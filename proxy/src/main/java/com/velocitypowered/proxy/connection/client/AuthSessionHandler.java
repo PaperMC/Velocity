@@ -40,7 +40,6 @@ import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
 import com.velocitypowered.proxy.protocol.packet.SetCompression;
-import io.netty.buffer.ByteBuf;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -226,7 +225,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public void handleUnknown(ByteBuf buf) {
+  public void handleUnknown(Object obj) {
     mcConnection.close(true);
   }
 

@@ -28,7 +28,6 @@ import com.velocitypowered.proxy.protocol.packet.StatusPing;
 import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
-import io.netty.buffer.ByteBuf;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -109,7 +108,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public void handleUnknown(ByteBuf buf) {
+  public void handleUnknown(Object obj) {
     // what even is going on?
     connection.close(true);
   }

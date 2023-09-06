@@ -79,6 +79,24 @@ public class JavaVelocityCompressor implements VelocityCompressor {
   }
 
   @Override
+  public void inflatePartial(ByteBuf source, ByteBuf destination, int size)
+      throws DataFormatException {
+    ensureNotDisposed();
+
+    // We (probably) can't nicely deal with >=1 buffer nicely, so let's scream loudly.
+    checkArgument(source.nioBufferCount() == 1, "source has multiple backing buffers");
+    checkArgument(destination.nioBufferCount() == 1, "destination has multiple backing buffers");
+
+    final int origIdx = source.readerIndex();
+    inflater.setInput(source.nioBuffer());
+    int produced = inflater.inflate(destination.nioBuffer(destination.writerIndex(),
+        destination.writableBytes()));
+    destination.writerIndex(destination.writerIndex() + produced);
+    source.readerIndex(origIdx + deflater.getTotalIn());
+    inflater.reset();
+  }
+
+  @Override
   public void deflate(ByteBuf source, ByteBuf destination) throws DataFormatException {
     ensureNotDisposed();
 

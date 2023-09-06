@@ -33,7 +33,7 @@ public class Connections {
   public static final String LEGACY_PING_DECODER = "legacy-ping-decoder";
   public static final String LEGACY_PING_ENCODER = "legacy-ping-encoder";
   public static final String MINECRAFT_DECODER = "minecraft-decoder";
-  public static final String MINECRAFT_ENCODER = "minecraft-encoder";
+  public static final String MINECRAFT_PRE_ENCODER = "minecraft-pre-encoder";
   public static final String READ_TIMEOUT = "read-timeout";
 
   private Connections() {

@@ -61,7 +61,6 @@ import com.velocitypowered.proxy.protocol.packet.title.TitleClearPacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleSubtitlePacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleTextPacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleTimesPacket;
-import io.netty.buffer.ByteBuf;
 
 /**
  * Interface for dispatching received Minecraft packets.
@@ -76,7 +75,7 @@ public interface MinecraftSessionHandler {
 
   }
 
-  default void handleUnknown(ByteBuf buf) {
+  default void handleUnknown(Object obj) {
 
   }
 

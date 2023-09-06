@@ -39,7 +39,6 @@ import com.velocitypowered.proxy.protocol.packet.EncryptionRequest;
 import com.velocitypowered.proxy.protocol.packet.EncryptionResponse;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
 import com.velocitypowered.proxy.protocol.packet.ServerLogin;
-import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -286,7 +285,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public void handleUnknown(ByteBuf buf) {
+  public void handleUnknown(Object obj) {
     mcConnection.close(true);
   }
 

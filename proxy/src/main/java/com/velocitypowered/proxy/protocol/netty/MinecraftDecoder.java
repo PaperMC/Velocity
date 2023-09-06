@@ -22,16 +22,20 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.netty.data.CompressedPacket;
+import com.velocitypowered.proxy.protocol.netty.data.IdentifiedPacket;
+import com.velocitypowered.proxy.protocol.netty.data.UncompressedPacket;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.CorruptedFrameException;
+import io.netty.handler.codec.MessageToMessageDecoder;
+import java.util.List;
 
 /**
  * Decodes Minecraft packets.
  */
-public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
+public class MinecraftDecoder extends MessageToMessageDecoder<IdentifiedPacket> {
 
   public static final boolean DEBUG = Boolean.getBoolean("velocity.packet-decode-logging");
   private static final QuietRuntimeException DECODE_FAILED =
@@ -55,43 +59,45 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
   }
 
   @Override
-  public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-    if (msg instanceof ByteBuf) {
-      ByteBuf buf = (ByteBuf) msg;
-      tryDecode(ctx, buf);
-    } else {
-      ctx.fireChannelRead(msg);
-    }
-  }
-
-  private void tryDecode(ChannelHandlerContext ctx, ByteBuf buf) throws Exception {
-    if (!ctx.channel().isActive() || !buf.isReadable()) {
-      buf.release();
-      return;
-    }
-
-    int originalReaderIndex = buf.readerIndex();
-    int packetId = ProtocolUtils.readVarInt(buf);
-    MinecraftPacket packet = this.registry.createPacket(packetId);
+  protected void decode(ChannelHandlerContext ctx, IdentifiedPacket msg, List<Object> out)
+      throws Exception {
+    int packetId = msg.getPacketId();
+    MinecraftPacket packet = registry.createPacket(packetId);
     if (packet == null) {
-      buf.readerIndex(originalReaderIndex);
-      ctx.fireChannelRead(buf);
+      ctx.fireChannelRead(msg);
     } else {
+      ByteBuf uncompressedBuf;
+      if (msg instanceof UncompressedPacket) {
+        uncompressedBuf = ((UncompressedPacket) msg).getPacketBuf();
+      } else if (msg instanceof CompressedPacket) {
+        uncompressedBuf = ((CompressedPacket) msg).decompress(ctx.alloc());
+      } else {
+        throw new IllegalArgumentException("Unsupported identified packet type.");
+      }
+
+      if (!ctx.channel().isActive() || !uncompressedBuf.isReadable()) {
+        uncompressedBuf.release();
+        return;
+      }
+
       try {
-        doLengthSanityChecks(buf, packet);
+        ProtocolUtils.readVarInt(uncompressedBuf);
+        doLengthSanityChecks(uncompressedBuf, packet);
 
         try {
-          packet.decode(buf, direction, registry.version);
+          packet.decode(uncompressedBuf, direction, registry.version);
         } catch (Exception e) {
+          e.printStackTrace();
           throw handleDecodeFailure(e, packet, packetId);
         }
 
-        if (buf.isReadable()) {
-          throw handleOverflow(packet, buf.readerIndex(), buf.writerIndex());
+        if (uncompressedBuf.isReadable()) {
+          throw handleOverflow(packet,
+              uncompressedBuf.readerIndex(), uncompressedBuf.writerIndex());
         }
         ctx.fireChannelRead(packet);
       } finally {
-        buf.release();
+        uncompressedBuf.release();
       }
     }
   }
