@@ -94,11 +94,11 @@ public class JavaVelocityCompressor implements VelocityCompressor {
     try {
       while (!inflater.finished() && size > 0) {
         inflater.setInput(source.nioBuffer());
-        int produced = inflater.inflate(destination.nioBuffer(destination.writerIndex(),
-            destination.writableBytes()));
+        int produced = inflater.inflate(
+            destination.nioBuffer(destination.writerIndex(), size));
         size -= produced;
         destination.writerIndex(destination.writerIndex() + produced);
-        source.readerIndex(origReaderIdx + deflater.getTotalIn());
+        source.readerIndex(origReaderIdx + inflater.getTotalIn());
       }
     } finally {
       inflater.reset();

@@ -77,7 +77,9 @@ public class MinecraftCompressAndIdDecoder extends MessageToMessageDecoder<ByteB
         + " threshold %s", claimedUncompressedSize, threshold);
 
     ByteBuf packetIdBuf = preferredBuffer(ctx.alloc(), this.compressor, 5);
+    int readerIndex = in.readerIndex();
     this.javaCompressor.inflatePartial(in, packetIdBuf, 5);
+    in.readerIndex(readerIndex);
     int packetId = ProtocolUtils.readVarInt(packetIdBuf);
     packetIdBuf.release();
 
