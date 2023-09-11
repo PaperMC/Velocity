@@ -104,7 +104,7 @@ public class ChatQueue {
       CompletableFuture<WrappedPacket> future
   ) {
     // the binder will run -> then the future will get the `write packet` caller
-    return binder.whenCompleteAsync((ignored1, ignored2) -> future.thenApply(writePacket(connection)).join());
+    return binder.thenCompose(ignored -> future.thenApply(writePacket(connection)));
   }
 
   private static <K, V extends MinecraftPacket> CompletableFuture<WrappedPacket> hijackCurrentPacket(
