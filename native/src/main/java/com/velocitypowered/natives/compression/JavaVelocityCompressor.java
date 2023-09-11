@@ -87,13 +87,22 @@ public class JavaVelocityCompressor implements VelocityCompressor {
     checkArgument(source.nioBufferCount() == 1, "source has multiple backing buffers");
     checkArgument(destination.nioBufferCount() == 1, "destination has multiple backing buffers");
 
-    final int origIdx = source.readerIndex();
-    inflater.setInput(source.nioBuffer());
-    int produced = inflater.inflate(destination.nioBuffer(destination.writerIndex(),
-        destination.writableBytes()));
-    destination.writerIndex(destination.writerIndex() + produced);
-    source.readerIndex(origIdx + deflater.getTotalIn());
-    inflater.reset();
+    final int origReaderIdx = source.readerIndex();
+
+    destination.ensureWritable(size);
+
+    try {
+      while (!inflater.finished() && size > 0) {
+        inflater.setInput(source.nioBuffer());
+        int produced = inflater.inflate(destination.nioBuffer(destination.writerIndex(),
+            destination.writableBytes()));
+        size -= produced;
+        destination.writerIndex(destination.writerIndex() + produced);
+        source.readerIndex(origReaderIdx + deflater.getTotalIn());
+      }
+    } finally {
+      inflater.reset();
+    }
   }
 
   @Override

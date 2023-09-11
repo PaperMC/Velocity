@@ -72,7 +72,6 @@ public class MinecraftCompressAndIdDecoder extends MessageToMessageDecoder<ByteB
       return;
     }
 
-    // TODO: Use ThreadLocal buffer
     ByteBuf packetIdBuf = preferredBuffer(ctx.alloc(), this.compressor, 5);
     this.javaCompressor.inflatePartial(in, packetIdBuf, 5);
     int packetId = ProtocolUtils.readVarInt(packetIdBuf);
