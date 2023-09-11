@@ -18,6 +18,7 @@
 package com.velocitypowered.proxy.protocol.netty;
 
 import static com.velocitypowered.natives.util.MoreByteBufUtils.preferredBuffer;
+import static com.velocitypowered.proxy.protocol.util.NettyPreconditions.checkFrame;
 
 import com.velocitypowered.natives.compression.VelocityCompressor;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -71,6 +72,9 @@ public class MinecraftCompressAndIdDecoder extends MessageToMessageDecoder<ByteB
       out.add(new UncompressedPacket(packetId, in.readerIndex(originalReaderIndex).retain()));
       return;
     }
+
+    checkFrame(claimedUncompressedSize >= threshold, "Uncompressed size %s is less than"
+        + " threshold %s", claimedUncompressedSize, threshold);
 
     ByteBuf packetIdBuf = preferredBuffer(ctx.alloc(), this.compressor, 5);
     this.javaCompressor.inflatePartial(in, packetIdBuf, 5);
