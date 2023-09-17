@@ -65,7 +65,8 @@ public class SessionPlayerCommand implements MinecraftPacket {
   }
 
   public boolean isSigned() {
-    return salt != 0 || !lastSeenMessages.isEmpty() || !argumentSignatures.isEmpty();
+    if (salt == 0) return false;
+    return !lastSeenMessages.isEmpty() || !argumentSignatures.isEmpty();
   }
 
   @Override
