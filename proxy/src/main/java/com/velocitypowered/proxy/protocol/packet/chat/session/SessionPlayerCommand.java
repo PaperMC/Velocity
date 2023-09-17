@@ -74,6 +74,17 @@ public class SessionPlayerCommand implements MinecraftPacket {
     return handler.handle(this);
   }
 
+  @Override
+  public String toString() {
+    return "SessionPlayerCommand{" +
+            "command='" + command + '\'' +
+            ", timeStamp=" + timeStamp +
+            ", salt=" + salt +
+            ", argumentSignatures=" + argumentSignatures +
+            ", lastSeenMessages=" + lastSeenMessages +
+            '}';
+  }
+
   public static class ArgumentSignatures {
 
     private final List<ArgumentSignature> entries;
@@ -105,6 +116,12 @@ public class SessionPlayerCommand implements MinecraftPacket {
         entry.encode(buf);
       }
     }
+    @Override
+    public String toString() {
+      return "ArgumentSignatures{" +
+              "entries=" + entries +
+              '}';
+    }
   }
 
   public static class ArgumentSignature {
@@ -120,6 +137,13 @@ public class SessionPlayerCommand implements MinecraftPacket {
     public void encode(ByteBuf buf) {
       ProtocolUtils.writeString(buf, name);
       buf.writeBytes(signature);
+    }
+
+    @Override
+    public String toString() {
+      return "ArgumentSignature{" +
+              "name='" + name + '\'' +
+              '}';
     }
   }
 }
