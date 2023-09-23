@@ -91,6 +91,10 @@ public class MinecraftCompressAndIdDecoder extends MessageToMessageDecoder<ByteB
     if (compressor != null) {
       compressor.close();
     }
+
+    if (javaCompressor != null) {
+      javaCompressor.close();
+    }
   }
 
   public void setThreshold(int threshold) {
