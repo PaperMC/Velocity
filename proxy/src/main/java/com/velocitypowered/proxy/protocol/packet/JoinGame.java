@@ -42,6 +42,7 @@ public class JoinGame implements MinecraftPacket {
   private int viewDistance; // 1.14+
   private boolean reducedDebugInfo;
   private boolean showRespawnScreen;
+  private boolean doLimitedCrafting;
   private ImmutableSet<String> levelNames; // 1.16+
   private CompoundBinaryTag registry; // 1.16+
   private DimensionInfo dimensionInfo; // 1.16+
@@ -143,6 +144,14 @@ public class JoinGame implements MinecraftPacket {
     this.isHardcore = isHardcore;
   }
 
+  public boolean getDoLimitedCrafting() {
+    return doLimitedCrafting;
+  }
+
+  public void setDoLimitedCrafting(boolean doLimitedCrafting) {
+    this.doLimitedCrafting = doLimitedCrafting;
+  }
+
   public CompoundBinaryTag getCurrentDimensionData() {
     return currentDimensionData;
   }
@@ -189,6 +198,7 @@ public class JoinGame implements MinecraftPacket {
         + ", viewDistance=" + viewDistance
         + ", reducedDebugInfo=" + reducedDebugInfo
         + ", showRespawnScreen=" + showRespawnScreen
+        + ", doLimitedCrafting=" + doLimitedCrafting
         + ", levelNames=" + levelNames
         + ", registry='" + registry + '\''
         + ", dimensionInfo='" + dimensionInfo + '\''
@@ -280,6 +290,9 @@ public class JoinGame implements MinecraftPacket {
 
     this.reducedDebugInfo = buf.readBoolean();
     this.showRespawnScreen = buf.readBoolean();
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_2) >= 0) {
+      this.doLimitedCrafting = buf.readBoolean();
+    }
 
     boolean isDebug = buf.readBoolean();
     boolean isFlat = buf.readBoolean();
@@ -376,6 +389,7 @@ public class JoinGame implements MinecraftPacket {
 
     buf.writeBoolean(reducedDebugInfo);
     buf.writeBoolean(showRespawnScreen);
+    buf.writeBoolean(doLimitedCrafting);
 
     buf.writeBoolean(dimensionInfo.isDebugType());
     buf.writeBoolean(dimensionInfo.isFlat());
