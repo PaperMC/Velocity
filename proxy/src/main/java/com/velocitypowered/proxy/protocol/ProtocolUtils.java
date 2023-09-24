@@ -248,7 +248,13 @@ public enum ProtocolUtils {
    * @return the decoded key array
    */
   public static Key[] readKeyArray(ByteBuf buf) {
-    Key[] ret = new Key[readVarInt(buf)];
+    int length = readVarInt(buf);
+    checkFrame(length >= 0, "Got a negative-length array (%s)", length);
+    checkFrame(buf.isReadable(length),
+            "Trying to read an array that is too long (wanted %s, only have %s)", length,
+            buf.readableBytes());
+    Key[] ret = new Key[length];
+
     for (int i = 0; i < ret.length; i++) {
       ret[i] = ProtocolUtils.readKey(buf);
     }
@@ -424,6 +430,10 @@ public enum ProtocolUtils {
    */
   public static int[] readVarIntArray(ByteBuf buf) {
     int length = readVarInt(buf);
+    checkFrame(length >= 0, "Got a negative-length array (%s)", length);
+    checkFrame(buf.isReadable(length),
+            "Trying to read an array that is too long (wanted %s, only have %s)", length,
+            buf.readableBytes());
     int[] ret = new int[length];
     for (int i = 0; i < length; i++) {
       ret[i] = readVarInt(buf);

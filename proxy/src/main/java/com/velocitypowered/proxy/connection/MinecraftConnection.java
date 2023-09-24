@@ -95,7 +95,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * Initializes a new {@link MinecraftConnection} instance.
    *
    * @param channel the channel on the connection
-   * @param server  the Velocity instance
+   * @param server the Velocity instance
    */
   public MinecraftConnection(Channel channel, VelocityServer server) {
     this.channel = channel;
@@ -123,9 +123,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
       activeSessionHandler.disconnected();
     }
 
-    if (association != null && !knownDisconnect
-            && !(activeSessionHandler instanceof StatusSessionHandler)
-            && server.getConfiguration().isLogPlayerConnections()) {
+    if (association != null
+        && !knownDisconnect
+        && !(activeSessionHandler instanceof StatusSessionHandler)
+        && server.getConfiguration().isLogPlayerConnections()) {
       logger.info("{} has disconnected", association);
     }
   }
@@ -153,8 +154,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         }
       } else if (msg instanceof HAProxyMessage) {
         HAProxyMessage proxyMessage = (HAProxyMessage) msg;
-        this.remoteAddress = new InetSocketAddress(proxyMessage.sourceAddress(),
-                proxyMessage.sourcePort());
+        this.remoteAddress =
+            new InetSocketAddress(proxyMessage.sourceAddress(), proxyMessage.sourcePort());
       } else if (msg instanceof ByteBuf) {
         activeSessionHandler.handleUnknown((ByteBuf) msg);
       }
@@ -177,8 +178,11 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         try {
           activeSessionHandler.exception(cause);
         } catch (Exception ex) {
-          logger.error("{}: exception handling exception in {}",
-                  (association != null ? association : channel.remoteAddress()), activeSessionHandler, cause);
+          logger.error(
+              "{}: exception handling exception in {}",
+              (association != null ? association : channel.remoteAddress()),
+              activeSessionHandler,
+              cause);
         }
       }
 
@@ -186,13 +190,15 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         if (cause instanceof ReadTimeoutException) {
           logger.error("{}: read timed out", association);
         } else {
-          boolean frontlineHandler = activeSessionHandler instanceof InitialLoginSessionHandler
+          boolean frontlineHandler =
+              activeSessionHandler instanceof InitialLoginSessionHandler
                   || activeSessionHandler instanceof HandshakeSessionHandler
                   || activeSessionHandler instanceof StatusSessionHandler;
           boolean isQuietDecoderException = cause instanceof QuietDecoderException;
           boolean willLog = !isQuietDecoderException && !frontlineHandler;
           if (willLog) {
-            logger.error("{}: exception encountered in {}", association, activeSessionHandler, cause);
+            logger.error(
+                "{}: exception encountered in {}", association, activeSessionHandler, cause);
           } else {
             knownDisconnect = true;
           }
@@ -244,9 +250,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     }
   }
 
-  /**
-   * Flushes the connection.
-   */
+  /** Flushes the connection. */
   public void flush() {
     if (channel.isActive()) {
       channel.flush();
@@ -260,18 +264,28 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    */
   public void closeWith(Object msg) {
     if (channel.isActive()) {
-      boolean is17 = this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) < 0
-          && this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_7_2) >= 0;
+      boolean is17 =
+          this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) < 0
+              && this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_7_2) >= 0;
       if (is17 && this.getState() != StateRegistry.STATUS) {
-        channel.eventLoop().execute(() -> {
-          // 1.7.x versions have a race condition with switching protocol states, so just explicitly
-          // close the connection after a short while.
-          this.setAutoReading(false);
-          channel.eventLoop().schedule(() -> {
-            knownDisconnect = true;
-            channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
-          }, 250, TimeUnit.MILLISECONDS);
-        });
+        channel
+            .eventLoop()
+            .execute(
+                () -> {
+                  // 1.7.x versions have a race condition with switching protocol states, so just
+                  // explicitly
+                  // close the connection after a short while.
+                  this.setAutoReading(false);
+                  channel
+                      .eventLoop()
+                      .schedule(
+                          () -> {
+                            knownDisconnect = true;
+                            channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
+                          },
+                          250,
+                          TimeUnit.MILLISECONDS);
+                });
       } else {
         knownDisconnect = true;
         channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
@@ -296,12 +310,15 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         }
         channel.close();
       } else {
-        channel.eventLoop().execute(() -> {
-          if (markKnown) {
-            knownDisconnect = true;
-          }
-          channel.close();
-        });
+        channel
+            .eventLoop()
+            .execute(
+                () -> {
+                  if (markKnown) {
+                    knownDisconnect = true;
+                  }
+                  channel.close();
+                });
       }
     }
   }
@@ -359,7 +376,12 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     if (state == StateRegistry.CONFIG) {
       // Activate the play packet queue
-      this.channel.pipeline().addAfter(Connections.MINECRAFT_ENCODER, Connections.PLAY_PACKET_QUEUE, new PlayPacketQueueHandler(this.protocolVersion));
+      this.channel
+          .pipeline()
+          .addAfter(
+              Connections.MINECRAFT_ENCODER,
+              Connections.PLAY_PACKET_QUEUE,
+              new PlayPacketQueueHandler(this.protocolVersion));
     } else if (this.channel.pipeline().get(Connections.PLAY_PACKET_QUEUE) != null) {
       // Remove the queue
       this.channel.pipeline().remove(Connections.PLAY_PACKET_QUEUE);
@@ -408,7 +430,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * @param registry the registry of the handler
    * @param sessionHandler the handler to use
    */
-  public void setActiveSessionHandler(StateRegistry registry, MinecraftSessionHandler sessionHandler) {
+  public void setActiveSessionHandler(
+      StateRegistry registry, MinecraftSessionHandler sessionHandler) {
     Preconditions.checkNotNull(registry);
     ensureInEventLoop();
 
@@ -435,7 +458,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     if (handler != null) {
       boolean flag = true;
       if (this.activeSessionHandler != null
-              && (flag = !Objects.equals(handler, this.activeSessionHandler))) {
+          && (flag = !Objects.equals(handler, this.activeSessionHandler))) {
         this.activeSessionHandler.deactivated();
       }
       this.activeSessionHandler = handler;
@@ -466,8 +489,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   }
 
   /**
-   * Sets the compression threshold on the connection. You are responsible for sending
-   * {@link com.velocitypowered.proxy.protocol.packet.SetCompression} beforehand.
+   * Sets the compression threshold on the connection. You are responsible for sending {@link
+   * com.velocitypowered.proxy.protocol.packet.SetCompression} beforehand.
    *
    * @param threshold the compression threshold to use
    */
@@ -480,13 +503,14 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
       final ChannelHandler removedEncoder = channel.pipeline().remove(COMPRESSION_ENCODER);
 
       if (removedDecoder != null && removedEncoder != null) {
-        channel.pipeline().addBefore(MINECRAFT_DECODER, FRAME_ENCODER,
-            MinecraftVarintLengthEncoder.INSTANCE);
+        channel
+            .pipeline()
+            .addBefore(MINECRAFT_DECODER, FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE);
         channel.pipeline().fireUserEventTriggered(VelocityConnectionEvent.COMPRESSION_DISABLED);
       }
     } else {
-      MinecraftCompressDecoder decoder = (MinecraftCompressDecoder) channel.pipeline()
-          .get(COMPRESSION_DECODER);
+      MinecraftCompressDecoder decoder =
+          (MinecraftCompressDecoder) channel.pipeline().get(COMPRESSION_DECODER);
       MinecraftCompressorAndLengthEncoder encoder =
           (MinecraftCompressorAndLengthEncoder) channel.pipeline().get(COMPRESSION_ENCODER);
       if (decoder != null && encoder != null) {
@@ -523,9 +547,11 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     VelocityCipherFactory factory = Natives.cipher.get();
     VelocityCipher decryptionCipher = factory.forDecryption(key);
     VelocityCipher encryptionCipher = factory.forEncryption(key);
-    channel.pipeline()
+    channel
+        .pipeline()
         .addBefore(FRAME_DECODER, CIPHER_DECODER, new MinecraftCipherDecoder(decryptionCipher));
-    channel.pipeline()
+    channel
+        .pipeline()
         .addBefore(FRAME_ENCODER, CIPHER_ENCODER, new MinecraftCipherEncoder(encryptionCipher));
 
     channel.pipeline().fireUserEventTriggered(VelocityConnectionEvent.ENCRYPTION_ENABLED);
@@ -557,5 +583,4 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   public void setType(ConnectionType connectionType) {
     this.connectionType = connectionType;
   }
-
 }

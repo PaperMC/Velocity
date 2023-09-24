@@ -88,7 +88,7 @@ public class PlayPacketQueueHandler extends ChannelDuplexHandler {
     MinecraftPacket packet;
     while ((packet = this.queue.poll()) != null) {
       if (active) {
-        ctx.writeAndFlush(packet);
+        ctx.write(packet, ctx.voidPromise());
       } else {
         ReferenceCountUtil.release(packet);
       }
