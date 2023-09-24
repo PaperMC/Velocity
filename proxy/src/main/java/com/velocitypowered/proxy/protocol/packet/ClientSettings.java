@@ -23,6 +23,8 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.Objects;
+
+import io.netty.buffer.ByteBufUtil;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientSettings implements MinecraftPacket {
@@ -134,6 +136,7 @@ public class ClientSettings implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+    System.out.println("BUF: " + ByteBufUtil.prettyHexDump(buf));
     this.locale = ProtocolUtils.readString(buf, 16);
     this.viewDistance = buf.readByte();
     this.chatVisibility = ProtocolUtils.readVarInt(buf);

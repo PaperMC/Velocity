@@ -27,6 +27,7 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.VelocityConstants;
+import com.velocitypowered.proxy.connection.client.ClientConfigSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
@@ -166,6 +167,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         smc.write(new LoginAcknowledged());
         //Sync backend
         smc.setActiveSessionHandler(StateRegistry.CONFIG, new ConfigSessionHandler(server, serverConn, resultFuture));
+        serverConn.getPlayer().getConnection().setActiveSessionHandler(StateRegistry.CONFIG,
+                new ClientConfigSessionHandler(server, serverConn.getPlayer()));
       }, smc.eventLoop());
     }
 

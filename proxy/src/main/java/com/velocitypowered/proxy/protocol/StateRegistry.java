@@ -153,7 +153,7 @@ public enum StateRegistry {
           map(0x08, ProtocolVersion.MINECRAFT_1_19_1, false),
           map(0x07, ProtocolVersion.MINECRAFT_1_19_3, false),
           map(0x08, ProtocolVersion.MINECRAFT_1_19_4, false),
-          map(0x00, ProtocolVersion.MINECRAFT_1_20_2, false));
+          map(0x09, ProtocolVersion.MINECRAFT_1_20_2, false));
       serverbound.register(PluginMessage.class, PluginMessage::new,
           map(0x17, ProtocolVersion.MINECRAFT_1_7_2, false),
           map(0x09, ProtocolVersion.MINECRAFT_1_9, false),

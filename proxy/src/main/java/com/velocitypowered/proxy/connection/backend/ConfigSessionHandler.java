@@ -94,6 +94,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ClientSettings packet) {
     System.out.println("ClientSettings packet received");
+    serverConn.ensureConnected().write(packet);
     return true;
   }
 
