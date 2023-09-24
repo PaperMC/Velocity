@@ -150,7 +150,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   public CompletableFuture<Void> handleBackendFinishUpdate(VelocityServerConnection serverConn) {
-    serverConn.getConnection().write(new FinishedUpdate());
+    player.getConnection().write(new FinishedUpdate());
     return configSwitchFuture;
   }
 
