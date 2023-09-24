@@ -23,25 +23,22 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import io.netty.buffer.ByteBuf;
-import net.kyori.adventure.nbt.BinaryTagIO;
-import net.kyori.adventure.nbt.CompoundBinaryTag;
 
 public class RegistrySync extends DeferredByteBufHolder implements MinecraftPacket {
-
-    private CompoundBinaryTag registryData;
 
     public RegistrySync() {
         super(null);
     }
 
+    //NBT change in 1.20.2 makes it difficult to parse this packet.
     @Override
     public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        registryData = ProtocolUtils.readCompoundTag(buf, BinaryTagIO.reader());
+        this.replace(buf.readRetainedSlice(buf.readableBytes()));
     }
 
     @Override
     public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        ProtocolUtils.writeCompoundTag(buf, registryData);
+        buf.writeBytes(content());
     }
 
     @Override
