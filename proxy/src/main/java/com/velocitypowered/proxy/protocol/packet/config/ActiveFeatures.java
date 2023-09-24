@@ -22,27 +22,36 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import net.kyori.adventure.key.Key;
 
 public class ActiveFeatures implements MinecraftPacket {
 
-    private String[] activeFeatures;
+    private Key[] activeFeatures;
 
-    public ActiveFeatures(){
-        this.activeFeatures = new String[0];
+    public ActiveFeatures(Key[] activeFeatures) {
+        this.activeFeatures = activeFeatures;
     }
 
-    public ActiveFeatures(String[] activeFeatures) {
+    public ActiveFeatures(){
+        this.activeFeatures = new Key[0];
+    }
+
+    public void setActiveFeatures(Key[] activeFeatures) {
         this.activeFeatures = activeFeatures;
+    }
+
+    public Key[] getActiveFeatures() {
+        return activeFeatures;
     }
 
     @Override
     public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        activeFeatures = ProtocolUtils.readStringArray(buf);
+        activeFeatures = ProtocolUtils.readKeyArray(buf);
     }
 
     @Override
     public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        ProtocolUtils.writeStringArray(buf, activeFeatures);
+        ProtocolUtils.writeKeyArray(buf, activeFeatures);
     }
 
     @Override

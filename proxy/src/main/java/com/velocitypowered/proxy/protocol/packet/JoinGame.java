@@ -42,7 +42,7 @@ public class JoinGame implements MinecraftPacket {
   private int viewDistance; // 1.14+
   private boolean reducedDebugInfo;
   private boolean showRespawnScreen;
-  private boolean doLimitedCrafting;
+  private boolean doLimitedCrafting; // 1.20.2+
   private ImmutableSet<String> levelNames; // 1.16+
   private CompoundBinaryTag registry; // 1.16+
   private DimensionInfo dimensionInfo; // 1.16+

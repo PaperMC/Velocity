@@ -32,10 +32,12 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
+import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.JoinGame;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
@@ -61,13 +63,13 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
    * @param resultFuture the result future
    */
   TransitionSessionHandler(VelocityServer server,
-      VelocityServerConnection serverConn,
-      CompletableFuture<Impl> resultFuture) {
+                           VelocityServerConnection serverConn,
+                           CompletableFuture<Impl> resultFuture) {
     this.server = server;
     this.serverConn = serverConn;
     this.resultFuture = resultFuture;
     this.bungeecordMessageResponder = new BungeeCordMessageResponder(server,
-        serverConn.getPlayer());
+            serverConn.getPlayer());
   }
 
   @Override
@@ -109,48 +111,49 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     // The goods are in hand! We got JoinGame. Let's transition completely to the new state.
     smc.setAutoReading(false);
     server.getEventManager()
-        .fire(new ServerConnectedEvent(player, serverConn.getServer(), previousServer))
-        .thenRunAsync(() -> {
-          // Make sure we can still transition (player might have disconnected here).
-          if (!serverConn.isActive()) {
-            // Connection is obsolete.
-            serverConn.disconnect();
-            return;
-          }
+            .fire(new ServerConnectedEvent(player, serverConn.getServer(), previousServer))
+            .thenRunAsync(() -> {
+              // Make sure we can still transition (player might have disconnected here).
+              if (!serverConn.isActive()) {
+                // Connection is obsolete.
+                serverConn.disconnect();
+                return;
+              }
 
-          // Change the client to use the ClientPlaySessionHandler if required.
-          ClientPlaySessionHandler playHandler;
-          if (player.getConnection().getSessionHandler() instanceof ClientPlaySessionHandler) {
-            playHandler = (ClientPlaySessionHandler) player.getConnection().getSessionHandler();
-          } else {
-            playHandler = new ClientPlaySessionHandler(server, player);
-            player.getConnection().setSessionHandler(playHandler);
-          }
-          playHandler.handleBackendJoinGame(packet, serverConn);
+              // Change the client to use the ClientPlaySessionHandler if required.
+              ClientPlaySessionHandler playHandler;
+              if (player.getConnection().setActiveSessionHandler(StateRegistry.PLAY)) {
+                playHandler = (ClientPlaySessionHandler) player.getConnection().getActiveSessionHandler();
+              } else {
+                playHandler = new ClientPlaySessionHandler(server, player);
+                player.getConnection().setActiveSessionHandler(StateRegistry.PLAY, playHandler);
+              }
+              assert playHandler != null;
+              playHandler.handleBackendJoinGame(packet, serverConn);
 
-          // Set the new play session handler for the server. We will have nothing more to do
-          // with this connection once this task finishes up.
-          smc.setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
+              // Set the new play session handler for the server. We will have nothing more to do
+              // with this connection once this task finishes up.
+              smc.setActiveSessionHandler(StateRegistry.PLAY, new BackendPlaySessionHandler(server, serverConn));
 
-          // Clean up disabling auto-read while the connected event was being processed.
-          smc.setAutoReading(true);
+              // Clean up disabling auto-read while the connected event was being processed.
+              smc.setAutoReading(true);
 
-          // Now set the connected server.
-          serverConn.getPlayer().setConnectedServer(serverConn);
+              // Now set the connected server.
+              serverConn.getPlayer().setConnectedServer(serverConn);
 
-          // We're done! :)
-          server.getEventManager().fireAndForget(new ServerPostConnectEvent(player,
-              previousServer));
-          resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
-        }, smc.eventLoop())
-        .exceptionally(exc -> {
-          logger.error("Unable to switch to new server {} for {}",
-              serverConn.getServerInfo().getName(),
-              player.getUsername(), exc);
-          player.disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
-          resultFuture.completeExceptionally(exc);
-          return null;
-        });
+              // We're done! :)
+              server.getEventManager().fireAndForget(new ServerPostConnectEvent(player,
+                      previousServer));
+              resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
+            }, smc.eventLoop())
+            .exceptionally(exc -> {
+              logger.error("Unable to switch to new server {} for {}",
+                      serverConn.getServerInfo().getName(),
+                      player.getUsername(), exc);
+              player.disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
+              resultFuture.completeExceptionally(exc);
+              return null;
+            });
 
     return true;
   }
@@ -163,9 +166,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     // If we were in the middle of the Forge handshake, it is not safe to proceed. We must kick
     // the client.
     if (connection.getType() == ConnectionTypes.LEGACY_FORGE
-        && !serverConn.getPhase().consideredComplete()) {
+            && !serverConn.getPhase().consideredComplete()) {
       resultFuture.complete(ConnectionRequestResults.forUnsafeDisconnect(packet,
-          serverConn.getServer()));
+              serverConn.getServer()));
     } else {
       resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
     }
@@ -179,6 +182,12 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
       return true;
     }
 
+    if (PluginMessageUtil.isRegister(packet)) {
+      serverConn.getPlayer().getKnownChannels().addAll(PluginMessageUtil.getChannels(packet));
+    } else if (PluginMessageUtil.isUnregister(packet)) {
+      serverConn.getPlayer().getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
+    }
+
     // We always need to handle plugin messages, for Forge compatibility.
     if (serverConn.getPhase().handle(serverConn, serverConn.getPlayer(), packet)) {
       // Handled, but check the server connection phase.
@@ -190,7 +199,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
           // Tell the player that we're leaving and we just aren't coming back.
           existingConnection.getPhase().onDepartForNewServer(existingConnection,
-              serverConn.getPlayer());
+                  serverConn.getPlayer());
         }
       }
       return true;
@@ -203,6 +212,6 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   @Override
   public void disconnected() {
     resultFuture
-        .completeExceptionally(new IOException("Unexpectedly disconnected from remote server"));
+            .completeExceptionally(new IOException("Unexpectedly disconnected from remote server"));
   }
 }

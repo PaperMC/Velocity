@@ -41,6 +41,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -52,19 +54,19 @@ public enum ProtocolUtils {
   ;
 
   private static final GsonComponentSerializer PRE_1_16_SERIALIZER =
-      GsonComponentSerializer.builder()
-          .downsampleColors()
-          .emitLegacyHoverEvent()
-          .legacyHoverEventSerializer(VelocityLegacyHoverEventSerializer.INSTANCE)
-          .build();
+          GsonComponentSerializer.builder()
+                  .downsampleColors()
+                  .emitLegacyHoverEvent()
+                  .legacyHoverEventSerializer(VelocityLegacyHoverEventSerializer.INSTANCE)
+                  .build();
   private static final GsonComponentSerializer MODERN_SERIALIZER =
-      GsonComponentSerializer.builder()
-          .legacyHoverEventSerializer(VelocityLegacyHoverEventSerializer.INSTANCE)
-          .build();
+          GsonComponentSerializer.builder()
+                  .legacyHoverEventSerializer(VelocityLegacyHoverEventSerializer.INSTANCE)
+                  .build();
 
   public static final int DEFAULT_MAX_STRING_SIZE = 65536; // 64KiB
   private static final QuietDecoderException BAD_VARINT_CACHED =
-      new QuietDecoderException("Bad VarInt decoded");
+          new QuietDecoderException("Bad VarInt decoded");
   private static final int[] VARINT_EXACT_BYTE_LENGTHS = new int[33];
 
   static {
@@ -84,7 +86,7 @@ public enum ProtocolUtils {
     int read = readVarIntSafely(buf);
     if (read == Integer.MIN_VALUE) {
       throw MinecraftDecoder.DEBUG ? new CorruptedFrameException("Bad VarInt decoded")
-          : BAD_VARINT_CACHED;
+              : BAD_VARINT_CACHED;
     }
     return read;
   }
@@ -151,11 +153,11 @@ public enum ProtocolUtils {
       buf.writeMedium(w);
     } else if ((value & (0xFFFFFFFF << 28)) == 0) {
       int w = (value & 0x7F | 0x80) << 24 | (((value >>> 7) & 0x7F | 0x80) << 16)
-          | ((value >>> 14) & 0x7F | 0x80) << 8 | (value >>> 21);
+              | ((value >>> 14) & 0x7F | 0x80) << 8 | (value >>> 21);
       buf.writeInt(w);
     } else {
       int w = (value & 0x7F | 0x80) << 24 | ((value >>> 7) & 0x7F | 0x80) << 16
-          | ((value >>> 14) & 0x7F | 0x80) << 8 | ((value >>> 21) & 0x7F | 0x80);
+              | ((value >>> 14) & 0x7F | 0x80) << 8 | ((value >>> 21) & 0x7F | 0x80);
       buf.writeInt(w);
       buf.writeByte(value >>> 28);
     }
@@ -198,12 +200,12 @@ public enum ProtocolUtils {
     // sanity check and then check again to make sure our optimistic guess was good.
     checkFrame(length <= cap * 3, "Bad string size (got %s, maximum is %s)", length, cap);
     checkFrame(buf.isReadable(length),
-        "Trying to read a string that is too long (wanted %s, only have %s)", length,
-        buf.readableBytes());
+            "Trying to read a string that is too long (wanted %s, only have %s)", length,
+            buf.readableBytes());
     String str = buf.toString(buf.readerIndex(), length, StandardCharsets.UTF_8);
     buf.skipBytes(length);
     checkFrame(str.length() <= cap, "Got a too-long string (got %s, max %s)",
-        str.length(), cap);
+            str.length(), cap);
     return str;
   }
 
@@ -219,6 +221,52 @@ public enum ProtocolUtils {
     buf.writeCharSequence(str, StandardCharsets.UTF_8);
   }
 
+  /**
+   * Reads a standard Mojang Text namespaced:key from the buffer.
+   *
+   * @param buf the buffer to read from
+   * @return the decoded key
+   */
+  public static Key readKey(ByteBuf buf) {
+    return Key.key(readString(buf), Key.DEFAULT_SEPARATOR);
+  }
+
+  /**
+   * Writes a standard Mojang Text namespaced:key to the buffer.
+   *
+   * @param buf the buffer to write to
+   * @param key the key to write
+   */
+  public static void writeKey(ByteBuf buf, Key key) {
+    writeString(buf, key.asString());
+  }
+
+  /**
+   * Reads a standard Mojang Text namespaced:key array from the buffer.
+   *
+   * @param buf the buffer to read from
+   * @return the decoded key array
+   */
+  public static Key[] readKeyArray(ByteBuf buf) {
+    Key[] ret = new Key[readVarInt(buf)];
+    for (int i = 0; i < ret.length; i++) {
+      ret[i] = ProtocolUtils.readKey(buf);
+    }
+    return ret;
+  }
+
+  /**
+   * Writes a standard Mojang Text namespaced:key array to the buffer.
+   *
+   * @param buf the buffer to write to
+   * @param keys the keys to write
+   */
+  public static void writeKeyArray(ByteBuf buf, Key[] keys) {
+    writeVarInt(buf, keys.length);
+    for (Key key : keys) {
+      writeKey(buf, key);
+    }
+  }
   public static byte[] readByteArray(ByteBuf buf) {
     return readByteArray(buf, DEFAULT_MAX_STRING_SIZE);
   }
@@ -236,8 +284,8 @@ public enum ProtocolUtils {
     checkFrame(length >= 0, "Got a negative-length array (%s)", length);
     checkFrame(length <= cap, "Bad array size (got %s, maximum is %s)", length, cap);
     checkFrame(buf.isReadable(length),
-        "Trying to read an array that is too long (wanted %s, only have %s)", length,
-        buf.readableBytes());
+            "Trying to read an array that is too long (wanted %s, only have %s)", length,
+            buf.readableBytes());
     byte[] array = new byte[length];
     buf.readBytes(array);
     return array;
@@ -322,7 +370,7 @@ public enum ProtocolUtils {
       return reader.read((DataInput) new ByteBufInputStream(buf));
     } catch (IOException thrown) {
       throw new DecoderException(
-          "Unable to parse NBT CompoundTag, full error: " + thrown.getMessage());
+              "Unable to parse NBT CompoundTag, full error: " + thrown.getMessage());
     }
   }
 
@@ -365,6 +413,34 @@ public enum ProtocolUtils {
     writeVarInt(buf, stringArray.length);
     for (String s : stringArray) {
       writeString(buf, s);
+    }
+  }
+
+  /**
+   * Reads an Integer array from the {@code buf}.
+   *
+   * @param buf the buffer to read from
+   * @return the Integer array from the buffer
+   */
+  public static int[] readVarIntArray(ByteBuf buf) {
+    int length = readVarInt(buf);
+    int[] ret = new int[length];
+    for (int i = 0; i < length; i++) {
+      ret[i] = readVarInt(buf);
+    }
+    return ret;
+  }
+
+  /**
+   * Writes an Integer Array to the {@code buf}.
+   *
+   * @param buf         the buffer to write to
+   * @param intArray the array to write
+   */
+  public static void writeVarIntArray(ByteBuf buf, int[] intArray) {
+    writeVarInt(buf, intArray.length);
+    for (int i = 0; i < intArray.length; i++) {
+      writeVarInt(buf, intArray[i]);
     }
   }
 
@@ -426,7 +502,7 @@ public enum ProtocolUtils {
     int len = readExtendedForgeShort(buf);
 
     checkArgument(len <= FORGE_MAX_ARRAY_LENGTH,
-        "Cannot receive array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH, len);
+            "Cannot receive array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH, len);
 
     byte[] ret = new byte[len];
     buf.readBytes(ret);
@@ -446,7 +522,7 @@ public enum ProtocolUtils {
     int len = readExtendedForgeShort(buf);
 
     checkFrame(len <= FORGE_MAX_ARRAY_LENGTH,
-        "Cannot receive array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH, len);
+            "Cannot receive array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH, len);
 
     return buf.readRetainedSlice(len);
   }
@@ -461,11 +537,11 @@ public enum ProtocolUtils {
   public static void writeByteArray17(byte[] b, ByteBuf buf, boolean allowExtended) {
     if (allowExtended) {
       checkFrame(b.length <= FORGE_MAX_ARRAY_LENGTH,
-          "Cannot send array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH,
-          b.length);
+              "Cannot send array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH,
+              b.length);
     } else {
       checkFrame(b.length <= Short.MAX_VALUE,
-          "Cannot send array longer than Short.MAX_VALUE (got %s bytes)", b.length);
+              "Cannot send array longer than Short.MAX_VALUE (got %s bytes)", b.length);
     }
     // Write a 2 or 3 byte number that represents the length of the packet. (3 byte "shorts" for
     // Forge only)
@@ -485,11 +561,11 @@ public enum ProtocolUtils {
   public static void writeByteBuf17(ByteBuf b, ByteBuf buf, boolean allowExtended) {
     if (allowExtended) {
       checkFrame(b.readableBytes() <= FORGE_MAX_ARRAY_LENGTH,
-          "Cannot send array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH,
-          b.readableBytes());
+              "Cannot send array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH,
+              b.readableBytes());
     } else {
       checkFrame(b.readableBytes() <= Short.MAX_VALUE,
-          "Cannot send array longer than Short.MAX_VALUE (got %s bytes)", b.readableBytes());
+              "Cannot send array longer than Short.MAX_VALUE (got %s bytes)", b.readableBytes());
     }
     // Write a 2 or 3 byte number that represents the length of the packet. (3 byte "shorts" for
     // Forge only)
@@ -581,7 +657,7 @@ public enum ProtocolUtils {
     byte[] key = ProtocolUtils.readByteArray(buf);
     byte[] signature = ProtocolUtils.readByteArray(buf, 4096);
     IdentifiedKey.Revision revision = version.compareTo(ProtocolVersion.MINECRAFT_1_19) == 0
-        ? IdentifiedKey.Revision.GENERIC_V1 : IdentifiedKey.Revision.LINKED_V2;
+            ? IdentifiedKey.Revision.GENERIC_V1 : IdentifiedKey.Revision.LINKED_V2;
     return new IdentifiedKeyImpl(revision, key, expiry, signature);
   }
 
@@ -591,33 +667,5 @@ public enum ProtocolUtils {
   public enum Direction {
     SERVERBOUND,
     CLIENTBOUND
-  }
-
-  /**
-   * Reads an Integer array from the {@code buf}.
-   *
-   * @param buf the buffer to read from
-   * @return the Integer array from the buffer
-   */
-  public static int[] readVarIntArray(ByteBuf buf) {
-    int length = readVarInt(buf);
-    int[] ret = new int[length];
-    for (int i = 0; i < length; i++) {
-      ret[i] = readVarInt(buf);
-    }
-    return ret;
-  }
-
-  /**
-   * Writes an Integer Array to the {@code buf}.
-   *
-   * @param buf         the buffer to write to
-   * @param intArray the array to write
-   */
-  public static void writeVarIntArray(ByteBuf buf, int[] intArray) {
-    writeVarInt(buf, intArray.length);
-    for (int i = 0; i < intArray.length; i++) {
-      writeVarInt(buf, intArray[i]);
-    }
   }
 }

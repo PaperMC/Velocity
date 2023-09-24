@@ -17,9 +17,7 @@
 
 package com.velocitypowered.proxy.connection.client;
 
-import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
-import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_16;
-import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
+import static com.velocitypowered.api.network.ProtocolVersion.*;
 import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.constructChannelsPacket;
 
 import com.google.common.collect.ImmutableList;
@@ -67,6 +65,7 @@ import com.velocitypowered.proxy.protocol.packet.chat.session.SessionChatHandler
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionCommandHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChat;
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommand;
+import com.velocitypowered.proxy.protocol.packet.config.StartUpdate;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.util.CharacterUtil;
@@ -80,6 +79,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Queue;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -104,6 +104,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private final ChatHandler<? extends MinecraftPacket> chatHandler;
   private final CommandHandler<? extends MinecraftPacket> commandHandler;
   private final ChatTimeKeeper timeKeeper = new ChatTimeKeeper();
+
+  private CompletableFuture<Void> configSwitchFuture;
 
   /**
    * Constructs a client play session handler.
@@ -143,7 +145,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private boolean validateChat(String message) {
     if (CharacterUtil.containsIllegalCharacters(message)) {
       player.disconnect(
-          Component.translatable("velocity.error.illegal-chat-characters", NamedTextColor.RED));
+              Component.translatable("velocity.error.illegal-chat-characters", NamedTextColor.RED));
       return false;
     }
     return true;
@@ -151,11 +153,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void activated() {
+    configSwitchFuture = new CompletableFuture<>();
     Collection<String> channels = server.getChannelRegistrar()
-        .getChannelsForProtocol(player.getProtocolVersion());
+            .getChannelsForProtocol(player.getProtocolVersion());
     if (!channels.isEmpty()) {
       PluginMessage register = constructChannelsPacket(player.getProtocolVersion(), channels);
       player.getConnection().write(register);
+      player.getKnownChannels().addAll(channels);
     }
   }
 
@@ -282,18 +286,19 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     VelocityServerConnection serverConn =
             (player.getConnectedServer() == null
                     && packet.getChannel().equals(
-                            LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL))
-            ? player.getConnectionInFlight() : player.getConnectedServer();
+                    LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL))
+                    ? player.getConnectionInFlight() : player.getConnectedServer();
 
     MinecraftConnection backendConn = serverConn != null ? serverConn.getConnection() : null;
     if (serverConn != null && backendConn != null) {
       if (backendConn.getState() != StateRegistry.PLAY) {
         logger.warn(
-            "A plugin message was received while the backend server was not "
-                + "ready. Channel: {}. Packet discarded.",
-            packet.getChannel());
+                "A plugin message was received while the backend server was not "
+                        + "ready. Channel: {}. Packet discarded.",
+                packet.getChannel());
       } else if (PluginMessageUtil.isRegister(packet)) {
         List<String> channels = PluginMessageUtil.getChannels(packet);
+        player.getKnownChannels().addAll(channels);
         List<ChannelIdentifier> channelIdentifiers = new ArrayList<>();
         for (String channel : channels) {
           try {
@@ -303,18 +308,19 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           }
         }
         server.getEventManager()
-            .fireAndForget(
-                new PlayerChannelRegisterEvent(player, ImmutableList.copyOf(channelIdentifiers)));
+                .fireAndForget(
+                        new PlayerChannelRegisterEvent(player, ImmutableList.copyOf(channelIdentifiers)));
         backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isUnregister(packet)) {
+        player.getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
         backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isMcBrand(packet)) {
         String brand = PluginMessageUtil.readBrandMessage(packet.content());
         server.getEventManager().fireAndForget(new PlayerClientBrandEvent(player, brand));
         player.setClientBrand(brand);
         backendConn.write(
-            PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion(),
-                player.getProtocolVersion()));
+                PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion(),
+                        player.getProtocolVersion()));
       } else if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
         return true;
       } else {
@@ -332,7 +338,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           if (id == null) {
             // We don't have any plugins listening on this channel, process the packet now.
             if (!player.getPhase().consideredComplete() || !serverConn.getPhase()
-                .consideredComplete()) {
+                    .consideredComplete()) {
               // The client is trying to send messages too early. This is primarily caused by mods,
               // but further aggravated by Velocity. To work around these issues, we will queue any
               // non-FML handshake messages to be sent once the FML handshake has completed or the
@@ -351,9 +357,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             server.getEventManager().fire(event).thenAcceptAsync(pme -> {
               if (pme.getResult().isAllowed()) {
                 PluginMessage message = new PluginMessage(packet.getChannel(),
-                    Unpooled.wrappedBuffer(copy));
+                        Unpooled.wrappedBuffer(copy));
                 if (!player.getPhase().consideredComplete() || !serverConn.getPhase()
-                    .consideredComplete()) {
+                        .consideredComplete()) {
                   // We're still processing the connection (see above), enqueue the packet for now.
                   loginPluginMessages.add(message.retain());
                 } else {
@@ -375,6 +381,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ResourcePackResponse packet) {
     return player.onResourcePackResponse(packet.getStatus());
+  }
+
+  @Override
+  public boolean handle(StartUpdate packet) {
+    //Complete client switch
+    player.getConnection().setActiveSessionHandler(StateRegistry.CONFIG);
+    configSwitchFuture.complete(null);
+    return true;
   }
 
   @Override
@@ -416,7 +430,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public void exception(Throwable throwable) {
     player.disconnect(
-        Component.translatable("velocity.error.player-connection-error", NamedTextColor.RED));
+            Component.translatable("velocity.error.player-connection-error", NamedTextColor.RED));
   }
 
   @Override
@@ -439,6 +453,26 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       }
     }
   }
+
+  public CompletableFuture<Void> doSwitch() {
+    VelocityServerConnection existingConnection = player.getConnectedServer();
+
+    if (existingConnection != null) {
+      // Shut down the existing server connection.
+      player.setConnectedServer(null);
+      existingConnection.disconnect();
+
+      // Send keep alive to try to avoid timeouts
+      player.sendKeepAlive();
+
+      // Reset Tablist header and footer to prevent desync
+      player.clearHeaderAndFooter();
+    }
+
+    player.getConnection().write(new StartUpdate());
+    return configSwitchFuture;
+  }
+
 
   /**
    * Handles the {@code JoinGame} packet. This function is responsible for handling the client-side
@@ -482,12 +516,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
     serverBossBars.clear();
 
-    // Tell the server about the proxy's plugin message channels.
+    // Tell the server about this client's plugin message channels.
     ProtocolVersion serverVersion = serverMc.getProtocolVersion();
-    final Collection<String> channels = server.getChannelRegistrar()
-        .getChannelsForProtocol(serverMc.getProtocolVersion());
-    if (!channels.isEmpty()) {
-      serverMc.delayedWrite(constructChannelsPacket(serverVersion, channels));
+    if (!player.getKnownChannels().isEmpty() && serverVersion.compareTo(MINECRAFT_1_20_2) < 0) {
+      serverMc.delayedWrite(constructChannelsPacket(serverVersion, player.getKnownChannels()));
     }
 
     // If we had plugin messages queued during login/FML handshake, send them now.
@@ -499,8 +531,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // Clear any title from the previous server.
     if (player.getProtocolVersion().compareTo(MINECRAFT_1_8) >= 0) {
       player.getConnection().delayedWrite(
-          GenericTitlePacket.constructTitlePacket(GenericTitlePacket.ActionType.RESET,
-              player.getProtocolVersion()));
+              GenericTitlePacket.constructTitlePacket(GenericTitlePacket.ActionType.RESET,
+                      player.getProtocolVersion()));
     }
 
     // Flush everything
@@ -571,35 +603,35 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     server.getCommandManager().offerBrigadierSuggestions(player, command)
-        .thenAcceptAsync(suggestions -> {
-          if (suggestions.isEmpty()) {
-            return;
-          }
+            .thenAcceptAsync(suggestions -> {
+              if (suggestions.isEmpty()) {
+                return;
+              }
 
-          List<Offer> offers = new ArrayList<>();
-          for (Suggestion suggestion : suggestions.getList()) {
-            String offer = suggestion.getText();
-            Component tooltip = null;
-            if (suggestion.getTooltip() != null
-                && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
-              tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
-            }
-            offers.add(new Offer(offer, tooltip));
-          }
-          int startPos = packet.getCommand().lastIndexOf(' ') + 1;
-          if (startPos > 0) {
-            TabCompleteResponse resp = new TabCompleteResponse();
-            resp.setTransactionId(packet.getTransactionId());
-            resp.setStart(startPos);
-            resp.setLength(packet.getCommand().length() - startPos);
-            resp.getOffers().addAll(offers);
-            player.getConnection().write(resp);
-          }
-        }, player.getConnection().eventLoop()).exceptionally((ex) -> {
-          logger.error("Exception while handling command tab completion for player {} executing {}",
-              player, command, ex);
-          return null;
-        });
+              List<Offer> offers = new ArrayList<>();
+              for (Suggestion suggestion : suggestions.getList()) {
+                String offer = suggestion.getText();
+                Component tooltip = null;
+                if (suggestion.getTooltip() != null
+                        && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
+                  tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
+                }
+                offers.add(new Offer(offer, tooltip));
+              }
+              int startPos = packet.getCommand().lastIndexOf(' ') + 1;
+              if (startPos > 0) {
+                TabCompleteResponse resp = new TabCompleteResponse();
+                resp.setTransactionId(packet.getTransactionId());
+                resp.setStart(startPos);
+                resp.setLength(packet.getCommand().length() - startPos);
+                resp.getOffers().addAll(offers);
+                player.getConnection().write(resp);
+              }
+            }, player.getConnection().eventLoop()).exceptionally((ex) -> {
+              logger.error("Exception while handling command tab completion for player {} executing {}",
+                      player, command, ex);
+              return null;
+            });
     return true; // Sorry, handler; we're just gonna have to lie to you here.
   }
 
@@ -634,36 +666,36 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private void finishCommandTabComplete(TabCompleteRequest request, TabCompleteResponse response) {
     String command = request.getCommand().substring(1);
     server.getCommandManager().offerBrigadierSuggestions(player, command)
-        .thenAcceptAsync(offers -> {
-          boolean legacy = player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0;
-          try {
-            for (Suggestion suggestion : offers.getList()) {
-              String offer = suggestion.getText();
-              offer = legacy && !offer.startsWith("/") ? "/" + offer : offer;
-              if (legacy && offer.startsWith(command)) {
-                offer = offer.substring(command.length());
+            .thenAcceptAsync(offers -> {
+              boolean legacy = player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0;
+              try {
+                for (Suggestion suggestion : offers.getList()) {
+                  String offer = suggestion.getText();
+                  offer = legacy && !offer.startsWith("/") ? "/" + offer : offer;
+                  if (legacy && offer.startsWith(command)) {
+                    offer = offer.substring(command.length());
+                  }
+                  Component tooltip = null;
+                  if (suggestion.getTooltip() != null
+                          && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
+                    tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
+                  }
+                  response.getOffers().add(new Offer(offer, tooltip));
+                }
+                response.getOffers().sort(null);
+                player.getConnection().write(response);
+              } catch (Exception e) {
+                logger.error("Unable to provide tab list completions for {} for command '{}'",
+                        player.getUsername(), command,
+                        e);
               }
-              Component tooltip = null;
-              if (suggestion.getTooltip() != null
-                  && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
-                tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
-              }
-              response.getOffers().add(new Offer(offer, tooltip));
-            }
-            response.getOffers().sort(null);
-            player.getConnection().write(response);
-          } catch (Exception e) {
-            logger.error("Unable to provide tab list completions for {} for command '{}'",
-                player.getUsername(), command,
-                e);
-          }
-        }, player.getConnection().eventLoop()).exceptionally((ex) -> {
-          logger.error(
-              "Exception while finishing command tab completion, with request {} and response {}",
-              request,
-              response, ex);
-          return null;
-        });
+            }, player.getConnection().eventLoop()).exceptionally((ex) -> {
+              logger.error(
+                      "Exception while finishing command tab completion, with request {} and response {}",
+                      request,
+                      response, ex);
+              return null;
+            });
   }
 
   private void finishRegularTabComplete(TabCompleteRequest request, TabCompleteResponse response) {
@@ -672,19 +704,19 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       offers.add(offer.getText());
     }
     server.getEventManager().fire(new TabCompleteEvent(player, request.getCommand(), offers))
-        .thenAcceptAsync(e -> {
-          response.getOffers().clear();
-          for (String s : e.getSuggestions()) {
-            response.getOffers().add(new Offer(s));
-          }
-          player.getConnection().write(response);
-        }, player.getConnection().eventLoop()).exceptionally((ex) -> {
-          logger.error(
-              "Exception while finishing regular tab completion, with request {} and response{}",
-              request,
-              response, ex);
-          return null;
-        });
+            .thenAcceptAsync(e -> {
+              response.getOffers().clear();
+              for (String s : e.getSuggestions()) {
+                response.getOffers().add(new Offer(s));
+              }
+              player.getConnection().write(response);
+            }, player.getConnection().eventLoop()).exceptionally((ex) -> {
+              logger.error(
+                      "Exception while finishing regular tab completion, with request {} and response{}",
+                      request,
+                      response, ex);
+              return null;
+            });
   }
 
   /**

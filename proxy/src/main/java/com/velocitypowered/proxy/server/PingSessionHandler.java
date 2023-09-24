@@ -44,7 +44,7 @@ public class PingSessionHandler implements MinecraftSessionHandler {
   private boolean completed = false;
 
   PingSessionHandler(CompletableFuture<ServerPing> result, RegisteredServer server,
-      MinecraftConnection connection, ProtocolVersion version) {
+                     MinecraftConnection connection, ProtocolVersion version) {
     this.result = result;
     this.server = server;
     this.connection = connection;
@@ -60,7 +60,7 @@ public class PingSessionHandler implements MinecraftSessionHandler {
     handshake.setProtocolVersion(version);
     connection.delayedWrite(handshake);
 
-    connection.setState(StateRegistry.STATUS);
+    connection.setActiveSessionHandler(StateRegistry.STATUS);
     connection.delayedWrite(StatusRequest.INSTANCE);
 
     connection.flush();
@@ -73,7 +73,7 @@ public class PingSessionHandler implements MinecraftSessionHandler {
     connection.close(true);
 
     ServerPing ping = VelocityServer.getPingGsonInstance(version).fromJson(packet.getStatus(),
-        ServerPing.class);
+            ServerPing.class);
     result.complete(ping);
     return true;
   }

@@ -27,6 +27,7 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.VelocityConstants;
+import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
@@ -34,6 +35,7 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequest;
+import com.velocitypowered.proxy.protocol.packet.LoginAcknowledged;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginMessage;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
@@ -60,7 +62,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
 
   private static final Component MODERN_IP_FORWARDING_FAILURE = Component
-      .translatable("velocity.error.modern-forwarding-failed");
+          .translatable("velocity.error.modern-forwarding-failed");
 
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
@@ -68,7 +70,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   private boolean informationForwarded;
 
   LoginSessionHandler(VelocityServer server, VelocityServerConnection serverConn,
-      CompletableFuture<Impl> resultFuture) {
+                      CompletableFuture<Impl> resultFuture) {
     this.server = server;
     this.serverConn = serverConn;
     this.resultFuture = resultFuture;
@@ -84,7 +86,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     MinecraftConnection mc = serverConn.ensureConnected();
     VelocityConfiguration configuration = server.getConfiguration();
     if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
-        && packet.getChannel().equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
+            && packet.getChannel().equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
 
       int requestedForwardingVersion = VelocityConstants.MODERN_FORWARDING_DEFAULT;
       // Check version
@@ -92,8 +94,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         requestedForwardingVersion = packet.content().readByte();
       }
       ByteBuf forwardingData = createForwardingData(configuration.getForwardingSecret(),
-          serverConn.getPlayerRemoteAddressAsString(), serverConn.getPlayer(),
-          requestedForwardingVersion);
+              serverConn.getPlayerRemoteAddressAsString(), serverConn.getPlayer(),
+              requestedForwardingVersion);
 
       LoginPluginResponse response = new LoginPluginResponse(packet.getId(), true, forwardingData);
       mc.write(response);
@@ -107,17 +109,17 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
       final byte[] contents = ByteBufUtil.getBytes(packet.content());
       final MinecraftChannelIdentifier identifier = MinecraftChannelIdentifier
-          .from(packet.getChannel());
+              .from(packet.getChannel());
       this.server.getEventManager().fire(new ServerLoginPluginMessageEvent(serverConn, identifier,
-              contents, packet.getId()))
-          .thenAcceptAsync(event -> {
-            if (event.getResult().isAllowed()) {
-              mc.write(new LoginPluginResponse(packet.getId(), true, Unpooled
-                  .wrappedBuffer(event.getResult().getResponse())));
-            } else {
-              mc.write(new LoginPluginResponse(packet.getId(), false, Unpooled.EMPTY_BUFFER));
-            }
-          }, mc.eventLoop());
+                      contents, packet.getId()))
+              .thenAcceptAsync(event -> {
+                if (event.getResult().isAllowed()) {
+                  mc.write(new LoginPluginResponse(packet.getId(), true, Unpooled
+                          .wrappedBuffer(event.getResult().getResponse())));
+                } else {
+                  mc.write(new LoginPluginResponse(packet.getId(), false, Unpooled.EMPTY_BUFFER));
+                }
+              }, mc.eventLoop());
     }
     return true;
   }
@@ -138,9 +140,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ServerLoginSuccess packet) {
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
-        && !informationForwarded) {
+            && !informationForwarded) {
       resultFuture.complete(ConnectionRequestResults.forDisconnect(MODERN_IP_FORWARDING_FAILURE,
-          serverConn.getServer()));
+              serverConn.getServer()));
       serverConn.disconnect();
       return true;
     }
@@ -150,10 +152,23 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     // Move into the PLAY phase.
     MinecraftConnection smc = serverConn.ensureConnected();
-    smc.setState(StateRegistry.PLAY);
+    if (smc.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0) {
+      smc.setActiveSessionHandler(StateRegistry.PLAY, new TransitionSessionHandler(server, serverConn, resultFuture));
+    } else {
+      CompletableFuture<Void> switchFuture;
+      if (serverConn.getPlayer().getConnection().getActiveSessionHandler() instanceof ClientPlaySessionHandler) {
+        switchFuture = ((ClientPlaySessionHandler) serverConn.getPlayer().getConnection().getActiveSessionHandler())
+                .doSwitch();
+      } else {
+        switchFuture = CompletableFuture.completedFuture(null);
+      }
+      switchFuture.thenAcceptAsync((unused) -> {
+        smc.write(new LoginAcknowledged());
+        //Sync backend
+        smc.setActiveSessionHandler(StateRegistry.CONFIG, new ConfigSessionHandler(server, serverConn, resultFuture));
+      }, smc.eventLoop());
+    }
 
-    // Switch to the transition handler.
-    smc.setSessionHandler(new TransitionSessionHandler(server, serverConn, resultFuture));
     return true;
   }
 
@@ -166,14 +181,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   public void disconnected() {
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.LEGACY) {
       resultFuture.completeExceptionally(
-          new QuietRuntimeException("The connection to the remote server was unexpectedly closed.\n"
-              + "This is usually because the remote server does not have BungeeCord IP forwarding "
-              + "correctly enabled.\nSee https://velocitypowered.com/wiki/users/forwarding/ "
-              + "for instructions on how to configure player info forwarding correctly.")
+              new QuietRuntimeException("The connection to the remote server was unexpectedly closed.\n"
+                      + "This is usually because the remote server does not have BungeeCord IP forwarding "
+                      + "correctly enabled.\nSee https://velocitypowered.com/wiki/users/forwarding/ "
+                      + "for instructions on how to configure player info forwarding correctly.")
       );
     } else {
       resultFuture.completeExceptionally(
-          new QuietRuntimeException("The connection to the remote server was unexpectedly closed.")
+              new QuietRuntimeException("The connection to the remote server was unexpectedly closed.")
       );
     }
   }
@@ -184,8 +199,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     if (requested > VelocityConstants.MODERN_FORWARDING_DEFAULT) {
       if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
         return requested >= VelocityConstants.MODERN_LAZY_SESSION
-            ? VelocityConstants.MODERN_LAZY_SESSION
-            : VelocityConstants.MODERN_FORWARDING_DEFAULT;
+                ? VelocityConstants.MODERN_LAZY_SESSION
+                : VelocityConstants.MODERN_FORWARDING_DEFAULT;
       }
       if (player.getIdentifiedKey() != null) {
         // No enhanced switch on java 11
@@ -195,8 +210,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
           // Since V2 is not backwards compatible we have to throw the key if v2 and requested is v1
           case LINKED_V2:
             return requested >= VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2
-                ? VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2
-                : VelocityConstants.MODERN_FORWARDING_DEFAULT;
+                    ? VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2
+                    : VelocityConstants.MODERN_FORWARDING_DEFAULT;
           default:
             return VelocityConstants.MODERN_FORWARDING_DEFAULT;
         }
@@ -208,7 +223,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   }
 
   private static ByteBuf createForwardingData(byte[] hmacSecret, String address,
-      ConnectedPlayer player, int requestedVersion) {
+                                              ConnectedPlayer player, int requestedVersion) {
     ByteBuf forwarded = Unpooled.buffer(2048);
     try {
       int actualVersion = findForwardingVersion(requestedVersion, player);
@@ -222,7 +237,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       // This serves as additional redundancy. The key normally is stored in the
       // login start to the server, but some setups require this.
       if (actualVersion >= VelocityConstants.MODERN_FORWARDING_WITH_KEY
-          && actualVersion < VelocityConstants.MODERN_LAZY_SESSION) {
+              && actualVersion < VelocityConstants.MODERN_LAZY_SESSION) {
         IdentifiedKey key = player.getIdentifiedKey();
         assert key != null;
         ProtocolUtils.writePlayerKey(forwarded, key);

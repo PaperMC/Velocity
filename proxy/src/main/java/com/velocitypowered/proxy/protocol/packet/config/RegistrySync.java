@@ -21,13 +21,18 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 
-public class RegistrySync implements MinecraftPacket {
+public class RegistrySync extends DeferredByteBufHolder implements MinecraftPacket {
 
     private CompoundBinaryTag registryData;
+
+    public RegistrySync() {
+        super(null);
+    }
 
     @Override
     public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {

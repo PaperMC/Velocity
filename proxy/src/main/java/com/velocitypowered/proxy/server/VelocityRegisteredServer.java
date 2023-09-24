@@ -37,6 +37,7 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
@@ -107,34 +108,41 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
     }
     CompletableFuture<ServerPing> pingFuture = new CompletableFuture<>();
     server.createBootstrap(loop)
-        .handler(new ChannelInitializer<Channel>() {
-          @Override
-          protected void initChannel(Channel ch) throws Exception {
-            ch.pipeline()
-                .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
-                .addLast(READ_TIMEOUT,
-                    new ReadTimeoutHandler(pingOptions.getTimeout() == 0
-                            ? server.getConfiguration().getReadTimeout() : pingOptions.getTimeout(),
-                        TimeUnit.MILLISECONDS))
-                .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
-                .addLast(MINECRAFT_DECODER,
-                    new MinecraftDecoder(ProtocolUtils.Direction.CLIENTBOUND))
-                .addLast(MINECRAFT_ENCODER,
-                    new MinecraftEncoder(ProtocolUtils.Direction.SERVERBOUND));
+            .handler(new ChannelInitializer<Channel>() {
+              @Override
+              protected void initChannel(Channel ch) throws Exception {
+                ch.pipeline()
+                        .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
+                        .addLast(READ_TIMEOUT,
+                                new ReadTimeoutHandler(pingOptions.getTimeout() == 0
+                                        ? server.getConfiguration()
+                                        .getReadTimeout() : pingOptions.getTimeout(),
+                                        TimeUnit.MILLISECONDS))
+                        .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
+                        .addLast(MINECRAFT_DECODER,
+                                new MinecraftDecoder(ProtocolUtils.Direction.CLIENTBOUND))
+                        .addLast(MINECRAFT_ENCODER,
+                                new MinecraftEncoder(ProtocolUtils.Direction.SERVERBOUND));
 
-            ch.pipeline().addLast(HANDLER, new MinecraftConnection(ch, server));
-          }
-        })
-        .connect(serverInfo.getAddress())
-        .addListener((ChannelFutureListener) future -> {
-          if (future.isSuccess()) {
-            MinecraftConnection conn = future.channel().pipeline().get(MinecraftConnection.class);
-            conn.setSessionHandler(new PingSessionHandler(
-                pingFuture, VelocityRegisteredServer.this, conn, pingOptions.getProtocolVersion()));
-          } else {
-            pingFuture.completeExceptionally(future.cause());
-          }
-        });
+                ch.pipeline().addLast(HANDLER, new MinecraftConnection(ch, server));
+              }
+            })
+            .connect(serverInfo.getAddress())
+            .addListener((ChannelFutureListener) future -> {
+              if (future.isSuccess()) {
+                MinecraftConnection conn =
+                        future.channel().pipeline().get(MinecraftConnection.class);
+                conn.setActiveSessionHandler(StateRegistry.HANDSHAKE,
+                        new PingSessionHandler(
+                                pingFuture,
+                                VelocityRegisteredServer.this,
+                                conn,
+                                pingOptions.getProtocolVersion()
+                        ));
+              } else {
+                pingFuture.completeExceptionally(future.cause());
+              }
+            });
     return pingFuture;
   }
 

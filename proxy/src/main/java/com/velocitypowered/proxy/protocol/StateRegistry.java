@@ -77,16 +77,18 @@ public enum StateRegistry {
   },
   CONFIG {
     {
-      serverbound.register(PluginMessage.class, PluginMessage::new,
+      serverbound.register(ClientSettings.class, ClientSettings::new,
               map(0x00, ProtocolVersion.MINECRAFT_1_20_2, false));
-      serverbound.register(FinishedUpdate.class, FinishedUpdate::new,
+      serverbound.register(PluginMessage.class, PluginMessage::new,
               map(0x01, ProtocolVersion.MINECRAFT_1_20_2, false));
-      serverbound.register(KeepAlive.class, KeepAlive::new,
+      serverbound.register(FinishedUpdate.class, FinishedUpdate::new,
               map(0x02, ProtocolVersion.MINECRAFT_1_20_2, false));
-      serverbound.register(PingIdentify.class, PingIdentify::new,
+      serverbound.register(KeepAlive.class, KeepAlive::new,
               map(0x03, ProtocolVersion.MINECRAFT_1_20_2, false));
-      serverbound.register(ResourcePackResponse.class, ResourcePackResponse::new,
+      serverbound.register(PingIdentify.class, PingIdentify::new,
               map(0x04, ProtocolVersion.MINECRAFT_1_20_2, false));
+      serverbound.register(ResourcePackResponse.class, ResourcePackResponse::new,
+              map(0x05, ProtocolVersion.MINECRAFT_1_20_2, false));
 
       clientbound.register(PluginMessage.class, PluginMessage::new,
               map(0x00, ProtocolVersion.MINECRAFT_1_20_2, false));
