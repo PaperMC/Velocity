@@ -68,7 +68,6 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(KeepAlive packet) {
-    System.out.println("CLIENT KEEPALIVE");
     VelocityServerConnection serverConnection = player.getConnectedServer();
     if (serverConnection != null) {
       Long sentTime = serverConnection.getPendingPings().remove(packet.getRandomId());
@@ -86,19 +85,16 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(PluginMessage packet) {
-    System.out.println("CLIENT PLUGINMESSAGE");
     return true;
   }
 
   @Override
   public boolean handle(ResourcePackResponse packet) {
-    System.out.println("CLIENT RESOURCEPACK RESPONSE");
     return true;
   }
 
   @Override
   public boolean handle(FinishedUpdate packet) {
-    System.out.println("CLIENT FINISHUPDATE");
     player.getConnection().setActiveSessionHandler(StateRegistry.PLAY,
             new ClientPlaySessionHandler(server, player));
 
@@ -109,7 +105,6 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void handleGeneric(MinecraftPacket packet) {
-    System.out.println("CLIENT GENERIC: " + packet.toString());
     VelocityServerConnection serverConnection = player.getConnectedServer();
     if (serverConnection == null) {
       // No server connection yet, probably transitioning.
