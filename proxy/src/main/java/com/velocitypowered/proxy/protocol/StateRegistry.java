@@ -596,6 +596,16 @@ public enum StateRegistry {
         }
         return id;
       }
+
+      /**
+       * Checks if the registry contains a packet with the specified {@code id}.
+       *
+       * @param packet the packet to check
+       * @return {@code true} if the packet is registered, {@code false} otherwise
+       */
+      public boolean containsPacket(final MinecraftPacket packet) {
+        return this.packetClassToId.containsKey(packet.getClass());
+      }
     }
   }
 

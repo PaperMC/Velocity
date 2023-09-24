@@ -36,6 +36,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.connection.client.InitialLoginSessionHandler;
 import com.velocitypowered.proxy.connection.client.StatusSessionHandler;
+import com.velocitypowered.proxy.network.Connections;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.VelocityConnectionEvent;
@@ -46,6 +47,7 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftCompressorAndLengthEnco
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
+import com.velocitypowered.proxy.protocol.netty.PlayPacketQueueHandler;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
@@ -354,6 +356,14 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     this.state = state;
     this.channel.pipeline().get(MinecraftEncoder.class).setState(state);
     this.channel.pipeline().get(MinecraftDecoder.class).setState(state);
+
+    if (state == StateRegistry.CONFIG) {
+      // Activate the play packet queue
+      this.channel.pipeline().addAfter(Connections.MINECRAFT_ENCODER, Connections.PLAY_PACKET_QUEUE, new PlayPacketQueueHandler(this.protocolVersion));
+    } else if (this.channel.pipeline().get(Connections.PLAY_PACKET_QUEUE) != null) {
+      // Remove the queue
+      this.channel.pipeline().remove(Connections.PLAY_PACKET_QUEUE);
+    }
   }
 
   public ProtocolVersion getProtocolVersion() {
