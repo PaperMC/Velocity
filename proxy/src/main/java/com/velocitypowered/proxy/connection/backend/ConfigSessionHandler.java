@@ -30,19 +30,23 @@ import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.*;
+import com.velocitypowered.proxy.protocol.packet.ClientSettings;
+import com.velocitypowered.proxy.protocol.packet.Disconnect;
+import com.velocitypowered.proxy.protocol.packet.KeepAlive;
+import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
+import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.config.ActiveFeatures;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdate;
 import com.velocitypowered.proxy.protocol.packet.config.RegistrySync;
 import com.velocitypowered.proxy.protocol.packet.config.TagsUpdate;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
+import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 import jdk.jfr.Experimental;
 import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * A special session handler that catches "last minute" disconnects. This version is to accommodate
@@ -181,16 +185,6 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
     return true;
   }
 
-  private void switchFailure(Throwable cause) {
-    logger.error(
-        "Unable to switch to new server {} for {}",
-        serverConn.getServerInfo().getName(),
-        serverConn.getPlayer().getUsername(),
-        cause);
-    serverConn.getPlayer().disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
-    resultFuture.completeExceptionally(cause);
-  }
-
   @Override
   public boolean handle(Disconnect packet) {
     serverConn.disconnect();
@@ -219,15 +213,15 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public void disconnected() {
-    resultFuture.completeExceptionally(
-        new IOException("Unexpectedly disconnected from remote server"));
-  }
-
-  @Override
   public boolean handle(RegistrySync packet) {
     serverConn.getPlayer().getConnection().write(packet.retain());
     return true;
+  }
+
+  @Override
+  public void disconnected() {
+    resultFuture.completeExceptionally(
+        new IOException("Unexpectedly disconnected from remote server"));
   }
 
   @Override
@@ -235,6 +229,19 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
     serverConn.getPlayer().getConnection().write(packet);
   }
 
+  private void switchFailure(Throwable cause) {
+    logger.error(
+            "Unable to switch to new server {} for {}",
+            serverConn.getServerInfo().getName(),
+            serverConn.getPlayer().getUsername(),
+            cause);
+    serverConn.getPlayer().disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
+    resultFuture.completeExceptionally(cause);
+  }
+
+  /**
+   * Represents the state of the configuration stage.
+   */
   public static enum State {
     START,
     NEGOTIATING,

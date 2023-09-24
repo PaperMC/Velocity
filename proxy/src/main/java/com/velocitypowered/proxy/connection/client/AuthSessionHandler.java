@@ -130,9 +130,9 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
                           final PermissionFunction function = event.createFunction(player);
                           if (function == null) {
                             logger.error(
-                                "A plugin permission provider {} provided an invalid permission function"
-                                    + " for player {}. This is a bug in the plugin, not in Velocity. Falling"
-                                    + " back to the default permission function.",
+                                "A plugin permission provider {} provided an invalid permission "
+                                    + "function for player {}. This is a bug in the plugin, not in "
+                                    + "Velocity. Falling back to the default permission function.",
                                 event.getProvider().getClass().getName(),
                                 player.getUsername());
                           } else {

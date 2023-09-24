@@ -17,7 +17,6 @@
 
 package com.velocitypowered.proxy.connection.client;
 
-import static com.velocitypowered.api.network.ProtocolVersion.*;
 import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.constructChannelsPacket;
 
 import com.google.common.collect.ImmutableList;
@@ -465,6 +464,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
   }
 
+  /**
+   * Handles switching stages for swapping between servers.
+   *
+   * @return a future that completes when the switch is complete
+   */
   public CompletableFuture<Void> doSwitch() {
     VelocityServerConnection existingConnection = player.getConnectedServer();
 
@@ -529,7 +533,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     // Tell the server about this client's plugin message channels.
     ProtocolVersion serverVersion = serverMc.getProtocolVersion();
-    if (!player.getKnownChannels().isEmpty() && serverVersion.compareTo(MINECRAFT_1_20_2) < 0) {
+    if (!player.getKnownChannels().isEmpty()
+        && serverVersion.compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0) {
       serverMc.delayedWrite(constructChannelsPacket(serverVersion, player.getKnownChannels()));
     }
 
@@ -540,7 +545,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     // Clear any title from the previous server.
-    if (player.getProtocolVersion().compareTo(MINECRAFT_1_8) >= 0) {
+    if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
       player
           .getConnection()
           .delayedWrite(
@@ -565,7 +570,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // improving compatibility with mods.
     final Respawn respawn = Respawn.fromJoinGame(joinGame);
 
-    if (player.getProtocolVersion().compareTo(MINECRAFT_1_16) < 0) {
+    if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_16) < 0) {
       // Before Minecraft 1.16, we could not switch to the same dimension without sending an
       // additional respawn. On older versions of Minecraft this forces the client to perform
       // garbage collection which adds additional latency.
@@ -607,7 +612,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     String commandLabel = command.substring(0, commandEndPosition);
     if (!server.getCommandManager().hasCommand(commandLabel)) {
-      if (player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0) {
+      if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
         // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
         // additional tab completion support.
         outstandingTabComplete = packet;
@@ -658,7 +663,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   private boolean handleRegularTabComplete(TabCompleteRequest packet) {
-    if (player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0) {
+    if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
       // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
       // additional tab completion support.
       outstandingTabComplete = packet;
@@ -692,7 +697,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         .offerBrigadierSuggestions(player, command)
         .thenAcceptAsync(
             offers -> {
-              boolean legacy = player.getProtocolVersion().compareTo(MINECRAFT_1_13) < 0;
+              boolean legacy =
+                  player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0;
               try {
                 for (Suggestion suggestion : offers.getList()) {
                   String offer = suggestion.getText();
@@ -721,7 +727,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         .exceptionally(
             (ex) -> {
               logger.error(
-                  "Exception while finishing command tab completion, with request {} and response {}",
+                  "Exception while finishing command tab completion,"
+                      + " with request {} and response {}",
                   request,
                   response,
                   ex);
@@ -749,7 +756,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         .exceptionally(
             (ex) -> {
               logger.error(
-                  "Exception while finishing regular tab completion, with request {} and response{}",
+                  "Exception while finishing regular tab completion,"
+                      + " with request {} and response{}",
                   request,
                   response,
                   ex);

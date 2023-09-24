@@ -22,6 +22,10 @@ import com.velocitypowered.proxy.protocol.packet.config.RegistrySync;
 import net.kyori.adventure.key.Key;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Holds the registry data that is sent
+ * to the client during the config stage.
+ */
 public class ClientConfigData {
 
   private final @Nullable VelocityResourcePackInfo resourcePackInfo;
@@ -63,10 +67,18 @@ public class ClientConfigData {
     return brand;
   }
 
+  /**
+   * Creates a new builder.
+   *
+   * @return ClientConfigData.Builder
+   */
   public static ClientConfigData.Builder builder() {
     return new Builder();
   }
 
+  /**
+   * Builder for ClientConfigData.
+   */
   public static class Builder {
     private VelocityResourcePackInfo resourcePackInfo;
     private DataTag tag;
@@ -76,6 +88,9 @@ public class ClientConfigData {
 
     private Builder() {}
 
+    /**
+     * Clears the builder.
+     */
     public void clear() {
       this.resourcePackInfo = null;
       this.tag = null;

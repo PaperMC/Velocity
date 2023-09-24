@@ -767,7 +767,7 @@ public class ConnectedPlayer
                           }
 
                           switch (status.getStatus()) {
-                              // Impossible/nonsensical cases
+                            // Impossible/nonsensical cases
                             case ALREADY_CONNECTED:
                               logger.error(
                                   "{}: already connected to {}",

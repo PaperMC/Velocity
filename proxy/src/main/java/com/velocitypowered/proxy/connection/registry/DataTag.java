@@ -18,12 +18,14 @@
 package com.velocitypowered.proxy.connection.registry;
 
 import com.google.common.collect.ImmutableList;
+import java.util.List;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.key.Keyed;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-
+/**
+ * Represents a data tag.
+ */
 public class DataTag {
   private final ImmutableList<DataTag.Set> entrySets;
 
@@ -31,10 +33,18 @@ public class DataTag {
     this.entrySets = entrySets;
   }
 
+  /**
+   * Returns the entry sets.
+   *
+   * @return List of entry sets
+   */
   public List<Set> getEntrySets() {
     return entrySets;
   }
 
+  /**
+   * Represents a data tag set.
+   */
   public static class Set implements Keyed {
 
     private final Key key;
@@ -45,6 +55,11 @@ public class DataTag {
       this.entries = entries;
     }
 
+    /**
+     * Returns the entries.
+     *
+     * @return List of entries
+     */
     public List<Entry> getEntries() {
       return entries;
     }
@@ -55,6 +70,9 @@ public class DataTag {
     }
   }
 
+  /**
+   * Represents a data tag entry.
+   */
   public static class Entry implements Keyed {
 
     private final Key key;
