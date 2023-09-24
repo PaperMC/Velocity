@@ -213,7 +213,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
     serverConn.getPlayer().getConnection().write(packet);
   }
 
-  public static enum State{
+  public static enum State {
     START,
     NEGOTIATING,
     PLUGIN_MESSAGE_INTERRUPT,

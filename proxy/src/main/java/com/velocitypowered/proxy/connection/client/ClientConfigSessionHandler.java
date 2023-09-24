@@ -43,7 +43,6 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
   private CompletableFuture<Void> configSwitchFuture;
 
-
   /**
    * Constructs a client config session handler.
    *
@@ -53,7 +52,6 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   public ClientConfigSessionHandler(VelocityServer server, ConnectedPlayer player) {
     this.server = server;
     this.player = player;
-
   }
 
   @Override
@@ -62,9 +60,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public void deactivated() {
-
-  }
+  public void deactivated() {}
 
   @Override
   public boolean handle(KeepAlive packet) {

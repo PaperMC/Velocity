@@ -27,7 +27,6 @@ import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientSettings implements MinecraftPacket {
-
   private @Nullable String locale;
   private byte viewDistance;
   private int chatVisibility;

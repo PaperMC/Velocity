@@ -40,7 +40,6 @@ public class ClientConfigData {
     this.brand = brand;
   }
 
-
   public RegistrySync getRegistry() {
     return registry;
   }
@@ -65,19 +64,16 @@ public class ClientConfigData {
     return new Builder();
   }
 
-
   public static class Builder {
-
     private VelocityResourcePackInfo resourcePackInfo;
     private DataTag tag;
     private RegistrySync registry;
     private Key[] features;
     private String brand;
 
-    private Builder(){
-    }
+    private Builder() {}
 
-    public void clear(){
+    public void clear() {
       this.resourcePackInfo = null;
       this.tag = null;
       this.registry = null;

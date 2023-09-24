@@ -25,8 +25,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class DataTag {
-
-
   private final ImmutableList<DataTag.Set> entrySets;
 
   public DataTag(ImmutableList<DataTag.Set> entrySets) {
