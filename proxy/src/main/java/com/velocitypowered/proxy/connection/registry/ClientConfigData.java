@@ -30,9 +30,12 @@ public class ClientConfigData {
   private final Key[] features;
   private final String brand;
 
-
-  private ClientConfigData(@Nullable VelocityResourcePackInfo resourcePackInfo, DataTag tag,
-                           RegistrySync registry, Key[] features, String brand) {
+  private ClientConfigData(
+      @Nullable VelocityResourcePackInfo resourcePackInfo,
+      DataTag tag,
+      RegistrySync registry,
+      Key[] features,
+      String brand) {
     this.resourcePackInfo = resourcePackInfo;
     this.tag = tag;
     this.registry = registry;
@@ -60,7 +63,7 @@ public class ClientConfigData {
     return brand;
   }
 
-  public static ClientConfigData.Builder builder(){
+  public static ClientConfigData.Builder builder() {
     return new Builder();
   }
 
@@ -106,7 +109,7 @@ public class ClientConfigData {
       return this;
     }
 
-    public ClientConfigData build(){
+    public ClientConfigData build() {
       return new ClientConfigData(resourcePackInfo, tag, registry, features, brand);
     }
   }

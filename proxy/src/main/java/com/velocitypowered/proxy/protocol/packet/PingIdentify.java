@@ -25,27 +25,25 @@ import io.netty.buffer.ByteBuf;
 
 public class PingIdentify implements MinecraftPacket {
 
-    private int id;
+  private int id;
 
-    @Override
-    public String toString() {
-        return "Ping{"
-                + "id=" + id
-                + '}';
-    }
+  @Override
+  public String toString() {
+    return "Ping{" + "id=" + id + '}';
+  }
 
-    @Override
-    public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-        id = buf.readInt();
-    }
+  @Override
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+    id = buf.readInt();
+  }
 
-    @Override
-    public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-        buf.writeInt(id);
-    }
+  @Override
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+    buf.writeInt(id);
+  }
 
-    @Override
-    public boolean handle(MinecraftSessionHandler handler) {
-        return handler.handle(this);
-    }
+  @Override
+  public boolean handle(MinecraftSessionHandler handler) {
+    return handler.handle(this);
+  }
 }

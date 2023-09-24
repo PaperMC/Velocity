@@ -43,9 +43,7 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-/**
- * A special session handler that catches "last minute" disconnects.
- */
+/** A special session handler that catches "last minute" disconnects. */
 public class TransitionSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(TransitionSessionHandler.class);
@@ -58,18 +56,19 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   /**
    * Creates the new transition handler.
    *
-   * @param server       the Velocity server instance
-   * @param serverConn   the server connection
+   * @param server the Velocity server instance
+   * @param serverConn the server connection
    * @param resultFuture the result future
    */
-  TransitionSessionHandler(VelocityServer server,
+  TransitionSessionHandler(
+      VelocityServer server,
       VelocityServerConnection serverConn,
       CompletableFuture<Impl> resultFuture) {
     this.server = server;
     this.serverConn = serverConn;
     this.resultFuture = resultFuture;
-    this.bungeecordMessageResponder = new BungeeCordMessageResponder(server,
-        serverConn.getPlayer());
+    this.bungeecordMessageResponder =
+        new BungeeCordMessageResponder(server, serverConn.getPlayer());
   }
 
   @Override
@@ -110,9 +109,11 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
     // The goods are in hand! We got JoinGame. Let's transition completely to the new state.
     smc.setAutoReading(false);
-    server.getEventManager()
-            .fire(new ServerConnectedEvent(player, serverConn.getServer(), previousServer))
-            .thenRunAsync(() -> {
+    server
+        .getEventManager()
+        .fire(new ServerConnectedEvent(player, serverConn.getServer(), previousServer))
+        .thenRunAsync(
+            () -> {
               // Make sure we can still transition (player might have disconnected here).
               if (!serverConn.isActive()) {
                 // Connection is obsolete.
@@ -122,8 +123,10 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
               // Change the client to use the ClientPlaySessionHandler if required.
               ClientPlaySessionHandler playHandler;
-              if (player.getConnection().getActiveSessionHandler() instanceof ClientPlaySessionHandler) {
-                playHandler = (ClientPlaySessionHandler) player.getConnection().getActiveSessionHandler();
+              if (player.getConnection().getActiveSessionHandler()
+                  instanceof ClientPlaySessionHandler) {
+                playHandler =
+                    (ClientPlaySessionHandler) player.getConnection().getActiveSessionHandler();
               } else {
                 playHandler = new ClientPlaySessionHandler(server, player);
                 player.getConnection().setActiveSessionHandler(StateRegistry.PLAY, playHandler);
@@ -133,7 +136,8 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
               // Set the new play session handler for the server. We will have nothing more to do
               // with this connection once this task finishes up.
-              smc.setActiveSessionHandler(StateRegistry.PLAY, new BackendPlaySessionHandler(server, serverConn));
+              smc.setActiveSessionHandler(
+                  StateRegistry.PLAY, new BackendPlaySessionHandler(server, serverConn));
 
               // Clean up disabling auto-read while the connected event was being processed.
               smc.setAutoReading(true);
@@ -142,14 +146,19 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
               serverConn.getPlayer().setConnectedServer(serverConn);
 
               // We're done! :)
-              server.getEventManager().fireAndForget(new ServerPostConnectEvent(player,
-                      previousServer));
+              server
+                  .getEventManager()
+                  .fireAndForget(new ServerPostConnectEvent(player, previousServer));
               resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
-            }, smc.eventLoop())
-            .exceptionally(exc -> {
-              logger.error("Unable to switch to new server {} for {}",
-                      serverConn.getServerInfo().getName(),
-                      player.getUsername(), exc);
+            },
+            smc.eventLoop())
+        .exceptionally(
+            exc -> {
+              logger.error(
+                  "Unable to switch to new server {} for {}",
+                  serverConn.getServerInfo().getName(),
+                  player.getUsername(),
+                  exc);
               player.disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
               resultFuture.completeExceptionally(exc);
               return null;
@@ -167,8 +176,8 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     // the client.
     if (connection.getType() == ConnectionTypes.LEGACY_FORGE
         && !serverConn.getPhase().consideredComplete()) {
-      resultFuture.complete(ConnectionRequestResults.forUnsafeDisconnect(packet,
-          serverConn.getServer()));
+      resultFuture.complete(
+          ConnectionRequestResults.forUnsafeDisconnect(packet, serverConn.getServer()));
     } else {
       resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
     }
@@ -198,8 +207,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           existingConnection.setConnectionPhase(IN_TRANSITION);
 
           // Tell the player that we're leaving and we just aren't coming back.
-          existingConnection.getPhase().onDepartForNewServer(existingConnection,
-              serverConn.getPlayer());
+          existingConnection
+              .getPhase()
+              .onDepartForNewServer(existingConnection, serverConn.getPlayer());
         }
       }
       return true;
@@ -211,7 +221,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void disconnected() {
-    resultFuture
-        .completeExceptionally(new IOException("Unexpectedly disconnected from remote server"));
+    resultFuture.completeExceptionally(
+        new IOException("Unexpectedly disconnected from remote server"));
   }
 }

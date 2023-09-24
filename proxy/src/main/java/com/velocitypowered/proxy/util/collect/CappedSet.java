@@ -23,9 +23,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * An unsynchronized collection that puts an upper bound on the size of the collection.
- */
+/** An unsynchronized collection that puts an upper bound on the size of the collection. */
 public final class CappedSet<T> extends ForwardingSet<T> {
 
   private final Set<T> delegate;
@@ -40,7 +38,7 @@ public final class CappedSet<T> extends ForwardingSet<T> {
    * Creates a capped collection backed by a {@link HashSet}.
    *
    * @param maxSize the maximum size of the collection
-   * @param <T>     the type of elements in the collection
+   * @param <T> the type of elements in the collection
    * @return the new collection
    */
   public static <T> Set<T> create(int maxSize) {
@@ -55,9 +53,11 @@ public final class CappedSet<T> extends ForwardingSet<T> {
   @Override
   public boolean add(T element) {
     if (this.delegate.size() >= upperSize) {
-      Preconditions.checkState(this.delegate.contains(element),
-              "collection is too large (%s >= %s)",
-              this.delegate.size(), this.upperSize);
+      Preconditions.checkState(
+          this.delegate.contains(element),
+          "collection is too large (%s >= %s)",
+          this.delegate.size(),
+          this.upperSize);
       return false;
     }
     return this.delegate.add(element);

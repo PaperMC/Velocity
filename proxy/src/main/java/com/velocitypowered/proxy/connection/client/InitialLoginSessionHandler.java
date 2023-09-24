@@ -57,14 +57,13 @@ import org.asynchttpclient.ListenableFuture;
 import org.asynchttpclient.Response;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
-/**
- * Handles authenticating the player to Mojang's servers.
- */
+/** Handles authenticating the player to Mojang's servers. */
 public class InitialLoginSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(InitialLoginSessionHandler.class);
   private static final String MOJANG_HASJOINED_URL =
-      System.getProperty("mojang.sessionserver",
+      System.getProperty(
+              "mojang.sessionserver",
               "https://sessionserver.mojang.com/session/minecraft/hasJoined")
           .concat("?username=%s&serverId=%s");
 
@@ -76,14 +75,15 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
   private LoginState currentState = LoginState.LOGIN_PACKET_EXPECTED;
   private boolean forceKeyAuthentication;
 
-  InitialLoginSessionHandler(VelocityServer server, MinecraftConnection mcConnection,
-     LoginInboundConnection inbound) {
+  InitialLoginSessionHandler(
+      VelocityServer server, MinecraftConnection mcConnection, LoginInboundConnection inbound) {
     this.server = Preconditions.checkNotNull(server, "server");
     this.mcConnection = Preconditions.checkNotNull(mcConnection, "mcConnection");
     this.inbound = Preconditions.checkNotNull(inbound, "inbound");
-    this.forceKeyAuthentication = System.getProperties().containsKey("auth.forceSecureProfiles")
-        ? Boolean.getBoolean("auth.forceSecureProfiles")
-        : server.getConfiguration().isForceKeyAuthentication();
+    this.forceKeyAuthentication =
+        System.getProperties().containsKey("auth.forceSecureProfiles")
+            ? Boolean.getBoolean("auth.forceSecureProfiles")
+            : server.getConfiguration().isForceKeyAuthentication();
   }
 
   @Override
@@ -121,44 +121,58 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
     this.login = packet;
 
     PreLoginEvent event = new PreLoginEvent(inbound, login.getUsername());
-    server.getEventManager().fire(event)
-        .thenRunAsync(() -> {
-          if (mcConnection.isClosed()) {
-            // The player was disconnected
-            return;
-          }
+    server
+        .getEventManager()
+        .fire(event)
+        .thenRunAsync(
+            () -> {
+              if (mcConnection.isClosed()) {
+                // The player was disconnected
+                return;
+              }
 
-          PreLoginComponentResult result = event.getResult();
-          Optional<Component> disconnectReason = result.getReasonComponent();
-          if (disconnectReason.isPresent()) {
-            // The component is guaranteed to be provided if the connection was denied.
-            inbound.disconnect(disconnectReason.get());
-            return;
-          }
+              PreLoginComponentResult result = event.getResult();
+              Optional<Component> disconnectReason = result.getReasonComponent();
+              if (disconnectReason.isPresent()) {
+                // The component is guaranteed to be provided if the connection was denied.
+                inbound.disconnect(disconnectReason.get());
+                return;
+              }
 
-          inbound.loginEventFired(() -> {
-            if (mcConnection.isClosed()) {
-              // The player was disconnected
-              return;
-            }
+              inbound.loginEventFired(
+                  () -> {
+                    if (mcConnection.isClosed()) {
+                      // The player was disconnected
+                      return;
+                    }
 
-                mcConnection.eventLoop().execute(() -> {
-                  if (!result.isForceOfflineMode() && (server.getConfiguration().isOnlineMode()
-                          || result.isOnlineModeAllowed())) {
-                    // Request encryption.
-                    EncryptionRequest request = generateEncryptionRequest();
-                    this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
-                    mcConnection.write(request);
-                    this.currentState = LoginState.ENCRYPTION_REQUEST_SENT;
-                  } else {
-                    mcConnection.setActiveSessionHandler(StateRegistry.LOGIN, new AuthSessionHandler(
-                            server, inbound, GameProfile.forOfflinePlayer(login.getUsername()), false
-                    ));
-                  }
-                });
-              });
-            }, mcConnection.eventLoop())
-            .exceptionally((ex) -> {
+                    mcConnection
+                        .eventLoop()
+                        .execute(
+                            () -> {
+                              if (!result.isForceOfflineMode()
+                                  && (server.getConfiguration().isOnlineMode()
+                                      || result.isOnlineModeAllowed())) {
+                                // Request encryption.
+                                EncryptionRequest request = generateEncryptionRequest();
+                                this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
+                                mcConnection.write(request);
+                                this.currentState = LoginState.ENCRYPTION_REQUEST_SENT;
+                              } else {
+                                mcConnection.setActiveSessionHandler(
+                                    StateRegistry.LOGIN,
+                                    new AuthSessionHandler(
+                                        server,
+                                        inbound,
+                                        GameProfile.forOfflinePlayer(login.getUsername()),
+                                        false));
+                              }
+                            });
+                  });
+            },
+            mcConnection.eventLoop())
+        .exceptionally(
+            (ex) -> {
               logger.error("Exception in pre-login stage", ex);
               return null;
             });
@@ -189,8 +203,8 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
       KeyPair serverKeyPair = server.getServerKeyPair();
       if (inbound.getIdentifiedKey() != null) {
         IdentifiedKey playerKey = inbound.getIdentifiedKey();
-        if (!playerKey.verifyDataSignature(packet.getVerifyToken(), verify,
-            Longs.toByteArray(packet.getSalt()))) {
+        if (!playerKey.verifyDataSignature(
+            packet.getVerifyToken(), verify, Longs.toByteArray(packet.getSalt()))) {
           throw new IllegalStateException("Invalid client public signature.");
         }
       } else {
@@ -204,71 +218,79 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
       String serverId = generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
 
       String playerIp = ((InetSocketAddress) mcConnection.getRemoteAddress()).getHostString();
-      String url = String.format(MOJANG_HASJOINED_URL,
-          urlFormParameterEscaper().escape(login.getUsername()), serverId);
+      String url =
+          String.format(
+              MOJANG_HASJOINED_URL,
+              urlFormParameterEscaper().escape(login.getUsername()),
+              serverId);
 
       if (server.getConfiguration().shouldPreventClientProxyConnections()) {
         url += "&ip=" + urlFormParameterEscaper().escape(playerIp);
       }
 
-      ListenableFuture<Response> hasJoinedResponse = server.getAsyncHttpClient().prepareGet(url)
-          .execute();
-      hasJoinedResponse.addListener(() -> {
-        if (mcConnection.isClosed()) {
-          // The player disconnected after we authenticated them.
-          return;
-        }
-
-        // Go ahead and enable encryption. Once the client sends EncryptionResponse, encryption
-        // is enabled.
-        try {
-          mcConnection.enableEncryption(decryptedSharedSecret);
-        } catch (GeneralSecurityException e) {
-          logger.error("Unable to enable encryption for connection", e);
-          // At this point, the connection is encrypted, but something's wrong on our side and
-          // we can't do anything about it.
-          mcConnection.close(true);
-          return;
-        }
-
-        try {
-          Response profileResponse = hasJoinedResponse.get();
-          if (profileResponse.getStatusCode() == 200) {
-            final GameProfile profile = GENERAL_GSON.fromJson(profileResponse.getResponseBody(),
-                GameProfile.class);
-            // Not so fast, now we verify the public key for 1.19.1+
-            if (inbound.getIdentifiedKey() != null
-                && inbound.getIdentifiedKey().getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
-                && inbound.getIdentifiedKey() instanceof IdentifiedKeyImpl) {
-              IdentifiedKeyImpl key = (IdentifiedKeyImpl) inbound.getIdentifiedKey();
-              if (!key.internalAddHolder(profile.getId())) {
-                inbound.disconnect(
-                    Component.translatable("multiplayer.disconnect.invalid_public_key"));
-              }
+      ListenableFuture<Response> hasJoinedResponse =
+          server.getAsyncHttpClient().prepareGet(url).execute();
+      hasJoinedResponse.addListener(
+          () -> {
+            if (mcConnection.isClosed()) {
+              // The player disconnected after we authenticated them.
+              return;
             }
-            // All went well, initialize the session.
-            mcConnection.setActiveSessionHandler(StateRegistry.LOGIN, new AuthSessionHandler(
-                server, inbound, profile, true
-            ));
-          } else if (profileResponse.getStatusCode() == 204) {
-            // Apparently an offline-mode user logged onto this online-mode proxy.
-            inbound.disconnect(Component.translatable("velocity.error.online-mode-only",
-                NamedTextColor.RED));
-          } else {
-            // Something else went wrong
-            logger.error(
-                "Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
-                profileResponse.getStatusCode(), login.getUsername(), playerIp);
-            inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
-          }
-        } catch (ExecutionException e) {
-          logger.error("Unable to authenticate with Mojang", e);
-          inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
-        } catch (InterruptedException e) {
-          // not much we can do usefully
-          Thread.currentThread().interrupt();
-        }
-      }, mcConnection.eventLoop());
+
+            // Go ahead and enable encryption. Once the client sends EncryptionResponse, encryption
+            // is enabled.
+            try {
+              mcConnection.enableEncryption(decryptedSharedSecret);
+            } catch (GeneralSecurityException e) {
+              logger.error("Unable to enable encryption for connection", e);
+              // At this point, the connection is encrypted, but something's wrong on our side and
+              // we can't do anything about it.
+              mcConnection.close(true);
+              return;
+            }
+
+            try {
+              Response profileResponse = hasJoinedResponse.get();
+              if (profileResponse.getStatusCode() == 200) {
+                final GameProfile profile =
+                    GENERAL_GSON.fromJson(profileResponse.getResponseBody(), GameProfile.class);
+                // Not so fast, now we verify the public key for 1.19.1+
+                if (inbound.getIdentifiedKey() != null
+                    && inbound.getIdentifiedKey().getKeyRevision()
+                        == IdentifiedKey.Revision.LINKED_V2
+                    && inbound.getIdentifiedKey() instanceof IdentifiedKeyImpl) {
+                  IdentifiedKeyImpl key = (IdentifiedKeyImpl) inbound.getIdentifiedKey();
+                  if (!key.internalAddHolder(profile.getId())) {
+                    inbound.disconnect(
+                        Component.translatable("multiplayer.disconnect.invalid_public_key"));
+                  }
+                }
+                // All went well, initialize the session.
+                mcConnection.setActiveSessionHandler(
+                    StateRegistry.LOGIN, new AuthSessionHandler(server, inbound, profile, true));
+              } else if (profileResponse.getStatusCode() == 204) {
+                // Apparently an offline-mode user logged onto this online-mode proxy.
+                inbound.disconnect(
+                    Component.translatable("velocity.error.online-mode-only", NamedTextColor.RED));
+              } else {
+                // Something else went wrong
+                logger.error(
+                    "Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
+                    profileResponse.getStatusCode(),
+                    login.getUsername(),
+                    playerIp);
+                inbound.disconnect(
+                    Component.translatable("multiplayer.disconnect.authservers_down"));
+              }
+            } catch (ExecutionException e) {
+              logger.error("Unable to authenticate with Mojang", e);
+              inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
+            } catch (InterruptedException e) {
+              // not much we can do usefully
+              Thread.currentThread().interrupt();
+            }
+          },
+          mcConnection.eventLoop());
     } catch (GeneralSecurityException e) {
       logger.error("Unable to enable encryption", e);
       mcConnection.close(true);
@@ -299,9 +321,11 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
   private void assertState(LoginState expectedState) {
     if (this.currentState != expectedState) {
       if (MinecraftDecoder.DEBUG) {
-        logger.error("{} Received an unexpected packet requiring state {}, but we are in {}",
+        logger.error(
+            "{} Received an unexpected packet requiring state {}, but we are in {}",
             inbound,
-            expectedState, this.currentState);
+            expectedState,
+            this.currentState);
       }
       mcConnection.close(true);
     }

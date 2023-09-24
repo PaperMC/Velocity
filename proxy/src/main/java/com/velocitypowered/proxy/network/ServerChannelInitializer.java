@@ -42,9 +42,7 @@ import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Server channel initializer.
- */
+/** Server channel initializer. */
 @SuppressWarnings("WeakerAccess")
 public class ServerChannelInitializer extends ChannelInitializer<Channel> {
 
@@ -59,9 +57,10 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
     ch.pipeline()
         .addLast(LEGACY_PING_DECODER, new LegacyPingDecoder())
         .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
-        .addLast(READ_TIMEOUT,
-            new ReadTimeoutHandler(this.server.getConfiguration().getReadTimeout(),
-                TimeUnit.MILLISECONDS))
+        .addLast(
+            READ_TIMEOUT,
+            new ReadTimeoutHandler(
+                this.server.getConfiguration().getReadTimeout(), TimeUnit.MILLISECONDS))
         .addLast(LEGACY_PING_ENCODER, LegacyPingEncoder.INSTANCE)
         .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
         .addLast(MINECRAFT_DECODER, new MinecraftDecoder(ProtocolUtils.Direction.SERVERBOUND))
@@ -69,8 +68,7 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
 
     final MinecraftConnection connection = new MinecraftConnection(ch, this.server);
     connection.setActiveSessionHandler(
-            StateRegistry.HANDSHAKE,
-            new HandshakeSessionHandler(connection, this.server));
+        StateRegistry.HANDSHAKE, new HandshakeSessionHandler(connection, this.server));
     ch.pipeline().addLast(Connections.HANDLER, connection);
 
     if (this.server.getConfiguration().isProxyProtocol()) {

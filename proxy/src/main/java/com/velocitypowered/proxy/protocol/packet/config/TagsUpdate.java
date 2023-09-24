@@ -28,53 +28,55 @@ import java.util.Map;
 
 public class TagsUpdate implements MinecraftPacket {
 
-    private Map<String, Map<String, int[]>> tags;
+  private Map<String, Map<String, int[]>> tags;
 
-    public TagsUpdate(Map<String, Map<String, int[]>> tags) {
-        this.tags = tags;
+  public TagsUpdate(Map<String, Map<String, int[]>> tags) {
+    this.tags = tags;
+  }
+
+  public TagsUpdate() {
+    this.tags = Map.of();
+  }
+
+  @Override
+  public void decode(
+      ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+    ImmutableMap.Builder<String, Map<String, int[]>> builder = ImmutableMap.builder();
+    int size = ProtocolUtils.readVarInt(buf);
+    for (int i = 0; i < size; i++) {
+      String key = ProtocolUtils.readString(buf);
+
+      int innerSize = ProtocolUtils.readVarInt(buf);
+      ImmutableMap.Builder<String, int[]> innerBuilder = ImmutableMap.builder();
+      for (int j = 0; j < innerSize; j++) {
+        String innerKey = ProtocolUtils.readString(buf);
+        int[] innerValue = ProtocolUtils.readVarIntArray(buf);
+        innerBuilder.put(innerKey, innerValue);
+      }
+
+      builder.put(key, innerBuilder.build());
     }
+    tags = builder.build();
+  }
 
-    public TagsUpdate() {
-        this.tags = Map.of();
+  @Override
+  public void encode(
+      ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+    ProtocolUtils.writeVarInt(buf, tags.size());
+    for (Map.Entry<String, Map<String, int[]>> entry : tags.entrySet()) {
+      ProtocolUtils.writeString(buf, entry.getKey());
+      // Oh, joy
+      ProtocolUtils.writeVarInt(buf, entry.getValue().size());
+      for (Map.Entry<String, int[]> innerEntry : entry.getValue().entrySet()) {
+        // Yea, object oriented programming be damned
+        ProtocolUtils.writeString(buf, innerEntry.getKey());
+        ProtocolUtils.writeVarIntArray(buf, innerEntry.getValue());
+      }
     }
+  }
 
-    @Override
-    public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        ImmutableMap.Builder<String, Map<String, int[]>> builder = ImmutableMap.builder();
-        int size = ProtocolUtils.readVarInt(buf);
-        for (int i = 0; i < size; i++) {
-            String key = ProtocolUtils.readString(buf);
-
-            int innerSize = ProtocolUtils.readVarInt(buf);
-            ImmutableMap.Builder<String, int[]> innerBuilder = ImmutableMap.builder();
-            for (int j = 0; j < innerSize; j++) {
-                String innerKey = ProtocolUtils.readString(buf);
-                int[] innerValue = ProtocolUtils.readVarIntArray(buf);
-                innerBuilder.put(innerKey, innerValue);
-            }
-
-            builder.put(key, innerBuilder.build());
-        }
-        tags = builder.build();
-    }
-
-    @Override
-    public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        ProtocolUtils.writeVarInt(buf, tags.size());
-        for (Map.Entry<String, Map<String, int[]>> entry : tags.entrySet()) {
-            ProtocolUtils.writeString(buf, entry.getKey());
-            // Oh, joy
-            ProtocolUtils.writeVarInt(buf, entry.getValue().size());
-            for (Map.Entry<String, int[]> innerEntry : entry.getValue().entrySet()) {
-                // Yea, object oriented programming be damned
-                ProtocolUtils.writeString(buf, innerEntry.getKey());
-                ProtocolUtils.writeVarIntArray(buf, innerEntry.getValue());
-            }
-        }
-    }
-
-    @Override
-    public boolean handle(MinecraftSessionHandler handler) {
-        return handler.handle(this);
-    }
+  @Override
+  public boolean handle(MinecraftSessionHandler handler) {
+    return handler.handle(this);
+  }
 }

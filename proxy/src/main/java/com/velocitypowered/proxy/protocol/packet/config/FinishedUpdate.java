@@ -25,21 +25,22 @@ import io.netty.buffer.ByteBuf;
 
 public class FinishedUpdate implements MinecraftPacket {
 
-    @Override
-    public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    }
+  @Override
+  public void decode(
+      ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {}
 
-    @Override
-    public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    }
+  @Override
+  public void encode(
+      ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {}
 
-    @Override
-    public int expectedMaxLength(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-        return 0;
-    }
+  @Override
+  public int expectedMaxLength(
+      ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+    return 0;
+  }
 
-    @Override
-    public boolean handle(MinecraftSessionHandler handler) {
-        return handler.handle(this);
-    }
+  @Override
+  public boolean handle(MinecraftSessionHandler handler) {
+    return handler.handle(this);
+  }
 }

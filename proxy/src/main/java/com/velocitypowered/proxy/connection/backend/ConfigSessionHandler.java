@@ -45,9 +45,8 @@ import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * A special session handler that catches "last minute" disconnects.
- * This version is to accommodate 1.20.2+ switching.
- * Yes, some of this is exceptionally stupid.
+ * A special session handler that catches "last minute" disconnects. This version is to accommodate
+ * 1.20.2+ switching. Yes, some of this is exceptionally stupid.
  */
 @Experimental
 public class ConfigSessionHandler implements MinecraftSessionHandler {
@@ -58,19 +57,19 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   private final VelocityServerConnection serverConn;
   private final CompletableFuture<Impl> resultFuture;
 
-
   private State state;
 
   /**
    * Creates the new transition handler.
    *
-   * @param server       the Velocity server instance
-   * @param serverConn   the server connection
+   * @param server the Velocity server instance
+   * @param serverConn the server connection
    * @param resultFuture the result future
    */
-  ConfigSessionHandler(VelocityServer server,
-                       VelocityServerConnection serverConn,
-                       CompletableFuture<Impl> resultFuture) {
+  ConfigSessionHandler(
+      VelocityServer server,
+      VelocityServerConnection serverConn,
+      CompletableFuture<Impl> resultFuture) {
     this.server = server;
     this.serverConn = serverConn;
     this.resultFuture = resultFuture;
@@ -78,8 +77,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public void deactivated() {
-  }
+  public void deactivated() {}
 
   @Override
   public boolean beforeHandle() {
@@ -117,37 +115,47 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   public boolean handle(ResourcePackRequest packet) {
     final MinecraftConnection playerConnection = serverConn.getPlayer().getConnection();
 
-    ServerResourcePackSendEvent event = new ServerResourcePackSendEvent(
-            packet.toServerPromptedPack(), this.serverConn);
+    ServerResourcePackSendEvent event =
+        new ServerResourcePackSendEvent(packet.toServerPromptedPack(), this.serverConn);
 
-    server.getEventManager().fire(event).thenAcceptAsync(serverResourcePackSendEvent -> {
-      if (playerConnection.isClosed()) {
-        return;
-      }
-      if (serverResourcePackSendEvent.getResult().isAllowed()) {
-        ResourcePackInfo toSend = serverResourcePackSendEvent.getProvidedResourcePack();
-        if (toSend != serverResourcePackSendEvent.getReceivedResourcePack()) {
-          ((VelocityResourcePackInfo) toSend)
-                  .setOriginalOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
-        }
+    server
+        .getEventManager()
+        .fire(event)
+        .thenAcceptAsync(
+            serverResourcePackSendEvent -> {
+              if (playerConnection.isClosed()) {
+                return;
+              }
+              if (serverResourcePackSendEvent.getResult().isAllowed()) {
+                ResourcePackInfo toSend = serverResourcePackSendEvent.getProvidedResourcePack();
+                if (toSend != serverResourcePackSendEvent.getReceivedResourcePack()) {
+                  ((VelocityResourcePackInfo) toSend)
+                      .setOriginalOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
+                }
 
-        serverConn.getPlayer().queueResourcePack(toSend);
-      } else if (serverConn.getConnection() != null) {
-        serverConn.getConnection().write(new ResourcePackResponse(
-                packet.getHash(),
-                PlayerResourcePackStatusEvent.Status.DECLINED
-        ));
-      }
-    }, playerConnection.eventLoop()).exceptionally((ex) -> {
-      if (serverConn.getConnection() != null) {
-        serverConn.getConnection().write(new ResourcePackResponse(
-                packet.getHash(),
-                PlayerResourcePackStatusEvent.Status.DECLINED
-        ));
-      }
-      logger.error("Exception while handling resource pack send for {}", playerConnection, ex);
-      return null;
-    });
+                serverConn.getPlayer().queueResourcePack(toSend);
+              } else if (serverConn.getConnection() != null) {
+                serverConn
+                    .getConnection()
+                    .write(
+                        new ResourcePackResponse(
+                            packet.getHash(), PlayerResourcePackStatusEvent.Status.DECLINED));
+              }
+            },
+            playerConnection.eventLoop())
+        .exceptionally(
+            (ex) -> {
+              if (serverConn.getConnection() != null) {
+                serverConn
+                    .getConnection()
+                    .write(
+                        new ResourcePackResponse(
+                            packet.getHash(), PlayerResourcePackStatusEvent.Status.DECLINED));
+              }
+              logger.error(
+                  "Exception while handling resource pack send for {}", playerConnection, ex);
+              return null;
+            });
 
     return true;
   }
@@ -155,21 +163,30 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(FinishedUpdate packet) {
     ClientConfigSessionHandler configHandler =
-            (ClientConfigSessionHandler) serverConn.getPlayer().getConnection().getActiveSessionHandler();
+        (ClientConfigSessionHandler)
+            serverConn.getPlayer().getConnection().getActiveSessionHandler();
 
-    configHandler.handleBackendFinishUpdate(serverConn).thenAcceptAsync((unused) -> {
-      serverConn.ensureConnected().write(new FinishedUpdate());
-      serverConn.ensureConnected().setActiveSessionHandler(StateRegistry.PLAY,
-              new TransitionSessionHandler(server, serverConn, resultFuture));
-    }, serverConn.ensureConnected().eventLoop());
+    configHandler
+        .handleBackendFinishUpdate(serverConn)
+        .thenAcceptAsync(
+            (unused) -> {
+              serverConn.ensureConnected().write(new FinishedUpdate());
+              serverConn
+                  .ensureConnected()
+                  .setActiveSessionHandler(
+                      StateRegistry.PLAY,
+                      new TransitionSessionHandler(server, serverConn, resultFuture));
+            },
+            serverConn.ensureConnected().eventLoop());
     return true;
   }
 
-
   private void switchFailure(Throwable cause) {
-    logger.error("Unable to switch to new server {} for {}",
-            serverConn.getServerInfo().getName(),
-            serverConn.getPlayer().getUsername(), cause);
+    logger.error(
+        "Unable to switch to new server {} for {}",
+        serverConn.getServerInfo().getName(),
+        serverConn.getPlayer().getUsername(),
+        cause);
     serverConn.getPlayer().disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
     resultFuture.completeExceptionally(cause);
   }
@@ -184,22 +201,27 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(PluginMessage packet) {
     if (PluginMessageUtil.isMcBrand(packet)) {
-      serverConn.getPlayer().getConnection().write(
-              PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion(),
-                      serverConn.getPlayer().getProtocolVersion()));
+      serverConn
+          .getPlayer()
+          .getConnection()
+          .write(
+              PluginMessageUtil.rewriteMinecraftBrand(
+                  packet, server.getVersion(), serverConn.getPlayer().getProtocolVersion()));
     } else {
       // TODO: Change this so its usable for mod loaders
       serverConn.disconnect();
-      resultFuture.complete(ConnectionRequestResults.forDisconnect(
-              Component.translatable("multiplayer.disconnect.missing_tags"), serverConn.getServer()));
+      resultFuture.complete(
+          ConnectionRequestResults.forDisconnect(
+              Component.translatable("multiplayer.disconnect.missing_tags"),
+              serverConn.getServer()));
     }
     return true;
   }
 
   @Override
   public void disconnected() {
-    resultFuture
-            .completeExceptionally(new IOException("Unexpectedly disconnected from remote server"));
+    resultFuture.completeExceptionally(
+        new IOException("Unexpectedly disconnected from remote server"));
   }
 
   @Override

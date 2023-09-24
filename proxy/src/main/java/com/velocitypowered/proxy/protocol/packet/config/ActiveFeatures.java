@@ -26,36 +26,38 @@ import net.kyori.adventure.key.Key;
 
 public class ActiveFeatures implements MinecraftPacket {
 
-    private Key[] activeFeatures;
+  private Key[] activeFeatures;
 
-    public ActiveFeatures(Key[] activeFeatures) {
-        this.activeFeatures = activeFeatures;
-    }
+  public ActiveFeatures(Key[] activeFeatures) {
+    this.activeFeatures = activeFeatures;
+  }
 
-    public ActiveFeatures(){
-        this.activeFeatures = new Key[0];
-    }
+  public ActiveFeatures() {
+    this.activeFeatures = new Key[0];
+  }
 
-    public void setActiveFeatures(Key[] activeFeatures) {
-        this.activeFeatures = activeFeatures;
-    }
+  public void setActiveFeatures(Key[] activeFeatures) {
+    this.activeFeatures = activeFeatures;
+  }
 
-    public Key[] getActiveFeatures() {
-        return activeFeatures;
-    }
+  public Key[] getActiveFeatures() {
+    return activeFeatures;
+  }
 
-    @Override
-    public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        activeFeatures = ProtocolUtils.readKeyArray(buf);
-    }
+  @Override
+  public void decode(
+      ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+    activeFeatures = ProtocolUtils.readKeyArray(buf);
+  }
 
-    @Override
-    public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        ProtocolUtils.writeKeyArray(buf, activeFeatures);
-    }
+  @Override
+  public void encode(
+      ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+    ProtocolUtils.writeKeyArray(buf, activeFeatures);
+  }
 
-    @Override
-    public boolean handle(MinecraftSessionHandler handler) {
-        return handler.handle(this);
-    }
+  @Override
+  public boolean handle(MinecraftSessionHandler handler) {
+    return handler.handle(this);
+  }
 }

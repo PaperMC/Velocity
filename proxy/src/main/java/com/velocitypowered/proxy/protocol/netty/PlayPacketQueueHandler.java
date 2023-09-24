@@ -32,15 +32,14 @@ import java.util.Queue;
 
 /**
  * Queues up any pending PLAY packets while the client is in the CONFIG state.
- * <p>
- * Much of the Velocity API (i.e. chat messages) utilize PLAY packets, however
- * the client is incapable of receiving these packets during the CONFIG state.
- * Certain events such as the ServerPreConnectEvent may be called during this
- * time, and we need to ensure that any API that uses these packets will work
- * as expected.
- * <p>
- * This handler will queue up any packets that are sent to the client during
- * this time, and send them once the client has (re)entered the PLAY state.
+ *
+ * <p>Much of the Velocity API (i.e. chat messages) utilize PLAY packets, however the client is
+ * incapable of receiving these packets during the CONFIG state. Certain events such as the
+ * ServerPreConnectEvent may be called during this time, and we need to ensure that any API that
+ * uses these packets will work as expected.
+ *
+ * <p>This handler will queue up any packets that are sent to the client during this time, and send
+ * them once the client has (re)entered the PLAY state.
  */
 public class PlayPacketQueueHandler extends ChannelDuplexHandler {
 
@@ -48,11 +47,13 @@ public class PlayPacketQueueHandler extends ChannelDuplexHandler {
   private final Queue<MinecraftPacket> queue = PlatformDependent.newMpscQueue();
 
   public PlayPacketQueueHandler(ProtocolVersion version) {
-    this.registry = StateRegistry.CONFIG.getProtocolRegistry(ProtocolUtils.Direction.CLIENTBOUND, version);
+    this.registry =
+        StateRegistry.CONFIG.getProtocolRegistry(ProtocolUtils.Direction.CLIENTBOUND, version);
   }
 
   @Override
-  public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+  public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
+      throws Exception {
     if (!(msg instanceof MinecraftPacket)) {
       ctx.write(msg, promise);
       return;

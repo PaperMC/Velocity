@@ -25,9 +25,7 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-/**
- * Handles the initial server configuration setup.
- */
+/** Handles the initial server configuration setup. */
 public class BackendConfigSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(BackendConfigSessionHandler.class);
@@ -37,18 +35,18 @@ public class BackendConfigSessionHandler implements MinecraftSessionHandler {
   private final CompletableFuture<Impl> resultFuture;
   private boolean informationForwarded;
 
-  BackendConfigSessionHandler(VelocityServer server, VelocityServerConnection serverConn,
-                              CompletableFuture<Impl> resultFuture) {
+  BackendConfigSessionHandler(
+      VelocityServer server,
+      VelocityServerConnection serverConn,
+      CompletableFuture<Impl> resultFuture) {
     this.server = server;
     this.serverConn = serverConn;
     this.resultFuture = resultFuture;
   }
-
 
   @Override
   public boolean handle(StartUpdate packet) {
 
     return true;
   }
-
 }

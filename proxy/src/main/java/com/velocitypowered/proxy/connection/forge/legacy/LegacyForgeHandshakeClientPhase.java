@@ -28,9 +28,7 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import java.util.List;
 import javax.annotation.Nullable;
 
-/**
- * Allows for simple tracking of the phase that the Legacy Forge handshake is in.
- */
+/** Allows for simple tracking of the phase that the Legacy Forge handshake is in. */
 public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
 
   /**
@@ -55,9 +53,8 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
     }
 
     @Override
-    boolean onHandle(ConnectedPlayer player,
-        PluginMessage message,
-        MinecraftConnection backendConn) {
+    boolean onHandle(
+        ConnectedPlayer player, PluginMessage message, MinecraftConnection backendConn) {
       // If we stay in this phase, we do nothing because it means the packet wasn't handled.
       // Returning false indicates this
       return false;
@@ -76,9 +73,9 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
   },
 
   /**
-   * The Mod list is sent to the server, captured by Velocity. Transition to
-   * {@link #WAITING_SERVER_DATA} when an ACK is sent, which indicates to the server to start
-   * sending state data.
+   * The Mod list is sent to the server, captured by Velocity. Transition to {@link
+   * #WAITING_SERVER_DATA} when an ACK is sent, which indicates to the server to start sending state
+   * data.
    */
   MOD_LIST(LegacyForgeConstants.ACK_DISCRIMINATOR) {
     @Override
@@ -87,9 +84,8 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
     }
 
     @Override
-    boolean onHandle(ConnectedPlayer player,
-        PluginMessage message,
-        MinecraftConnection backendConn) {
+    boolean onHandle(
+        ConnectedPlayer player, PluginMessage message, MinecraftConnection backendConn) {
       // Read the mod list if we haven't already.
       if (!player.getModInfo().isPresent()) {
         List<ModInfo.Mod> mods = LegacyForgeUtil.readModList(message);
@@ -138,11 +134,10 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
   /**
    * The handshake is complete. The handshake can be reset.
    *
-   * <p>Note that a successful connection to a server does not mean that
-   * we will be in this state. After a handshake reset, if the next server is vanilla we will still
-   * be in the {@link #NOT_STARTED} phase, which means we must NOT send a reset packet. This is
-   * handled by overriding the {@link #resetConnectionPhase(ConnectedPlayer)} in this element (it is
-   * usually a no-op).</p>
+   * <p>Note that a successful connection to a server does not mean that we will be in this state.
+   * After a handshake reset, if the next server is vanilla we will still be in the {@link
+   * #NOT_STARTED} phase, which means we must NOT send a reset packet. This is handled by overriding
+   * the {@link #resetConnectionPhase(ConnectedPlayer)} in this element (it is usually a no-op).
    */
   COMPLETE(null) {
     @Override
@@ -157,9 +152,8 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
     }
 
     @Override
-    boolean onHandle(ConnectedPlayer player,
-        PluginMessage message,
-        MinecraftConnection backendConn) {
+    boolean onHandle(
+        ConnectedPlayer player, PluginMessage message, MinecraftConnection backendConn) {
       super.onHandle(player, message, backendConn);
 
       // just in case the timing is awful
@@ -174,25 +168,22 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
     }
   };
 
-  @Nullable
-  private final Integer packetToAdvanceOn;
+  @Nullable private final Integer packetToAdvanceOn;
 
   /**
    * Creates an instance of the {@link LegacyForgeHandshakeClientPhase}.
    *
    * @param packetToAdvanceOn The ID of the packet discriminator that indicates that the client has
-   *                          moved onto a new phase, and as such, Velocity should do so too
-   *                          (inspecting {@link #nextPhase()}. A null indicates there is no further
-   *                          phase to transition to.
+   *     moved onto a new phase, and as such, Velocity should do so too (inspecting {@link
+   *     #nextPhase()}. A null indicates there is no further phase to transition to.
    */
   LegacyForgeHandshakeClientPhase(Integer packetToAdvanceOn) {
     this.packetToAdvanceOn = packetToAdvanceOn;
   }
 
   @Override
-  public final boolean handle(ConnectedPlayer player,
-      PluginMessage message,
-      VelocityServerConnection server) {
+  public final boolean handle(
+      ConnectedPlayer player, PluginMessage message, VelocityServerConnection server) {
     if (server != null) {
       MinecraftConnection backendConn = server.getConnection();
       if (backendConn != null
@@ -215,14 +206,12 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
   /**
    * Handles the phase tasks.
    *
-   * @param player      The player
-   * @param message     The message to handle
+   * @param player The player
+   * @param message The message to handle
    * @param backendConn The backend connection to write to, if required.
    * @return true if handled, false otherwise.
    */
-  boolean onHandle(ConnectedPlayer player,
-      PluginMessage message,
-      MinecraftConnection backendConn) {
+  boolean onHandle(ConnectedPlayer player, PluginMessage message, MinecraftConnection backendConn) {
     // Send the packet on to the server.
     backendConn.write(message.retain());
 

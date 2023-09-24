@@ -47,9 +47,7 @@ import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 
-/**
- * Utilities for writing and reading data in the Minecraft protocol.
- */
+/** Utilities for writing and reading data in the Minecraft protocol. */
 public enum ProtocolUtils {
   ;
 
@@ -85,7 +83,8 @@ public enum ProtocolUtils {
   public static int readVarInt(ByteBuf buf) {
     int read = readVarIntSafely(buf);
     if (read == Integer.MIN_VALUE) {
-      throw MinecraftDecoder.DEBUG ? new CorruptedFrameException("Bad VarInt decoded")
+      throw MinecraftDecoder.DEBUG
+          ? new CorruptedFrameException("Bad VarInt decoded")
           : BAD_VARINT_CACHED;
     }
     return read;
@@ -125,7 +124,7 @@ public enum ProtocolUtils {
   /**
    * Writes a Minecraft-style VarInt to the specified {@code buf}.
    *
-   * @param buf   the buffer to read from
+   * @param buf the buffer to read from
    * @param value the integer to write
    */
   public static void writeVarInt(ByteBuf buf, int value) {
@@ -152,12 +151,18 @@ public enum ProtocolUtils {
       int w = (value & 0x7F | 0x80) << 16 | ((value >>> 7) & 0x7F | 0x80) << 8 | (value >>> 14);
       buf.writeMedium(w);
     } else if ((value & (0xFFFFFFFF << 28)) == 0) {
-      int w = (value & 0x7F | 0x80) << 24 | (((value >>> 7) & 0x7F | 0x80) << 16)
-          | ((value >>> 14) & 0x7F | 0x80) << 8 | (value >>> 21);
+      int w =
+          (value & 0x7F | 0x80) << 24
+              | (((value >>> 7) & 0x7F | 0x80) << 16)
+              | ((value >>> 14) & 0x7F | 0x80) << 8
+              | (value >>> 21);
       buf.writeInt(w);
     } else {
-      int w = (value & 0x7F | 0x80) << 24 | ((value >>> 7) & 0x7F | 0x80) << 16
-          | ((value >>> 14) & 0x7F | 0x80) << 8 | ((value >>> 21) & 0x7F | 0x80);
+      int w =
+          (value & 0x7F | 0x80) << 24
+              | ((value >>> 7) & 0x7F | 0x80) << 16
+              | ((value >>> 14) & 0x7F | 0x80) << 8
+              | ((value >>> 21) & 0x7F | 0x80);
       buf.writeInt(w);
       buf.writeByte(value >>> 28);
     }
@@ -167,7 +172,7 @@ public enum ProtocolUtils {
    * Writes the specified {@code value} as a 21-bit Minecraft VarInt to the specified {@code buf}.
    * The upper 11 bits will be discarded.
    *
-   * @param buf   the buffer to read from
+   * @param buf the buffer to read from
    * @param value the integer to write
    */
   public static void write21BitVarInt(ByteBuf buf, int value) {
@@ -199,13 +204,14 @@ public enum ProtocolUtils {
     // consider the length of a UTF-8 character, which can be up to 3 bytes. We do an initial
     // sanity check and then check again to make sure our optimistic guess was good.
     checkFrame(length <= cap * 3, "Bad string size (got %s, maximum is %s)", length, cap);
-    checkFrame(buf.isReadable(length),
-        "Trying to read a string that is too long (wanted %s, only have %s)", length,
+    checkFrame(
+        buf.isReadable(length),
+        "Trying to read a string that is too long (wanted %s, only have %s)",
+        length,
         buf.readableBytes());
     String str = buf.toString(buf.readerIndex(), length, StandardCharsets.UTF_8);
     buf.skipBytes(length);
-    checkFrame(str.length() <= cap, "Got a too-long string (got %s, max %s)",
-        str.length(), cap);
+    checkFrame(str.length() <= cap, "Got a too-long string (got %s, max %s)", str.length(), cap);
     return str;
   }
 
@@ -250,9 +256,11 @@ public enum ProtocolUtils {
   public static Key[] readKeyArray(ByteBuf buf) {
     int length = readVarInt(buf);
     checkFrame(length >= 0, "Got a negative-length array (%s)", length);
-    checkFrame(buf.isReadable(length),
-            "Trying to read an array that is too long (wanted %s, only have %s)", length,
-            buf.readableBytes());
+    checkFrame(
+        buf.isReadable(length),
+        "Trying to read an array that is too long (wanted %s, only have %s)",
+        length,
+        buf.readableBytes());
     Key[] ret = new Key[length];
 
     for (int i = 0; i < ret.length; i++) {
@@ -273,6 +281,7 @@ public enum ProtocolUtils {
       writeKey(buf, key);
     }
   }
+
   public static byte[] readByteArray(ByteBuf buf) {
     return readByteArray(buf, DEFAULT_MAX_STRING_SIZE);
   }
@@ -289,8 +298,10 @@ public enum ProtocolUtils {
     int length = readVarInt(buf);
     checkFrame(length >= 0, "Got a negative-length array (%s)", length);
     checkFrame(length <= cap, "Bad array size (got %s, maximum is %s)", length, cap);
-    checkFrame(buf.isReadable(length),
-        "Trying to read an array that is too long (wanted %s, only have %s)", length,
+    checkFrame(
+        buf.isReadable(length),
+        "Trying to read an array that is too long (wanted %s, only have %s)",
+        length,
         buf.readableBytes());
     byte[] array = new byte[length];
     buf.readBytes(array);
@@ -354,7 +365,7 @@ public enum ProtocolUtils {
   /**
    * Writes an UUID as an Integer Array to the {@code buf}.
    *
-   * @param buf  the buffer to write to
+   * @param buf the buffer to write to
    * @param uuid the UUID to write
    */
   public static void writeUuidIntArray(ByteBuf buf, UUID uuid) {
@@ -367,7 +378,7 @@ public enum ProtocolUtils {
   /**
    * Reads a {@link net.kyori.adventure.nbt.CompoundBinaryTag} from the {@code buf}.
    *
-   * @param buf    the buffer to read from
+   * @param buf the buffer to read from
    * @param reader the NBT reader to use
    * @return {@link net.kyori.adventure.nbt.CompoundBinaryTag} the CompoundTag from the buffer
    */
@@ -383,7 +394,7 @@ public enum ProtocolUtils {
   /**
    * Writes a CompoundTag to the {@code buf}.
    *
-   * @param buf         the buffer to write to
+   * @param buf the buffer to write to
    * @param compoundTag the CompoundTag to write
    */
   public static void writeCompoundTag(ByteBuf buf, CompoundBinaryTag compoundTag) {
@@ -412,7 +423,7 @@ public enum ProtocolUtils {
   /**
    * Writes a String Array to the {@code buf}.
    *
-   * @param buf         the buffer to write to
+   * @param buf the buffer to write to
    * @param stringArray the array to write
    */
   public static void writeStringArray(ByteBuf buf, String[] stringArray) {
@@ -431,9 +442,11 @@ public enum ProtocolUtils {
   public static int[] readVarIntArray(ByteBuf buf) {
     int length = readVarInt(buf);
     checkFrame(length >= 0, "Got a negative-length array (%s)", length);
-    checkFrame(buf.isReadable(length),
-            "Trying to read an array that is too long (wanted %s, only have %s)", length,
-            buf.readableBytes());
+    checkFrame(
+        buf.isReadable(length),
+        "Trying to read an array that is too long (wanted %s, only have %s)",
+        length,
+        buf.readableBytes());
     int[] ret = new int[length];
     for (int i = 0; i < length; i++) {
       ret[i] = readVarInt(buf);
@@ -444,7 +457,7 @@ public enum ProtocolUtils {
   /**
    * Writes an Integer Array to the {@code buf}.
    *
-   * @param buf         the buffer to write to
+   * @param buf the buffer to write to
    * @param intArray the array to write
    */
   public static void writeVarIntArray(ByteBuf buf, int[] intArray) {
@@ -457,7 +470,7 @@ public enum ProtocolUtils {
   /**
    * Writes a list of {@link com.velocitypowered.api.util.GameProfile.Property} to the buffer.
    *
-   * @param buf        the buffer to write to
+   * @param buf the buffer to write to
    * @param properties the properties to serialize
    */
   public static void writeProperties(ByteBuf buf, List<GameProfile.Property> properties) {
@@ -511,8 +524,11 @@ public enum ProtocolUtils {
     // No vanilla packet should give a 3 byte packet
     int len = readExtendedForgeShort(buf);
 
-    checkArgument(len <= FORGE_MAX_ARRAY_LENGTH,
-        "Cannot receive array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH, len);
+    checkArgument(
+        len <= FORGE_MAX_ARRAY_LENGTH,
+        "Cannot receive array longer than %s (got %s bytes)",
+        FORGE_MAX_ARRAY_LENGTH,
+        len);
 
     byte[] ret = new byte[len];
     buf.readBytes(ret);
@@ -531,8 +547,11 @@ public enum ProtocolUtils {
     // No vanilla packet should give a 3 byte packet
     int len = readExtendedForgeShort(buf);
 
-    checkFrame(len <= FORGE_MAX_ARRAY_LENGTH,
-        "Cannot receive array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH, len);
+    checkFrame(
+        len <= FORGE_MAX_ARRAY_LENGTH,
+        "Cannot receive array longer than %s (got %s bytes)",
+        FORGE_MAX_ARRAY_LENGTH,
+        len);
 
     return buf.readRetainedSlice(len);
   }
@@ -540,18 +559,22 @@ public enum ProtocolUtils {
   /**
    * Writes an byte array for legacy version 1.7 to the specified {@code buf}
    *
-   * @param b             array
-   * @param buf           buf
+   * @param b array
+   * @param buf buf
    * @param allowExtended forge
    */
   public static void writeByteArray17(byte[] b, ByteBuf buf, boolean allowExtended) {
     if (allowExtended) {
-      checkFrame(b.length <= FORGE_MAX_ARRAY_LENGTH,
-          "Cannot send array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH,
+      checkFrame(
+          b.length <= FORGE_MAX_ARRAY_LENGTH,
+          "Cannot send array longer than %s (got %s bytes)",
+          FORGE_MAX_ARRAY_LENGTH,
           b.length);
     } else {
-      checkFrame(b.length <= Short.MAX_VALUE,
-          "Cannot send array longer than Short.MAX_VALUE (got %s bytes)", b.length);
+      checkFrame(
+          b.length <= Short.MAX_VALUE,
+          "Cannot send array longer than Short.MAX_VALUE (got %s bytes)",
+          b.length);
     }
     // Write a 2 or 3 byte number that represents the length of the packet. (3 byte "shorts" for
     // Forge only)
@@ -564,18 +587,22 @@ public enum ProtocolUtils {
   /**
    * Writes an {@link ByteBuf} for legacy version 1.7 to the specified {@code buf}
    *
-   * @param b             array
-   * @param buf           buf
+   * @param b array
+   * @param buf buf
    * @param allowExtended forge
    */
   public static void writeByteBuf17(ByteBuf b, ByteBuf buf, boolean allowExtended) {
     if (allowExtended) {
-      checkFrame(b.readableBytes() <= FORGE_MAX_ARRAY_LENGTH,
-              "Cannot send array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH,
-              b.readableBytes());
+      checkFrame(
+          b.readableBytes() <= FORGE_MAX_ARRAY_LENGTH,
+          "Cannot send array longer than %s (got %s bytes)",
+          FORGE_MAX_ARRAY_LENGTH,
+          b.readableBytes());
     } else {
-      checkFrame(b.readableBytes() <= Short.MAX_VALUE,
-              "Cannot send array longer than Short.MAX_VALUE (got %s bytes)", b.readableBytes());
+      checkFrame(
+          b.readableBytes() <= Short.MAX_VALUE,
+          "Cannot send array longer than Short.MAX_VALUE (got %s bytes)",
+          b.readableBytes());
     }
     // Write a 2 or 3 byte number that represents the length of the packet. (3 byte "shorts" for
     // Forge only)
@@ -604,7 +631,7 @@ public enum ProtocolUtils {
   /**
    * Writes a Minecraft-style extended short to the specified {@code buf}.
    *
-   * @param buf     buf to write
+   * @param buf buf to write
    * @param toWrite the extended short to write
    */
   public static void writeExtendedForgeShort(ByteBuf buf, int toWrite) {
@@ -647,7 +674,7 @@ public enum ProtocolUtils {
   /**
    * Writes a players {@link IdentifiedKey} to the buffer.
    *
-   * @param buf       the buffer
+   * @param buf the buffer
    * @param playerKey the key to write
    */
   public static void writePlayerKey(ByteBuf buf, IdentifiedKey playerKey) {
@@ -666,14 +693,14 @@ public enum ProtocolUtils {
     long expiry = buf.readLong();
     byte[] key = ProtocolUtils.readByteArray(buf);
     byte[] signature = ProtocolUtils.readByteArray(buf, 4096);
-    IdentifiedKey.Revision revision = version.compareTo(ProtocolVersion.MINECRAFT_1_19) == 0
-        ? IdentifiedKey.Revision.GENERIC_V1 : IdentifiedKey.Revision.LINKED_V2;
+    IdentifiedKey.Revision revision =
+        version.compareTo(ProtocolVersion.MINECRAFT_1_19) == 0
+            ? IdentifiedKey.Revision.GENERIC_V1
+            : IdentifiedKey.Revision.LINKED_V2;
     return new IdentifiedKeyImpl(revision, key, expiry, signature);
   }
 
-  /**
-   * Represents the direction in which a packet flows.
-   */
+  /** Represents the direction in which a packet flows. */
   public enum Direction {
     SERVERBOUND,
     CLIENTBOUND

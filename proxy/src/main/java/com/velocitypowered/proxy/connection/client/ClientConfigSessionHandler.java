@@ -46,8 +46,8 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   /**
    * Constructs a client config session handler.
    *
-   * @param server      the Velocity server instance
-   * @param player      the player
+   * @param server the Velocity server instance
+   * @param player the player
    */
   public ClientConfigSessionHandler(VelocityServer server, ConnectedPlayer player) {
     this.server = server;
@@ -78,7 +78,6 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
     return true;
   }
 
-
   @Override
   public boolean handle(PluginMessage packet) {
     return true;
@@ -91,8 +90,9 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(FinishedUpdate packet) {
-    player.getConnection().setActiveSessionHandler(StateRegistry.PLAY,
-            new ClientPlaySessionHandler(server, player));
+    player
+        .getConnection()
+        .setActiveSessionHandler(StateRegistry.PLAY, new ClientPlaySessionHandler(server, player));
 
     configSwitchFuture.complete(null);
 
@@ -138,12 +138,11 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   @Override
   public void exception(Throwable throwable) {
     player.disconnect(
-            Component.translatable("velocity.error.player-connection-error", NamedTextColor.RED));
+        Component.translatable("velocity.error.player-connection-error", NamedTextColor.RED));
   }
 
   public CompletableFuture<Void> handleBackendFinishUpdate(VelocityServerConnection serverConn) {
     player.getConnection().write(new FinishedUpdate());
     return configSwitchFuture;
   }
-
 }

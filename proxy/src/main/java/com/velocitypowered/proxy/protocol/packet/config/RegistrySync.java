@@ -26,23 +26,25 @@ import io.netty.buffer.ByteBuf;
 
 public class RegistrySync extends DeferredByteBufHolder implements MinecraftPacket {
 
-    public RegistrySync() {
-        super(null);
-    }
+  public RegistrySync() {
+    super(null);
+  }
 
-    //NBT change in 1.20.2 makes it difficult to parse this packet.
-    @Override
-    public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        this.replace(buf.readRetainedSlice(buf.readableBytes()));
-    }
+  // NBT change in 1.20.2 makes it difficult to parse this packet.
+  @Override
+  public void decode(
+      ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+    this.replace(buf.readRetainedSlice(buf.readableBytes()));
+  }
 
-    @Override
-    public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        buf.writeBytes(content());
-    }
+  @Override
+  public void encode(
+      ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+    buf.writeBytes(content());
+  }
 
-    @Override
-    public boolean handle(MinecraftSessionHandler handler) {
-        return handler.handle(this);
-    }
+  @Override
+  public boolean handle(MinecraftSessionHandler handler) {
+    return handler.handle(this);
+  }
 }

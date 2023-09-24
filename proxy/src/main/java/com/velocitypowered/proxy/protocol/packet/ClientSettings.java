@@ -37,11 +37,17 @@ public class ClientSettings implements MinecraftPacket {
   private boolean chatFilteringEnabled; // Added in 1.17
   private boolean clientListingAllowed; // Added in 1.18, overwrites server-list "anonymous" mode
 
-  public ClientSettings() {
-  }
+  public ClientSettings() {}
 
-  public ClientSettings(String locale, byte viewDistance, int chatVisibility, boolean chatColors,
-      short skinParts, int mainHand, boolean chatFilteringEnabled, boolean clientListingAllowed) {
+  public ClientSettings(
+      String locale,
+      byte viewDistance,
+      int chatVisibility,
+      boolean chatColors,
+      short skinParts,
+      int mainHand,
+      boolean chatFilteringEnabled,
+      boolean clientListingAllowed) {
     this.locale = locale;
     this.viewDistance = viewDistance;
     this.chatVisibility = chatVisibility;
@@ -121,14 +127,23 @@ public class ClientSettings implements MinecraftPacket {
   @Override
   public String toString() {
     return "ClientSettings{"
-        + "locale='" + locale + '\''
-        + ", viewDistance=" + viewDistance
-        + ", chatVisibility=" + chatVisibility
-        + ", chatColors=" + chatColors
-        + ", skinParts=" + skinParts
-        + ", mainHand=" + mainHand
-        + ", chatFilteringEnabled=" + chatFilteringEnabled
-        + ", clientListingAllowed=" + clientListingAllowed
+        + "locale='"
+        + locale
+        + '\''
+        + ", viewDistance="
+        + viewDistance
+        + ", chatVisibility="
+        + chatVisibility
+        + ", chatColors="
+        + chatColors
+        + ", skinParts="
+        + skinParts
+        + ", mainHand="
+        + mainHand
+        + ", chatFilteringEnabled="
+        + chatFilteringEnabled
+        + ", clientListingAllowed="
+        + clientListingAllowed
         + '}';
   }
 

@@ -32,15 +32,14 @@ import java.util.UUID;
 
 public class ServerLogin implements MinecraftPacket {
 
-  private static final QuietDecoderException EMPTY_USERNAME = new QuietDecoderException(
-      "Empty username!");
+  private static final QuietDecoderException EMPTY_USERNAME =
+      new QuietDecoderException("Empty username!");
 
   private @Nullable String username;
   private @Nullable IdentifiedKey playerKey; // Introduced in 1.19.3
   private @Nullable UUID holderUuid; // Used for key revision 2
 
-  public ServerLogin() {
-  }
+  public ServerLogin() {}
 
   public ServerLogin(String username, @Nullable IdentifiedKey playerKey) {
     this.username = Preconditions.checkNotNull(username, "username");
@@ -74,10 +73,7 @@ public class ServerLogin implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "ServerLogin{"
-        + "username='" + username + '\''
-        + "playerKey='" + playerKey + '\''
-        + '}';
+    return "ServerLogin{" + "username='" + username + '\'' + "playerKey='" + playerKey + '\'' + '}';
   }
 
   @Override
