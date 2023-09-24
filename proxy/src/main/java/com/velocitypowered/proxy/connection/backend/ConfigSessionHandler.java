@@ -173,24 +173,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
     serverConn.getPlayer().disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
     resultFuture.completeExceptionally(cause);
   }
-  /*
-    private ClientConfigSessionHandler getClientConfigSessionHandler(ConnectedPlayer player) {
-      ClientPlaySessionHandler playHandler;
-      if (player.getConnection().getSessionHandler() instanceof ClientPlaySessionHandler) {
-        playHandler = (ClientPlaySessionHandler) player.getConnection().getSessionHandler();
-      } else {
-        playHandler = new ClientPlaySessionHandler(server, player);
-      }
 
-      ClientConfigSessionHandler configHandler;
-      if (player.getConnection().getSessionHandler() instanceof ClientConfigSessionHandler) {
-        configHandler = (ClientConfigSessionHandler) player.getConnection().getSessionHandler();
-      } else {
-        configHandler = new ClientConfigSessionHandler(server, player, playHandler);
-      }
-      return configHandler;
-    }
-  */
   @Override
   public boolean handle(Disconnect packet) {
     serverConn.disconnect();

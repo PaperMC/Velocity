@@ -130,10 +130,10 @@ public class ResourcePackRequest implements MinecraftPacket {
   @Override
   public String toString() {
     return "ResourcePackRequest{"
-            + "url='" + url + '\''
-            + ", hash='" + hash + '\''
-            + ", isRequired=" + isRequired
-            + ", prompt='" + prompt + '\''
-            + '}';
+        + "url='" + url + '\''
+        + ", hash='" + hash + '\''
+        + ", isRequired=" + isRequired
+        + ", prompt='" + prompt + '\''
+        + '}';
   }
 }

@@ -56,8 +56,8 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
 
     @Override
     boolean onHandle(ConnectedPlayer player,
-                     PluginMessage message,
-                     MinecraftConnection backendConn) {
+        PluginMessage message,
+        MinecraftConnection backendConn) {
       // If we stay in this phase, we do nothing because it means the packet wasn't handled.
       // Returning false indicates this
       return false;
@@ -88,8 +88,8 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
 
     @Override
     boolean onHandle(ConnectedPlayer player,
-                     PluginMessage message,
-                     MinecraftConnection backendConn) {
+        PluginMessage message,
+        MinecraftConnection backendConn) {
       // Read the mod list if we haven't already.
       if (!player.getModInfo().isPresent()) {
         List<ModInfo.Mod> mods = LegacyForgeUtil.readModList(message);
@@ -158,8 +158,8 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
 
     @Override
     boolean onHandle(ConnectedPlayer player,
-                     PluginMessage message,
-                     MinecraftConnection backendConn) {
+        PluginMessage message,
+        MinecraftConnection backendConn) {
       super.onHandle(player, message, backendConn);
 
       // just in case the timing is awful
@@ -191,12 +191,12 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
 
   @Override
   public final boolean handle(ConnectedPlayer player,
-                              PluginMessage message,
-                              VelocityServerConnection server) {
+      PluginMessage message,
+      VelocityServerConnection server) {
     if (server != null) {
       MinecraftConnection backendConn = server.getConnection();
       if (backendConn != null
-              && message.getChannel().equals(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
+          && message.getChannel().equals(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
         // Get the phase and check if we need to start the next phase.
         LegacyForgeHandshakeClientPhase newPhase = getNewPhase(message);
 
@@ -221,8 +221,8 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
    * @return true if handled, false otherwise.
    */
   boolean onHandle(ConnectedPlayer player,
-                   PluginMessage message,
-                   MinecraftConnection backendConn) {
+      PluginMessage message,
+      MinecraftConnection backendConn) {
     // Send the packet on to the server.
     backendConn.write(message.retain());
 
@@ -252,7 +252,7 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
    */
   private LegacyForgeHandshakeClientPhase getNewPhase(PluginMessage packet) {
     if (packetToAdvanceOn != null
-            && LegacyForgeUtil.getHandshakePacketDiscriminator(packet) == packetToAdvanceOn) {
+        && LegacyForgeUtil.getHandshakePacketDiscriminator(packet) == packetToAdvanceOn) {
       return nextPhase();
     }
 

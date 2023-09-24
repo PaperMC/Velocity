@@ -261,7 +261,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   public void closeWith(Object msg) {
     if (channel.isActive()) {
       boolean is17 = this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) < 0
-              && this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_7_2) >= 0;
+          && this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_7_2) >= 0;
       if (is17 && this.getState() != StateRegistry.STATUS) {
         channel.eventLoop().execute(() -> {
           // 1.7.x versions have a race condition with switching protocol states, so just explicitly
@@ -481,14 +481,14 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
       if (removedDecoder != null && removedEncoder != null) {
         channel.pipeline().addBefore(MINECRAFT_DECODER, FRAME_ENCODER,
-                MinecraftVarintLengthEncoder.INSTANCE);
+            MinecraftVarintLengthEncoder.INSTANCE);
         channel.pipeline().fireUserEventTriggered(VelocityConnectionEvent.COMPRESSION_DISABLED);
       }
     } else {
       MinecraftCompressDecoder decoder = (MinecraftCompressDecoder) channel.pipeline()
-              .get(COMPRESSION_DECODER);
+          .get(COMPRESSION_DECODER);
       MinecraftCompressorAndLengthEncoder encoder =
-              (MinecraftCompressorAndLengthEncoder) channel.pipeline().get(COMPRESSION_ENCODER);
+          (MinecraftCompressorAndLengthEncoder) channel.pipeline().get(COMPRESSION_ENCODER);
       if (decoder != null && encoder != null) {
         decoder.setThreshold(threshold);
         encoder.setThreshold(threshold);
@@ -524,9 +524,9 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     VelocityCipher decryptionCipher = factory.forDecryption(key);
     VelocityCipher encryptionCipher = factory.forEncryption(key);
     channel.pipeline()
-            .addBefore(FRAME_DECODER, CIPHER_DECODER, new MinecraftCipherDecoder(decryptionCipher));
+        .addBefore(FRAME_DECODER, CIPHER_DECODER, new MinecraftCipherDecoder(decryptionCipher));
     channel.pipeline()
-            .addBefore(FRAME_ENCODER, CIPHER_ENCODER, new MinecraftCipherEncoder(encryptionCipher));
+        .addBefore(FRAME_ENCODER, CIPHER_ENCODER, new MinecraftCipherEncoder(encryptionCipher));
 
     channel.pipeline().fireUserEventTriggered(VelocityConnectionEvent.ENCRYPTION_ENABLED);
   }

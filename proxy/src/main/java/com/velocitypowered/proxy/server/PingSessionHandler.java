@@ -44,7 +44,7 @@ public class PingSessionHandler implements MinecraftSessionHandler {
   private boolean completed = false;
 
   PingSessionHandler(CompletableFuture<ServerPing> result, RegisteredServer server,
-                     MinecraftConnection connection, ProtocolVersion version) {
+      MinecraftConnection connection, ProtocolVersion version) {
     this.result = result;
     this.server = server;
     this.connection = connection;

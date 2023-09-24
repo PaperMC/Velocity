@@ -63,13 +63,13 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
    * @param resultFuture the result future
    */
   TransitionSessionHandler(VelocityServer server,
-                           VelocityServerConnection serverConn,
-                           CompletableFuture<Impl> resultFuture) {
+      VelocityServerConnection serverConn,
+      CompletableFuture<Impl> resultFuture) {
     this.server = server;
     this.serverConn = serverConn;
     this.resultFuture = resultFuture;
     this.bungeecordMessageResponder = new BungeeCordMessageResponder(server,
-            serverConn.getPlayer());
+        serverConn.getPlayer());
   }
 
   @Override
@@ -166,9 +166,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     // If we were in the middle of the Forge handshake, it is not safe to proceed. We must kick
     // the client.
     if (connection.getType() == ConnectionTypes.LEGACY_FORGE
-            && !serverConn.getPhase().consideredComplete()) {
+        && !serverConn.getPhase().consideredComplete()) {
       resultFuture.complete(ConnectionRequestResults.forUnsafeDisconnect(packet,
-              serverConn.getServer()));
+          serverConn.getServer()));
     } else {
       resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
     }
@@ -199,7 +199,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
           // Tell the player that we're leaving and we just aren't coming back.
           existingConnection.getPhase().onDepartForNewServer(existingConnection,
-                  serverConn.getPlayer());
+              serverConn.getPlayer());
         }
       }
       return true;
@@ -212,6 +212,6 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   @Override
   public void disconnected() {
     resultFuture
-            .completeExceptionally(new IOException("Unexpectedly disconnected from remote server"));
+        .completeExceptionally(new IOException("Unexpectedly disconnected from remote server"));
   }
 }

@@ -26,7 +26,7 @@ public interface LoginPhaseConnection extends InboundConnection, KeyIdentifiable
    * @param contents the message to send
    * @param consumer the consumer that will respond to the message
    */
-  void sendLoginPluginMessage(int messageId, ChannelIdentifier identifier, byte[] contents,
+  void sendLoginPluginMessage(ChannelIdentifier identifier, byte[] contents,
       MessageConsumer consumer);
 
   /**

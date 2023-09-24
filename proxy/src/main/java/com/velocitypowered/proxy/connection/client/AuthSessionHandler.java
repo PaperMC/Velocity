@@ -69,7 +69,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
   private State loginState = State.START; // 1.20.2+
 
   AuthSessionHandler(VelocityServer server, LoginInboundConnection inbound,
-                     GameProfile profile, boolean onlineMode) {
+      GameProfile profile, boolean onlineMode) {
     this.server = Preconditions.checkNotNull(server, "server");
     this.inbound = Preconditions.checkNotNull(inbound, "inbound");
     this.profile = Preconditions.checkNotNull(profile, "profile");
@@ -81,9 +81,9 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
   public void activated() {
     // Some connection types may need to alter the game profile.
     profile = mcConnection.getType().addGameProfileTokensIfRequired(profile,
-            server.getConfiguration().getPlayerInfoForwardingMode());
+        server.getConfiguration().getPlayerInfoForwardingMode());
     GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEvent(inbound, profile,
-            onlineMode);
+        onlineMode);
     final GameProfile finalProfile = profile;
 
     server.getEventManager().fire(profileRequestEvent).thenComposeAsync(profileEvent -> {
@@ -94,36 +94,36 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
 
       // Initiate a regular connection and move over to it.
       ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.getGameProfile(),
-              mcConnection, inbound.getVirtualHost().orElse(null), onlineMode,
-              inbound.getIdentifiedKey());
+          mcConnection, inbound.getVirtualHost().orElse(null), onlineMode,
+          inbound.getIdentifiedKey());
       this.connectedPlayer = player;
       if (!server.canRegisterConnection(player)) {
         player.disconnect0(Component.translatable("velocity.error.already-connected-proxy",
-                NamedTextColor.RED), true);
+            NamedTextColor.RED), true);
         return CompletableFuture.completedFuture(null);
       }
 
       logger.info("{} has connected", player);
 
       return server.getEventManager()
-              .fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
-              .thenAcceptAsync(event -> {
-                if (!mcConnection.isClosed()) {
-                  // wait for permissions to load, then set the players permission function
-                  final PermissionFunction function = event.createFunction(player);
-                  if (function == null) {
-                    logger.error(
+          .fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
+          .thenAcceptAsync(event -> {
+            if (!mcConnection.isClosed()) {
+              // wait for permissions to load, then set the players permission function
+              final PermissionFunction function = event.createFunction(player);
+              if (function == null) {
+                logger.error(
                             "A plugin permission provider {} provided an invalid permission function"
-                                    + " for player {}. This is a bug in the plugin, not in Velocity. Falling"
-                                    + " back to the default permission function.",
-                            event.getProvider().getClass().getName(),
-                            player.getUsername());
-                  } else {
-                    player.setPermissionFunction(function);
-                  }
-                  startLoginCompletion(player);
-                }
-              }, mcConnection.eventLoop());
+                        + " for player {}. This is a bug in the plugin, not in Velocity. Falling"
+                        + " back to the default permission function.",
+                    event.getProvider().getClass().getName(),
+                    player.getUsername());
+              } else {
+                player.setPermissionFunction(function);
+              }
+              startLoginCompletion(player);
+            }
+          }, mcConnection.eventLoop());
     }, mcConnection.eventLoop()).exceptionally((ex) -> {
       logger.error("Exception during connection of {}", finalProfile, ex);
       return null;
@@ -151,7 +151,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
           if (!unlinkedKey.internalAddHolder(player.getUniqueId())) {
             if (onlineMode) {
               inbound.disconnect(
-                      Component.translatable("multiplayer.disconnect.invalid_public_key"));
+                  Component.translatable("multiplayer.disconnect.invalid_public_key"));
               return;
             } else {
               logger.warn("Key for player " + player.getUsername() + " could not be verified!");
@@ -163,7 +163,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
       } else {
         if (!Objects.equals(playerKey.getSignatureHolder(), playerUniqueId)) {
           logger.warn("UUID for Player " + player.getUsername() + " mismatches! "
-                  + "Chat/Commands signatures will not work correctly for this player!");
+              + "Chat/Commands signatures will not work correctly for this player!");
         }
       }
     }
@@ -197,29 +197,29 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
     mcConnection.setAssociation(player);
 
     server.getEventManager().fire(new LoginEvent(player))
-            .thenAcceptAsync(event -> {
-              if (mcConnection.isClosed()) {
-                // The player was disconnected
-                server.getEventManager().fireAndForget(new DisconnectEvent(player,
-                        DisconnectEvent.LoginStatus.CANCELLED_BY_USER_BEFORE_COMPLETE));
-                return;
-              }
+        .thenAcceptAsync(event -> {
+          if (mcConnection.isClosed()) {
+            // The player was disconnected
+            server.getEventManager().fireAndForget(new DisconnectEvent(player,
+                DisconnectEvent.LoginStatus.CANCELLED_BY_USER_BEFORE_COMPLETE));
+            return;
+          }
 
-              Optional<Component> reason = event.getResult().getReasonComponent();
-              if (reason.isPresent()) {
-                player.disconnect0(reason.get(), true);
-              } else {
-                if (!server.registerConnection(player)) {
-                  player.disconnect0(Component.translatable("velocity.error.already-connected-proxy"),
-                          true);
-                  return;
-                }
+          Optional<Component> reason = event.getResult().getReasonComponent();
+          if (reason.isPresent()) {
+            player.disconnect0(reason.get(), true);
+          } else {
+            if (!server.registerConnection(player)) {
+              player.disconnect0(Component.translatable("velocity.error.already-connected-proxy"),
+                  true);
+              return;
+            }
 
-                if (inbound.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0) {
-                  mcConnection.setActiveSessionHandler(StateRegistry.PLAY, new InitialConnectSessionHandler(player, server));
-                } else {
-                  mcConnection.setActiveSessionHandler(StateRegistry.CONFIG, new ClientConfigSessionHandler(server, player));
-                }
+            if (inbound.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0) {
+              mcConnection.setActiveSessionHandler(StateRegistry.PLAY, new InitialConnectSessionHandler(player, server));
+            } else {
+              mcConnection.setActiveSessionHandler(StateRegistry.CONFIG, new ClientConfigSessionHandler(server, player));
+            }
 
                 server.getEventManager().fire(new PostLoginEvent(player))
                         .thenCompose((ignored) -> connectToInitialServer(player))
@@ -238,18 +238,18 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
   private CompletableFuture<Void> connectToInitialServer(ConnectedPlayer player) {
     Optional<RegisteredServer> initialFromConfig = player.getNextServerToTry();
     PlayerChooseInitialServerEvent event = new PlayerChooseInitialServerEvent(player,
-            initialFromConfig.orElse(null));
+        initialFromConfig.orElse(null));
 
     return server.getEventManager().fire(event)
-            .thenRunAsync(() -> {
-              Optional<RegisteredServer> toTry = event.getInitialServer();
-              if (!toTry.isPresent()) {
-                player.disconnect0(Component.translatable("velocity.error.no-available-servers",
-                        NamedTextColor.RED), true);
-                return;
-              }
-              player.createConnectionRequest(toTry.get()).fireAndForget();
-            }, mcConnection.eventLoop());
+        .thenRunAsync(() -> {
+          Optional<RegisteredServer> toTry = event.getInitialServer();
+          if (!toTry.isPresent()) {
+            player.disconnect0(Component.translatable("velocity.error.no-available-servers",
+                NamedTextColor.RED), true);
+            return;
+          }
+          player.createConnectionRequest(toTry.get()).fireAndForget();
+        }, mcConnection.eventLoop());
   }
 
   @Override

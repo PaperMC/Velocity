@@ -66,7 +66,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   public boolean handle(LegacyPing packet) {
     connection.setProtocolVersion(ProtocolVersion.LEGACY);
     StatusSessionHandler handler = new StatusSessionHandler(server,
-            new LegacyInboundConnection(connection, packet));
+    new LegacyInboundConnection(connection, packet));
     connection.setActiveSessionHandler(StateRegistry.STATUS ,handler);
     handler.handle(packet);
     return true;
@@ -75,8 +75,8 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(LegacyHandshake packet) {
     connection.closeWith(LegacyDisconnect.from(Component.text(
-            "Your client is extremely old. Please update to a newer version of Minecraft.",
-            NamedTextColor.RED)
+        "Your client is extremely old. Please update to a newer version of Minecraft.",
+        NamedTextColor.RED)
     ));
     return true;
   }
@@ -84,7 +84,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(Handshake handshake) {
     InitialInboundConnection ic = new InitialInboundConnection(connection,
-            cleanVhost(handshake.getServerAddress()), handshake);
+        cleanVhost(handshake.getServerAddress()), handshake);
     StateRegistry nextState = getStateForProtocol(handshake.getNextStatus());
     if (nextState == null) {
       LOGGER.error("{} provided invalid protocol {}", ic, handshake.getNextStatus());
@@ -123,7 +123,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   private void handleLogin(Handshake handshake, InitialInboundConnection ic) {
     if (!ProtocolVersion.isSupported(handshake.getProtocolVersion())) {
       ic.disconnectQuietly(Component.translatable("multiplayer.disconnect.outdated_client")
-              .args(Component.text(ProtocolVersion.SUPPORTED_VERSION_STRING)));
+          .args(Component.text(ProtocolVersion.SUPPORTED_VERSION_STRING)));
       return;
     }
 
@@ -138,9 +138,9 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     // If the proxy is configured for modern forwarding, we must deny connections from 1.12.2
     // and lower, otherwise IP information will never get forwarded.
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
-            && handshake.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
+        && handshake.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
       ic.disconnectQuietly(Component.translatable(
-              "velocity.error.modern-forwarding-needs-new-client"));
+          "velocity.error.modern-forwarding-needs-new-client"));
       return;
     }
 
@@ -152,7 +152,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   private ConnectionType getHandshakeConnectionType(Handshake handshake) {
     // Determine if we're using Forge (1.8 to 1.12, may not be the case in 1.13).
     if (handshake.getServerAddress().endsWith(LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN)
-            && handshake.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
+        && handshake.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
       return ConnectionTypes.LEGACY_FORGE;
     } else if (handshake.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_7_6) <= 0) {
       // 1.7 Forge will not notify us during handshake. UNDETERMINED will listen for incoming
@@ -207,7 +207,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     private final LegacyPing ping;
 
     private LegacyInboundConnection(MinecraftConnection connection,
-                                    LegacyPing ping) {
+        LegacyPing ping) {
       this.connection = connection;
       this.ping = ping;
     }

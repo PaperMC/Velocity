@@ -64,9 +64,9 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(InitialLoginSessionHandler.class);
   private static final String MOJANG_HASJOINED_URL =
-          System.getProperty("mojang.sessionserver",
-                          "https://sessionserver.mojang.com/session/minecraft/hasJoined")
-                  .concat("?username=%s&serverId=%s");
+      System.getProperty("mojang.sessionserver",
+              "https://sessionserver.mojang.com/session/minecraft/hasJoined")
+          .concat("?username=%s&serverId=%s");
 
   private final VelocityServer server;
   private final MinecraftConnection mcConnection;
@@ -77,13 +77,13 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
   private boolean forceKeyAuthentication;
 
   InitialLoginSessionHandler(VelocityServer server, MinecraftConnection mcConnection,
-                             LoginInboundConnection inbound) {
+     LoginInboundConnection inbound) {
     this.server = Preconditions.checkNotNull(server, "server");
     this.mcConnection = Preconditions.checkNotNull(mcConnection, "mcConnection");
     this.inbound = Preconditions.checkNotNull(inbound, "inbound");
     this.forceKeyAuthentication = System.getProperties().containsKey("auth.forceSecureProfiles")
-            ? Boolean.getBoolean("auth.forceSecureProfiles")
-            : server.getConfiguration().isForceKeyAuthentication();
+        ? Boolean.getBoolean("auth.forceSecureProfiles")
+        : server.getConfiguration().isForceKeyAuthentication();
   }
 
   @Override
@@ -94,13 +94,13 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
     if (playerKey != null) {
       if (playerKey.hasExpired()) {
         inbound.disconnect(
-                Component.translatable("multiplayer.disconnect.invalid_public_key_signature"));
+            Component.translatable("multiplayer.disconnect.invalid_public_key_signature"));
         return true;
       }
 
       boolean isKeyValid;
       if (playerKey.getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
-              && playerKey instanceof IdentifiedKeyImpl) {
+          && playerKey instanceof IdentifiedKeyImpl) {
         IdentifiedKeyImpl keyImpl = (IdentifiedKeyImpl) playerKey;
         isKeyValid = keyImpl.internalAddHolder(packet.getHolderUuid());
       } else {
@@ -112,8 +112,8 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
         return true;
       }
     } else if (mcConnection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0
-            && forceKeyAuthentication
-            && mcConnection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
+        && forceKeyAuthentication
+        && mcConnection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
       inbound.disconnect(Component.translatable("multiplayer.disconnect.missing_public_key"));
       return true;
     }
@@ -122,25 +122,25 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
 
     PreLoginEvent event = new PreLoginEvent(inbound, login.getUsername());
     server.getEventManager().fire(event)
-            .thenRunAsync(() -> {
-              if (mcConnection.isClosed()) {
-                // The player was disconnected
-                return;
-              }
+        .thenRunAsync(() -> {
+          if (mcConnection.isClosed()) {
+            // The player was disconnected
+            return;
+          }
 
-              PreLoginComponentResult result = event.getResult();
-              Optional<Component> disconnectReason = result.getReasonComponent();
-              if (disconnectReason.isPresent()) {
-                // The component is guaranteed to be provided if the connection was denied.
-                inbound.disconnect(disconnectReason.get());
-                return;
-              }
+          PreLoginComponentResult result = event.getResult();
+          Optional<Component> disconnectReason = result.getReasonComponent();
+          if (disconnectReason.isPresent()) {
+            // The component is guaranteed to be provided if the connection was denied.
+            inbound.disconnect(disconnectReason.get());
+            return;
+          }
 
-              inbound.loginEventFired(() -> {
-                if (mcConnection.isClosed()) {
-                  // The player was disconnected
-                  return;
-                }
+          inbound.loginEventFired(() -> {
+            if (mcConnection.isClosed()) {
+              // The player was disconnected
+              return;
+            }
 
                 mcConnection.eventLoop().execute(() -> {
                   if (!result.isForceOfflineMode() && (server.getConfiguration().isOnlineMode()
@@ -190,7 +190,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
       if (inbound.getIdentifiedKey() != null) {
         IdentifiedKey playerKey = inbound.getIdentifiedKey();
         if (!playerKey.verifyDataSignature(packet.getVerifyToken(), verify,
-                Longs.toByteArray(packet.getSalt()))) {
+            Longs.toByteArray(packet.getSalt()))) {
           throw new IllegalStateException("Invalid client public signature.");
         }
       } else {
@@ -205,14 +205,14 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
 
       String playerIp = ((InetSocketAddress) mcConnection.getRemoteAddress()).getHostString();
       String url = String.format(MOJANG_HASJOINED_URL,
-              urlFormParameterEscaper().escape(login.getUsername()), serverId);
+          urlFormParameterEscaper().escape(login.getUsername()), serverId);
 
       if (server.getConfiguration().shouldPreventClientProxyConnections()) {
         url += "&ip=" + urlFormParameterEscaper().escape(playerIp);
       }
 
       ListenableFuture<Response> hasJoinedResponse = server.getAsyncHttpClient().prepareGet(url)
-              .execute();
+          .execute();
       hasJoinedResponse.addListener(() -> {
         if (mcConnection.isClosed()) {
           // The player disconnected after we authenticated them.
@@ -235,30 +235,30 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
           Response profileResponse = hasJoinedResponse.get();
           if (profileResponse.getStatusCode() == 200) {
             final GameProfile profile = GENERAL_GSON.fromJson(profileResponse.getResponseBody(),
-                    GameProfile.class);
+                GameProfile.class);
             // Not so fast, now we verify the public key for 1.19.1+
             if (inbound.getIdentifiedKey() != null
-                    && inbound.getIdentifiedKey().getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
-                    && inbound.getIdentifiedKey() instanceof IdentifiedKeyImpl) {
+                && inbound.getIdentifiedKey().getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
+                && inbound.getIdentifiedKey() instanceof IdentifiedKeyImpl) {
               IdentifiedKeyImpl key = (IdentifiedKeyImpl) inbound.getIdentifiedKey();
               if (!key.internalAddHolder(profile.getId())) {
                 inbound.disconnect(
-                        Component.translatable("multiplayer.disconnect.invalid_public_key"));
+                    Component.translatable("multiplayer.disconnect.invalid_public_key"));
               }
             }
             // All went well, initialize the session.
             mcConnection.setActiveSessionHandler(StateRegistry.LOGIN, new AuthSessionHandler(
-                    server, inbound, profile, true
+                server, inbound, profile, true
             ));
           } else if (profileResponse.getStatusCode() == 204) {
             // Apparently an offline-mode user logged onto this online-mode proxy.
             inbound.disconnect(Component.translatable("velocity.error.online-mode-only",
-                    NamedTextColor.RED));
+                NamedTextColor.RED));
           } else {
             // Something else went wrong
             logger.error(
-                    "Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
-                    profileResponse.getStatusCode(), login.getUsername(), playerIp);
+                "Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
+                profileResponse.getStatusCode(), login.getUsername(), playerIp);
             inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
           }
         } catch (ExecutionException e) {
@@ -300,8 +300,8 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
     if (this.currentState != expectedState) {
       if (MinecraftDecoder.DEBUG) {
         logger.error("{} Received an unexpected packet requiring state {}, but we are in {}",
-                inbound,
-                expectedState, this.currentState);
+            inbound,
+            expectedState, this.currentState);
       }
       mcConnection.close(true);
     }
