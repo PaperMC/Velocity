@@ -192,17 +192,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
       }
     }
 
-    ServerLoginSuccess success = new ServerLoginSuccess();
-    success.setUsername(player.getUsername());
-    success.setProperties(player.getGameProfileProperties());
-    success.setUuid(playerUniqueId);
-    mcConnection.write(success);
-
-    if (inbound.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0) {
-      completeLoginProtocolPhaseAndInitialize(player);
-    } else {
-      loginState = State.SUCCESS_SENT;
-    }
+    completeLoginProtocolPhaseAndInitialize(player);
   }
 
   @Override
@@ -211,7 +201,19 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
       inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_player_data"));
     } else {
       loginState = State.ACKNOWLEDGED;
-      completeLoginProtocolPhaseAndInitialize(connectedPlayer);
+      mcConnection.setActiveSessionHandler(
+              StateRegistry.CONFIG, new ClientConfigSessionHandler(server, connectedPlayer));
+
+      server
+          .getEventManager()
+          .fire(new PostLoginEvent(connectedPlayer))
+          .thenCompose((ignored) -> connectToInitialServer(connectedPlayer))
+          .exceptionally(
+              (ex) -> {
+                logger.error(
+                    "Exception while connecting {} to initial server", connectedPlayer, ex);
+                return null;
+              });
     }
     return true;
   }
@@ -244,26 +246,29 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
                   return;
                 }
 
-                if (inbound.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0) {
-                  mcConnection.setActiveSessionHandler(
-                      StateRegistry.PLAY, new InitialConnectSessionHandler(player, server));
-                } else {
-                  mcConnection.setActiveSessionHandler(
-                      StateRegistry.CONFIG, new ClientConfigSessionHandler(server, player));
-                }
+                ServerLoginSuccess success = new ServerLoginSuccess();
+                success.setUsername(player.getUsername());
+                success.setProperties(player.getGameProfileProperties());
+                success.setUuid(player.getUniqueId());
+                mcConnection.write(success);
 
-                server
-                    .getEventManager()
-                    .fire(new PostLoginEvent(player))
-                    .thenCompose((ignored) -> connectToInitialServer(player))
-                    .exceptionally(
-                        (ex) -> {
-                          logger.error(
-                              "Exception while connecting {} to initial server", player, ex);
-                          return null;
-                        });
-              }
-            },
+                loginState = State.SUCCESS_SENT;
+                if (inbound.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0) {
+                  loginState = State.ACKNOWLEDGED;
+                  mcConnection.setActiveSessionHandler(
+                          StateRegistry.PLAY, new InitialConnectSessionHandler(player, server));
+                  server
+                      .getEventManager()
+                      .fire(new PostLoginEvent(player))
+                      .thenCompose((ignored) -> connectToInitialServer(player))
+                      .exceptionally(
+                          (ex) -> {
+                            logger.error(
+                                "Exception while connecting {} to initial server", player, ex);
+                            return null;
+                          });
+                }
+            }},
             mcConnection.eventLoop())
         .exceptionally(
             (ex) -> {
