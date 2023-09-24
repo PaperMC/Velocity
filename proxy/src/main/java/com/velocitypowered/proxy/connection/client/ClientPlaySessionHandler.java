@@ -65,6 +65,7 @@ import com.velocitypowered.proxy.protocol.packet.chat.session.SessionChatHandler
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionCommandHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChat;
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommand;
+import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdate;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdate;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
@@ -384,7 +385,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(StartUpdate packet) {
+  public boolean handle(FinishedUpdate packet) {
     //Complete client switch
     player.getConnection().setActiveSessionHandler(StateRegistry.CONFIG);
     configSwitchFuture.complete(null);

@@ -215,7 +215,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
                   return;
                 }
 
-                if (inbound.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_2) > 0) {
+                if (inbound.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0) {
                   mcConnection.setActiveSessionHandler(StateRegistry.PLAY, new InitialConnectSessionHandler(player, server));
                 } else {
                   mcConnection.setActiveSessionHandler(StateRegistry.CONFIG, new ClientConfigSessionHandler(server, player));
