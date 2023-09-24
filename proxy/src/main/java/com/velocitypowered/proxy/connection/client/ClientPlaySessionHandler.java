@@ -469,6 +469,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       player.clearHeaderAndFooter();
     }
 
+    System.out.println("STARTING UPDATE FOR SWITCH");
     player.getConnection().write(new StartUpdate());
     return configSwitchFuture;
   }

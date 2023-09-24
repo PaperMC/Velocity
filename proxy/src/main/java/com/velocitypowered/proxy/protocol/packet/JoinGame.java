@@ -425,7 +425,6 @@ public class JoinGame implements MinecraftPacket {
 
     buf.writeBoolean(reducedDebugInfo);
     buf.writeBoolean(showRespawnScreen);
-    buf.writeBoolean(doLimitedCrafting);
 
     buf.writeBoolean(dimensionInfo.isDebugType());
     buf.writeBoolean(dimensionInfo.isFlat());

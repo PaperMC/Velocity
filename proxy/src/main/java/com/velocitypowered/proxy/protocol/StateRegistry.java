@@ -192,7 +192,7 @@ public enum StateRegistry {
           map(0x23, ProtocolVersion.MINECRAFT_1_19, false),
           map(0x24, ProtocolVersion.MINECRAFT_1_19_1, false),
           map(0x27, ProtocolVersion.MINECRAFT_1_20_2, false));
-      serverbound.register(FinishedUpdate.class, FinishedUpdate::new,
+      serverbound.register(StartUpdate.class, StartUpdate::new,
           map(0x0B, ProtocolVersion.MINECRAFT_1_20_2, false));
 
       clientbound.register(BossBar.class, BossBar::new,
