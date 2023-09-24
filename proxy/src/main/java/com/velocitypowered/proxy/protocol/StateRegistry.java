@@ -319,7 +319,7 @@ public enum StateRegistry {
           map(0x3D, ProtocolVersion.MINECRAFT_1_19_1, false),
           map(0x3C, ProtocolVersion.MINECRAFT_1_19_3, false),
           map(0x40, ProtocolVersion.MINECRAFT_1_19_4, false),
-          map(0x06, ProtocolVersion.MINECRAFT_1_20_2, false));
+          map(0x42, ProtocolVersion.MINECRAFT_1_20_2, false));
       clientbound.register(HeaderAndFooter.class, HeaderAndFooter::new,
           map(0x47, ProtocolVersion.MINECRAFT_1_8, true),
           map(0x48, ProtocolVersion.MINECRAFT_1_9, true),
