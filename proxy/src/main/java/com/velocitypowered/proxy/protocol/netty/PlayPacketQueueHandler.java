@@ -70,12 +70,14 @@ public class PlayPacketQueueHandler extends ChannelDuplexHandler {
   }
 
   @Override
-  public void channelInactive(@NotNull ChannelHandlerContext ctx) {
+  public void channelInactive(@NotNull ChannelHandlerContext ctx) throws Exception {
     this.releaseQueue(ctx, false);
+
+    super.channelInactive(ctx);
   }
 
   @Override
-  public void handlerRemoved(ChannelHandlerContext ctx) {
+  public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
     this.releaseQueue(ctx, ctx.channel().isActive());
   }
 
