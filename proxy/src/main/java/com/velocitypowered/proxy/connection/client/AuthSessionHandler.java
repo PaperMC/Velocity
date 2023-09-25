@@ -268,7 +268,8 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
                             return null;
                           });
                 }
-            }},
+              }
+            },
             mcConnection.eventLoop())
         .exceptionally(
             (ex) -> {
