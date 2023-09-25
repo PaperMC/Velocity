@@ -106,6 +106,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(TagsUpdate packet) {
+    serverConn.getPlayer().getConnection().write(packet);
     return true;
   }
 
