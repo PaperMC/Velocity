@@ -202,7 +202,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
     } else {
       loginState = State.ACKNOWLEDGED;
       mcConnection.setActiveSessionHandler(
-              StateRegistry.CONFIG, new ClientConfigSessionHandler(server, connectedPlayer));
+          StateRegistry.CONFIG, new ClientConfigSessionHandler(server, connectedPlayer));
 
       server
           .getEventManager()
@@ -256,7 +256,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
                 if (inbound.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0) {
                   loginState = State.ACKNOWLEDGED;
                   mcConnection.setActiveSessionHandler(
-                          StateRegistry.PLAY, new InitialConnectSessionHandler(player, server));
+                      StateRegistry.PLAY, new InitialConnectSessionHandler(player, server));
                   server
                       .getEventManager()
                       .fire(new PostLoginEvent(player))
