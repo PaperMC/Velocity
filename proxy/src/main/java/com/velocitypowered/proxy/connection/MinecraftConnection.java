@@ -367,7 +367,13 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   }
 
   // Ideally only used by the state switch
-  private void setState(StateRegistry state) {
+
+  /**
+   * Sets the new state for the connection.
+   *
+   * @param state the state to use
+   */
+  public void setState(StateRegistry state) {
     ensureInEventLoop();
 
     this.state = state;
