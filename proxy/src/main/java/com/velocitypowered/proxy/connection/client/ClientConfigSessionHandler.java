@@ -86,7 +86,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ClientSettings packet) {
-    player.getClientSettingsPacketQueue().add(packet);
+    player.setClientSettingsPacket(packet);
     return true;
   }
 

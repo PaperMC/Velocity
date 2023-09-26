@@ -81,7 +81,6 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -173,9 +172,9 @@ public class ConnectedPlayer
   private @Nullable String clientBrand;
   private @Nullable Locale effectiveLocale;
   private @Nullable IdentifiedKey playerKey;
+  private @Nullable ClientSettings clientSettingsPacket;
   private final ChatQueue chatQueue;
   private final ChatBuilderFactory chatBuilderFactory;
-  private final List<ClientSettings> clientSettingsPacketQueue;
 
   ConnectedPlayer(
       VelocityServer server,
@@ -202,7 +201,6 @@ public class ConnectedPlayer
     this.playerKey = playerKey;
     this.chatQueue = new ChatQueue(this);
     this.chatBuilderFactory = new ChatBuilderFactory(this.getProtocolVersion());
-    this.clientSettingsPacketQueue = new ArrayList<>();
   }
 
   public ChatBuilderFactory getChatBuilderFactory() {
@@ -287,13 +285,17 @@ public class ConnectedPlayer
     return settings == null ? ClientSettingsWrapper.DEFAULT : this.settings;
   }
 
-  public List<ClientSettings> getClientSettingsPacketQueue() {
-    return clientSettingsPacketQueue;
+  public ClientSettings getClientSettingsPacket() {
+    return clientSettingsPacket;
   }
 
   @Override
   public boolean hasSentPlayerSettings() {
     return settings != null;
+  }
+
+  public void setClientSettingsPacket(ClientSettings clientSettingsPacket) {
+    this.clientSettingsPacket = clientSettingsPacket;
   }
 
   void setPlayerSettings(ClientSettings settings) {
