@@ -41,6 +41,7 @@ import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
+import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
@@ -123,6 +124,12 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   public boolean handle(KeepAlive packet) {
     serverConn.getPendingPings().put(packet.getRandomId(), System.currentTimeMillis());
     return false; // forwards on
+  }
+
+  @Override
+  public boolean handle(ClientSettings packet) {
+    serverConn.ensureConnected().write(packet);
+    return true;
   }
 
   @Override

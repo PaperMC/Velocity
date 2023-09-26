@@ -23,6 +23,7 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
@@ -34,9 +35,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-/**
- * Handles the client config stage.
- */
+/** Handles the client config stage. */
 public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(ClientConfigSessionHandler.class);
@@ -86,7 +85,14 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
+  public boolean handle(ClientSettings packet) {
+    player.getClientSettingsPacketQueue().add(packet);
+    return true;
+  }
+
+  @Override
   public boolean handle(ResourcePackResponse packet) {
+    player.getConnection().write(packet);
     return true;
   }
 

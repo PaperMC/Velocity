@@ -188,7 +188,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ClientSettings packet) {
     player.setPlayerSettings(packet);
-    return false; // will forward onto the server
+    VelocityServerConnection serverConnection = player.getConnectedServer();
+    if (serverConnection == null) {
+      // No server connection yet, probably transitioning.
+      return true;
+    }
+    player.getConnectedServer().ensureConnected().write(packet);
+    return true; // will forward onto the server
   }
 
   @Override

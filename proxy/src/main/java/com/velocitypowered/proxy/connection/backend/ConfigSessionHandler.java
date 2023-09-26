@@ -30,13 +30,11 @@ import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
-import com.velocitypowered.proxy.protocol.packet.config.ActiveFeatures;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdate;
 import com.velocitypowered.proxy.protocol.packet.config.RegistrySync;
 import com.velocitypowered.proxy.protocol.packet.config.TagsUpdate;
@@ -91,17 +89,6 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
       return true;
     }
     return false;
-  }
-
-  @Override
-  public boolean handle(ClientSettings packet) {
-    serverConn.ensureConnected().write(packet);
-    return true;
-  }
-
-  @Override
-  public boolean handle(ActiveFeatures packet) {
-    return true;
   }
 
   @Override
@@ -232,17 +219,15 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
 
   private void switchFailure(Throwable cause) {
     logger.error(
-            "Unable to switch to new server {} for {}",
-            serverConn.getServerInfo().getName(),
-            serverConn.getPlayer().getUsername(),
-            cause);
+        "Unable to switch to new server {} for {}",
+        serverConn.getServerInfo().getName(),
+        serverConn.getPlayer().getUsername(),
+        cause);
     serverConn.getPlayer().disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
     resultFuture.completeExceptionally(cause);
   }
 
-  /**
-   * Represents the state of the configuration stage.
-   */
+  /** Represents the state of the configuration stage. */
   public static enum State {
     START,
     NEGOTIATING,
