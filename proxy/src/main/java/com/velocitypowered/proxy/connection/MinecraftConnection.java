@@ -348,7 +348,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   }
 
   /**
-   * Determines whether or not the channel should continue reading data automaticaly.
+   * Determines whether or not the channel should continue reading data automatically.
    *
    * @param autoReading whether or not we should read data automatically
    */

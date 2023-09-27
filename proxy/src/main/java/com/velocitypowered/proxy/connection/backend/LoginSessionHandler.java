@@ -166,6 +166,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       smc.setActiveSessionHandler(
           StateRegistry.PLAY, new TransitionSessionHandler(server, serverConn, resultFuture));
     } else {
+      smc.setAutoReading(false);
       CompletableFuture<Void> switchFuture;
       if (serverConn.getPlayer().getConnection().getActiveSessionHandler()
           instanceof ClientPlaySessionHandler) {
@@ -182,6 +183,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
             // Sync backend
             smc.setActiveSessionHandler(
                 StateRegistry.CONFIG, new ConfigSessionHandler(server, serverConn, resultFuture));
+            smc.setAutoReading(true);
           },
           smc.eventLoop());
     }

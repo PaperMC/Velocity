@@ -154,22 +154,23 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(FinishedUpdate packet) {
+    MinecraftConnection smc = serverConn.ensureConnected();
     ClientConfigSessionHandler configHandler =
         (ClientConfigSessionHandler)
             serverConn.getPlayer().getConnection().getActiveSessionHandler();
 
+    smc.setAutoReading(false);
     configHandler
         .handleBackendFinishUpdate(serverConn)
         .thenAcceptAsync(
             (unused) -> {
-              serverConn.ensureConnected().write(new FinishedUpdate());
-              serverConn
-                  .ensureConnected()
-                  .setActiveSessionHandler(
-                      StateRegistry.PLAY,
-                      new TransitionSessionHandler(server, serverConn, resultFuture));
+              smc.write(new FinishedUpdate());
+              smc.setActiveSessionHandler(
+                  StateRegistry.PLAY,
+                  new TransitionSessionHandler(server, serverConn, resultFuture));
+              smc.setAutoReading(true);
             },
-            serverConn.ensureConnected().eventLoop());
+            smc.eventLoop());
     return true;
   }
 
