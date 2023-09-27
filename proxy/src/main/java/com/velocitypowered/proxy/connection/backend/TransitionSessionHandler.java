@@ -143,7 +143,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
               // Now set the connected server.
               serverConn.getPlayer().setConnectedServer(serverConn);
-              serverConn.ensureConnected().write(player.getClientSettingsPacket());
+              if (player.getClientSettingsPacket() != null) {
+                serverConn.ensureConnected().write(player.getClientSettingsPacket());
+              }
 
               // We're done! :)
               server
