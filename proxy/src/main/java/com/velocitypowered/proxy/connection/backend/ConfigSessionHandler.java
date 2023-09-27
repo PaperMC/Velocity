@@ -41,7 +41,6 @@ import com.velocitypowered.proxy.protocol.packet.config.TagsUpdate;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
-import jdk.jfr.Experimental;
 import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,7 +49,6 @@ import org.apache.logging.log4j.Logger;
  * A special session handler that catches "last minute" disconnects. This version is to accommodate
  * 1.20.2+ switching. Yes, some of this is exceptionally stupid.
  */
-@Experimental
 public class ConfigSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(ConfigSessionHandler.class);
