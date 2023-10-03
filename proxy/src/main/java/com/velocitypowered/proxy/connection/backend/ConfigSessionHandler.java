@@ -37,10 +37,12 @@ import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdate;
 import com.velocitypowered.proxy.protocol.packet.config.RegistrySync;
+import com.velocitypowered.proxy.protocol.packet.config.StartUpdate;
 import com.velocitypowered.proxy.protocol.packet.config.TagsUpdate;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Pattern;
 import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -51,8 +53,8 @@ import org.apache.logging.log4j.Logger;
  */
 public class ConfigSessionHandler implements MinecraftSessionHandler {
 
+  private static final Pattern PLAUSIBLE_SHA1_HASH = Pattern.compile("^[a-z0-9]{40}$");
   private static final Logger logger = LogManager.getLogger(ConfigSessionHandler.class);
-
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
   private final CompletableFuture<Impl> resultFuture;
@@ -62,14 +64,12 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   /**
    * Creates the new transition handler.
    *
-   * @param server the Velocity server instance
-   * @param serverConn the server connection
+   * @param server       the Velocity server instance
+   * @param serverConn   the server connection
    * @param resultFuture the result future
    */
-  ConfigSessionHandler(
-      VelocityServer server,
-      VelocityServerConnection serverConn,
-      CompletableFuture<Impl> resultFuture) {
+  ConfigSessionHandler(VelocityServer server, VelocityServerConnection serverConn,
+                       CompletableFuture<Impl> resultFuture) {
     this.server = server;
     this.serverConn = serverConn;
     this.resultFuture = resultFuture;
@@ -77,7 +77,8 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public void deactivated() {}
+  public void deactivated() {
+  }
 
   @Override
   public boolean beforeHandle() {
@@ -87,6 +88,12 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
       return true;
     }
     return false;
+  }
+
+  @Override
+  public boolean handle(StartUpdate packet) {
+    serverConn.ensureConnected().write(packet);
+    return true;
   }
 
   @Override
@@ -108,44 +115,30 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
     ServerResourcePackSendEvent event =
         new ServerResourcePackSendEvent(packet.toServerPromptedPack(), this.serverConn);
 
-    server
-        .getEventManager()
-        .fire(event)
-        .thenAcceptAsync(
-            serverResourcePackSendEvent -> {
-              if (playerConnection.isClosed()) {
-                return;
-              }
-              if (serverResourcePackSendEvent.getResult().isAllowed()) {
-                ResourcePackInfo toSend = serverResourcePackSendEvent.getProvidedResourcePack();
-                if (toSend != serverResourcePackSendEvent.getReceivedResourcePack()) {
-                  ((VelocityResourcePackInfo) toSend)
-                      .setOriginalOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
-                }
+    server.getEventManager().fire(event).thenAcceptAsync(serverResourcePackSendEvent -> {
+      if (playerConnection.isClosed()) {
+        return;
+      }
+      if (serverResourcePackSendEvent.getResult().isAllowed()) {
+        ResourcePackInfo toSend = serverResourcePackSendEvent.getProvidedResourcePack();
+        if (toSend != serverResourcePackSendEvent.getReceivedResourcePack()) {
+          ((VelocityResourcePackInfo) toSend).setOriginalOrigin(
+              ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
+        }
 
-                serverConn.getPlayer().queueResourcePack(toSend);
-              } else if (serverConn.getConnection() != null) {
-                serverConn
-                    .getConnection()
-                    .write(
-                        new ResourcePackResponse(
-                            packet.getHash(), PlayerResourcePackStatusEvent.Status.DECLINED));
-              }
-            },
-            playerConnection.eventLoop())
-        .exceptionally(
-            (ex) -> {
-              if (serverConn.getConnection() != null) {
-                serverConn
-                    .getConnection()
-                    .write(
-                        new ResourcePackResponse(
-                            packet.getHash(), PlayerResourcePackStatusEvent.Status.DECLINED));
-              }
-              logger.error(
-                  "Exception while handling resource pack send for {}", playerConnection, ex);
-              return null;
-            });
+        serverConn.getPlayer().queueResourcePack(toSend);
+      } else if (serverConn.getConnection() != null) {
+        serverConn.getConnection().write(new ResourcePackResponse(packet.getHash(),
+            PlayerResourcePackStatusEvent.Status.DECLINED));
+      }
+    }, playerConnection.eventLoop()).exceptionally((ex) -> {
+      if (serverConn.getConnection() != null) {
+        serverConn.getConnection().write(new ResourcePackResponse(packet.getHash(),
+            PlayerResourcePackStatusEvent.Status.DECLINED));
+      }
+      logger.error("Exception while handling resource pack send for {}", playerConnection, ex);
+      return null;
+    });
 
     return true;
   }
@@ -154,21 +147,15 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   public boolean handle(FinishedUpdate packet) {
     MinecraftConnection smc = serverConn.ensureConnected();
     ClientConfigSessionHandler configHandler =
-        (ClientConfigSessionHandler)
-            serverConn.getPlayer().getConnection().getActiveSessionHandler();
+        (ClientConfigSessionHandler) serverConn.getPlayer().getConnection()
+            .getActiveSessionHandler();
 
     smc.setAutoReading(false);
-    configHandler
-        .handleBackendFinishUpdate(serverConn)
-        .thenAcceptAsync(
-            (unused) -> {
-              smc.write(new FinishedUpdate());
-              smc.setActiveSessionHandler(
-                  StateRegistry.PLAY,
-                  new TransitionSessionHandler(server, serverConn, resultFuture));
-              smc.setAutoReading(true);
-            },
-            smc.eventLoop());
+    configHandler.handleBackendFinishUpdate(serverConn).thenAcceptAsync((unused) -> {
+      smc.setActiveSessionHandler(StateRegistry.PLAY,
+          new TransitionSessionHandler(server, serverConn, resultFuture));
+      smc.setAutoReading(true);
+    }, smc.eventLoop());
     return true;
   }
 
@@ -182,19 +169,14 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(PluginMessage packet) {
     if (PluginMessageUtil.isMcBrand(packet)) {
-      serverConn
-          .getPlayer()
-          .getConnection()
-          .write(
-              PluginMessageUtil.rewriteMinecraftBrand(
-                  packet, server.getVersion(), serverConn.getPlayer().getProtocolVersion()));
+      serverConn.getPlayer().getConnection().write(
+          PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion(),
+              serverConn.getPlayer().getProtocolVersion()));
     } else {
       // TODO: Change this so its usable for mod loaders
       serverConn.disconnect();
-      resultFuture.complete(
-          ConnectionRequestResults.forDisconnect(
-              Component.translatable("multiplayer.disconnect.missing_tags"),
-              serverConn.getServer()));
+      resultFuture.complete(ConnectionRequestResults.forDisconnect(
+          Component.translatable("multiplayer.disconnect.missing_tags"), serverConn.getServer()));
     }
     return true;
   }
@@ -217,21 +199,16 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   private void switchFailure(Throwable cause) {
-    logger.error(
-        "Unable to switch to new server {} for {}",
-        serverConn.getServerInfo().getName(),
-        serverConn.getPlayer().getUsername(),
-        cause);
+    logger.error("Unable to switch to new server {} for {}", serverConn.getServerInfo().getName(),
+        serverConn.getPlayer().getUsername(), cause);
     serverConn.getPlayer().disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
     resultFuture.completeExceptionally(cause);
   }
 
-  /** Represents the state of the configuration stage. */
+  /**
+   * Represents the state of the configuration stage.
+   */
   public static enum State {
-    START,
-    NEGOTIATING,
-    PLUGIN_MESSAGE_INTERRUPT,
-    RESOURCE_PACK_INTERRUPT,
-    COMPLETE
+    START, NEGOTIATING, PLUGIN_MESSAGE_INTERRUPT, RESOURCE_PACK_INTERRUPT, COMPLETE
   }
 }

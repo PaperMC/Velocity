@@ -35,7 +35,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-/** Handles the client config stage. */
+/**
+ * Handles the client config stage.
+ */
 public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(ClientConfigSessionHandler.class);
@@ -61,7 +63,8 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public void deactivated() {}
+  public void deactivated() {
+  }
 
   @Override
   public boolean handle(KeepAlive packet) {
@@ -80,11 +83,6 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(PluginMessage packet) {
-    return true;
-  }
-
-  @Override
   public boolean handle(ClientSettings packet) {
     player.setClientSettingsPacket(packet);
     return true;
@@ -92,18 +90,18 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ResourcePackResponse packet) {
-    player.getConnection().write(packet);
-    return true;
+    if (player.getConnectionInFlight() != null) {
+      player.getConnectionInFlight().ensureConnected().write(packet);
+    }
+    return player.onResourcePackResponse(packet.getStatus());
   }
 
   @Override
   public boolean handle(FinishedUpdate packet) {
-    player
-        .getConnection()
+    player.getConnection()
         .setActiveSessionHandler(StateRegistry.PLAY, new ClientPlaySessionHandler(server, player));
 
     configSwitchFuture.complete(null);
-
     return true;
   }
 
@@ -149,8 +147,15 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
         Component.translatable("velocity.error.player-connection-error", NamedTextColor.RED));
   }
 
+  /**
+   * Handles the backend finishing the config stage.
+   *
+   * @param serverConn the server connection
+   * @return a future that completes when the config stage is finished
+   */
   public CompletableFuture<Void> handleBackendFinishUpdate(VelocityServerConnection serverConn) {
     player.getConnection().write(new FinishedUpdate());
+    serverConn.ensureConnected().write(new FinishedUpdate());
     return configSwitchFuture;
   }
 }

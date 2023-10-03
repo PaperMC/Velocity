@@ -42,7 +42,9 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-/** A special session handler that catches "last minute" disconnects. */
+/**
+ * A special session handler that catches "last minute" disconnects.
+ */
 public class TransitionSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(TransitionSessionHandler.class);
@@ -55,14 +57,12 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   /**
    * Creates the new transition handler.
    *
-   * @param server the Velocity server instance
-   * @param serverConn the server connection
+   * @param server       the Velocity server instance
+   * @param serverConn   the server connection
    * @param resultFuture the result future
    */
-  TransitionSessionHandler(
-      VelocityServer server,
-      VelocityServerConnection serverConn,
-      CompletableFuture<Impl> resultFuture) {
+  TransitionSessionHandler(VelocityServer server, VelocityServerConnection serverConn,
+                           CompletableFuture<Impl> resultFuture) {
     this.server = server;
     this.serverConn = serverConn;
     this.resultFuture = resultFuture;
@@ -108,63 +108,56 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
     // The goods are in hand! We got JoinGame. Let's transition completely to the new state.
     smc.setAutoReading(false);
-    server
-        .getEventManager()
+    server.getEventManager()
         .fire(new ServerConnectedEvent(player, serverConn.getServer(), previousServer))
-        .thenRunAsync(
-            () -> {
-              // Make sure we can still transition (player might have disconnected here).
-              if (!serverConn.isActive()) {
-                // Connection is obsolete.
-                serverConn.disconnect();
-                return;
-              }
+        .thenRunAsync(() -> {
+          // Make sure we can still transition (player might have disconnected here).
+          if (!serverConn.isActive()) {
+            // Connection is obsolete.
+            serverConn.disconnect();
+            return;
+          }
 
-              // Change the client to use the ClientPlaySessionHandler if required.
-              ClientPlaySessionHandler playHandler;
-              if (player.getConnection().getActiveSessionHandler()
-                  instanceof ClientPlaySessionHandler) {
-                playHandler =
-                    (ClientPlaySessionHandler) player.getConnection().getActiveSessionHandler();
-              } else {
-                playHandler = new ClientPlaySessionHandler(server, player);
-                player.getConnection().setActiveSessionHandler(StateRegistry.PLAY, playHandler);
-              }
-              assert playHandler != null;
-              playHandler.handleBackendJoinGame(packet, serverConn);
+          // Change the client to use the ClientPlaySessionHandler if required.
+          ClientPlaySessionHandler playHandler;
+          if (player.getConnection()
+              .getActiveSessionHandler() instanceof ClientPlaySessionHandler) {
+            playHandler =
+                (ClientPlaySessionHandler) player.getConnection().getActiveSessionHandler();
+          } else {
+            playHandler = new ClientPlaySessionHandler(server, player);
+            player.getConnection().setActiveSessionHandler(StateRegistry.PLAY, playHandler);
+          }
+          assert playHandler != null;
+          playHandler.handleBackendJoinGame(packet, serverConn);
 
-              // Set the new play session handler for the server. We will have nothing more to do
-              // with this connection once this task finishes up.
-              smc.setActiveSessionHandler(
-                  StateRegistry.PLAY, new BackendPlaySessionHandler(server, serverConn));
+          // Set the new play session handler for the server. We will have nothing more to do
+          // with this connection once this task finishes up.
+          smc.setActiveSessionHandler(StateRegistry.PLAY,
+              new BackendPlaySessionHandler(server, serverConn));
 
-              // Clean up disabling auto-read while the connected event was being processed.
-              smc.setAutoReading(true);
+          // Clean up disabling auto-read while the connected event was being processed.
+          smc.setAutoReading(true);
 
-              // Now set the connected server.
-              serverConn.getPlayer().setConnectedServer(serverConn);
-              if (player.getClientSettingsPacket() != null) {
-                serverConn.ensureConnected().write(player.getClientSettingsPacket());
-              }
+          // Now set the connected server.
+          serverConn.getPlayer().setConnectedServer(serverConn);
 
-              // We're done! :)
-              server
-                  .getEventManager()
-                  .fireAndForget(new ServerPostConnectEvent(player, previousServer));
-              resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
-            },
-            smc.eventLoop())
-        .exceptionally(
-            exc -> {
-              logger.error(
-                  "Unable to switch to new server {} for {}",
-                  serverConn.getServerInfo().getName(),
-                  player.getUsername(),
-                  exc);
-              player.disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
-              resultFuture.completeExceptionally(exc);
-              return null;
-            });
+          if (player.getClientSettingsPacket() != null) {
+            serverConn.ensureConnected().write(player.getClientSettingsPacket());
+          }
+
+          // We're done! :)
+          server.getEventManager()
+              .fireAndForget(new ServerPostConnectEvent(player, previousServer));
+          resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
+        }, smc.eventLoop()).exceptionally(exc -> {
+          logger.error("Unable to switch to new server {} for {}",
+              serverConn.getServerInfo().getName(),
+              player.getUsername(), exc);
+          player.disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
+          resultFuture.completeExceptionally(exc);
+          return null;
+        });
 
     return true;
   }
@@ -203,8 +196,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           existingConnection.setConnectionPhase(IN_TRANSITION);
 
           // Tell the player that we're leaving and we just aren't coming back.
-          existingConnection
-              .getPhase()
+          existingConnection.getPhase()
               .onDepartForNewServer(existingConnection, serverConn.getPlayer());
         }
       }

@@ -288,19 +288,15 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   public boolean handle(PluginMessage packet) {
     // Handling edge case when packet with FML client handshake (state COMPLETE)
     // arrives after JoinGame packet from destination server
-    VelocityServerConnection serverConn =
-        (player.getConnectedServer() == null
-                && packet.getChannel().equals(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL))
-            ? player.getConnectionInFlight()
-            : player.getConnectedServer();
+    VelocityServerConnection serverConn = (player.getConnectedServer() == null
+        && packet.getChannel().equals(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL))
+        ? player.getConnectionInFlight() : player.getConnectedServer();
 
     MinecraftConnection backendConn = serverConn != null ? serverConn.getConnection() : null;
     if (serverConn != null && backendConn != null) {
       if (backendConn.getState() != StateRegistry.PLAY) {
-        logger.warn(
-            "A plugin message was received while the backend server was not "
-                + "ready. Channel: {}. Packet discarded.",
-            packet.getChannel());
+        logger.warn("A plugin message was received while the backend server was not "
+            + "ready. Channel: {}. Packet discarded.", packet.getChannel());
       } else if (PluginMessageUtil.isRegister(packet)) {
         List<String> channels = PluginMessageUtil.getChannels(packet);
         List<ChannelIdentifier> channelIdentifiers = new ArrayList<>();
@@ -311,10 +307,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             channelIdentifiers.add(new LegacyChannelIdentifier(channel));
           }
         }
-        server
-            .getEventManager()
-            .fireAndForget(
-                new PlayerChannelRegisterEvent(player, ImmutableList.copyOf(channelIdentifiers)));
+        server.getEventManager().fireAndForget(
+            new PlayerChannelRegisterEvent(player, ImmutableList.copyOf(channelIdentifiers)));
         backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isUnregister(packet)) {
         backendConn.write(packet.retain());
@@ -322,9 +316,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         String brand = PluginMessageUtil.readBrandMessage(packet.content());
         server.getEventManager().fireAndForget(new PlayerClientBrandEvent(player, brand));
         player.setClientBrand(brand);
-        backendConn.write(
-            PluginMessageUtil.rewriteMinecraftBrand(
-                packet, server.getVersion(), player.getProtocolVersion()));
+        backendConn.write(PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion(),
+            player.getProtocolVersion()));
       } else if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
         return true;
       } else {
@@ -358,31 +351,23 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           } else {
             byte[] copy = ByteBufUtil.getBytes(packet.content());
             PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id, copy);
-            server
-                .getEventManager()
-                .fire(event)
-                .thenAcceptAsync(
-                    pme -> {
-                      if (pme.getResult().isAllowed()) {
-                        PluginMessage message =
-                            new PluginMessage(packet.getChannel(), Unpooled.wrappedBuffer(copy));
-                        if (!player.getPhase().consideredComplete()
-                            || !serverConn.getPhase().consideredComplete()) {
-                          // We're still processing the connection (see above), enqueue the packet
-                          // for now.
-                          loginPluginMessages.add(message.retain());
-                        } else {
-                          backendConn.write(message);
-                        }
-                      }
-                    },
-                    backendConn.eventLoop())
-                .exceptionally(
-                    (ex) -> {
-                      logger.error(
-                          "Exception while handling plugin message packet for {}", player, ex);
-                      return null;
-                    });
+            server.getEventManager().fire(event).thenAcceptAsync(pme -> {
+              if (pme.getResult().isAllowed()) {
+                PluginMessage message =
+                    new PluginMessage(packet.getChannel(), Unpooled.wrappedBuffer(copy));
+                if (!player.getPhase().consideredComplete()
+                    || !serverConn.getPhase().consideredComplete()) {
+                  // We're still processing the connection (see above), enqueue the packet
+                  // for now.
+                  loginPluginMessages.add(message.retain());
+                } else {
+                  backendConn.write(message);
+                }
+              }
+            }, backendConn.eventLoop()).exceptionally((ex) -> {
+              logger.error("Exception while handling plugin message packet for {}", player, ex);
+              return null;
+            });
           }
         }
       }
@@ -496,7 +481,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
    * Handles the {@code JoinGame} packet. This function is responsible for handling the client-side
    * switching servers in Velocity.
    *
-   * @param joinGame the join game packet
+   * @param joinGame    the join game packet
    * @param destination the new server we are connecting to
    */
   public void handleBackendJoinGame(JoinGame joinGame, VelocityServerConnection destination) {
@@ -542,11 +527,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     // Clear any title from the previous server.
     if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
-      player
-          .getConnection()
-          .delayedWrite(
-              GenericTitlePacket.constructTitlePacket(
-                  GenericTitlePacket.ActionType.RESET, player.getProtocolVersion()));
+      player.getConnection().delayedWrite(
+          GenericTitlePacket.constructTitlePacket(GenericTitlePacket.ActionType.RESET,
+              player.getProtocolVersion()));
     }
 
     // Flush everything
@@ -616,45 +599,36 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       return false;
     }
 
-    server
-        .getCommandManager()
-        .offerBrigadierSuggestions(player, command)
-        .thenAcceptAsync(
-            suggestions -> {
-              if (suggestions.isEmpty()) {
-                return;
-              }
+    server.getCommandManager().offerBrigadierSuggestions(player, command)
+        .thenAcceptAsync(suggestions -> {
+          if (suggestions.isEmpty()) {
+            return;
+          }
 
-              List<Offer> offers = new ArrayList<>();
-              for (Suggestion suggestion : suggestions.getList()) {
-                String offer = suggestion.getText();
-                Component tooltip = null;
-                if (suggestion.getTooltip() != null
-                    && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
-                  tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
-                }
-                offers.add(new Offer(offer, tooltip));
-              }
-              int startPos = packet.getCommand().lastIndexOf(' ') + 1;
-              if (startPos > 0) {
-                TabCompleteResponse resp = new TabCompleteResponse();
-                resp.setTransactionId(packet.getTransactionId());
-                resp.setStart(startPos);
-                resp.setLength(packet.getCommand().length() - startPos);
-                resp.getOffers().addAll(offers);
-                player.getConnection().write(resp);
-              }
-            },
-            player.getConnection().eventLoop())
-        .exceptionally(
-            (ex) -> {
-              logger.error(
-                  "Exception while handling command tab completion for player {} executing {}",
-                  player,
-                  command,
-                  ex);
-              return null;
-            });
+          List<Offer> offers = new ArrayList<>();
+          for (Suggestion suggestion : suggestions.getList()) {
+            String offer = suggestion.getText();
+            Component tooltip = null;
+            if (suggestion.getTooltip() != null
+                && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
+              tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
+            }
+            offers.add(new Offer(offer, tooltip));
+          }
+          int startPos = packet.getCommand().lastIndexOf(' ') + 1;
+          if (startPos > 0) {
+            TabCompleteResponse resp = new TabCompleteResponse();
+            resp.setTransactionId(packet.getTransactionId());
+            resp.setStart(startPos);
+            resp.setLength(packet.getCommand().length() - startPos);
+            resp.getOffers().addAll(offers);
+            player.getConnection().write(resp);
+          }
+        }, player.getConnection().eventLoop()).exceptionally((ex) -> {
+          logger.error("Exception while handling command tab completion for player {} executing {}",
+              player, command, ex);
+          return null;
+        });
     return true; // Sorry, handler; we're just gonna have to lie to you here.
   }
 
@@ -688,48 +662,37 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   private void finishCommandTabComplete(TabCompleteRequest request, TabCompleteResponse response) {
     String command = request.getCommand().substring(1);
-    server
-        .getCommandManager()
-        .offerBrigadierSuggestions(player, command)
-        .thenAcceptAsync(
-            offers -> {
-              boolean legacy =
-                  player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0;
-              try {
-                for (Suggestion suggestion : offers.getList()) {
-                  String offer = suggestion.getText();
-                  offer = legacy && !offer.startsWith("/") ? "/" + offer : offer;
-                  if (legacy && offer.startsWith(command)) {
-                    offer = offer.substring(command.length());
-                  }
-                  Component tooltip = null;
-                  if (suggestion.getTooltip() != null
-                      && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
-                    tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
-                  }
-                  response.getOffers().add(new Offer(offer, tooltip));
-                }
-                response.getOffers().sort(null);
-                player.getConnection().write(response);
-              } catch (Exception e) {
-                logger.error(
-                    "Unable to provide tab list completions for {} for command '{}'",
-                    player.getUsername(),
-                    command,
-                    e);
+    server.getCommandManager().offerBrigadierSuggestions(player, command)
+        .thenAcceptAsync(offers -> {
+          boolean legacy =
+              player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0;
+          try {
+            for (Suggestion suggestion : offers.getList()) {
+              String offer = suggestion.getText();
+              offer = legacy && !offer.startsWith("/") ? "/" + offer : offer;
+              if (legacy && offer.startsWith(command)) {
+                offer = offer.substring(command.length());
               }
-            },
-            player.getConnection().eventLoop())
-        .exceptionally(
-            (ex) -> {
-              logger.error(
-                  "Exception while finishing command tab completion,"
-                      + " with request {} and response {}",
-                  request,
-                  response,
-                  ex);
-              return null;
-            });
+              Component tooltip = null;
+              if (suggestion.getTooltip() != null
+                  && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
+                tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
+              }
+              response.getOffers().add(new Offer(offer, tooltip));
+            }
+            response.getOffers().sort(null);
+            player.getConnection().write(response);
+          } catch (Exception e) {
+            logger.error("Unable to provide tab list completions for {} for command '{}'",
+                player.getUsername(), command, e);
+          }
+        }, player.getConnection().eventLoop()).exceptionally((ex) -> {
+          logger.error(
+              "Exception while finishing command tab completion,"
+                  + " with request {} and response {}",
+              request, response, ex);
+          return null;
+        });
   }
 
   private void finishRegularTabComplete(TabCompleteRequest request, TabCompleteResponse response) {
@@ -737,31 +700,25 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     for (Offer offer : response.getOffers()) {
       offers.add(offer.getText());
     }
-    server
-        .getEventManager()
-        .fire(new TabCompleteEvent(player, request.getCommand(), offers))
-        .thenAcceptAsync(
-            e -> {
-              response.getOffers().clear();
-              for (String s : e.getSuggestions()) {
-                response.getOffers().add(new Offer(s));
-              }
-              player.getConnection().write(response);
-            },
-            player.getConnection().eventLoop())
-        .exceptionally(
-            (ex) -> {
-              logger.error(
-                  "Exception while finishing regular tab completion,"
-                      + " with request {} and response{}",
-                  request,
-                  response,
-                  ex);
-              return null;
-            });
+    server.getEventManager().fire(new TabCompleteEvent(player, request.getCommand(), offers))
+        .thenAcceptAsync(e -> {
+          response.getOffers().clear();
+          for (String s : e.getSuggestions()) {
+            response.getOffers().add(new Offer(s));
+          }
+          player.getConnection().write(response);
+        }, player.getConnection().eventLoop()).exceptionally((ex) -> {
+          logger.error(
+              "Exception while finishing regular tab completion,"
+                  + " with request {} and response{}",
+              request, response, ex);
+          return null;
+        });
   }
 
-  /** Immediately send any queued messages to the server. */
+  /**
+   * Immediately send any queued messages to the server.
+   */
   public void flushQueuedMessages() {
     VelocityServerConnection serverConnection = player.getConnectedServer();
     if (serverConnection != null) {
