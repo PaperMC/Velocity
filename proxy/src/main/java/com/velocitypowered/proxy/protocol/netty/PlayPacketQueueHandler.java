@@ -21,8 +21,6 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
-import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
@@ -76,11 +74,8 @@ public class PlayPacketQueueHandler extends ChannelDuplexHandler {
     }
 
     if (this.serverRegistry.containsPacket(((MinecraftPacket) msg))) {
-      MinecraftPacket packet = (MinecraftPacket) msg;
-      if (packet instanceof ResourcePackResponse || packet instanceof PluginMessage) {
-        ctx.write(msg, promise);
-        return;
-      }
+      ctx.write(msg, promise);
+      return;
     }
 
     // Otherwise, queue the packet
