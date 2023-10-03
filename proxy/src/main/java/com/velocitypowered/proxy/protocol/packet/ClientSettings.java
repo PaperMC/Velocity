@@ -37,17 +37,12 @@ public class ClientSettings implements MinecraftPacket {
   private boolean chatFilteringEnabled; // Added in 1.17
   private boolean clientListingAllowed; // Added in 1.18, overwrites server-list "anonymous" mode
 
-  public ClientSettings() {}
+  public ClientSettings() {
+  }
 
-  public ClientSettings(
-      String locale,
-      byte viewDistance,
-      int chatVisibility,
-      boolean chatColors,
-      short skinParts,
-      int mainHand,
-      boolean chatFilteringEnabled,
-      boolean clientListingAllowed) {
+  public ClientSettings(String locale, byte viewDistance, int chatVisibility, boolean chatColors,
+                        short skinParts, int mainHand, boolean chatFilteringEnabled,
+                        boolean clientListingAllowed) {
     this.locale = locale;
     this.viewDistance = viewDistance;
     this.chatVisibility = chatVisibility;
@@ -126,25 +121,10 @@ public class ClientSettings implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "ClientSettings{"
-        + "locale='"
-        + locale
-        + '\''
-        + ", viewDistance="
-        + viewDistance
-        + ", chatVisibility="
-        + chatVisibility
-        + ", chatColors="
-        + chatColors
-        + ", skinParts="
-        + skinParts
-        + ", mainHand="
-        + mainHand
-        + ", chatFilteringEnabled="
-        + chatFilteringEnabled
-        + ", clientListingAllowed="
-        + clientListingAllowed
-        + '}';
+    return "ClientSettings{" + "locale='" + locale + '\'' + ", viewDistance=" + viewDistance +
+        ", chatVisibility=" + chatVisibility + ", chatColors=" + chatColors + ", skinParts=" +
+        skinParts + ", mainHand=" + mainHand + ", chatFilteringEnabled=" + chatFilteringEnabled +
+        ", clientListingAllowed=" + clientListingAllowed + '}';
   }
 
   @Override
@@ -216,12 +196,9 @@ public class ClientSettings implements MinecraftPacket {
       return false;
     }
     final ClientSettings that = (ClientSettings) o;
-    return viewDistance == that.viewDistance
-        && chatVisibility == that.chatVisibility
-        && chatColors == that.chatColors
-        && difficulty == that.difficulty
-        && skinParts == that.skinParts
-        && mainHand == that.mainHand
+    return viewDistance == that.viewDistance && chatVisibility == that.chatVisibility
+        && chatColors == that.chatColors && difficulty == that.difficulty
+        && skinParts == that.skinParts && mainHand == that.mainHand
         && chatFilteringEnabled == that.chatFilteringEnabled
         && clientListingAllowed == that.clientListingAllowed
         && Objects.equals(locale, that.locale);
@@ -229,15 +206,7 @@ public class ClientSettings implements MinecraftPacket {
 
   @Override
   public int hashCode() {
-    return Objects.hash(
-        locale,
-        viewDistance,
-        chatVisibility,
-        chatColors,
-        difficulty,
-        skinParts,
-        mainHand,
-        chatFilteringEnabled,
-        clientListingAllowed);
+    return Objects.hash(locale, viewDistance, chatVisibility, chatColors, difficulty, skinParts,
+        mainHand, chatFilteringEnabled, clientListingAllowed);
   }
 }

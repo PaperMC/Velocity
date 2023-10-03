@@ -34,12 +34,8 @@ public class ClientConfigData {
   private final Key[] features;
   private final String brand;
 
-  private ClientConfigData(
-      @Nullable VelocityResourcePackInfo resourcePackInfo,
-      DataTag tag,
-      RegistrySync registry,
-      Key[] features,
-      String brand) {
+  private ClientConfigData(@Nullable VelocityResourcePackInfo resourcePackInfo, DataTag tag,
+                           RegistrySync registry, Key[] features, String brand) {
     this.resourcePackInfo = resourcePackInfo;
     this.tag = tag;
     this.registry = registry;
@@ -86,7 +82,8 @@ public class ClientConfigData {
     private Key[] features;
     private String brand;
 
-    private Builder() {}
+    private Builder() {
+    }
 
     /**
      * Clears the builder.

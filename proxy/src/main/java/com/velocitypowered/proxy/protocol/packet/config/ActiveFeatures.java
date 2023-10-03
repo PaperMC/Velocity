@@ -45,14 +45,14 @@ public class ActiveFeatures implements MinecraftPacket {
   }
 
   @Override
-  public void decode(
-      ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
+                     ProtocolVersion protocolVersion) {
     activeFeatures = ProtocolUtils.readKeyArray(buf);
   }
 
   @Override
-  public void encode(
-      ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction,
+                     ProtocolVersion protocolVersion) {
     ProtocolUtils.writeKeyArray(buf, activeFeatures);
   }
 

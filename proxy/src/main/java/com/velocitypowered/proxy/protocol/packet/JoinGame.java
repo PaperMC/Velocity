@@ -186,53 +186,16 @@ public class JoinGame implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "JoinGame{"
-        + "entityId="
-        + entityId
-        + ", gamemode="
-        + gamemode
-        + ", dimension="
-        + dimension
-        + ", partialHashedSeed="
-        + partialHashedSeed
-        + ", difficulty="
-        + difficulty
-        + ", isHardcore="
-        + isHardcore
-        + ", maxPlayers="
-        + maxPlayers
-        + ", levelType='"
-        + levelType
-        + '\''
-        + ", viewDistance="
-        + viewDistance
-        + ", reducedDebugInfo="
-        + reducedDebugInfo
-        + ", showRespawnScreen="
-        + showRespawnScreen
-        + ", doLimitedCrafting="
-        + doLimitedCrafting
-        + ", levelNames="
-        + levelNames
-        + ", registry='"
-        + registry
-        + '\''
-        + ", dimensionInfo='"
-        + dimensionInfo
-        + '\''
-        + ", currentDimensionData='"
-        + currentDimensionData
-        + '\''
-        + ", previousGamemode="
-        + previousGamemode
-        + ", simulationDistance="
-        + simulationDistance
-        + ", lastDeathPosition='"
-        + lastDeathPosition
-        + '\''
-        + ", portalCooldown="
-        + portalCooldown
-        + '}';
+    return "JoinGame{" + "entityId=" + entityId + ", gamemode=" + gamemode + ", dimension=" +
+        dimension + ", partialHashedSeed=" + partialHashedSeed + ", difficulty=" + difficulty +
+        ", isHardcore=" + isHardcore + ", maxPlayers=" + maxPlayers + ", levelType='" + levelType +
+        '\'' + ", viewDistance=" + viewDistance + ", reducedDebugInfo=" + reducedDebugInfo +
+        ", showRespawnScreen=" + showRespawnScreen + ", doLimitedCrafting=" + doLimitedCrafting +
+        ", levelNames=" + levelNames + ", registry='" + registry + '\'' + ", dimensionInfo='" +
+        dimensionInfo + '\'' + ", currentDimensionData='" + currentDimensionData + '\'' +
+        ", previousGamemode=" + previousGamemode + ", simulationDistance=" + simulationDistance +
+        ", lastDeathPosition='" + lastDeathPosition + '\'' + ", portalCooldown=" + portalCooldown +
+        '}';
   }
 
   @Override
@@ -360,8 +323,9 @@ public class JoinGame implements MinecraftPacket {
     this.dimensionInfo = new DimensionInfo(dimensionIdentifier, levelName, isFlat, isDebug);
 
     // optional death location
-    if (buf.readBoolean())
+    if (buf.readBoolean()) {
       this.lastDeathPosition = Pair.of(ProtocolUtils.readString(buf), buf.readLong());
+    }
 
     this.portalCooldown = ProtocolUtils.readVarInt(buf);
   }

@@ -39,7 +39,8 @@ public class ServerLogin implements MinecraftPacket {
   private @Nullable IdentifiedKey playerKey; // Introduced in 1.19.3
   private @Nullable UUID holderUuid; // Used for key revision 2
 
-  public ServerLogin() {}
+  public ServerLogin() {
+  }
 
   public ServerLogin(String username, @Nullable IdentifiedKey playerKey) {
     this.username = Preconditions.checkNotNull(username, "username");

@@ -60,7 +60,9 @@ import net.kyori.adventure.audience.ForwardingAudience;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-/** Represents a server registered on the proxy. */
+/**
+ * Represents a server registered on the proxy.
+ */
 public class VelocityRegisteredServer implements RegisteredServer, ForwardingAudience {
 
   private final @Nullable VelocityServer server;
@@ -96,7 +98,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
    * Pings the specified server using the specified event {@code loop}, claiming to be {@code
    * version}.
    *
-   * @param loop the event loop to use
+   * @param loop        the event loop to use
    * @param pingOptions the options to apply to this ping
    * @return the server list ping response
    */
@@ -105,50 +107,30 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
       throw new IllegalStateException("No Velocity proxy instance available");
     }
     CompletableFuture<ServerPing> pingFuture = new CompletableFuture<>();
-    server
-        .createBootstrap(loop)
-        .handler(
-            new ChannelInitializer<Channel>() {
-              @Override
-              protected void initChannel(Channel ch) throws Exception {
-                ch.pipeline()
-                    .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
-                    .addLast(
-                        READ_TIMEOUT,
-                        new ReadTimeoutHandler(
-                            pingOptions.getTimeout() == 0
-                                ? server.getConfiguration().getReadTimeout()
-                                : pingOptions.getTimeout(),
-                            TimeUnit.MILLISECONDS))
-                    .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
-                    .addLast(
-                        MINECRAFT_DECODER,
-                        new MinecraftDecoder(ProtocolUtils.Direction.CLIENTBOUND))
-                    .addLast(
-                        MINECRAFT_ENCODER,
-                        new MinecraftEncoder(ProtocolUtils.Direction.SERVERBOUND));
+    server.createBootstrap(loop).handler(new ChannelInitializer<Channel>() {
+      @Override
+      protected void initChannel(Channel ch) throws Exception {
+        ch.pipeline().addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
+            .addLast(READ_TIMEOUT, new ReadTimeoutHandler(
+                pingOptions.getTimeout() == 0
+                    ? server.getConfiguration().getReadTimeout()
+                    : pingOptions.getTimeout(), TimeUnit.MILLISECONDS))
+            .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
+            .addLast(MINECRAFT_DECODER, new MinecraftDecoder(ProtocolUtils.Direction.CLIENTBOUND))
+            .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(ProtocolUtils.Direction.SERVERBOUND));
 
-                ch.pipeline().addLast(HANDLER, new MinecraftConnection(ch, server));
-              }
-            })
-        .connect(serverInfo.getAddress())
-        .addListener(
-            (ChannelFutureListener)
-                future -> {
-                  if (future.isSuccess()) {
-                    MinecraftConnection conn =
-                        future.channel().pipeline().get(MinecraftConnection.class);
-                    conn.setActiveSessionHandler(
-                        StateRegistry.HANDSHAKE,
-                        new PingSessionHandler(
-                            pingFuture,
-                            VelocityRegisteredServer.this,
-                            conn,
-                            pingOptions.getProtocolVersion()));
-                  } else {
-                    pingFuture.completeExceptionally(future.cause());
-                  }
-                });
+        ch.pipeline().addLast(HANDLER, new MinecraftConnection(ch, server));
+      }
+    }).connect(serverInfo.getAddress()).addListener((ChannelFutureListener) future -> {
+      if (future.isSuccess()) {
+        MinecraftConnection conn = future.channel().pipeline().get(MinecraftConnection.class);
+        conn.setActiveSessionHandler(StateRegistry.HANDSHAKE,
+            new PingSessionHandler(pingFuture, VelocityRegisteredServer.this, conn,
+                pingOptions.getProtocolVersion()));
+      } else {
+        pingFuture.completeExceptionally(future.cause());
+      }
+    });
     return pingFuture;
   }
 
@@ -170,14 +152,13 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
    * afterwards.
    *
    * @param identifier the channel ID to use
-   * @param data the data
+   * @param data       the data
    * @return whether or not the message was sent
    */
   public boolean sendPluginMessage(ChannelIdentifier identifier, ByteBuf data) {
     for (ConnectedPlayer player : players.values()) {
       VelocityServerConnection serverConnection = player.getConnectedServer();
-      if (serverConnection != null
-          && serverConnection.getConnection() != null
+      if (serverConnection != null && serverConnection.getConnection() != null
           && serverConnection.getServer() == this) {
         return serverConnection.sendPluginMessage(identifier, data);
       }

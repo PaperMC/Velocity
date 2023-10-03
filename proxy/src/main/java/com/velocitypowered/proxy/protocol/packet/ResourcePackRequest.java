@@ -109,10 +109,8 @@ public class ResourcePackRequest implements MinecraftPacket {
 
   public VelocityResourcePackInfo toServerPromptedPack() {
     ResourcePackInfo.Builder builder =
-        new VelocityResourcePackInfo.BuilderImpl(Preconditions.checkNotNull(url))
-            .setPrompt(prompt)
-            .setShouldForce(isRequired)
-            .setOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
+        new VelocityResourcePackInfo.BuilderImpl(Preconditions.checkNotNull(url)).setPrompt(prompt)
+            .setShouldForce(isRequired).setOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
 
     if (hash != null && !hash.isEmpty()) {
       if (PLAUSIBLE_SHA1_HASH.matcher(hash).matches()) {
@@ -129,18 +127,7 @@ public class ResourcePackRequest implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "ResourcePackRequest{"
-        + "url='"
-        + url
-        + '\''
-        + ", hash='"
-        + hash
-        + '\''
-        + ", isRequired="
-        + isRequired
-        + ", prompt='"
-        + prompt
-        + '\''
-        + '}';
+    return "ResourcePackRequest{" + "url='" + url + '\'' + ", hash='" + hash + '\'' +
+        ", isRequired=" + isRequired + ", prompt='" + prompt + '\'' + '}';
   }
 }

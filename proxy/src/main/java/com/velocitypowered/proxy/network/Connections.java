@@ -17,7 +17,9 @@
 
 package com.velocitypowered.proxy.network;
 
-/** Constants used for the pipeline. */
+/**
+ * Constants used for the pipeline.
+ */
 public class Connections {
 
   public static final String CIPHER_DECODER = "cipher-decoder";

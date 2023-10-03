@@ -77,8 +77,7 @@ public class PlayPacketQueueHandler extends ChannelDuplexHandler {
 
     if (this.serverRegistry.containsPacket(((MinecraftPacket) msg))) {
       MinecraftPacket packet = (MinecraftPacket) msg;
-      if (packet instanceof ResourcePackResponse
-          || packet instanceof PluginMessage) {
+      if (packet instanceof ResourcePackResponse || packet instanceof PluginMessage) {
         ctx.write(msg, promise);
         return;
       }

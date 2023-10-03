@@ -74,19 +74,17 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(LegacyHandshake packet) {
-    connection.closeWith(
-        LegacyDisconnect.from(
-            Component.text(
-                "Your client is extremely old. Please update to a newer version of Minecraft.",
-                NamedTextColor.RED)));
+    connection.closeWith(LegacyDisconnect.from(Component.text(
+        "Your client is extremely old. Please update to a newer version of Minecraft.",
+        NamedTextColor.RED)));
     return true;
   }
 
   @Override
   public boolean handle(Handshake handshake) {
     InitialInboundConnection ic =
-        new InitialInboundConnection(
-            connection, cleanVhost(handshake.getServerAddress()), handshake);
+        new InitialInboundConnection(connection, cleanVhost(handshake.getServerAddress()),
+            handshake);
     StateRegistry nextState = getStateForProtocol(handshake.getNextStatus());
     if (nextState == null) {
       LOGGER.error("{} provided invalid protocol {}", ic, handshake.getNextStatus());
@@ -97,8 +95,8 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
       switch (nextState) {
         case STATUS:
-          connection.setActiveSessionHandler(
-              StateRegistry.STATUS, new StatusSessionHandler(server, ic));
+          connection.setActiveSessionHandler(StateRegistry.STATUS,
+              new StatusSessionHandler(server, ic));
           break;
         case LOGIN:
           this.handleLogin(handshake, ic);
@@ -125,9 +123,8 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
   private void handleLogin(Handshake handshake, InitialInboundConnection ic) {
     if (!ProtocolVersion.isSupported(handshake.getProtocolVersion())) {
-      ic.disconnectQuietly(
-          Component.translatable("multiplayer.disconnect.outdated_client")
-              .args(Component.text(ProtocolVersion.SUPPORTED_VERSION_STRING)));
+      ic.disconnectQuietly(Component.translatable("multiplayer.disconnect.outdated_client")
+          .args(Component.text(ProtocolVersion.SUPPORTED_VERSION_STRING)));
       return;
     }
 
@@ -150,8 +147,8 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
     LoginInboundConnection lic = new LoginInboundConnection(ic);
     server.getEventManager().fireAndForget(new ConnectionHandshakeEvent(lic));
-    connection.setActiveSessionHandler(
-        StateRegistry.LOGIN, new InitialLoginSessionHandler(server, connection, lic));
+    connection.setActiveSessionHandler(StateRegistry.LOGIN,
+        new InitialLoginSessionHandler(server, connection, lic));
   }
 
   private ConnectionType getHandshakeConnectionType(Handshake handshake) {
