@@ -39,6 +39,8 @@ import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
@@ -52,12 +54,14 @@ import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.ServerData;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
+import com.velocitypowered.proxy.protocol.packet.config.StartUpdate;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.handler.timeout.ReadTimeoutException;
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -117,6 +121,23 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       return true;
     }
     return false;
+  }
+
+  @Override
+  public boolean handle(StartUpdate packet) {
+    MinecraftConnection smc = serverConn.ensureConnected();
+    smc.setAutoReading(false);
+    CompletableFuture.runAsync(() -> {
+      playerConnection.write(packet);
+      playerConnection.getChannel().pipeline()
+              .get(MinecraftEncoder.class).setState(StateRegistry.CONFIG);
+      // Make sure we don't send any play packets to the player after update start
+      playerConnection.addPlayPacketQueueHandler();
+    }, playerConnection.eventLoop()).exceptionally((ex) -> {
+      logger.error("Error switching player connection to config state:", ex);
+      return null;
+    });
+    return true;
   }
 
   @Override

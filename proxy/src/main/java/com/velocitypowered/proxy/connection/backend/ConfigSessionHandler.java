@@ -152,8 +152,12 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
 
     smc.setAutoReading(false);
     configHandler.handleBackendFinishUpdate(serverConn).thenAcceptAsync((unused) -> {
-      smc.setActiveSessionHandler(StateRegistry.PLAY,
-          new TransitionSessionHandler(server, serverConn, resultFuture));
+      if (serverConn == serverConn.getPlayer().getConnectedServer()) {
+        smc.setActiveSessionHandler(StateRegistry.PLAY);
+      } else {
+        smc.setActiveSessionHandler(StateRegistry.PLAY,
+            new TransitionSessionHandler(server, serverConn, resultFuture));
+      }
       smc.setAutoReading(true);
     }, smc.eventLoop());
     return true;

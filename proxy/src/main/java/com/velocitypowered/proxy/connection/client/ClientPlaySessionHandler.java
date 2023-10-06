@@ -385,6 +385,18 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   public boolean handle(FinishedUpdate packet) {
     // Complete client switch
     player.getConnection().setActiveSessionHandler(StateRegistry.CONFIG);
+    VelocityServerConnection serverConnection = player.getConnectedServer();
+    if (serverConnection != null) {
+      MinecraftConnection smc = serverConnection.ensureConnected();
+      CompletableFuture.runAsync(() -> {
+        smc.write(packet);
+        smc.setActiveSessionHandler(StateRegistry.CONFIG);
+        smc.setAutoReading(true);
+      }, smc.eventLoop()).exceptionally((ex) -> {
+        logger.error("Error forwarding config state acknowledgement to server:", ex);
+        return null;
+      });
+    }
     configSwitchFuture.complete(null);
     return true;
   }
@@ -471,6 +483,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // Reset Tablist header and footer to prevent desync
       player.clearHeaderAndFooter();
     }
+
+    spawned = false;
 
     player.getConnection().write(new StartUpdate());
 
