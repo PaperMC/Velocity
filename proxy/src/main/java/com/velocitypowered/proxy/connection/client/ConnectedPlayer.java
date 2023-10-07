@@ -59,6 +59,7 @@ import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.connection.util.VelocityInboundConnection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
@@ -69,6 +70,7 @@ import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatType;
 import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderFactory;
 import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChat;
+import com.velocitypowered.proxy.protocol.packet.config.StartUpdate;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.InternalTabList;
@@ -1092,11 +1094,28 @@ public class ConnectedPlayer
    * by Velocity as it will not match the ID last sent by the server.
    */
   public void sendKeepAlive() {
-    if (connection.getState() == StateRegistry.PLAY) {
+    if (connection.getState() == StateRegistry.PLAY
+            || connection.getState() == StateRegistry.CONFIG) {
       KeepAlive keepAlive = new KeepAlive();
       keepAlive.setRandomId(ThreadLocalRandom.current().nextLong());
       connection.write(keepAlive);
     }
+  }
+
+  /**
+   * Switches the connection to the client into config state.
+   */
+  public void switchToConfigState() {
+    CompletableFuture.runAsync(() -> {
+      connection.write(new StartUpdate());
+      connection.getChannel().pipeline()
+              .get(MinecraftEncoder.class).setState(StateRegistry.CONFIG);
+      // Make sure we don't send any play packets to the player after update start
+      connection.addPlayPacketQueueHandler();
+    }, connection.eventLoop()).exceptionally((ex) -> {
+      logger.error("Error switching player connection to config state:", ex);
+      return null;
+    });
   }
 
   /**
