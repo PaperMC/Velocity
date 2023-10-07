@@ -1028,6 +1028,13 @@ public class ConnectedPlayer
   }
 
   /**
+   * Clears the applied resource pack field.
+   */
+  public void clearAppliedResourcePack() {
+    appliedResourcePack = null;
+  }
+
+  /**
    * Processes a client response to a sent resource-pack.
    */
   public boolean onResourcePackResponse(PlayerResourcePackStatusEvent.Status status) {

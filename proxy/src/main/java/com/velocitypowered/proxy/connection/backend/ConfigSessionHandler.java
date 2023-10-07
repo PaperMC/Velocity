@@ -59,6 +59,8 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   private final VelocityServerConnection serverConn;
   private final CompletableFuture<Impl> resultFuture;
 
+  private ResourcePackInfo resourcePackToApply;
+
   private State state;
 
   /**
@@ -77,7 +79,9 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public void deactivated() {
+  public void activated() {
+    resourcePackToApply = serverConn.getPlayer().getAppliedResourcePack();
+    serverConn.getPlayer().clearAppliedResourcePack();
   }
 
   @Override
@@ -126,6 +130,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
               ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
         }
 
+        resourcePackToApply = null;
         serverConn.getPlayer().queueResourcePack(toSend);
       } else if (serverConn.getConnection() != null) {
         serverConn.getConnection().write(new ResourcePackResponse(packet.getHash(),
@@ -157,6 +162,9 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
       } else {
         smc.setActiveSessionHandler(StateRegistry.PLAY,
             new TransitionSessionHandler(server, serverConn, resultFuture));
+      }
+      if (serverConn.getPlayer().getAppliedResourcePack() == null && resourcePackToApply != null) {
+        serverConn.getPlayer().queueResourcePack(resourcePackToApply);
       }
       smc.setAutoReading(true);
     }, smc.eventLoop());
