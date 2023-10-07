@@ -30,6 +30,7 @@ import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
@@ -156,6 +157,8 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
             .getActiveSessionHandler();
 
     smc.setAutoReading(false);
+    // Even when not auto reading messages are still decoded. Decode them with the correct state
+    smc.getChannel().pipeline().get(MinecraftDecoder.class).setState(StateRegistry.PLAY);
     configHandler.handleBackendFinishUpdate(serverConn).thenAcceptAsync((unused) -> {
       if (serverConn == serverConn.getPlayer().getConnectedServer()) {
         smc.setActiveSessionHandler(StateRegistry.PLAY);
