@@ -138,10 +138,11 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
   /**
    * The handshake is complete. The handshake can be reset.
    *
-   * <p>Note that a successful connection to a server does not mean that we will be in this state.
-   * After a handshake reset, if the next server is vanilla we will still be in the {@link
-   * #NOT_STARTED} phase, which means we must NOT send a reset packet. This is handled by overriding
-   * the {@link #resetConnectionPhase(ConnectedPlayer)} in this element (it is usually a no-op).
+   * <p>Note that a successful connection to a server does not mean that
+   * we will be in this state. After a handshake reset, if the next server is vanilla we will still
+   * be in the {@link #NOT_STARTED} phase, which means we must NOT send a reset packet. This is
+   * handled by overriding the {@link #resetConnectionPhase(ConnectedPlayer)} in this element (it is
+   * usually a no-op).</p>
    */
   COMPLETE(null) {
     @Override

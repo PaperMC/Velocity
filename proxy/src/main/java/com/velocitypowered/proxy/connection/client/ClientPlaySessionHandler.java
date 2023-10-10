@@ -715,9 +715,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           }
         }, player.getConnection().eventLoop()).exceptionally((ex) -> {
           logger.error(
-              "Exception while finishing command tab completion,"
-                  + " with request {} and response {}",
-              request, response, ex);
+              "Exception while finishing command tab completion, with request {} and response {}",
+              request,
+              response, ex);
           return null;
         });
   }
@@ -736,9 +736,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           player.getConnection().write(response);
         }, player.getConnection().eventLoop()).exceptionally((ex) -> {
           logger.error(
-              "Exception while finishing regular tab completion,"
-                  + " with request {} and response{}",
-              request, response, ex);
+              "Exception while finishing regular tab completion, with request {} and response{}",
+              request,
+              response, ex);
           return null;
         });
   }

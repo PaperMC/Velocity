@@ -185,10 +185,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   @Override
   public void disconnected() {
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.LEGACY) {
-      resultFuture.completeExceptionally(new QuietRuntimeException(
-          "The connection to the remote server was unexpectedly closed.\n"
-              + "This is usually because the remote server "
-              + "does not have BungeeCord IP forwarding "
+      resultFuture.completeExceptionally(
+          new QuietRuntimeException("The connection to the remote server was unexpectedly closed.\n"
+              + "This is usually because the remote server does not have BungeeCord IP forwarding "
               + "correctly enabled.\nSee https://velocitypowered.com/wiki/users/forwarding/ "
               + "for instructions on how to configure player info forwarding correctly.")
       );

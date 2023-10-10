@@ -701,34 +701,35 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   private void handleKickEvent(KickedFromServerEvent originalEvent, Component friendlyReason,
                                boolean kickedFromCurrent) {
-    server.getEventManager().fire(originalEvent).thenAcceptAsync(event -> {
-      // There can't be any connection in flight now.
-      connectionInFlight = null;
+    server.getEventManager().fire(originalEvent)
+        .thenAcceptAsync(event -> {
+          // There can't be any connection in flight now.
+          connectionInFlight = null;
 
-      // Make sure we clear the current connected server as the connection is invalid.
-      VelocityServerConnection previousConnection = connectedServer;
-      if (kickedFromCurrent) {
-        connectedServer = null;
-      }
+          // Make sure we clear the current connected server as the connection is invalid.
+          VelocityServerConnection previousConnection = connectedServer;
+          if (kickedFromCurrent) {
+            connectedServer = null;
+          }
 
-      if (!isActive()) {
-        // If the connection is no longer active, it makes no sense to try and recover it.
-        return;
-      }
+          if (!isActive()) {
+            // If the connection is no longer active, it makes no sense to try and recover it.
+            return;
+          }
 
-      if (event.getResult() instanceof DisconnectPlayer) {
-        DisconnectPlayer res = (DisconnectPlayer) event.getResult();
-        disconnect(res.getReasonComponent());
-      } else if (event.getResult() instanceof RedirectPlayer) {
-        RedirectPlayer res = (RedirectPlayer) event.getResult();
-        createConnectionRequest(res.getServer(), previousConnection).connect()
-            .whenCompleteAsync((status, throwable) -> {
-              if (throwable != null) {
-                handleConnectionException(
-                    status != null ? status.getAttemptedConnection() : res.getServer(), throwable,
-                    true);
-                return;
-              }
+          if (event.getResult() instanceof DisconnectPlayer) {
+            DisconnectPlayer res = (DisconnectPlayer) event.getResult();
+            disconnect(res.getReasonComponent());
+          } else if (event.getResult() instanceof RedirectPlayer) {
+            RedirectPlayer res = (RedirectPlayer) event.getResult();
+            createConnectionRequest(res.getServer(), previousConnection)
+                .connect()
+                .whenCompleteAsync((status, throwable) -> {
+                  if (throwable != null) {
+                    handleConnectionException(status != null ? status.getAttemptedConnection()
+                        : res.getServer(), throwable, true);
+                    return;
+                  }
 
               switch (status.getStatus()) {
                 // Impossible/nonsensical cases
