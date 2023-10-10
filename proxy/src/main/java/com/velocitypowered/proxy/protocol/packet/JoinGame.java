@@ -42,6 +42,7 @@ public class JoinGame implements MinecraftPacket {
   private int viewDistance; // 1.14+
   private boolean reducedDebugInfo;
   private boolean showRespawnScreen;
+  private boolean doLimitedCrafting; // 1.20.2+
   private ImmutableSet<String> levelNames; // 1.16+
   private CompoundBinaryTag registry; // 1.16+
   private DimensionInfo dimensionInfo; // 1.16+
@@ -143,6 +144,14 @@ public class JoinGame implements MinecraftPacket {
     this.isHardcore = isHardcore;
   }
 
+  public boolean getDoLimitedCrafting() {
+    return doLimitedCrafting;
+  }
+
+  public void setDoLimitedCrafting(boolean doLimitedCrafting) {
+    this.doLimitedCrafting = doLimitedCrafting;
+  }
+
   public CompoundBinaryTag getCurrentDimensionData() {
     return currentDimensionData;
   }
@@ -177,32 +186,24 @@ public class JoinGame implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "JoinGame{"
-        + "entityId=" + entityId
-        + ", gamemode=" + gamemode
-        + ", dimension=" + dimension
-        + ", partialHashedSeed=" + partialHashedSeed
-        + ", difficulty=" + difficulty
-        + ", isHardcore=" + isHardcore
-        + ", maxPlayers=" + maxPlayers
-        + ", levelType='" + levelType + '\''
-        + ", viewDistance=" + viewDistance
-        + ", reducedDebugInfo=" + reducedDebugInfo
-        + ", showRespawnScreen=" + showRespawnScreen
-        + ", levelNames=" + levelNames
-        + ", registry='" + registry + '\''
-        + ", dimensionInfo='" + dimensionInfo + '\''
-        + ", currentDimensionData='" + currentDimensionData + '\''
-        + ", previousGamemode=" + previousGamemode
-        + ", simulationDistance=" + simulationDistance
-        + ", lastDeathPosition='" + lastDeathPosition + '\''
-        + ", portalCooldown=" + portalCooldown
-        + '}';
+    return "JoinGame{" + "entityId=" + entityId + ", gamemode=" + gamemode + ", dimension=" +
+        dimension + ", partialHashedSeed=" + partialHashedSeed + ", difficulty=" + difficulty +
+        ", isHardcore=" + isHardcore + ", maxPlayers=" + maxPlayers + ", levelType='" + levelType +
+        '\'' + ", viewDistance=" + viewDistance + ", reducedDebugInfo=" + reducedDebugInfo +
+        ", showRespawnScreen=" + showRespawnScreen + ", doLimitedCrafting=" + doLimitedCrafting +
+        ", levelNames=" + levelNames + ", registry='" + registry + '\'' + ", dimensionInfo='" +
+        dimensionInfo + '\'' + ", currentDimensionData='" + currentDimensionData + '\'' +
+        ", previousGamemode=" + previousGamemode + ", simulationDistance=" + simulationDistance +
+        ", lastDeathPosition='" + lastDeathPosition + '\'' + ", portalCooldown=" + portalCooldown +
+        '}';
   }
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_2) >= 0) {
+      // haha funny, they made 1.20.2 more complicated
+      this.decode1202Up(buf, version);
+    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       // Minecraft 1.16 and above have significantly more complicated logic for reading this packet,
       // so separate it out.
       this.decode116Up(buf, version);
@@ -295,9 +296,46 @@ public class JoinGame implements MinecraftPacket {
     }
   }
 
+  private void decode1202Up(ByteBuf buf, ProtocolVersion version) {
+    this.entityId = buf.readInt();
+    this.isHardcore = buf.readBoolean();
+
+    this.levelNames = ImmutableSet.copyOf(ProtocolUtils.readStringArray(buf));
+
+    this.maxPlayers = ProtocolUtils.readVarInt(buf);
+
+    this.viewDistance = ProtocolUtils.readVarInt(buf);
+    this.simulationDistance = ProtocolUtils.readVarInt(buf);
+
+    this.reducedDebugInfo = buf.readBoolean();
+    this.showRespawnScreen = buf.readBoolean();
+    this.doLimitedCrafting = buf.readBoolean();
+
+    String dimensionIdentifier = ProtocolUtils.readString(buf);
+    String levelName = ProtocolUtils.readString(buf);
+    this.partialHashedSeed = buf.readLong();
+
+    this.gamemode = buf.readByte();
+    this.previousGamemode = buf.readByte();
+
+    boolean isDebug = buf.readBoolean();
+    boolean isFlat = buf.readBoolean();
+    this.dimensionInfo = new DimensionInfo(dimensionIdentifier, levelName, isFlat, isDebug);
+
+    // optional death location
+    if (buf.readBoolean()) {
+      this.lastDeathPosition = Pair.of(ProtocolUtils.readString(buf), buf.readLong());
+    }
+
+    this.portalCooldown = ProtocolUtils.readVarInt(buf);
+  }
+
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_2) >= 0) {
+      // haha funny, they made 1.20.2 more complicated
+      this.encode1202Up(buf, version);
+    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       // Minecraft 1.16 and above have significantly more complicated logic for reading this packet,
       // so separate it out.
       this.encode116Up(buf, version);
@@ -394,6 +432,43 @@ public class JoinGame implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_20) >= 0) {
       ProtocolUtils.writeVarInt(buf, portalCooldown);
     }
+  }
+
+  private void encode1202Up(ByteBuf buf, ProtocolVersion version) {
+    buf.writeInt(entityId);
+    buf.writeBoolean(isHardcore);
+
+    ProtocolUtils.writeStringArray(buf, levelNames.toArray(String[]::new));
+
+    ProtocolUtils.writeVarInt(buf, maxPlayers);
+
+    ProtocolUtils.writeVarInt(buf, viewDistance);
+    ProtocolUtils.writeVarInt(buf, simulationDistance);
+
+    buf.writeBoolean(reducedDebugInfo);
+    buf.writeBoolean(showRespawnScreen);
+    buf.writeBoolean(doLimitedCrafting);
+
+    ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
+    ProtocolUtils.writeString(buf, dimensionInfo.getLevelName());
+    buf.writeLong(partialHashedSeed);
+
+    buf.writeByte(gamemode);
+    buf.writeByte(previousGamemode);
+
+    buf.writeBoolean(dimensionInfo.isDebugType());
+    buf.writeBoolean(dimensionInfo.isFlat());
+
+    // optional death location
+    if (lastDeathPosition != null) {
+      buf.writeBoolean(true);
+      ProtocolUtils.writeString(buf, lastDeathPosition.key());
+      buf.writeLong(lastDeathPosition.value());
+    } else {
+      buf.writeBoolean(false);
+    }
+
+    ProtocolUtils.writeVarInt(buf, portalCooldown);
   }
 
   @Override

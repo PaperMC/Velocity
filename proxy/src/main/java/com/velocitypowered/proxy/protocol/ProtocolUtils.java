@@ -41,6 +41,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -202,8 +203,7 @@ public enum ProtocolUtils {
         buf.readableBytes());
     String str = buf.toString(buf.readerIndex(), length, StandardCharsets.UTF_8);
     buf.skipBytes(length);
-    checkFrame(str.length() <= cap, "Got a too-long string (got %s, max %s)",
-        str.length(), cap);
+    checkFrame(str.length() <= cap, "Got a too-long string (got %s, max %s)", str.length(), cap);
     return str;
   }
 
@@ -217,6 +217,59 @@ public enum ProtocolUtils {
     int size = ByteBufUtil.utf8Bytes(str);
     writeVarInt(buf, size);
     buf.writeCharSequence(str, StandardCharsets.UTF_8);
+  }
+
+  /**
+   * Reads a standard Mojang Text namespaced:key from the buffer.
+   *
+   * @param buf the buffer to read from
+   * @return the decoded key
+   */
+  public static Key readKey(ByteBuf buf) {
+    return Key.key(readString(buf), Key.DEFAULT_SEPARATOR);
+  }
+
+  /**
+   * Writes a standard Mojang Text namespaced:key to the buffer.
+   *
+   * @param buf the buffer to write to
+   * @param key the key to write
+   */
+  public static void writeKey(ByteBuf buf, Key key) {
+    writeString(buf, key.asString());
+  }
+
+  /**
+   * Reads a standard Mojang Text namespaced:key array from the buffer.
+   *
+   * @param buf the buffer to read from
+   * @return the decoded key array
+   */
+  public static Key[] readKeyArray(ByteBuf buf) {
+    int length = readVarInt(buf);
+    checkFrame(length >= 0, "Got a negative-length array (%s)", length);
+    checkFrame(buf.isReadable(length),
+        "Trying to read an array that is too long (wanted %s, only have %s)", length,
+        buf.readableBytes());
+    Key[] ret = new Key[length];
+
+    for (int i = 0; i < ret.length; i++) {
+      ret[i] = ProtocolUtils.readKey(buf);
+    }
+    return ret;
+  }
+
+  /**
+   * Writes a standard Mojang Text namespaced:key array to the buffer.
+   *
+   * @param buf  the buffer to write to
+   * @param keys the keys to write
+   */
+  public static void writeKeyArray(ByteBuf buf, Key[] keys) {
+    writeVarInt(buf, keys.length);
+    for (Key key : keys) {
+      writeKey(buf, key);
+    }
   }
 
   public static byte[] readByteArray(ByteBuf buf) {
@@ -365,6 +418,38 @@ public enum ProtocolUtils {
     writeVarInt(buf, stringArray.length);
     for (String s : stringArray) {
       writeString(buf, s);
+    }
+  }
+
+  /**
+   * Reads an Integer array from the {@code buf}.
+   *
+   * @param buf the buffer to read from
+   * @return the Integer array from the buffer
+   */
+  public static int[] readVarIntArray(ByteBuf buf) {
+    int length = readVarInt(buf);
+    checkFrame(length >= 0, "Got a negative-length array (%s)", length);
+    checkFrame(buf.isReadable(length),
+        "Trying to read an array that is too long (wanted %s, only have %s)", length,
+        buf.readableBytes());
+    int[] ret = new int[length];
+    for (int i = 0; i < length; i++) {
+      ret[i] = readVarInt(buf);
+    }
+    return ret;
+  }
+
+  /**
+   * Writes an Integer Array to the {@code buf}.
+   *
+   * @param buf      the buffer to write to
+   * @param intArray the array to write
+   */
+  public static void writeVarIntArray(ByteBuf buf, int[] intArray) {
+    writeVarInt(buf, intArray.length);
+    for (int i = 0; i < intArray.length; i++) {
+      writeVarInt(buf, intArray[i]);
     }
   }
 
