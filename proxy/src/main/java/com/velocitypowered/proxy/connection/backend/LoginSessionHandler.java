@@ -156,22 +156,17 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       smc.setActiveSessionHandler(StateRegistry.PLAY,
           new TransitionSessionHandler(server, serverConn, resultFuture));
     } else {
-      smc.setAutoReading(false);
-      CompletableFuture<Void> switchFuture;
+      smc.write(new LoginAcknowledged());
+      smc.setActiveSessionHandler(StateRegistry.CONFIG,
+          new ConfigSessionHandler(server, serverConn, resultFuture));
       if (serverConn.getPlayer().getConnection()
           .getActiveSessionHandler() instanceof ClientPlaySessionHandler) {
-        switchFuture = ((ClientPlaySessionHandler) serverConn.getPlayer().getConnection()
-            .getActiveSessionHandler()).doSwitch();
-      } else {
-        switchFuture = CompletableFuture.completedFuture(null);
+        smc.setAutoReading(false);
+        ((ClientPlaySessionHandler) serverConn.getPlayer().getConnection()
+            .getActiveSessionHandler()).doSwitch().thenAcceptAsync((unused) -> {
+              smc.setAutoReading(true);
+            }, smc.eventLoop());
       }
-      switchFuture.thenAcceptAsync((unused) -> {
-        smc.write(new LoginAcknowledged());
-        // Sync backend
-        smc.setActiveSessionHandler(StateRegistry.CONFIG,
-            new ConfigSessionHandler(server, serverConn, resultFuture));
-        smc.setAutoReading(true);
-      }, smc.eventLoop());
     }
 
     return true;
