@@ -92,8 +92,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   /**
    * Connects to the server.
    *
-   * @return a {@link com.velocitypowered.api.proxy.ConnectionRequestBuilder.Result}
-   *     representing whether the connection succeeded
+   * @return a {@link com.velocitypowered.api.proxy.ConnectionRequestBuilder.Result} representing
+   *         whether the connection succeeded
    */
   public CompletableFuture<Impl> connect() {
     CompletableFuture<Impl> result = new CompletableFuture<>();
@@ -116,8 +116,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
               connection.addSessionHandler(StateRegistry.LOGIN, handler);
             }
 
-            // Set the connection phase, which may, for future forge (or whatever), be
-            // determined
+            // Set the connection phase, which may, for future forge (or whatever), be determined
             // at this point already
             connectionPhase = connection.getType().getInitialBackendPhase();
             startHandshake();

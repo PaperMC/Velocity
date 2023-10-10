@@ -731,53 +731,55 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
                     return;
                   }
 
-              switch (status.getStatus()) {
-                // Impossible/nonsensical cases
-                case ALREADY_CONNECTED:
-                  logger.error("{}: already connected to {}", this,
-                      status.getAttemptedConnection().getServerInfo().getName());
-                  break;
-                case CONNECTION_IN_PROGRESS:
-                  // Fatal case
-                case CONNECTION_CANCELLED:
-                  Component fallbackMsg = res.getMessageComponent();
-                  if (fallbackMsg == null) {
-                    fallbackMsg = friendlyReason;
+                  switch (status.getStatus()) {
+                    // Impossible/nonsensical cases
+                    case ALREADY_CONNECTED:
+                      logger.error("{}: already connected to {}",
+                          this,
+                          status.getAttemptedConnection().getServerInfo().getName()
+                      );
+                      break;
+                    case CONNECTION_IN_PROGRESS:
+                      // Fatal case
+                    case CONNECTION_CANCELLED:
+                      Component fallbackMsg = res.getMessageComponent();
+                      if (fallbackMsg == null) {
+                        fallbackMsg = friendlyReason;
+                      }
+                      disconnect(status.getReasonComponent().orElse(fallbackMsg));
+                      break;
+                    case SERVER_DISCONNECTED:
+                      Component reason = status.getReasonComponent()
+                          .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
+                      handleConnectionException(res.getServer(), Disconnect.create(reason,
+                          getProtocolVersion()), ((Impl) status).isSafe());
+                      break;
+                    case SUCCESS:
+                      Component requestedMessage = res.getMessageComponent();
+                      if (requestedMessage == null) {
+                        requestedMessage = friendlyReason;
+                      }
+                      if (requestedMessage != Component.empty()) {
+                        sendMessage(requestedMessage);
+                      }
+                      break;
+                    default:
+                      // The only remaining value is successful (no need to do anything!)
+                      break;
                   }
-                  disconnect(status.getReasonComponent().orElse(fallbackMsg));
-                  break;
-                case SERVER_DISCONNECTED:
-                  Component reason = status.getReasonComponent()
-                      .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
-                  handleConnectionException(res.getServer(),
-                      Disconnect.create(reason, getProtocolVersion()), ((Impl) status).isSafe());
-                  break;
-                case SUCCESS:
-                  Component requestedMessage = res.getMessageComponent();
-                  if (requestedMessage == null) {
-                    requestedMessage = friendlyReason;
-                  }
-                  if (requestedMessage != Component.empty()) {
-                    sendMessage(requestedMessage);
-                  }
-                  break;
-                default:
-                  // The only remaining value is successful (no need to do anything!)
-                  break;
-              }
-            }, connection.eventLoop());
-      } else if (event.getResult() instanceof Notify) {
-        Notify res = (Notify) event.getResult();
-        if (event.kickedDuringServerConnect() && previousConnection != null) {
-          sendMessage(Identity.nil(), res.getMessageComponent());
-        } else {
-          disconnect(res.getMessageComponent());
-        }
-      } else {
-        // In case someone gets creative, assume we want to disconnect the player.
-        disconnect(friendlyReason);
-      }
-    }, connection.eventLoop());
+                }, connection.eventLoop());
+          } else if (event.getResult() instanceof Notify) {
+            Notify res = (Notify) event.getResult();
+            if (event.kickedDuringServerConnect() && previousConnection != null) {
+              sendMessage(Identity.nil(), res.getMessageComponent());
+            } else {
+              disconnect(res.getMessageComponent());
+            }
+          } else {
+            // In case someone gets creative, assume we want to disconnect the player.
+            disconnect(friendlyReason);
+          }
+        }, connection.eventLoop());
   }
 
   /**
