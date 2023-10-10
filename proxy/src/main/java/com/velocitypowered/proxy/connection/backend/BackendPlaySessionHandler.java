@@ -97,8 +97,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     }
     this.playerSessionHandler = (ClientPlaySessionHandler) psh;
 
-    this.bungeecordMessageResponder =
-        new BungeeCordMessageResponder(server, serverConn.getPlayer());
+    this.bungeecordMessageResponder = new BungeeCordMessageResponder(server,
+        serverConn.getPlayer());
   }
 
   @Override
@@ -108,7 +108,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     if (server.getConfiguration().isBungeePluginChannelEnabled()) {
       MinecraftConnection serverMc = serverConn.ensureConnected();
       serverMc.write(PluginMessageUtil.constructChannelsPacket(serverMc.getProtocolVersion(),
-          ImmutableList.of(getBungeeCordChannel(serverMc.getProtocolVersion()))));
+          ImmutableList.of(getBungeeCordChannel(serverMc.getProtocolVersion()))
+      ));
     }
   }
 
@@ -164,8 +165,10 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ResourcePackRequest packet) {
     ResourcePackInfo.Builder builder = new VelocityResourcePackInfo.BuilderImpl(
-        Preconditions.checkNotNull(packet.getUrl())).setPrompt(packet.getPrompt())
-        .setShouldForce(packet.isRequired()).setOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
+        Preconditions.checkNotNull(packet.getUrl()))
+        .setPrompt(packet.getPrompt())
+        .setShouldForce(packet.isRequired())
+        .setOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
 
     String hash = packet.getHash();
     if (hash != null && !hash.isEmpty()) {
@@ -174,8 +177,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       }
     }
 
-    ServerResourcePackSendEvent event =
-        new ServerResourcePackSendEvent(builder.build(), this.serverConn);
+    ServerResourcePackSendEvent event = new ServerResourcePackSendEvent(
+        builder.build(), this.serverConn);
 
     server.getEventManager().fire(event).thenAcceptAsync(serverResourcePackSendEvent -> {
       if (playerConnection.isClosed()) {
@@ -184,19 +187,23 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       if (serverResourcePackSendEvent.getResult().isAllowed()) {
         ResourcePackInfo toSend = serverResourcePackSendEvent.getProvidedResourcePack();
         if (toSend != serverResourcePackSendEvent.getReceivedResourcePack()) {
-          ((VelocityResourcePackInfo) toSend).setOriginalOrigin(
-              ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
+          ((VelocityResourcePackInfo) toSend)
+              .setOriginalOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
         }
 
         serverConn.getPlayer().queueResourcePack(toSend);
       } else if (serverConn.getConnection() != null) {
-        serverConn.getConnection().write(new ResourcePackResponse(packet.getHash(),
-            PlayerResourcePackStatusEvent.Status.DECLINED));
+        serverConn.getConnection().write(new ResourcePackResponse(
+            packet.getHash(),
+            PlayerResourcePackStatusEvent.Status.DECLINED
+        ));
       }
     }, playerConnection.eventLoop()).exceptionally((ex) -> {
       if (serverConn.getConnection() != null) {
-        serverConn.getConnection().write(new ResourcePackResponse(packet.getHash(),
-            PlayerResourcePackStatusEvent.Status.DECLINED));
+        serverConn.getConnection().write(new ResourcePackResponse(
+            packet.getHash(),
+            PlayerResourcePackStatusEvent.Status.DECLINED
+        ));
       }
       logger.error("Exception while handling resource pack send for {}", playerConnection, ex);
       return null;
@@ -280,8 +287,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       injector.inject(rootNode, serverConn.getPlayer());
     }
 
-    server.getEventManager()
-        .fire(new PlayerAvailableCommandsEvent(serverConn.getPlayer(), rootNode))
+    server.getEventManager().fire(
+            new PlayerAvailableCommandsEvent(serverConn.getPlayer(), rootNode))
         .thenAcceptAsync(event -> playerConnection.write(commands), playerConnection.eventLoop())
         .exceptionally((ex) -> {
           logger.error("Exception while handling available commands for {}", playerConnection, ex);

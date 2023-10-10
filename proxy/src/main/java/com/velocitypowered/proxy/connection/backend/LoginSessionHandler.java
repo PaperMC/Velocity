@@ -70,7 +70,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   private boolean informationForwarded;
 
   LoginSessionHandler(VelocityServer server, VelocityServerConnection serverConn,
-                      CompletableFuture<Impl> resultFuture) {
+      CompletableFuture<Impl> resultFuture) {
     this.server = server;
     this.serverConn = serverConn;
     this.resultFuture = resultFuture;
@@ -108,14 +108,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       }
 
       final byte[] contents = ByteBufUtil.getBytes(packet.content());
-      final MinecraftChannelIdentifier identifier =
-          MinecraftChannelIdentifier.from(packet.getChannel());
-      this.server.getEventManager()
-          .fire(new ServerLoginPluginMessageEvent(serverConn, identifier, contents, packet.getId()))
+      final MinecraftChannelIdentifier identifier = MinecraftChannelIdentifier
+          .from(packet.getChannel());
+      this.server.getEventManager().fire(new ServerLoginPluginMessageEvent(serverConn, identifier,
+              contents, packet.getId()))
           .thenAcceptAsync(event -> {
             if (event.getResult().isAllowed()) {
-              mc.write(new LoginPluginResponse(packet.getId(), true,
-                  Unpooled.wrappedBuffer(event.getResult().getResponse())));
+              mc.write(new LoginPluginResponse(packet.getId(), true, Unpooled
+                  .wrappedBuffer(event.getResult().getResponse())));
             } else {
               mc.write(new LoginPluginResponse(packet.getId(), false, Unpooled.EMPTY_BUFFER));
             }
@@ -192,8 +192,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
               + "correctly enabled.\nSee https://velocitypowered.com/wiki/users/forwarding/ "
               + "for instructions on how to configure player info forwarding correctly."));
     } else {
-      resultFuture.completeExceptionally(new QuietRuntimeException(
-          "The connection to the remote server was unexpectedly closed."));
+      resultFuture.completeExceptionally(
+          new QuietRuntimeException("The connection to the remote server was unexpectedly closed.")
+      );
     }
   }
 
@@ -203,15 +204,15 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     if (requested > VelocityConstants.MODERN_FORWARDING_DEFAULT) {
       if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
         return requested >= VelocityConstants.MODERN_LAZY_SESSION
-            ? VelocityConstants.MODERN_LAZY_SESSION : VelocityConstants.MODERN_FORWARDING_DEFAULT;
+            ? VelocityConstants.MODERN_LAZY_SESSION
+            : VelocityConstants.MODERN_FORWARDING_DEFAULT;
       }
       if (player.getIdentifiedKey() != null) {
         // No enhanced switch on java 11
         switch (player.getIdentifiedKey().getKeyRevision()) {
           case GENERIC_V1:
             return VelocityConstants.MODERN_FORWARDING_WITH_KEY;
-          // Since V2 is not backwards compatible we have to throw the key if v2 and requested is
-          // v1
+          // Since V2 is not backwards compatible we have to throw the key if v2 and requested is v1
           case LINKED_V2:
             return requested >= VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2
                 ? VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2
@@ -227,7 +228,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   }
 
   private static ByteBuf createForwardingData(byte[] hmacSecret, String address,
-                                              ConnectedPlayer player, int requestedVersion) {
+      ConnectedPlayer player, int requestedVersion) {
     ByteBuf forwarded = Unpooled.buffer(2048);
     try {
       int actualVersion = findForwardingVersion(requestedVersion, player);

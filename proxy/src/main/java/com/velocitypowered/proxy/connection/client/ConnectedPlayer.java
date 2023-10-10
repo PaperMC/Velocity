@@ -120,8 +120,8 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Represents a player that is connected to the proxy.
  */
-public class ConnectedPlayer
-    implements MinecraftConnectionAssociation, Player, KeyIdentifiable, VelocityInboundConnection {
+public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, KeyIdentifiable,
+    VelocityInboundConnection {
 
   private static final int MAX_PLUGIN_CHANNELS = 1024;
   private static final PlainTextComponentSerializer PASS_THRU_TRANSLATE =
@@ -133,12 +133,10 @@ public class ConnectedPlayer
   private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
 
   private final Identity identity = new IdentityImpl();
-
   /**
    * The actual Minecraft connection. This is actually a wrapper object around the Netty channel.
    */
   private final MinecraftConnection connection;
-
   private final @Nullable InetSocketAddress virtualHost;
   private GameProfile profile;
   private PermissionFunction permissionFunction;
@@ -175,8 +173,8 @@ public class ConnectedPlayer
   private final ChatBuilderFactory chatBuilderFactory;
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
-                  @Nullable InetSocketAddress virtualHost, boolean onlineMode,
-                  @Nullable IdentifiedKey playerKey) {
+      @Nullable InetSocketAddress virtualHost, boolean onlineMode,
+      @Nullable IdentifiedKey playerKey) {
     this.server = server;
     this.profile = profile;
     this.connection = connection;
@@ -344,8 +342,8 @@ public class ConnectedPlayer
    * @return the translated message
    */
   public Component translateMessage(Component message) {
-    Locale locale = ClosestLocaleMatcher.INSTANCE.lookupClosest(
-        getEffectiveLocale() == null ? Locale.getDefault() : getEffectiveLocale());
+    Locale locale = ClosestLocaleMatcher.INSTANCE
+        .lookupClosest(getEffectiveLocale() == null ? Locale.getDefault() : getEffectiveLocale());
     return GlobalTranslator.render(message, locale);
   }
 
@@ -353,20 +351,22 @@ public class ConnectedPlayer
   public void sendMessage(@NonNull Identity identity, @NonNull Component message) {
     Component translated = translateMessage(message);
 
-    connection.write(
-        getChatBuilderFactory().builder().component(translated).forIdentity(identity).toClient());
+    connection.write(getChatBuilderFactory().builder()
+        .component(translated).forIdentity(identity).toClient());
   }
 
   @Override
   public void sendMessage(@NonNull Identity identity, @NonNull Component message,
-                          @NonNull MessageType type) {
+      @NonNull MessageType type) {
     Preconditions.checkNotNull(message, "message");
     Preconditions.checkNotNull(type, "type");
 
     Component translated = translateMessage(message);
 
-    connection.write(getChatBuilderFactory().builder().component(translated).forIdentity(identity)
-        .setType(type == MessageType.CHAT ? ChatType.CHAT : ChatType.SYSTEM).toClient());
+    connection.write(getChatBuilderFactory().builder()
+        .component(translated).forIdentity(identity)
+        .setType(type == MessageType.CHAT ? ChatType.CHAT : ChatType.SYSTEM)
+        .toClient());
   }
 
   @Override
@@ -376,16 +376,17 @@ public class ConnectedPlayer
     ProtocolVersion playerVersion = getProtocolVersion();
     if (playerVersion.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0) {
       // Use the title packet instead.
-      GenericTitlePacket pkt =
-          GenericTitlePacket.constructTitlePacket(GenericTitlePacket.ActionType.SET_ACTION_BAR,
-              playerVersion);
-      pkt.setComponent(ProtocolUtils.getJsonChatSerializer(playerVersion).serialize(translated));
+      GenericTitlePacket pkt = GenericTitlePacket.constructTitlePacket(
+          GenericTitlePacket.ActionType.SET_ACTION_BAR, playerVersion);
+      pkt.setComponent(ProtocolUtils.getJsonChatSerializer(playerVersion)
+          .serialize(translated));
       connection.write(pkt);
     } else {
       // Due to issues with action bar packets, we'll need to convert the text message into a
       // legacy message and then inject the legacy text into a component... yuck!
       JsonObject object = new JsonObject();
-      object.addProperty("text", LegacyComponentSerializer.legacySection().serialize(translated));
+      object.addProperty("text", LegacyComponentSerializer.legacySection()
+          .serialize(translated));
       LegacyChat legacyChat = new LegacyChat();
       legacyChat.setMessage(object.toString());
       legacyChat.setType(LegacyChat.GAME_INFO_TYPE);
@@ -427,11 +428,10 @@ public class ConnectedPlayer
   @Override
   public void showTitle(net.kyori.adventure.title.@NonNull Title title) {
     if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
-      GsonComponentSerializer serializer =
-          ProtocolUtils.getJsonChatSerializer(this.getProtocolVersion());
-      GenericTitlePacket timesPkt =
-          GenericTitlePacket.constructTitlePacket(GenericTitlePacket.ActionType.SET_TIMES,
-              this.getProtocolVersion());
+      GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this
+          .getProtocolVersion());
+      GenericTitlePacket timesPkt = GenericTitlePacket.constructTitlePacket(
+          GenericTitlePacket.ActionType.SET_TIMES, this.getProtocolVersion());
       net.kyori.adventure.title.Title.Times times = title.times();
       if (times != null) {
         timesPkt.setFadeIn((int) DurationUtils.toTicks(times.fadeIn()));
@@ -440,15 +440,13 @@ public class ConnectedPlayer
       }
       connection.delayedWrite(timesPkt);
 
-      GenericTitlePacket subtitlePkt =
-          GenericTitlePacket.constructTitlePacket(GenericTitlePacket.ActionType.SET_SUBTITLE,
-              this.getProtocolVersion());
+      GenericTitlePacket subtitlePkt = GenericTitlePacket.constructTitlePacket(
+          GenericTitlePacket.ActionType.SET_SUBTITLE, this.getProtocolVersion());
       subtitlePkt.setComponent(serializer.serialize(translateMessage(title.subtitle())));
       connection.delayedWrite(subtitlePkt);
 
-      GenericTitlePacket titlePkt =
-          GenericTitlePacket.constructTitlePacket(GenericTitlePacket.ActionType.SET_TITLE,
-              this.getProtocolVersion());
+      GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
+          GenericTitlePacket.ActionType.SET_TITLE, this.getProtocolVersion());
       titlePkt.setComponent(serializer.serialize(translateMessage(title.title())));
       connection.delayedWrite(titlePkt);
 
@@ -469,26 +467,23 @@ public class ConnectedPlayer
       return;
     }
 
-    GsonComponentSerializer serializer =
-        ProtocolUtils.getJsonChatSerializer(this.getProtocolVersion());
+    GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this
+        .getProtocolVersion());
 
     if (part == TitlePart.TITLE) {
-      GenericTitlePacket titlePkt =
-          GenericTitlePacket.constructTitlePacket(GenericTitlePacket.ActionType.SET_TITLE,
-              this.getProtocolVersion());
+      GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
+          GenericTitlePacket.ActionType.SET_TITLE, this.getProtocolVersion());
       titlePkt.setComponent(serializer.serialize(translateMessage((Component) value)));
       connection.write(titlePkt);
     } else if (part == TitlePart.SUBTITLE) {
-      GenericTitlePacket titlePkt =
-          GenericTitlePacket.constructTitlePacket(GenericTitlePacket.ActionType.SET_SUBTITLE,
-              this.getProtocolVersion());
+      GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
+          GenericTitlePacket.ActionType.SET_SUBTITLE, this.getProtocolVersion());
       titlePkt.setComponent(serializer.serialize(translateMessage((Component) value)));
       connection.write(titlePkt);
     } else if (part == TitlePart.TIMES) {
       Times times = (Times) value;
-      GenericTitlePacket timesPkt =
-          GenericTitlePacket.constructTitlePacket(GenericTitlePacket.ActionType.SET_TIMES,
-              this.getProtocolVersion());
+      GenericTitlePacket timesPkt = GenericTitlePacket.constructTitlePacket(
+          GenericTitlePacket.ActionType.SET_TIMES, this.getProtocolVersion());
       timesPkt.setFadeIn((int) DurationUtils.toTicks(times.fadeIn()));
       timesPkt.setStay((int) DurationUtils.toTicks(times.stay()));
       timesPkt.setFadeOut((int) DurationUtils.toTicks(times.fadeOut()));
@@ -501,16 +496,16 @@ public class ConnectedPlayer
   @Override
   public void clearTitle() {
     if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
-      connection.write(GenericTitlePacket.constructTitlePacket(GenericTitlePacket.ActionType.HIDE,
-          this.getProtocolVersion()));
+      connection.write(GenericTitlePacket.constructTitlePacket(
+          GenericTitlePacket.ActionType.HIDE, this.getProtocolVersion()));
     }
   }
 
   @Override
   public void resetTitle() {
     if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
-      connection.write(GenericTitlePacket.constructTitlePacket(GenericTitlePacket.ActionType.RESET,
-          this.getProtocolVersion()));
+      connection.write(GenericTitlePacket.constructTitlePacket(
+          GenericTitlePacket.ActionType.RESET, this.getProtocolVersion()));
     }
   }
 
@@ -603,7 +598,7 @@ public class ConnectedPlayer
    * @param safe      whether or not we can safely reconnect to a new server
    */
   public void handleConnectionException(RegisteredServer server, Throwable throwable,
-                                        boolean safe) {
+      boolean safe) {
     if (!isActive()) {
       // If the connection is no longer active, it makes no sense to try and recover it.
       return;
@@ -642,7 +637,7 @@ public class ConnectedPlayer
    * @param safe       whether or not we can safely reconnect to a new server
    */
   public void handleConnectionException(RegisteredServer server, Disconnect disconnect,
-                                        boolean safe) {
+      boolean safe) {
     if (!isActive()) {
       // If the connection is no longer active, it makes no sense to try and recover it.
       return;
@@ -655,18 +650,20 @@ public class ConnectedPlayer
           plainTextReason);
       handleConnectionException(server, disconnectReason,
           Component.translatable("velocity.error.moved-to-new-server", NamedTextColor.RED,
-              Component.text(server.getServerInfo().getName()), disconnectReason), safe);
+              Component.text(server.getServerInfo().getName()),
+              disconnectReason), safe);
     } else {
       logger.error("{}: disconnected while connecting to {}: {}", this,
           server.getServerInfo().getName(), plainTextReason);
       handleConnectionException(server, disconnectReason,
           Component.translatable("velocity.error.cant-connect", NamedTextColor.RED,
-              Component.text(server.getServerInfo().getName()), disconnectReason), safe);
+              Component.text(server.getServerInfo().getName()),
+              disconnectReason), safe);
     }
   }
 
-  private void handleConnectionException(RegisteredServer rs, @Nullable Component kickReason,
-                                         Component friendlyReason, boolean safe) {
+  private void handleConnectionException(RegisteredServer rs,
+      @Nullable Component kickReason, Component friendlyReason, boolean safe) {
     if (!isActive()) {
       // If the connection is no longer active, it makes no sense to try and recover it.
       return;
@@ -693,8 +690,8 @@ public class ConnectedPlayer
       }
       result = Notify.create(friendlyReason);
     }
-    KickedFromServerEvent originalEvent =
-        new KickedFromServerEvent(this, rs, kickReason, !kickedFromCurrent, result);
+    KickedFromServerEvent originalEvent = new KickedFromServerEvent(this, rs, kickReason,
+        !kickedFromCurrent, result);
     handleKickEvent(originalEvent, friendlyReason, kickedFromCurrent);
   }
 
@@ -797,10 +794,11 @@ public class ConnectedPlayer
    */
   private Optional<RegisteredServer> getNextServerToTry(@Nullable RegisteredServer current) {
     if (serversToTry == null) {
-      String virtualHostStr = getVirtualHost().map(InetSocketAddress::getHostString).orElse("")
+      String virtualHostStr = getVirtualHost().map(InetSocketAddress::getHostString)
+          .orElse("")
           .toLowerCase(Locale.ROOT);
-      serversToTry = server.getConfiguration().getForcedHosts()
-          .getOrDefault(virtualHostStr, Collections.emptyList());
+      serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(virtualHostStr,
+          Collections.emptyList());
     }
 
     if (serversToTry.isEmpty()) {
@@ -878,14 +876,12 @@ public class ConnectedPlayer
       if (!connectedPlayer.get().getCurrentServer().isPresent()) {
         status = LoginStatus.PRE_SERVER_JOIN;
       } else {
-        status = connectedPlayer.get() == this
-            ? LoginStatus.SUCCESSFUL_LOGIN
+        status = connectedPlayer.get() == this ? LoginStatus.SUCCESSFUL_LOGIN
             : LoginStatus.CONFLICTING_LOGIN;
       }
     } else {
-      status = connection.isKnownDisconnect()
-          ? LoginStatus.CANCELLED_BY_PROXY
-          : LoginStatus.CANCELLED_BY_USER;
+      status = connection.isKnownDisconnect() ? LoginStatus.CANCELLED_BY_PROXY :
+          LoginStatus.CANCELLED_BY_USER;
     }
 
     DisconnectEvent event = new DisconnectEvent(this, status);
@@ -904,8 +900,8 @@ public class ConnectedPlayer
 
   @Override
   public String toString() {
-    boolean isPlayerAddressLoggingEnabled =
-        server.getConfiguration().isPlayerAddressLoggingEnabled();
+    boolean isPlayerAddressLoggingEnabled = server.getConfiguration()
+        .isPlayerAddressLoggingEnabled();
     String playerIp =
         isPlayerAddressLoggingEnabled ? getRemoteAddress().toString() : "<ip address withheld>";
     return "[connected player] " + profile.getName() + " (" + playerIp + ")";
@@ -946,8 +942,8 @@ public class ConnectedPlayer
             return item.toServer();
           });
     } else {
-      ensureBackendConnection().write(
-          getChatBuilderFactory().builder().asPlayer(this).message(input).toServer());
+      ensureBackendConnection().write(getChatBuilderFactory().builder()
+          .asPlayer(this).message(input).toServer());
     }
   }
 
@@ -992,8 +988,8 @@ public class ConnectedPlayer
         // Unless its 1.17+ and forced it will come back denied anyway
         while (!outstandingResourcePacks.isEmpty()) {
           queued = outstandingResourcePacks.peek();
-          if (queued.getShouldForce()
-              && getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
+          if (queued.getShouldForce() && getProtocolVersion()
+              .compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
             break;
           }
           onResourcePackResponse(PlayerResourcePackStatusEvent.Status.DECLINED);
@@ -1041,17 +1037,18 @@ public class ConnectedPlayer
    */
   public boolean onResourcePackResponse(PlayerResourcePackStatusEvent.Status status) {
     final boolean peek = status == PlayerResourcePackStatusEvent.Status.ACCEPTED;
-    final ResourcePackInfo queued =
-        peek ? outstandingResourcePacks.peek() : outstandingResourcePacks.poll();
+    final ResourcePackInfo queued = peek
+        ? outstandingResourcePacks.peek() : outstandingResourcePacks.poll();
 
     server.getEventManager().fire(new PlayerResourcePackStatusEvent(this, status, queued))
         .thenAcceptAsync(event -> {
           if (event.getStatus() == PlayerResourcePackStatusEvent.Status.DECLINED
               && event.getPackInfo() != null && event.getPackInfo().getShouldForce()
-              && (!event.isOverwriteKick() || event.getPlayer().getProtocolVersion()
-              .compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0)) {
-            event.getPlayer()
-                .disconnect(Component.translatable("multiplayer.requiredTexturePrompt.disconnect"));
+              && (!event.isOverwriteKick() || event.getPlayer()
+              .getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0)
+          ) {
+            event.getPlayer().disconnect(Component
+                .translatable("multiplayer.requiredTexturePrompt.disconnect"));
           }
         });
 
@@ -1156,7 +1153,7 @@ public class ConnectedPlayer
     private final @Nullable VelocityRegisteredServer previousServer;
 
     ConnectionRequestBuilderImpl(RegisteredServer toConnect,
-                                 @Nullable VelocityServerConnection previousConnection) {
+        @Nullable VelocityServerConnection previousConnection) {
       this.toConnect = Preconditions.checkNotNull(toConnect, "info");
       this.previousServer = previousConnection == null ? null : previousConnection.getServer();
     }
@@ -1169,8 +1166,8 @@ public class ConnectedPlayer
     private Optional<ConnectionRequestBuilder.Status> checkServer(RegisteredServer server) {
       Preconditions.checkArgument(server instanceof VelocityRegisteredServer,
           "Not a valid Velocity server.");
-      if (connectionInFlight != null
-          || (connectedServer != null && !connectedServer.hasCompletedJoin())) {
+      if (connectionInFlight != null || (connectedServer != null
+          && !connectedServer.hasCompletedJoin())) {
         return Optional.of(ConnectionRequestBuilder.Status.CONNECTION_IN_PROGRESS);
       }
       if (connectedServer != null

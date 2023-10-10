@@ -76,15 +76,15 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   public boolean handle(LegacyHandshake packet) {
     connection.closeWith(LegacyDisconnect.from(Component.text(
         "Your client is extremely old. Please update to a newer version of Minecraft.",
-        NamedTextColor.RED)));
+        NamedTextColor.RED)
+    ));
     return true;
   }
 
   @Override
   public boolean handle(Handshake handshake) {
-    InitialInboundConnection ic =
-        new InitialInboundConnection(connection, cleanVhost(handshake.getServerAddress()),
-            handshake);
+    InitialInboundConnection ic = new InitialInboundConnection(connection,
+        cleanVhost(handshake.getServerAddress()), handshake);
     StateRegistry nextState = getStateForProtocol(handshake.getNextStatus());
     if (nextState == null) {
       LOGGER.error("{} provided invalid protocol {}", ic, handshake.getNextStatus());
@@ -208,7 +208,8 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     private final MinecraftConnection connection;
     private final LegacyPing ping;
 
-    private LegacyInboundConnection(MinecraftConnection connection, LegacyPing ping) {
+    private LegacyInboundConnection(MinecraftConnection connection,
+        LegacyPing ping) {
       this.connection = connection;
       this.ping = ping;
     }

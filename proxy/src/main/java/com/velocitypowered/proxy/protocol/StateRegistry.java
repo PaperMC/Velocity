@@ -108,9 +108,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** Registry of all Minecraft protocol states and the packets for each state. */
 public enum StateRegistry {
+
   HANDSHAKE {
     {
-      serverbound.register(Handshake.class, Handshake::new, map(0x00, MINECRAFT_1_7_2, false));
+      serverbound.register(Handshake.class, Handshake::new,
+          map(0x00, MINECRAFT_1_7_2, false));
     }
   },
   STATUS {
@@ -162,9 +164,7 @@ public enum StateRegistry {
       serverbound.fallback = false;
       clientbound.fallback = false;
 
-      serverbound.register(
-          TabCompleteRequest.class,
-          TabCompleteRequest::new,
+      serverbound.register(TabCompleteRequest.class, TabCompleteRequest::new,
           map(0x14, MINECRAFT_1_7_2, false),
           map(0x01, MINECRAFT_1_9, false),
           map(0x02, MINECRAFT_1_12, false),
@@ -184,19 +184,13 @@ public enum StateRegistry {
           map(0x03, MINECRAFT_1_12, false),
           map(0x02, MINECRAFT_1_12_1, false),
           map(0x03, MINECRAFT_1_14, MINECRAFT_1_18_2, false));
-      serverbound.register(
-          KeyedPlayerCommand.class,
-          KeyedPlayerCommand::new,
+      serverbound.register(KeyedPlayerCommand.class, KeyedPlayerCommand::new,
           map(0x03, MINECRAFT_1_19, false),
           map(0x04, MINECRAFT_1_19_1, MINECRAFT_1_19_1, false));
-      serverbound.register(
-          KeyedPlayerChat.class,
-          KeyedPlayerChat::new,
+      serverbound.register(KeyedPlayerChat.class, KeyedPlayerChat::new,
           map(0x04, MINECRAFT_1_19, false),
           map(0x05, MINECRAFT_1_19_1, MINECRAFT_1_19_1, false));
-      serverbound.register(
-          SessionPlayerCommand.class,
-          SessionPlayerCommand::new,
+      serverbound.register(SessionPlayerCommand.class, SessionPlayerCommand::new,
           map(0x04, MINECRAFT_1_19_3, false));
       serverbound.register(
           SessionPlayerChat.class,
@@ -281,9 +275,7 @@ public enum StateRegistry {
           map(0x0F, MINECRAFT_1_15, true),
           map(0x0E, MINECRAFT_1_16, true),
           map(0x0F, MINECRAFT_1_17, MINECRAFT_1_18_2, true));
-      clientbound.register(
-          TabCompleteResponse.class,
-          TabCompleteResponse::new,
+      clientbound.register(TabCompleteResponse.class, TabCompleteResponse::new,
           map(0x3A, MINECRAFT_1_7_2, false),
           map(0x0E, MINECRAFT_1_9, false),
           map(0x10, MINECRAFT_1_13, false),
@@ -437,9 +429,7 @@ public enum StateRegistry {
           map(0x4F, MINECRAFT_1_14, true),
           map(0x50, MINECRAFT_1_15, true),
           map(0x4F, MINECRAFT_1_16, MINECRAFT_1_16_4, true));
-      clientbound.register(
-          TitleSubtitlePacket.class,
-          TitleSubtitlePacket::new,
+      clientbound.register(TitleSubtitlePacket.class, TitleSubtitlePacket::new,
           map(0x57, MINECRAFT_1_17, true),
           map(0x58, MINECRAFT_1_18, true),
           map(0x5B, MINECRAFT_1_19_1, true),
@@ -495,9 +485,7 @@ public enum StateRegistry {
           map(0x36, MINECRAFT_1_17, false),
           map(0x34, MINECRAFT_1_19, false),
           map(0x37, MINECRAFT_1_19_1, MINECRAFT_1_19_1, false));
-      clientbound.register(
-          RemovePlayerInfo.class,
-          RemovePlayerInfo::new,
+      clientbound.register(RemovePlayerInfo.class, RemovePlayerInfo::new,
           map(0x35, MINECRAFT_1_19_3, false),
           map(0x39, MINECRAFT_1_19_4, false),
           map(0x3B, MINECRAFT_1_20_2, false));
@@ -560,8 +548,8 @@ public enum StateRegistry {
   protected final PacketRegistry clientbound = new PacketRegistry(CLIENTBOUND);
   protected final PacketRegistry serverbound = new PacketRegistry(SERVERBOUND);
 
-  public StateRegistry.PacketRegistry.ProtocolRegistry getProtocolRegistry(
-      Direction direction, ProtocolVersion version) {
+  public StateRegistry.PacketRegistry.ProtocolRegistry getProtocolRegistry(Direction direction,
+      ProtocolVersion version) {
     return (direction == SERVERBOUND ? serverbound : clientbound).getProtocolRegistry(version);
   }
 
@@ -596,8 +584,8 @@ public enum StateRegistry {
       return registry;
     }
 
-    <P extends MinecraftPacket> void register(
-        Class<P> clazz, Supplier<P> packetSupplier, PacketMapping... mappings) {
+    <P extends MinecraftPacket> void register(Class<P> clazz, Supplier<P> packetSupplier,
+        PacketMapping... mappings) {
       if (mappings.length == 0) {
         throw new IllegalArgumentException("At least one mapping must be provided.");
       }
@@ -617,17 +605,14 @@ public enum StateRegistry {
                 "Last mapping version cannot be higher than highest mapping version");
           }
         }
-        ProtocolVersion to =
-            current == next
-                ? lastValid != null ? lastValid : getLast(SUPPORTED_VERSIONS)
-                : next.protocolVersion;
+        ProtocolVersion to = current == next ? lastValid != null
+            ? lastValid : getLast(SUPPORTED_VERSIONS) : next.protocolVersion;
 
         ProtocolVersion lastInList = lastValid != null ? lastValid : getLast(SUPPORTED_VERSIONS);
 
         if (from.compareTo(to) >= 0 && from != lastInList) {
-          throw new IllegalArgumentException(
-              String.format(
-                  "Next mapping version (%s) should be lower then current (%s)", to, from));
+          throw new IllegalArgumentException(String.format(
+              "Next mapping version (%s) should be lower then current (%s)", to, from));
         }
 
         for (ProtocolVersion protocol : EnumSet.range(from, to)) {
@@ -702,10 +687,10 @@ public enum StateRegistry {
       public int getPacketId(final MinecraftPacket packet) {
         final int id = this.packetClassToId.getInt(packet.getClass());
         if (id == Integer.MIN_VALUE) {
-          throw new IllegalArgumentException(
-              String.format(
-                  "Unable to find id for packet of type %s in %s protocol %s",
-                  packet.getClass().getName(), PacketRegistry.this.direction, this.version));
+          throw new IllegalArgumentException(String.format(
+              "Unable to find id for packet of type %s in %s protocol %s",
+              packet.getClass().getName(), PacketRegistry.this.direction, this.version
+          ));
         }
         return id;
       }
@@ -730,11 +715,8 @@ public enum StateRegistry {
     private final boolean encodeOnly;
     private final @Nullable ProtocolVersion lastValidProtocolVersion;
 
-    PacketMapping(
-        int id,
-        ProtocolVersion protocolVersion,
-        ProtocolVersion lastValidProtocolVersion,
-        boolean packetDecoding) {
+    PacketMapping(int id, ProtocolVersion protocolVersion,
+        ProtocolVersion lastValidProtocolVersion, boolean packetDecoding) {
       this.id = id;
       this.protocolVersion = protocolVersion;
       this.lastValidProtocolVersion = lastValidProtocolVersion;
@@ -776,8 +758,8 @@ public enum StateRegistry {
   /**
    * Creates a PacketMapping using the provided arguments.
    *
-   * @param id Packet Id
-   * @param version Protocol version
+   * @param id         Packet Id
+   * @param version    Protocol version
    * @param encodeOnly When true packet decoding will be disabled
    * @return PacketMapping with the provided arguments
    */
@@ -789,17 +771,15 @@ public enum StateRegistry {
   /**
    * Creates a PacketMapping using the provided arguments.
    *
-   * @param id Packet Id
-   * @param version Protocol version
-   * @param encodeOnly When true packet decoding will be disabled
+   * @param id                       Packet Id
+   * @param version                  Protocol version
+   * @param encodeOnly               When true packet decoding will be disabled
    * @param lastValidProtocolVersion Last version this Mapping is valid at
    * @return PacketMapping with the provided arguments
    */
-  private static PacketMapping map(
-      int id,
-      ProtocolVersion version,
-      ProtocolVersion lastValidProtocolVersion,
-      boolean encodeOnly) {
+  private static PacketMapping map(int id, ProtocolVersion version,
+      ProtocolVersion lastValidProtocolVersion, boolean encodeOnly) {
     return new PacketMapping(id, version, lastValidProtocolVersion, encodeOnly);
   }
+
 }

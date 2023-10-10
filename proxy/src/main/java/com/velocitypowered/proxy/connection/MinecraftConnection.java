@@ -153,8 +153,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         }
       } else if (msg instanceof HAProxyMessage) {
         HAProxyMessage proxyMessage = (HAProxyMessage) msg;
-        this.remoteAddress =
-            new InetSocketAddress(proxyMessage.sourceAddress(), proxyMessage.sourcePort());
+        this.remoteAddress = new InetSocketAddress(proxyMessage.sourceAddress(),
+            proxyMessage.sourcePort());
       } else if (msg instanceof ByteBuf) {
         activeSessionHandler.handleUnknown((ByteBuf) msg);
       }
@@ -266,8 +266,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
           && this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_7_2) >= 0;
       if (is17 && this.getState() != StateRegistry.STATUS) {
         channel.eventLoop().execute(() -> {
-          // 1.7.x versions have a race condition with switching protocol states, so just
-          // explicitly
+          // 1.7.x versions have a race condition with switching protocol states, so just explicitly
           // close the connection after a short while.
           this.setAutoReading(false);
           channel.eventLoop().schedule(() -> {
@@ -501,13 +500,13 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
       final ChannelHandler removedEncoder = channel.pipeline().remove(COMPRESSION_ENCODER);
 
       if (removedDecoder != null && removedEncoder != null) {
-        channel.pipeline()
-            .addBefore(MINECRAFT_DECODER, FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE);
+        channel.pipeline().addBefore(MINECRAFT_DECODER, FRAME_ENCODER,
+            MinecraftVarintLengthEncoder.INSTANCE);
         channel.pipeline().fireUserEventTriggered(VelocityConnectionEvent.COMPRESSION_DISABLED);
       }
     } else {
-      MinecraftCompressDecoder decoder =
-          (MinecraftCompressDecoder) channel.pipeline().get(COMPRESSION_DECODER);
+      MinecraftCompressDecoder decoder = (MinecraftCompressDecoder) channel.pipeline()
+          .get(COMPRESSION_DECODER);
       MinecraftCompressorAndLengthEncoder encoder =
           (MinecraftCompressorAndLengthEncoder) channel.pipeline().get(COMPRESSION_ENCODER);
       if (decoder != null && encoder != null) {

@@ -56,10 +56,13 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
 
   @Override
   protected void initChannel(final Channel ch) {
-    ch.pipeline().addLast(LEGACY_PING_DECODER, new LegacyPingDecoder())
-        .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder()).addLast(READ_TIMEOUT,
+    ch.pipeline()
+        .addLast(LEGACY_PING_DECODER, new LegacyPingDecoder())
+        .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
+        .addLast(READ_TIMEOUT,
             new ReadTimeoutHandler(this.server.getConfiguration().getReadTimeout(),
-                TimeUnit.MILLISECONDS)).addLast(LEGACY_PING_ENCODER, LegacyPingEncoder.INSTANCE)
+                TimeUnit.MILLISECONDS))
+        .addLast(LEGACY_PING_ENCODER, LegacyPingEncoder.INSTANCE)
         .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
         .addLast(MINECRAFT_DECODER, new MinecraftDecoder(ProtocolUtils.Direction.SERVERBOUND))
         .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(ProtocolUtils.Direction.CLIENTBOUND));

@@ -63,9 +63,10 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 public class InitialLoginSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(InitialLoginSessionHandler.class);
-  private static final String MOJANG_HASJOINED_URL = System.getProperty("mojang.sessionserver",
-          "https://sessionserver.mojang.com/session/minecraft/hasJoined")
-      .concat("?username=%s&serverId=%s");
+  private static final String MOJANG_HASJOINED_URL =
+      System.getProperty("mojang.sessionserver",
+              "https://sessionserver.mojang.com/session/minecraft/hasJoined")
+          .concat("?username=%s&serverId=%s");
 
   private final VelocityServer server;
   private final MinecraftConnection mcConnection;
@@ -76,7 +77,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
   private boolean forceKeyAuthentication;
 
   InitialLoginSessionHandler(VelocityServer server, MinecraftConnection mcConnection,
-                             LoginInboundConnection inbound) {
+      LoginInboundConnection inbound) {
     this.server = Preconditions.checkNotNull(server, "server");
     this.mcConnection = Preconditions.checkNotNull(mcConnection, "mcConnection");
     this.inbound = Preconditions.checkNotNull(inbound, "inbound");
@@ -201,16 +202,15 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
       String serverId = generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
 
       String playerIp = ((InetSocketAddress) mcConnection.getRemoteAddress()).getHostString();
-      String url =
-          String.format(MOJANG_HASJOINED_URL, urlFormParameterEscaper().escape(login.getUsername()),
-              serverId);
+      String url = String.format(MOJANG_HASJOINED_URL,
+          urlFormParameterEscaper().escape(login.getUsername()), serverId);
 
       if (server.getConfiguration().shouldPreventClientProxyConnections()) {
         url += "&ip=" + urlFormParameterEscaper().escape(playerIp);
       }
 
-      ListenableFuture<Response> hasJoinedResponse =
-          server.getAsyncHttpClient().prepareGet(url).execute();
+      ListenableFuture<Response> hasJoinedResponse = server.getAsyncHttpClient().prepareGet(url)
+          .execute();
       hasJoinedResponse.addListener(() -> {
         if (mcConnection.isClosed()) {
           // The player disconnected after we authenticated them.
@@ -232,8 +232,8 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
         try {
           Response profileResponse = hasJoinedResponse.get();
           if (profileResponse.getStatusCode() == 200) {
-            final GameProfile profile =
-                GENERAL_GSON.fromJson(profileResponse.getResponseBody(), GameProfile.class);
+            final GameProfile profile = GENERAL_GSON.fromJson(profileResponse.getResponseBody(),
+                GameProfile.class);
             // Not so fast, now we verify the public key for 1.19.1+
             if (inbound.getIdentifiedKey() != null
                 && inbound.getIdentifiedKey().getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
@@ -297,14 +297,17 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
     if (this.currentState != expectedState) {
       if (MinecraftDecoder.DEBUG) {
         logger.error("{} Received an unexpected packet requiring state {}, but we are in {}",
-            inbound, expectedState, this.currentState);
+            inbound,
+            expectedState, this.currentState);
       }
       mcConnection.close(true);
     }
   }
 
   private enum LoginState {
-    LOGIN_PACKET_EXPECTED, LOGIN_PACKET_RECEIVED, ENCRYPTION_REQUEST_SENT,
+    LOGIN_PACKET_EXPECTED,
+    LOGIN_PACKET_RECEIVED,
+    ENCRYPTION_REQUEST_SENT,
     ENCRYPTION_RESPONSE_RECEIVED
   }
 }

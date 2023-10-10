@@ -53,10 +53,15 @@ public enum ProtocolUtils {
   ;
 
   private static final GsonComponentSerializer PRE_1_16_SERIALIZER =
-      GsonComponentSerializer.builder().downsampleColors().emitLegacyHoverEvent()
-          .legacyHoverEventSerializer(VelocityLegacyHoverEventSerializer.INSTANCE).build();
-  private static final GsonComponentSerializer MODERN_SERIALIZER = GsonComponentSerializer.builder()
-      .legacyHoverEventSerializer(VelocityLegacyHoverEventSerializer.INSTANCE).build();
+      GsonComponentSerializer.builder()
+          .downsampleColors()
+          .emitLegacyHoverEvent()
+          .legacyHoverEventSerializer(VelocityLegacyHoverEventSerializer.INSTANCE)
+          .build();
+  private static final GsonComponentSerializer MODERN_SERIALIZER =
+      GsonComponentSerializer.builder()
+          .legacyHoverEventSerializer(VelocityLegacyHoverEventSerializer.INSTANCE)
+          .build();
 
   public static final int DEFAULT_MAX_STRING_SIZE = 65536; // 64KiB
   private static final QuietDecoderException BAD_VARINT_CACHED =
@@ -79,8 +84,8 @@ public enum ProtocolUtils {
   public static int readVarInt(ByteBuf buf) {
     int read = readVarIntSafely(buf);
     if (read == Integer.MIN_VALUE) {
-      throw MinecraftDecoder.DEBUG ? new CorruptedFrameException("Bad VarInt decoded") :
-          BAD_VARINT_CACHED;
+      throw MinecraftDecoder.DEBUG ? new CorruptedFrameException("Bad VarInt decoded")
+          : BAD_VARINT_CACHED;
     }
     return read;
   }
@@ -525,8 +530,8 @@ public enum ProtocolUtils {
     // No vanilla packet should give a 3 byte packet
     int len = readExtendedForgeShort(buf);
 
-    checkFrame(len <= FORGE_MAX_ARRAY_LENGTH, "Cannot receive array longer than %s (got %s bytes)",
-        FORGE_MAX_ARRAY_LENGTH, len);
+    checkFrame(len <= FORGE_MAX_ARRAY_LENGTH,
+        "Cannot receive array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH, len);
 
     return buf.readRetainedSlice(len);
   }
@@ -541,7 +546,8 @@ public enum ProtocolUtils {
   public static void writeByteArray17(byte[] b, ByteBuf buf, boolean allowExtended) {
     if (allowExtended) {
       checkFrame(b.length <= FORGE_MAX_ARRAY_LENGTH,
-          "Cannot send array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH, b.length);
+          "Cannot send array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH,
+          b.length);
     } else {
       checkFrame(b.length <= Short.MAX_VALUE,
           "Cannot send array longer than Short.MAX_VALUE (got %s bytes)", b.length);
@@ -659,9 +665,8 @@ public enum ProtocolUtils {
     long expiry = buf.readLong();
     byte[] key = ProtocolUtils.readByteArray(buf);
     byte[] signature = ProtocolUtils.readByteArray(buf, 4096);
-    IdentifiedKey.Revision revision =
-        version.compareTo(ProtocolVersion.MINECRAFT_1_19) == 0 ? IdentifiedKey.Revision.GENERIC_V1
-            : IdentifiedKey.Revision.LINKED_V2;
+    IdentifiedKey.Revision revision = version.compareTo(ProtocolVersion.MINECRAFT_1_19) == 0
+        ? IdentifiedKey.Revision.GENERIC_V1 : IdentifiedKey.Revision.LINKED_V2;
     return new IdentifiedKeyImpl(revision, key, expiry, signature);
   }
 
@@ -669,6 +674,7 @@ public enum ProtocolUtils {
    * Represents the direction in which a packet flows.
    */
   public enum Direction {
-    SERVERBOUND, CLIENTBOUND
+    SERVERBOUND,
+    CLIENTBOUND
   }
 }

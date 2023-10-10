@@ -98,7 +98,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
    * Pings the specified server using the specified event {@code loop}, claiming to be {@code
    * version}.
    *
-   * @param loop        the event loop to use
+   * @param loop    the event loop to use
    * @param pingOptions the options to apply to this ping
    * @return the server list ping response
    */
@@ -159,7 +159,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
     for (ConnectedPlayer player : players.values()) {
       VelocityServerConnection serverConnection = player.getConnectedServer();
       if (serverConnection != null && serverConnection.getConnection() != null
-          && serverConnection.getServer() == this) {
+              && serverConnection.getServer() == this) {
         return serverConnection.sendPluginMessage(identifier, data);
       }
     }

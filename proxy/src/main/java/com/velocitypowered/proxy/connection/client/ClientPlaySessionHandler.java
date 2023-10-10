@@ -287,9 +287,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   public boolean handle(PluginMessage packet) {
     // Handling edge case when packet with FML client handshake (state COMPLETE)
     // arrives after JoinGame packet from destination server
-    VelocityServerConnection serverConn = (player.getConnectedServer() == null
-        && packet.getChannel().equals(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL))
-        ? player.getConnectionInFlight() : player.getConnectedServer();
+    VelocityServerConnection serverConn =
+            (player.getConnectedServer() == null
+                    && packet.getChannel().equals(
+                            LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL))
+            ? player.getConnectionInFlight() : player.getConnectedServer();
 
     MinecraftConnection backendConn = serverConn != null ? serverConn.getConnection() : null;
     if (serverConn != null && backendConn != null) {
@@ -306,8 +308,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             channelIdentifiers.add(new LegacyChannelIdentifier(channel));
           }
         }
-        server.getEventManager().fireAndForget(
-            new PlayerChannelRegisterEvent(player, ImmutableList.copyOf(channelIdentifiers)));
+        server.getEventManager()
+            .fireAndForget(
+                new PlayerChannelRegisterEvent(player, ImmutableList.copyOf(channelIdentifiers)));
         backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isUnregister(packet)) {
         backendConn.write(packet.retain());
@@ -315,8 +318,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         String brand = PluginMessageUtil.readBrandMessage(packet.content());
         server.getEventManager().fireAndForget(new PlayerClientBrandEvent(player, brand));
         player.setClientBrand(brand);
-        backendConn.write(PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion(),
-            player.getProtocolVersion()));
+        backendConn.write(
+            PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion(),
+                player.getProtocolVersion()));
       } else if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
         return true;
       } else {
@@ -333,8 +337,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
           if (id == null) {
             // We don't have any plugins listening on this channel, process the packet now.
-            if (!player.getPhase().consideredComplete()
-                || !serverConn.getPhase().consideredComplete()) {
+            if (!player.getPhase().consideredComplete() || !serverConn.getPhase()
+                .consideredComplete()) {
               // The client is trying to send messages too early. This is primarily caused by mods,
               // but further aggravated by Velocity. To work around these issues, we will queue any
               // non-FML handshake messages to be sent once the FML handshake has completed or the
@@ -352,12 +356,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             PluginMessageEvent event = new PluginMessageEvent(player, serverConn, id, copy);
             server.getEventManager().fire(event).thenAcceptAsync(pme -> {
               if (pme.getResult().isAllowed()) {
-                PluginMessage message =
-                    new PluginMessage(packet.getChannel(), Unpooled.wrappedBuffer(copy));
-                if (!player.getPhase().consideredComplete()
-                    || !serverConn.getPhase().consideredComplete()) {
-                  // We're still processing the connection (see above), enqueue the packet
-                  // for now.
+                PluginMessage message = new PluginMessage(packet.getChannel(),
+                    Unpooled.wrappedBuffer(copy));
+                if (!player.getPhase().consideredComplete() || !serverConn.getPhase()
+                    .consideredComplete()) {
+                  // We're still processing the connection (see above), enqueue the packet for now.
                   loginPluginMessages.add(message.retain());
                 } else {
                   backendConn.write(message);
@@ -697,7 +700,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             player.getConnection().write(response);
           } catch (Exception e) {
             logger.error("Unable to provide tab list completions for {} for command '{}'",
-                player.getUsername(), command, e);
+                player.getUsername(), command,
+                e);
           }
         }, player.getConnection().eventLoop()).exceptionally((ex) -> {
           logger.error(

@@ -81,8 +81,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
    * @param server           the Velocity proxy instance
    */
   public VelocityServerConnection(VelocityRegisteredServer registeredServer,
-                                  @Nullable VelocityRegisteredServer previousServer,
-                                  ConnectedPlayer proxyPlayer, VelocityServer server) {
+      @Nullable VelocityRegisteredServer previousServer,
+      ConnectedPlayer proxyPlayer, VelocityServer server) {
     this.registeredServer = registeredServer;
     this.previousServer = previousServer;
     this.proxyPlayer = proxyPlayer;
@@ -149,9 +149,10 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
         .append('\0')
         .append(getPlayerRemoteAddressAsString())
         .append('\0')
-        .append(proxyPlayer.getGameProfile().getUndashedId()).append('\0');
-    GENERAL_GSON.toJson(propertiesTransform.apply(proxyPlayer.getGameProfile().getProperties()),
-        data);
+        .append(proxyPlayer.getGameProfile().getUndashedId())
+        .append('\0');
+    GENERAL_GSON
+        .toJson(propertiesTransform.apply(proxyPlayer.getGameProfile().getProperties()), data);
     return data.toString();
   }
 

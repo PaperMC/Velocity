@@ -68,8 +68,8 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
   private final boolean onlineMode;
   private State loginState = State.START; // 1.20.2+
 
-  AuthSessionHandler(VelocityServer server, LoginInboundConnection inbound, GameProfile profile,
-                     boolean onlineMode) {
+  AuthSessionHandler(VelocityServer server, LoginInboundConnection inbound,
+      GameProfile profile, boolean onlineMode) {
     this.server = Preconditions.checkNotNull(server, "server");
     this.inbound = Preconditions.checkNotNull(inbound, "inbound");
     this.profile = Preconditions.checkNotNull(profile, "profile");
@@ -82,8 +82,8 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
     // Some connection types may need to alter the game profile.
     profile = mcConnection.getType().addGameProfileTokensIfRequired(profile,
         server.getConfiguration().getPlayerInfoForwardingMode());
-    GameProfileRequestEvent profileRequestEvent =
-        new GameProfileRequestEvent(inbound, profile, onlineMode);
+    GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEvent(inbound, profile,
+        onlineMode);
     final GameProfile finalProfile = profile;
 
     server.getEventManager().fire(profileRequestEvent).thenComposeAsync(profileEvent -> {
@@ -93,9 +93,9 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
       }
 
       // Initiate a regular connection and move over to it.
-      ConnectedPlayer player =
-          new ConnectedPlayer(server, profileEvent.getGameProfile(), mcConnection,
-              inbound.getVirtualHost().orElse(null), onlineMode, inbound.getIdentifiedKey());
+      ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.getGameProfile(),
+          mcConnection, inbound.getVirtualHost().orElse(null), onlineMode,
+          inbound.getIdentifiedKey());
       this.connectedPlayer = player;
       if (!server.canRegisterConnection(player)) {
         player.disconnect0(
