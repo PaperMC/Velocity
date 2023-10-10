@@ -203,7 +203,8 @@ public enum ProtocolUtils {
         buf.readableBytes());
     String str = buf.toString(buf.readerIndex(), length, StandardCharsets.UTF_8);
     buf.skipBytes(length);
-    checkFrame(str.length() <= cap, "Got a too-long string (got %s, max %s)", str.length(), cap);
+    checkFrame(str.length() <= cap, "Got a too-long string (got %s, max %s)",
+        str.length(), cap);
     return str;
   }
 

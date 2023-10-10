@@ -32,8 +32,8 @@ import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Session handler used to implement {@link VelocityRegisteredServer#ping(EventLoop,
- * ProtocolVersion)}.
+ * Session handler used to implement
+ * {@link VelocityRegisteredServer#ping(EventLoop, ProtocolVersion)}.
  */
 public class PingSessionHandler implements MinecraftSessionHandler {
 

@@ -98,9 +98,8 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
           inbound.getIdentifiedKey());
       this.connectedPlayer = player;
       if (!server.canRegisterConnection(player)) {
-        player.disconnect0(
-            Component.translatable("velocity.error.already-connected-proxy", NamedTextColor.RED),
-            true);
+        player.disconnect0(Component.translatable("velocity.error.already-connected-proxy",
+            NamedTextColor.RED), true);
         return CompletableFuture.completedFuture(null);
       }
 
@@ -235,19 +234,19 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
 
   private CompletableFuture<Void> connectToInitialServer(ConnectedPlayer player) {
     Optional<RegisteredServer> initialFromConfig = player.getNextServerToTry();
-    PlayerChooseInitialServerEvent event =
-        new PlayerChooseInitialServerEvent(player, initialFromConfig.orElse(null));
+    PlayerChooseInitialServerEvent event = new PlayerChooseInitialServerEvent(player,
+        initialFromConfig.orElse(null));
 
-    return server.getEventManager().fire(event).thenRunAsync(() -> {
-      Optional<RegisteredServer> toTry = event.getInitialServer();
-      if (!toTry.isPresent()) {
-        player.disconnect0(
-            Component.translatable("velocity.error.no-available-servers", NamedTextColor.RED),
-            true);
-        return;
-      }
-      player.createConnectionRequest(toTry.get()).fireAndForget();
-    }, mcConnection.eventLoop());
+    return server.getEventManager().fire(event)
+        .thenRunAsync(() -> {
+          Optional<RegisteredServer> toTry = event.getInitialServer();
+          if (!toTry.isPresent()) {
+            player.disconnect0(Component.translatable("velocity.error.no-available-servers",
+                NamedTextColor.RED), true);
+            return;
+          }
+          player.createConnectionRequest(toTry.get()).fireAndForget();
+        }, mcConnection.eventLoop());
   }
 
   @Override

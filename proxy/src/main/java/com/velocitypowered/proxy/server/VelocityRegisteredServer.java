@@ -95,8 +95,8 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   }
 
   /**
-   * Pings the specified server using the specified event {@code loop}, claiming to be {@code
-   * version}.
+   * Pings the specified server using the specified event {@code loop}, claiming to be
+   * {@code version}.
    *
    * @param loop    the event loop to use
    * @param pingOptions the options to apply to this ping

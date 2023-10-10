@@ -73,6 +73,9 @@ public class ResourcePackResponse implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "ResourcePackResponse{" + "hash=" + hash + ", " + "status=" + status + '}';
+    return "ResourcePackResponse{"
+        + "hash=" + hash + ", "
+        + "status=" + status
+        + '}';
   }
 }

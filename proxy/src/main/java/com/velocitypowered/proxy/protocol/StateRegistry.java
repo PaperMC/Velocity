@@ -106,7 +106,9 @@ import java.util.Objects;
 import java.util.function.Supplier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-/** Registry of all Minecraft protocol states and the packets for each state. */
+/**
+ * Registry of all Minecraft protocol states and the packets for each state.
+ */
 public enum StateRegistry {
 
   HANDSHAKE {
@@ -117,9 +119,10 @@ public enum StateRegistry {
   },
   STATUS {
     {
-      serverbound.register(
-          StatusRequest.class, () -> StatusRequest.INSTANCE, map(0x00, MINECRAFT_1_7_2, false));
-      serverbound.register(StatusPing.class, StatusPing::new, map(0x01, MINECRAFT_1_7_2, false));
+      serverbound.register(StatusRequest.class, () -> StatusRequest.INSTANCE,
+          map(0x00, MINECRAFT_1_7_2, false));
+      serverbound.register(StatusPing.class, StatusPing::new,
+          map(0x01, MINECRAFT_1_7_2, false));
 
       clientbound.register(
           StatusResponse.class, StatusResponse::new, map(0x00, MINECRAFT_1_7_2, false));
@@ -553,7 +556,9 @@ public enum StateRegistry {
     return (direction == SERVERBOUND ? serverbound : clientbound).getProtocolRegistry(version);
   }
 
-  /** Packet registry. */
+  /**
+   * Packet registry.
+   */
   public static class PacketRegistry {
 
     private final Direction direction;
@@ -621,24 +626,19 @@ public enum StateRegistry {
           }
           ProtocolRegistry registry = this.versions.get(protocol);
           if (registry == null) {
-            throw new IllegalArgumentException(
-                "Unknown protocol version " + current.protocolVersion);
+            throw new IllegalArgumentException("Unknown protocol version "
+                + current.protocolVersion);
           }
 
           if (registry.packetIdToSupplier.containsKey(current.id)) {
-            throw new IllegalArgumentException(
-                "Can not register class "
-                    + clazz.getSimpleName()
-                    + " with id "
-                    + current.id
-                    + " for "
-                    + registry.version
-                    + " because another packet is already registered");
+            throw new IllegalArgumentException("Can not register class " + clazz.getSimpleName()
+                + " with id " + current.id + " for " + registry.version
+                + " because another packet is already registered");
           }
 
           if (registry.packetClassToId.containsKey(clazz)) {
-            throw new IllegalArgumentException(
-                clazz.getSimpleName() + " is already registered for version " + registry.version);
+            throw new IllegalArgumentException(clazz.getSimpleName()
+                + " is already registered for version " + registry.version);
           }
 
           if (!current.encodeOnly) {
@@ -649,7 +649,9 @@ public enum StateRegistry {
       }
     }
 
-    /** Protocol registry. */
+    /**
+     * Protocol registry.
+     */
     public class ProtocolRegistry {
 
       public final ProtocolVersion version;
@@ -707,7 +709,9 @@ public enum StateRegistry {
     }
   }
 
-  /** Packet mapping. */
+  /**
+   * Packet mapping.
+   */
   public static final class PacketMapping {
 
     private final int id;
@@ -726,12 +730,9 @@ public enum StateRegistry {
     @Override
     public String toString() {
       return "PacketMapping{"
-          + "id="
-          + id
-          + ", protocolVersion="
-          + protocolVersion
-          + ", encodeOnly="
-          + encodeOnly
+          + "id=" + id
+          + ", protocolVersion=" + protocolVersion
+          + ", encodeOnly=" + encodeOnly
           + '}';
     }
 

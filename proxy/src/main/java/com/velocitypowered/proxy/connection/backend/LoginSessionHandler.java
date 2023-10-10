@@ -61,8 +61,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
 
-  private static final Component MODERN_IP_FORWARDING_FAILURE =
-      Component.translatable("velocity.error.modern-forwarding-failed");
+  private static final Component MODERN_IP_FORWARDING_FAILURE = Component
+      .translatable("velocity.error.modern-forwarding-failed");
 
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
@@ -190,7 +190,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
               + "This is usually because the remote server "
               + "does not have BungeeCord IP forwarding "
               + "correctly enabled.\nSee https://velocitypowered.com/wiki/users/forwarding/ "
-              + "for instructions on how to configure player info forwarding correctly."));
+              + "for instructions on how to configure player info forwarding correctly.")
+      );
     } else {
       resultFuture.completeExceptionally(
           new QuietRuntimeException("The connection to the remote server was unexpectedly closed.")

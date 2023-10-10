@@ -72,10 +72,10 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   private static final Pattern PLAUSIBLE_SHA1_HASH = Pattern.compile("^[a-z0-9]{40}$");
   private static final Logger logger = LogManager.getLogger(BackendPlaySessionHandler.class);
-  private static final boolean BACKPRESSURE_LOG =
-      Boolean.getBoolean("velocity.log-server-backpressure");
-  private static final int MAXIMUM_PACKETS_TO_FLUSH =
-      Integer.getInteger("velocity.max-packets-per-flush", 8192);
+  private static final boolean BACKPRESSURE_LOG = Boolean
+      .getBoolean("velocity.log-server-backpressure");
+  private static final int MAXIMUM_PACKETS_TO_FLUSH = Integer
+      .getInteger("velocity.max-packets-per-flush", 8192);
 
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
@@ -242,16 +242,20 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     byte[] copy = ByteBufUtil.getBytes(packet.content());
-    PluginMessageEvent event = new PluginMessageEvent(serverConn, serverConn.getPlayer(), id, copy);
-    server.getEventManager().fire(event).thenAcceptAsync(pme -> {
-      if (pme.getResult().isAllowed() && !playerConnection.isClosed()) {
-        PluginMessage copied = new PluginMessage(packet.getChannel(), Unpooled.wrappedBuffer(copy));
-        playerConnection.write(copied);
-      }
-    }, playerConnection.eventLoop()).exceptionally((ex) -> {
-      logger.error("Exception while handling plugin message {}", packet, ex);
-      return null;
-    });
+    PluginMessageEvent event = new PluginMessageEvent(serverConn, serverConn.getPlayer(), id,
+        copy);
+    server.getEventManager().fire(event)
+        .thenAcceptAsync(pme -> {
+          if (pme.getResult().isAllowed() && !playerConnection.isClosed()) {
+            PluginMessage copied = new PluginMessage(packet.getChannel(),
+                Unpooled.wrappedBuffer(copy));
+            playerConnection.write(copied);
+          }
+        }, playerConnection.eventLoop())
+        .exceptionally((ex) -> {
+          logger.error("Exception while handling plugin message {}", packet, ex);
+          return null;
+        });
     return true;
   }
 
@@ -300,13 +304,18 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ServerData packet) {
-    server.getServerListPingHandler().getInitialPing(this.serverConn.getPlayer()).thenComposeAsync(
-        ping -> server.getEventManager()
-            .fire(new ProxyPingEvent(this.serverConn.getPlayer(), ping)),
-        playerConnection.eventLoop()).thenAcceptAsync(pingEvent -> this.playerConnection.write(
-            new ServerData(pingEvent.getPing().getDescriptionComponent(),
-                pingEvent.getPing().getFavicon().orElse(null), packet.isSecureChatEnforced())),
-        playerConnection.eventLoop());
+    server.getServerListPingHandler().getInitialPing(this.serverConn.getPlayer())
+        .thenComposeAsync(
+            ping -> server.getEventManager()
+                .fire(new ProxyPingEvent(this.serverConn.getPlayer(), ping)),
+            playerConnection.eventLoop()
+        )
+        .thenAcceptAsync(pingEvent ->
+            this.playerConnection.write(
+                new ServerData(pingEvent.getPing().getDescriptionComponent(),
+                    pingEvent.getPing().getFavicon().orElse(null),
+                    packet.isSecureChatEnforced())
+            ), playerConnection.eventLoop());
     return true;
   }
 

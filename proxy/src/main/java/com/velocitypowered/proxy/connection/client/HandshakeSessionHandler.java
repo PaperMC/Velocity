@@ -47,8 +47,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * The initial handler used when a connection is established to the proxy. This will either
- * transition to {@link StatusSessionHandler} or {@link InitialLoginSessionHandler} as soon as the
- * handshake packet is received.
+ * transition to {@link StatusSessionHandler} or {@link InitialLoginSessionHandler} as soon
+ * as the handshake packet is received.
  */
 public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
@@ -140,8 +140,8 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     // and lower, otherwise IP information will never get forwarded.
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
         && handshake.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
-      ic.disconnectQuietly(
-          Component.translatable("velocity.error.modern-forwarding-needs-new-client"));
+      ic.disconnectQuietly(Component.translatable(
+          "velocity.error.modern-forwarding-needs-new-client"));
       return;
     }
 

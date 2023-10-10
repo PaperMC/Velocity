@@ -486,8 +486,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   }
 
   /**
-   * Sets the compression threshold on the connection. You are responsible for sending {@link
-   * com.velocitypowered.proxy.protocol.packet.SetCompression} beforehand.
+   * Sets the compression threshold on the connection. You are responsible for sending
+   * {@link com.velocitypowered.proxy.protocol.packet.SetCompression} beforehand.
    *
    * @param threshold the compression threshold to use
    */
@@ -577,4 +577,5 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   public void setType(ConnectionType connectionType) {
     this.connectionType = connectionType;
   }
+
 }

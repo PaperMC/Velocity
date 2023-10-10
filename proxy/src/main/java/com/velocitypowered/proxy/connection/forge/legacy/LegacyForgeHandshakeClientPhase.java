@@ -76,9 +76,9 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
   },
 
   /**
-   * The Mod list is sent to the server, captured by Velocity. Transition to {@link
-   * #WAITING_SERVER_DATA} when an ACK is sent, which indicates to the server to start sending state
-   * data.
+   * The Mod list is sent to the server, captured by Velocity. Transition to
+   * {@link #WAITING_SERVER_DATA} when an ACK is sent, which indicates to the server to start
+   * sending state data.
    */
   MOD_LIST(LegacyForgeConstants.ACK_DISCRIMINATOR) {
     @Override
@@ -181,8 +181,8 @@ public enum LegacyForgeHandshakeClientPhase implements ClientConnectionPhase {
    *
    * @param packetToAdvanceOn The ID of the packet discriminator that indicates that the client has
    *                          moved onto a new phase, and as such, Velocity should do so too
-   *                          (inspecting {@link #nextPhase()}. A null indicates there is
-   *                          no further phase to transition to.
+   *                          (inspecting {@link #nextPhase()}. A null indicates there is no further
+   *                          phase to transition to.
    */
   LegacyForgeHandshakeClientPhase(Integer packetToAdvanceOn) {
     this.packetToAdvanceOn = packetToAdvanceOn;
