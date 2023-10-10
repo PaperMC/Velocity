@@ -18,7 +18,6 @@
 package com.velocitypowered.proxy.connection.backend;
 
 import static com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder.getBungeeCordChannel;
-import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.constructChannelsPacket;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -62,8 +61,6 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.handler.timeout.ReadTimeoutException;
-
-import java.util.Collection;
 import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -113,13 +110,6 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       serverMc.write(PluginMessageUtil.constructChannelsPacket(serverMc.getProtocolVersion(),
           ImmutableList.of(getBungeeCordChannel(serverMc.getProtocolVersion()))
       ));
-    }
-
-    Collection<String> channels =
-            server.getChannelRegistrar().getChannelsForProtocol(serverConn.getPlayer().getProtocolVersion());
-    if (!channels.isEmpty()) {
-      PluginMessage register = constructChannelsPacket(serverConn.getPlayer().getProtocolVersion(), channels);
-      serverMc.write(register);
     }
 
   }
