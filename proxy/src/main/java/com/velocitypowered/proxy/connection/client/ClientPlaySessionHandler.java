@@ -482,11 +482,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // Send keep alive to try to avoid timeouts
       player.sendKeepAlive();
 
-      // Reset Tablist header and footer to prevent desync
-      player.clearHeaderAndFooter();
+      // Config state clears everything in the client. No need to clear later.
+      spawned = false;
+      serverBossBars.clear();
+      player.clearHeaderAndFooterSilent();
+      player.getTabList().clearAllSilent();
     }
-
-    spawned = false;
 
     player.switchToConfigState();
 

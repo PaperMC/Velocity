@@ -174,6 +174,11 @@ public class VelocityTabList implements InternalTabList {
   @Override
   public void clearAll() {
     this.connection.delayedWrite(new RemovePlayerInfo(new ArrayList<>(this.entries.keySet())));
+    clearAllSilent();
+  }
+
+  @Override
+  public void clearAllSilent() {
     this.entries.clear();
   }
 

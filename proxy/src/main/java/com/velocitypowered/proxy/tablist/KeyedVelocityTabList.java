@@ -130,8 +130,13 @@ public class KeyedVelocityTabList implements InternalTabList {
     for (TabListEntry value : listEntries) {
       items.add(LegacyPlayerListItem.Item.from(value));
     }
-    entries.clear();
+    clearAllSilent();
     connection.delayedWrite(new LegacyPlayerListItem(LegacyPlayerListItem.REMOVE_PLAYER, items));
+  }
+
+  @Override
+  public void clearAllSilent() {
+    entries.clear();
   }
 
   @Override
