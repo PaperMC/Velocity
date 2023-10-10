@@ -148,9 +148,7 @@ public interface Player extends
   /**
    * Clears the tab list header and footer for the player.
    *
-   * @deprecated Use {@link TabList#clearHeaderAndFooter()}.
    */
-  @Deprecated
   void clearHeaderAndFooter();
 
   /**
