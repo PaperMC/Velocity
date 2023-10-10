@@ -24,6 +24,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientConfigSessionHandler;
+import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
@@ -152,22 +153,24 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(FinishedUpdate packet) {
     MinecraftConnection smc = serverConn.ensureConnected();
+    ConnectedPlayer player = serverConn.getPlayer();
     ClientConfigSessionHandler configHandler =
-        (ClientConfigSessionHandler) serverConn.getPlayer().getConnection()
-            .getActiveSessionHandler();
+        (ClientConfigSessionHandler) player.getConnection().getActiveSessionHandler();
 
     smc.setAutoReading(false);
     // Even when not auto reading messages are still decoded. Decode them with the correct state
     smc.getChannel().pipeline().get(MinecraftDecoder.class).setState(StateRegistry.PLAY);
     configHandler.handleBackendFinishUpdate(serverConn).thenAcceptAsync((unused) -> {
-      if (serverConn == serverConn.getPlayer().getConnectedServer()) {
+      if (serverConn == player.getConnectedServer()) {
         smc.setActiveSessionHandler(StateRegistry.PLAY);
+        player.sendPlayerListHeaderAndFooter(
+            player.getPlayerListHeader(), player.getPlayerListFooter());
       } else {
         smc.setActiveSessionHandler(StateRegistry.PLAY,
             new TransitionSessionHandler(server, serverConn, resultFuture));
       }
-      if (serverConn.getPlayer().getAppliedResourcePack() == null && resourcePackToApply != null) {
-        serverConn.getPlayer().queueResourcePack(resourcePackToApply);
+      if (player.getAppliedResourcePack() == null && resourcePackToApply != null) {
+        player.queueResourcePack(resourcePackToApply);
       }
       smc.setAutoReading(true);
     }, smc.eventLoop());
