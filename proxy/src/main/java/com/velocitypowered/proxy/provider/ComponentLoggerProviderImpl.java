@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 public final class ComponentLoggerProviderImpl implements ComponentLoggerProvider {
   private static final ANSIComponentSerializer SERIALIZER = ANSIComponentSerializer.builder()
       .flattener(ComponentFlattener.basic().toBuilder()
-        .mapper(KeybindComponent.class, c -> "")
+        .mapper(KeybindComponent.class, c -> c.keybind())
         .mapper(TranslatableComponent.class, TranslatableComponent::key)
         .build())
       .build();

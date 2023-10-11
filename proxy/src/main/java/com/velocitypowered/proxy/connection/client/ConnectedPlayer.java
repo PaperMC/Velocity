@@ -126,7 +126,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private static final int MAX_PLUGIN_CHANNELS = 1024;
   private static final PlainTextComponentSerializer PASS_THRU_TRANSLATE =
       PlainTextComponentSerializer.builder().flattener(
-          ComponentFlattener.basic().toBuilder().mapper(KeybindComponent.class, c -> "")
+          ComponentFlattener.basic().toBuilder().mapper(KeybindComponent.class, c -> c.keybind())
               .mapper(TranslatableComponent.class, TranslatableComponent::key).build()).build();
   static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
 
