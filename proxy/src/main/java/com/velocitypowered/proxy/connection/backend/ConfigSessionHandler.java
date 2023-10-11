@@ -44,7 +44,6 @@ import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
-import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
