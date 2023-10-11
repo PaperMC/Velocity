@@ -156,7 +156,6 @@ public interface Player extends
 
   /**
    * Clears the player list header and footer.
-   *
    */
   void clearPlayerListHeaderAndFooter();
 
