@@ -94,7 +94,7 @@ public class VelocityPluginManager implements PluginManager {
       for (Path path : stream) {
         try {
           found.add(loader.loadCandidate(path));
-        } catch (Exception e) {
+        } catch (Throwable e) {
           logger.error("Unable to load plugin {}", path, e);
         }
       }
@@ -126,7 +126,7 @@ public class VelocityPluginManager implements PluginManager {
         VelocityPluginContainer container = new VelocityPluginContainer(realPlugin);
         pluginContainers.put(container, loader.createModule(container));
         loadedPluginsById.add(realPlugin.getId());
-      } catch (Exception e) {
+      } catch (Throwable e) {
         logger.error("Can't create module for plugin {}", candidate.getId(), e);
       }
     }
@@ -153,7 +153,7 @@ public class VelocityPluginManager implements PluginManager {
 
       try {
         loader.createPlugin(container, plugin.getValue(), commonModule);
-      } catch (Exception e) {
+      } catch (Throwable e) {
         logger.error("Can't create plugin {}", description.getId(), e);
         continue;
       }
