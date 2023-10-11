@@ -39,8 +39,11 @@ import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
 import com.velocitypowered.proxy.protocol.packet.BossBar;
+import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
@@ -51,6 +54,7 @@ import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.ServerData;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
+import com.velocitypowered.proxy.protocol.packet.config.StartUpdate;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
@@ -68,10 +72,10 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   private static final Pattern PLAUSIBLE_SHA1_HASH = Pattern.compile("^[a-z0-9]{40}$");
   private static final Logger logger = LogManager.getLogger(BackendPlaySessionHandler.class);
-  private static final boolean BACKPRESSURE_LOG = Boolean
-      .getBoolean("velocity.log-server-backpressure");
-  private static final int MAXIMUM_PACKETS_TO_FLUSH = Integer
-      .getInteger("velocity.max-packets-per-flush", 8192);
+  private static final boolean BACKPRESSURE_LOG =
+      Boolean.getBoolean("velocity.log-server-backpressure");
+  private static final int MAXIMUM_PACKETS_TO_FLUSH =
+      Integer.getInteger("velocity.max-packets-per-flush", 8192);
 
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
@@ -86,7 +90,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     this.serverConn = serverConn;
     this.playerConnection = serverConn.getPlayer().getConnection();
 
-    MinecraftSessionHandler psh = playerConnection.getSessionHandler();
+    MinecraftSessionHandler psh = playerConnection.getActiveSessionHandler();
     if (!(psh instanceof ClientPlaySessionHandler)) {
       throw new IllegalStateException(
           "Initializing BackendPlaySessionHandler with no backing client play session handler!");
@@ -101,12 +105,13 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   public void activated() {
     serverConn.getServer().addPlayer(serverConn.getPlayer());
 
+    MinecraftConnection serverMc = serverConn.ensureConnected();
     if (server.getConfiguration().isBungeePluginChannelEnabled()) {
-      MinecraftConnection serverMc = serverConn.ensureConnected();
       serverMc.write(PluginMessageUtil.constructChannelsPacket(serverMc.getProtocolVersion(),
           ImmutableList.of(getBungeeCordChannel(serverMc.getProtocolVersion()))
       ));
     }
+
   }
 
   @Override
@@ -120,9 +125,25 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
+  public boolean handle(StartUpdate packet) {
+    MinecraftConnection smc = serverConn.ensureConnected();
+    smc.setAutoReading(false);
+    // Even when not auto reading messages are still decoded. Decode them with the correct state
+    smc.getChannel().pipeline().get(MinecraftDecoder.class).setState(StateRegistry.CONFIG);
+    serverConn.getPlayer().switchToConfigState();
+    return true;
+  }
+
+  @Override
   public boolean handle(KeepAlive packet) {
     serverConn.getPendingPings().put(packet.getRandomId(), System.currentTimeMillis());
     return false; // forwards on
+  }
+
+  @Override
+  public boolean handle(ClientSettings packet) {
+    serverConn.ensureConnected().write(packet);
+    return true;
   }
 
   @Override
@@ -221,20 +242,16 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     byte[] copy = ByteBufUtil.getBytes(packet.content());
-    PluginMessageEvent event = new PluginMessageEvent(serverConn, serverConn.getPlayer(), id,
-        copy);
-    server.getEventManager().fire(event)
-        .thenAcceptAsync(pme -> {
-          if (pme.getResult().isAllowed() && !playerConnection.isClosed()) {
-            PluginMessage copied = new PluginMessage(packet.getChannel(),
-                Unpooled.wrappedBuffer(copy));
-            playerConnection.write(copied);
-          }
-        }, playerConnection.eventLoop())
-        .exceptionally((ex) -> {
-          logger.error("Exception while handling plugin message {}", packet, ex);
-          return null;
-        });
+    PluginMessageEvent event = new PluginMessageEvent(serverConn, serverConn.getPlayer(), id, copy);
+    server.getEventManager().fire(event).thenAcceptAsync(pme -> {
+      if (pme.getResult().isAllowed() && !playerConnection.isClosed()) {
+        PluginMessage copied = new PluginMessage(packet.getChannel(), Unpooled.wrappedBuffer(copy));
+        playerConnection.write(copied);
+      }
+    }, playerConnection.eventLoop()).exceptionally((ex) -> {
+      logger.error("Exception while handling plugin message {}", packet, ex);
+      return null;
+    });
     return true;
   }
 
@@ -283,18 +300,13 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ServerData packet) {
-    server.getServerListPingHandler().getInitialPing(this.serverConn.getPlayer())
-        .thenComposeAsync(
-            ping -> server.getEventManager()
-                .fire(new ProxyPingEvent(this.serverConn.getPlayer(), ping)),
-            playerConnection.eventLoop()
-        )
-        .thenAcceptAsync(pingEvent ->
-            this.playerConnection.write(
-                new ServerData(pingEvent.getPing().getDescriptionComponent(),
-                    pingEvent.getPing().getFavicon().orElse(null),
-                    packet.isSecureChatEnforced())
-            ), playerConnection.eventLoop());
+    server.getServerListPingHandler().getInitialPing(this.serverConn.getPlayer()).thenComposeAsync(
+        ping -> server.getEventManager()
+            .fire(new ProxyPingEvent(this.serverConn.getPlayer(), ping)),
+        playerConnection.eventLoop()).thenAcceptAsync(pingEvent -> this.playerConnection.write(
+            new ServerData(pingEvent.getPing().getDescriptionComponent(),
+                pingEvent.getPing().getFavicon().orElse(null), packet.isSecureChatEnforced())),
+        playerConnection.eventLoop());
     return true;
   }
 

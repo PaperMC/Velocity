@@ -17,16 +17,22 @@
 
 package com.velocitypowered.proxy.protocol.packet;
 
+import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.util.regex.Pattern;
 
 public class ResourcePackRequest implements MinecraftPacket {
 
@@ -34,6 +40,8 @@ public class ResourcePackRequest implements MinecraftPacket {
   private @MonotonicNonNull String hash;
   private boolean isRequired; // 1.17+
   private @Nullable Component prompt; // 1.17+
+
+  private static final Pattern PLAUSIBLE_SHA1_HASH = Pattern.compile("^[a-z0-9]{40}$"); // 1.20.2+
 
   public @Nullable String getUrl() {
     return url;
@@ -99,6 +107,19 @@ public class ResourcePackRequest implements MinecraftPacket {
     }
   }
 
+  public VelocityResourcePackInfo toServerPromptedPack() {
+    ResourcePackInfo.Builder builder =
+        new VelocityResourcePackInfo.BuilderImpl(Preconditions.checkNotNull(url)).setPrompt(prompt)
+            .setShouldForce(isRequired).setOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
+
+    if (hash != null && !hash.isEmpty()) {
+      if (PLAUSIBLE_SHA1_HASH.matcher(hash).matches()) {
+        builder.setHash(ByteBufUtil.decodeHexDump(hash));
+      }
+    }
+    return (VelocityResourcePackInfo) builder.build();
+  }
+
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
@@ -106,11 +127,7 @@ public class ResourcePackRequest implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "ResourcePackRequest{"
-        + "url='" + url + '\''
-        + ", hash='" + hash + '\''
-        + ", isRequired=" + isRequired
-        + ", prompt='" + prompt + '\''
-        + '}';
+    return "ResourcePackRequest{" + "url='" + url + '\'' + ", hash='" + hash + '\'' +
+        ", isRequired=" + isRequired + ", prompt='" + prompt + '\'' + '}';
   }
 }

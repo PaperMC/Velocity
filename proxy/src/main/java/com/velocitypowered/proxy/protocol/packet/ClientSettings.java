@@ -23,10 +23,10 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.Objects;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ClientSettings implements MinecraftPacket {
-
   private @Nullable String locale;
   private byte viewDistance;
   private int chatVisibility;
@@ -120,16 +120,10 @@ public class ClientSettings implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "ClientSettings{"
-        + "locale='" + locale + '\''
-        + ", viewDistance=" + viewDistance
-        + ", chatVisibility=" + chatVisibility
-        + ", chatColors=" + chatColors
-        + ", skinParts=" + skinParts
-        + ", mainHand=" + mainHand
-        + ", chatFilteringEnabled=" + chatFilteringEnabled
-        + ", clientListingAllowed=" + clientListingAllowed
-        + '}';
+    return "ClientSettings{" + "locale='" + locale + '\'' + ", viewDistance=" + viewDistance +
+        ", chatVisibility=" + chatVisibility + ", chatColors=" + chatColors + ", skinParts=" +
+        skinParts + ", mainHand=" + mainHand + ", chatFilteringEnabled=" + chatFilteringEnabled +
+        ", clientListingAllowed=" + clientListingAllowed + '}';
   }
 
   @Override
