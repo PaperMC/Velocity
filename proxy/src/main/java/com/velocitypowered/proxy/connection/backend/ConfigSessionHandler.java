@@ -188,10 +188,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
           PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion(),
               serverConn.getPlayer().getProtocolVersion()));
     } else {
-      // TODO: Change this so its usable for mod loaders
-      serverConn.disconnect();
-      resultFuture.complete(ConnectionRequestResults.forDisconnect(
-          Component.translatable("multiplayer.disconnect.missing_tags"), serverConn.getServer()));
+      serverConn.getPlayer().getConnection().write(packet.retain());
     }
     return true;
   }
