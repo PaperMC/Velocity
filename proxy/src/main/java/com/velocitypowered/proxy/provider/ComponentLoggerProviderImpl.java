@@ -17,9 +17,7 @@
 
 package com.velocitypowered.proxy.provider;
 
-import net.kyori.adventure.text.KeybindComponent;
-import net.kyori.adventure.text.TranslatableComponent;
-import net.kyori.adventure.text.flattener.ComponentFlattener;
+import com.velocitypowered.proxy.util.TranslatableMapper;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.kyori.adventure.text.logger.slf4j.ComponentLoggerProvider;
 import net.kyori.adventure.text.serializer.ansi.ANSIComponentSerializer;
@@ -29,18 +27,16 @@ import org.slf4j.LoggerFactory;
 /**
  * Velocity ComponentLogger Provider.
  */
+@SuppressWarnings("UnstableApiUsage")
 public final class ComponentLoggerProviderImpl implements ComponentLoggerProvider {
   private static final ANSIComponentSerializer SERIALIZER = ANSIComponentSerializer.builder()
-      .flattener(ComponentFlattener.basic().toBuilder()
-        .mapper(KeybindComponent.class, c -> c.keybind())
-        .mapper(TranslatableComponent.class, TranslatableComponent::key)
-        .build())
-      .build();
+          .flattener(TranslatableMapper.FLATTENER)
+          .build();
 
   @Override
   public @NotNull ComponentLogger logger(
-      final @NotNull LoggerHelper helper,
-      final @NotNull String name
+          final @NotNull LoggerHelper helper,
+          final @NotNull String name
   ) {
     return helper.delegating(LoggerFactory.getLogger(name), SERIALIZER::serialize);
   }
