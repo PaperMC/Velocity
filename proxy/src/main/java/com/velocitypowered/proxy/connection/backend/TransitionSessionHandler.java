@@ -22,6 +22,7 @@ import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHands
 
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.event.player.ServerPostConnectEvent;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
@@ -143,7 +144,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           // Now set the connected server.
           serverConn.getPlayer().setConnectedServer(serverConn);
 
-          if (player.getClientSettingsPacket() != null) {
+          // Send client settings. In 1.20.2+ this is done in the config state.
+          if (smc.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0
+              && player.getClientSettingsPacket() != null) {
             serverConn.ensureConnected().write(player.getClientSettingsPacket());
           }
 

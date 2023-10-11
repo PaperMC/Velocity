@@ -159,10 +159,13 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       smc.write(new LoginAcknowledged());
       smc.setActiveSessionHandler(StateRegistry.CONFIG,
           new ConfigSessionHandler(server, serverConn, resultFuture));
-      if (serverConn.getPlayer().getConnection()
-          .getActiveSessionHandler() instanceof ClientPlaySessionHandler) {
+      ConnectedPlayer player = serverConn.getPlayer();
+      if (player.getClientSettingsPacket() != null) {
+        smc.write(player.getClientSettingsPacket());
+      }
+      if (player.getConnection().getActiveSessionHandler() instanceof ClientPlaySessionHandler) {
         smc.setAutoReading(false);
-        ((ClientPlaySessionHandler) serverConn.getPlayer().getConnection()
+        ((ClientPlaySessionHandler) player.getConnection()
             .getActiveSessionHandler()).doSwitch().thenAcceptAsync((unused) -> {
               smc.setAutoReading(true);
             }, smc.eventLoop());
