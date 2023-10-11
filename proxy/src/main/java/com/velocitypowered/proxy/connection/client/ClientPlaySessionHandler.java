@@ -485,7 +485,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // Config state clears everything in the client. No need to clear later.
       spawned = false;
       serverBossBars.clear();
-      player.clearHeaderAndFooterSilent();
+      player.clearPlayerListHeaderAndFooterSilent();
       player.getTabList().clearAllSilent();
     }
 

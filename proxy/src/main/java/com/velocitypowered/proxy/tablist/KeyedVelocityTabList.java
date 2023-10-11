@@ -69,7 +69,7 @@ public class KeyedVelocityTabList implements InternalTabList {
 
   @Override
   public void clearHeaderAndFooter() {
-    this.player.clearHeaderAndFooter();
+    this.player.clearPlayerListHeaderAndFooter();
   }
 
   @Override

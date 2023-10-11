@@ -105,7 +105,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
       player.sendKeepAlive();
 
       // Reset Tablist header and footer to prevent desync
-      player.clearHeaderAndFooter();
+      player.clearPlayerListHeaderAndFooter();
     }
 
     // The goods are in hand! We got JoinGame. Let's transition completely to the new state.
