@@ -93,6 +93,7 @@ dependencies {
     implementation(project(":velocity-native"))
 
     implementation(libs.bundles.log4j)
+    implementation(libs.kyori.ansi)
     implementation(libs.netty.codec)
     implementation(libs.netty.codec.haproxy)
     implementation(libs.netty.codec.http)
