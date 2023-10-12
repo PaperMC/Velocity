@@ -50,6 +50,10 @@ public class LastSeenMessages {
     return acknowledged.isEmpty();
   }
 
+  public int getOffset() {
+    return this.offset;
+  }
+
   @Override
   public String toString() {
     return "LastSeenMessages{" +

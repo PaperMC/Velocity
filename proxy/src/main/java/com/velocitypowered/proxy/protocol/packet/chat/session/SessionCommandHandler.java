@@ -18,8 +18,10 @@
 package com.velocitypowered.proxy.protocol.packet.chat.session;
 
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import com.velocitypowered.proxy.protocol.packet.chat.ChatAcknowledgement;
 import com.velocitypowered.proxy.protocol.packet.chat.CommandHandler;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
@@ -51,6 +53,10 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
           player.disconnect(Component.text(
               "A proxy plugin caused an illegal protocol state. "
                   + "Contact your network administrator."));
+        }
+        // We seemingly can't actually do this if signed args exist, if not, we can probs keep stuff happy
+        if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
+          return CompletableFuture.completedFuture(new ChatAcknowledgement(packet.lastSeenMessages.getOffset()));
         }
         return CompletableFuture.completedFuture(null);
       }
@@ -101,6 +107,9 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
                 .message("/" + commandToRun)
                 .toServer();
           }
+        }
+        if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
+          return new ChatAcknowledgement(packet.lastSeenMessages.getOffset());
         }
         return null;
       });
