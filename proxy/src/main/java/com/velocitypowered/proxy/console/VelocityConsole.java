@@ -36,7 +36,6 @@ import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
-import net.kyori.adventure.translation.GlobalTranslator;
 import net.minecrell.terminalconsole.SimpleTerminalConsole;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -74,9 +73,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   @Override
   public void sendMessage(@NonNull Identity identity, @NonNull Component message,
       @NonNull MessageType messageType) {
-    Component translated = GlobalTranslator.render(message, ClosestLocaleMatcher.INSTANCE
-        .lookupClosest(Locale.getDefault()));
-    componentLogger.info(translated);
+    componentLogger.info(message);
   }
 
   @Override
