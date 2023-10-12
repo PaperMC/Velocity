@@ -49,4 +49,12 @@ public class LastSeenMessages {
   public boolean isEmpty() {
     return acknowledged.isEmpty();
   }
+
+  @Override
+  public String toString() {
+    return "LastSeenMessages{" +
+            "offset=" + offset +
+            ", acknowledged=" + acknowledged +
+            '}';
+  }
 }

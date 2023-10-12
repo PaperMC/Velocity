@@ -71,6 +71,11 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
       connection.delayedWrite(new LegacyPlayerListItem(LegacyPlayerListItem.REMOVE_PLAYER,
           Collections.singletonList(LegacyPlayerListItem.Item.from(value))));
     }
+    clearAllSilent();
+  }
+
+  @Override
+  public void clearAllSilent() {
     entries.clear();
     nameMapping.clear();
   }

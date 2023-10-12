@@ -544,8 +544,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public void clearHeaderAndFooter() {
-    tabList.clearHeaderAndFooter();
+  public void clearPlayerListHeaderAndFooter() {
+    clearPlayerListHeaderAndFooterSilent();
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      this.connection.write(HeaderAndFooter.reset());
+    }
+  }
+
+  public void clearPlayerListHeaderAndFooterSilent() {
+    this.playerListHeader = Component.empty();
+    this.playerListFooter = Component.empty();
   }
 
   @Override
