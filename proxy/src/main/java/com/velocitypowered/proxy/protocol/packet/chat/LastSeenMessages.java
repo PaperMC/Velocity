@@ -53,4 +53,12 @@ public class LastSeenMessages {
   public int getOffset() {
     return this.offset;
   }
+
+  @Override
+  public String toString() {
+    return "LastSeenMessages{" +
+            "offset=" + offset +
+            ", acknowledged=" + acknowledged +
+            '}';
+  }
 }
