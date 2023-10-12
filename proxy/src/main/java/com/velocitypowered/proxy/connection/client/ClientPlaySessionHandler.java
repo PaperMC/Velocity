@@ -50,7 +50,6 @@ import com.velocitypowered.proxy.protocol.packet.Respawn;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse.Offer;
-import com.velocitypowered.proxy.protocol.packet.chat.ChatAcknowledgement;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatTimeKeeper;
 import com.velocitypowered.proxy.protocol.packet.chat.CommandHandler;
@@ -402,12 +401,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
     configSwitchFuture.complete(null);
     return true;
-  }
-
-  @Override
-  public boolean handle(ChatAcknowledgement chatAcknowledgement) {
-    logger.info(chatAcknowledgement);
-    return false;
   }
 
   @Override
