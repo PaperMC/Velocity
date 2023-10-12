@@ -22,10 +22,8 @@ import static com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedChatHand
 
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.packet.chat.ChatAcknowledgement;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import org.apache.logging.log4j.LogManager;
@@ -59,9 +57,6 @@ public class SessionChatHandler implements ChatHandler<SessionPlayerChat> {
               PlayerChatEvent.ChatResult chatResult = pme.getResult();
               if (!chatResult.isAllowed()) {
                 if (packet.isSigned()) {
-                    if (player.getProtocolVersion().getProtocol() == ProtocolVersion.MINECRAFT_1_20_2.getProtocol()) {
-                        return new ChatAcknowledgement(packet.lastSeenMessages.getOffset());
-                    }
                   invalidCancel(logger, player);
                 }
                 return null;

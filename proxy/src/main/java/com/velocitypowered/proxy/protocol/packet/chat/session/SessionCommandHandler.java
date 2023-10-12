@@ -47,15 +47,16 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
       CommandExecuteEvent.CommandResult result = event.getResult();
       if (result == CommandExecuteEvent.CommandResult.denied()) {
         if (packet.isSigned()) {
-          if (player.getProtocolVersion().getProtocol() == ProtocolVersion.MINECRAFT_1_20_2.getProtocol()) {
-            return CompletableFuture.completedFuture(new ChatAcknowledgement(packet.lastSeenMessages.getOffset()));
-          }
           logger.fatal("A plugin tried to deny a command with signable component(s). "
               + "This is not supported. "
               + "Disconnecting player " + player.getUsername() + ". Command packet: " + packet);
           player.disconnect(Component.text(
               "A proxy plugin caused an illegal protocol state. "
                   + "Contact your network administrator."));
+        }
+        // We seemingly can't actually do this if signed args exist, if not, we can probs keep stuff happy
+        if (player.getProtocolVersion().getProtocol() == ProtocolVersion.MINECRAFT_1_20_2.getProtocol()) {
+          return CompletableFuture.completedFuture(new ChatAcknowledgement(packet.lastSeenMessages.getOffset()));
         }
         return CompletableFuture.completedFuture(null);
       }
@@ -66,9 +67,6 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
           return CompletableFuture.completedFuture(packet);
         } else {
           if (packet.isSigned()) {
-            if (player.getProtocolVersion().getProtocol() == ProtocolVersion.MINECRAFT_1_20_2.getProtocol()) {
-              return CompletableFuture.completedFuture(new ChatAcknowledgement(packet.lastSeenMessages.getOffset()));
-            }
             logger.fatal("A plugin tried to change a command with signed component(s). "
                 + "This is not supported. "
                 + "Disconnecting player " + player.getUsername() + ". Command packet: " + packet);
