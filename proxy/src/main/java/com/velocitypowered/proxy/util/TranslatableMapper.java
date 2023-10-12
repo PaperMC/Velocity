@@ -28,7 +28,6 @@ import net.kyori.adventure.translation.TranslationRegistry;
 import net.kyori.adventure.translation.Translator;
 import org.jetbrains.annotations.Nullable;
 
-
 /**
  * Velocity Translation Mapper.
  */
