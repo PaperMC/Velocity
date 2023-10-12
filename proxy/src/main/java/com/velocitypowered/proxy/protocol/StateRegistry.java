@@ -188,7 +188,7 @@ public enum StateRegistry {
       serverbound.register(
               ChatAcknowledgement.class,
               ChatAcknowledgement::new,
-              map(0x03, MINECRAFT_1_20_2, false));
+              map(0x03, MINECRAFT_1_19_3, false));
       serverbound.register(KeyedPlayerCommand.class, KeyedPlayerCommand::new,
           map(0x03, MINECRAFT_1_19, false),
           map(0x04, MINECRAFT_1_19_1, MINECRAFT_1_19_1, false));
