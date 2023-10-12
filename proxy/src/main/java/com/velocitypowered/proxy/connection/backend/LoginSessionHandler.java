@@ -156,22 +156,20 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       smc.setActiveSessionHandler(StateRegistry.PLAY,
           new TransitionSessionHandler(server, serverConn, resultFuture));
     } else {
-      smc.setAutoReading(false);
-      CompletableFuture<Void> switchFuture;
-      if (serverConn.getPlayer().getConnection()
-          .getActiveSessionHandler() instanceof ClientPlaySessionHandler) {
-        switchFuture = ((ClientPlaySessionHandler) serverConn.getPlayer().getConnection()
-            .getActiveSessionHandler()).doSwitch();
-      } else {
-        switchFuture = CompletableFuture.completedFuture(null);
+      smc.write(new LoginAcknowledged());
+      smc.setActiveSessionHandler(StateRegistry.CONFIG,
+          new ConfigSessionHandler(server, serverConn, resultFuture));
+      ConnectedPlayer player = serverConn.getPlayer();
+      if (player.getClientSettingsPacket() != null) {
+        smc.write(player.getClientSettingsPacket());
       }
-      switchFuture.thenAcceptAsync((unused) -> {
-        smc.write(new LoginAcknowledged());
-        // Sync backend
-        smc.setActiveSessionHandler(StateRegistry.CONFIG,
-            new ConfigSessionHandler(server, serverConn, resultFuture));
-        smc.setAutoReading(true);
-      }, smc.eventLoop());
+      if (player.getConnection().getActiveSessionHandler() instanceof ClientPlaySessionHandler) {
+        smc.setAutoReading(false);
+        ((ClientPlaySessionHandler) player.getConnection()
+            .getActiveSessionHandler()).doSwitch().thenAcceptAsync((unused) -> {
+              smc.setAutoReading(true);
+            }, smc.eventLoop());
+      }
     }
 
     return true;
