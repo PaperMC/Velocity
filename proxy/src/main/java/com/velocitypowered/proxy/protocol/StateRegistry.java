@@ -75,6 +75,7 @@ import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
+import com.velocitypowered.proxy.protocol.packet.chat.ChatAcknowledgement;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatCompletion;
 import com.velocitypowered.proxy.protocol.packet.chat.SystemChat;
 import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerChat;
@@ -186,6 +187,10 @@ public enum StateRegistry {
           map(0x03, MINECRAFT_1_12, false),
           map(0x02, MINECRAFT_1_12_1, false),
           map(0x03, MINECRAFT_1_14, MINECRAFT_1_18_2, false));
+      serverbound.register(
+              ChatAcknowledgement.class,
+              ChatAcknowledgement::new,
+              map(0x03, MINECRAFT_1_19_3, false));
       serverbound.register(KeyedPlayerCommand.class, KeyedPlayerCommand::new,
           map(0x03, MINECRAFT_1_19, false),
           map(0x04, MINECRAFT_1_19_1, MINECRAFT_1_19_1, false));
@@ -499,8 +504,8 @@ public enum StateRegistry {
 
   public static final int STATUS_ID = 1;
   public static final int LOGIN_ID = 2;
-  protected final PacketRegistry clientbound = new PacketRegistry(CLIENTBOUND);
-  protected final PacketRegistry serverbound = new PacketRegistry(SERVERBOUND);
+  protected final PacketRegistry clientbound = new PacketRegistry(CLIENTBOUND, this);
+  protected final PacketRegistry serverbound = new PacketRegistry(SERVERBOUND, this);
 
   public StateRegistry.PacketRegistry.ProtocolRegistry getProtocolRegistry(Direction direction,
       ProtocolVersion version) {
@@ -513,11 +518,13 @@ public enum StateRegistry {
   public static class PacketRegistry {
 
     private final Direction direction;
+    private final StateRegistry registry;
     private final Map<ProtocolVersion, ProtocolRegistry> versions;
     private boolean fallback = true;
 
-    PacketRegistry(Direction direction) {
+    PacketRegistry(Direction direction, StateRegistry registry) {
       this.direction = direction;
+      this.registry = registry;
 
       Map<ProtocolVersion, ProtocolRegistry> mutableVersions = new EnumMap<>(ProtocolVersion.class);
       for (ProtocolVersion version : ProtocolVersion.values()) {
@@ -641,8 +648,9 @@ public enum StateRegistry {
         final int id = this.packetClassToId.getInt(packet.getClass());
         if (id == Integer.MIN_VALUE) {
           throw new IllegalArgumentException(String.format(
-              "Unable to find id for packet of type %s in %s protocol %s",
-              packet.getClass().getName(), PacketRegistry.this.direction, this.version
+              "Unable to find id for packet of type %s in %s protocol %s phase %s",
+              packet.getClass().getName(), PacketRegistry.this.direction,
+                  this.version, PacketRegistry.this.registry
           ));
         }
         return id;

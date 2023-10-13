@@ -79,6 +79,7 @@ import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import com.velocitypowered.proxy.util.DurationUtils;
+import com.velocitypowered.proxy.util.TranslatableMapper;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
@@ -100,9 +101,6 @@ import net.kyori.adventure.platform.facet.FacetPointers;
 import net.kyori.adventure.platform.facet.FacetPointers.Type;
 import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.KeybindComponent;
-import net.kyori.adventure.text.TranslatableComponent;
-import net.kyori.adventure.text.flattener.ComponentFlattener;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -125,12 +123,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   private static final int MAX_PLUGIN_CHANNELS = 1024;
   private static final PlainTextComponentSerializer PASS_THRU_TRANSLATE =
-      PlainTextComponentSerializer.builder()
-          .flattener(ComponentFlattener.basic().toBuilder()
-              .mapper(KeybindComponent.class, c -> "")
-              .mapper(TranslatableComponent.class, TranslatableComponent::key)
-              .build())
-          .build();
+      PlainTextComponentSerializer.builder().flattener(TranslatableMapper.FLATTENER).build();
   static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
 
   private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
@@ -548,8 +541,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public void clearHeaderAndFooter() {
-    tabList.clearHeaderAndFooter();
+  public void clearPlayerListHeaderAndFooter() {
+    clearPlayerListHeaderAndFooterSilent();
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      this.connection.write(HeaderAndFooter.reset());
+    }
+  }
+
+  public void clearPlayerListHeaderAndFooterSilent() {
+    this.playerListHeader = Component.empty();
+    this.playerListFooter = Component.empty();
   }
 
   @Override
