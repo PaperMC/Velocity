@@ -212,9 +212,11 @@ public final class ConnectionManager {
   }
 
   /**
-   * Closes all endpoints.
+   * Closes all the currently registered endpoints.
+   *
+   * @param interrupt should closing forward interruptions
    */
-  public void shutdown() {
+  public void closeEndpoints(boolean interrupt) {
     for (final Map.Entry<InetSocketAddress, Endpoint> entry : this.endpoints.entrySet()) {
       final InetSocketAddress address = entry.getKey();
       final Endpoint endpoint = entry.getValue();
@@ -223,14 +225,26 @@ public final class ConnectionManager {
       // should have a chance to be notified before the server stops accepting connections.
       server.getEventManager().fire(new ListenerCloseEvent(address, endpoint.getType())).join();
 
-      try {
-        LOGGER.info("Closing endpoint {}", address);
-        endpoint.getChannel().close().sync();
-      } catch (final InterruptedException e) {
-        LOGGER.info("Interrupted whilst closing endpoint", e);
-        Thread.currentThread().interrupt();
+      LOGGER.info("Closing endpoint {}", address);
+      if (interrupt) {
+        try {
+          endpoint.getChannel().close().sync();
+        } catch (final InterruptedException e) {
+          LOGGER.info("Interrupted whilst closing endpoint", e);
+          Thread.currentThread().interrupt();
+        }
+      } else {
+        endpoint.getChannel().close().syncUninterruptibly();
       }
     }
+    this.endpoints.clear();
+  }
+
+  /**
+   * Closes all endpoints.
+   */
+  public void shutdown() {
+    this.closeEndpoints(true);
 
     this.resolver.shutdown();
   }
