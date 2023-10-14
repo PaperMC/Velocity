@@ -13,3 +13,6 @@ sequenceOf(
     include(project)
     project(project).projectDir = file(it)
 }
+
+include(":velocity-proxy-log4j2-plugin")
+project(":velocity-proxy-log4j2-plugin").projectDir = file("proxy/log4j2-plugin")
