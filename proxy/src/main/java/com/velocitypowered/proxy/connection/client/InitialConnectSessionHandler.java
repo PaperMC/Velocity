@@ -24,6 +24,7 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import org.apache.logging.log4j.LogManager;
@@ -54,7 +55,15 @@ public class InitialConnectSessionHandler implements MinecraftSessionHandler {
         return true;
       }
 
-      if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
+      if (PluginMessageUtil.isRegister(packet)) {
+        player.getKnownChannels().addAll(PluginMessageUtil.getChannels(packet));
+        serverConn.ensureConnected().write(packet.retain());
+        return true;
+      } else if (PluginMessageUtil.isUnregister(packet)) {
+        player.getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
+        serverConn.ensureConnected().write(packet.retain());
+        return true;
+      } else if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
         return true;
       }
 

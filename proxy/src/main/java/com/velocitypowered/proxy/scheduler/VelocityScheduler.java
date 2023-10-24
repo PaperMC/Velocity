@@ -30,12 +30,9 @@ import com.velocitypowered.api.scheduler.ScheduledTask;
 import com.velocitypowered.api.scheduler.Scheduler;
 import com.velocitypowered.api.scheduler.TaskStatus;
 import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -119,24 +116,17 @@ public class VelocityScheduler implements Scheduler {
       task.cancel();
     }
     timerExecutionService.shutdown();
-    final List<PluginContainer> plugins = new ArrayList<>(this.pluginManager.getPlugins());
-    final Iterator<PluginContainer> pluginIterator = plugins.iterator();
-    while (pluginIterator.hasNext()) {
-      final PluginContainer container = pluginIterator.next();
+    for (final PluginContainer container : this.pluginManager.getPlugins()) {
       if (container instanceof VelocityPluginContainer) {
-        final VelocityPluginContainer pluginContainer = (VelocityPluginContainer) container;
-        if (pluginContainer.hasExecutorService()) {
-          container.getExecutorService().shutdown();
-        } else {
-          pluginIterator.remove();
-        }
-      } else {
-        pluginIterator.remove();
+        (container).getExecutorService().shutdown();
       }
     }
 
     boolean allShutdown = true;
-    for (final PluginContainer container : plugins) {
+    for (final PluginContainer container : this.pluginManager.getPlugins()) {
+      if (!(container instanceof VelocityPluginContainer)) {
+        continue;
+      }
       final String id = container.getDescription().getId();
       final ExecutorService service = (container).getExecutorService();
 

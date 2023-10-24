@@ -62,8 +62,4 @@ public class MinecraftEncoder extends MessageToByteEncoder<MinecraftPacket> {
     this.state = state;
     this.setProtocolVersion(registry.version);
   }
-
-  public ProtocolUtils.Direction getDirection() {
-    return direction;
-  }
 }

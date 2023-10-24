@@ -83,8 +83,6 @@ gradle-app.setting
 logs/
 /velocity.toml
 /forwarding.secret
-forwarding.secret
-velocity.toml
 server-icon.png
 /bin/
 run/

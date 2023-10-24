@@ -2,7 +2,7 @@
 configurate = "3.7.3"
 flare = "2.0.1"
 log4j = "2.20.0"
-netty = "4.1.100.Final"
+netty = "4.1.90.Final"
 
 [plugins]
 indra-publishing = "net.kyori.indra.publishing:2.0.6"
@@ -10,7 +10,7 @@ shadow = "com.github.johnrengelman.shadow:8.1.0"
 spotless = "com.diffplug.spotless:6.12.0"
 
 [libraries]
-adventure-bom = "net.kyori:adventure-bom:4.14.0"
+adventure-bom = "net.kyori:adventure-bom:4.13.1"
 adventure-facet = "net.kyori:adventure-platform-facet:4.3.0"
 asm = "org.ow2.asm:asm:9.5"
 asynchttpclient = "org.asynchttpclient:async-http-client:2.12.3"
@@ -29,14 +29,13 @@ flare-fastutil = { module = "space.vectrix.flare:flare-fastutil", version.ref = 
 jline = "org.jline:jline-terminal-jansi:3.23.0"
 jopt = "net.sf.jopt-simple:jopt-simple:5.0.4"
 junit = "org.junit.jupiter:junit-jupiter:5.9.0"
-kyori-ansi = "net.kyori:ansi:1.0.3"
 guava = "com.google.guava:guava:25.1-jre"
 gson = "com.google.code.gson:gson:2.10.1"
 guice = "com.google.inject:guice:6.0.0"
 lmbda = "org.lanternpowered:lmbda:2.0.0"
 log4j-api = { module = "org.apache.logging.log4j:log4j-api", version.ref = "log4j" }
 log4j-core = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
-log4j-slf4j-impl = { module = "org.apache.logging.log4j:log4j-slf4j2-impl", version.ref = "log4j" }
+log4j-slf4j-impl = { module = "org.apache.logging.log4j:log4j-slf4j-impl", version.ref = "log4j" }
 log4j-iostreams = { module = "org.apache.logging.log4j:log4j-iostreams", version.ref = "log4j" }
 log4j-jul = { module = "org.apache.logging.log4j:log4j-jul", version.ref = "log4j" }
 mockito = "org.mockito:mockito-core:5.2.0"
@@ -46,7 +45,7 @@ netty-codec-http = { module = "io.netty:netty-codec-http", version.ref = "netty"
 netty-handler = { module = "io.netty:netty-handler", version.ref = "netty" }
 netty-transport-native-epoll = { module = "io.netty:netty-transport-native-epoll", version.ref = "netty" }
 nightconfig = "com.electronwill.night-config:toml:3.6.6"
-slf4j = "org.slf4j:slf4j-api:2.0.7"
+slf4j = "org.slf4j:slf4j-api:1.7.30"
 spotbugs-annotations = "com.github.spotbugs:spotbugs-annotations:4.7.3"
 terminalconsoleappender = "net.minecrell:terminalconsoleappender:1.3.0"
 
