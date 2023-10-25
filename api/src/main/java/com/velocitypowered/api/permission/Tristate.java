@@ -10,6 +10,8 @@ package com.velocitypowered.api.permission;
 import net.kyori.adventure.util.TriState;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.Optional;
+
 /**
  * Represents three different states of a setting.
  *
@@ -65,6 +67,19 @@ public enum Tristate {
     }
     return val ? TRUE : FALSE;
   }
+
+  /**
+   * Returns a {@link Tristate} from an {@link Optional<Boolean>}.
+   *
+   * <p>Unlike {@link #fromBoolean(boolean)}, this method returns {@link #UNDEFINED}
+   * if the value is empty.</p>
+   * @param val
+   * @return
+   */
+  public static Tristate fromOptionalBoolean(Optional<Boolean> val) {
+    return val.map(Tristate::fromBoolean).orElse(UNDEFINED);
+  }
+
 
   private final boolean booleanValue;
 
