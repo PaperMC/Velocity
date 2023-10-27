@@ -7,17 +7,19 @@
 
 package com.velocitypowered.api.permission;
 
+import net.kyori.adventure.permission.PermissionChecker;
+
 /**
- * Provides {@link PermissionFunction}s for {@link PermissionSubject}s.
+ * Provides {@link PermissionChecker}s for {@link PermissionSubject}s.
  */
 @FunctionalInterface
 public interface PermissionProvider {
 
   /**
-   * Creates a {@link PermissionFunction} for the subject.
+   * Creates a {@link PermissionChecker} for the subject.
    *
    * @param subject the subject
    * @return the function
    */
-  PermissionFunction createFunction(PermissionSubject subject);
+  PermissionChecker createChecker(PermissionSubject subject);
 }

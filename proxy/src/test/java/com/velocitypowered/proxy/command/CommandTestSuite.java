@@ -25,12 +25,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.proxy.event.MockEventManager;
 import com.velocitypowered.proxy.event.VelocityEventManager;
 import java.util.Arrays;
 import java.util.Collection;
+import net.kyori.adventure.util.TriState;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -66,7 +66,7 @@ abstract class CommandTestSuite {
 
   final void assertPlayerSuggestions(final String input, final String... expectedSuggestions) {
     final var player = mock(Player.class);
-    when(player.getPermissionValue(any())).thenReturn(Tristate.UNDEFINED);
+    when(player.getPermissionValue(any())).thenReturn(TriState.NOT_SET);
     final var actual = manager.offerSuggestions(player, input).join();
     assertEquals(Arrays.asList(expectedSuggestions), actual);
   }

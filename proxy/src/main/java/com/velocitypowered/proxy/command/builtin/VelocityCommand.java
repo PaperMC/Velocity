@@ -24,7 +24,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
-import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -59,6 +58,7 @@ import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.util.TriState;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -200,7 +200,7 @@ public class VelocityCommand implements SimpleCommand {
 
     @Override
     public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
-      return source.getPermissionValue("velocity.command.reload") == Tristate.TRUE;
+      return source.getPermissionValue("velocity.command.reload") == TriState.TRUE;
     }
   }
 
@@ -255,7 +255,7 @@ public class VelocityCommand implements SimpleCommand {
 
     @Override
     public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
-      return source.getPermissionValue("velocity.command.info") != Tristate.FALSE;
+      return source.getPermissionValue("velocity.command.info") != TriState.FALSE;
     }
   }
 
@@ -336,7 +336,7 @@ public class VelocityCommand implements SimpleCommand {
 
     @Override
     public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
-      return source.getPermissionValue("velocity.command.plugins") == Tristate.TRUE;
+      return source.getPermissionValue("velocity.command.plugins") == TriState.TRUE;
     }
   }
 
@@ -405,7 +405,7 @@ public class VelocityCommand implements SimpleCommand {
 
     @Override
     public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
-      return source.getPermissionValue("velocity.command.plugins") == Tristate.TRUE;
+      return source.getPermissionValue("velocity.command.plugins") == TriState.TRUE;
     }
   }
 
@@ -481,7 +481,7 @@ public class VelocityCommand implements SimpleCommand {
 
     @Override
     public boolean hasPermission(CommandSource source, String @NonNull [] args) {
-      return source.getPermissionValue("velocity.command.heap") == Tristate.TRUE;
+      return source.getPermissionValue("velocity.command.heap") == TriState.TRUE;
     }
 
   }

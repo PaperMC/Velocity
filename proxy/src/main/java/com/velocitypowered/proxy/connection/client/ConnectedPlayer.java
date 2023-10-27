@@ -35,9 +35,7 @@ import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.PlayerSettingsChangedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.PermissionProvider;
-import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
@@ -79,7 +77,6 @@ import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import com.velocitypowered.proxy.util.DurationUtils;
-import com.velocitypowered.proxy.util.TranslatableMapper;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
@@ -102,6 +99,9 @@ import net.kyori.adventure.platform.facet.FacetPointers;
 import net.kyori.adventure.platform.facet.FacetPointers.Type;
 import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.KeybindComponent;
+import net.kyori.adventure.text.TranslatableComponent;
+import net.kyori.adventure.text.flattener.ComponentFlattener;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -109,6 +109,7 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.title.Title.Times;
 import net.kyori.adventure.title.TitlePart;
 import net.kyori.adventure.translation.GlobalTranslator;
+import net.kyori.adventure.util.TriState;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -122,10 +123,15 @@ import org.jetbrains.annotations.NotNull;
 public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, KeyIdentifiable,
     VelocityInboundConnection {
 
-  private static final int MAX_PLUGIN_CHANNELS = 1024;
   private static final PlainTextComponentSerializer PASS_THRU_TRANSLATE =
-      PlainTextComponentSerializer.builder().flattener(TranslatableMapper.FLATTENER).build();
-  static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
+      PlainTextComponentSerializer.builder()
+          .flattener(ComponentFlattener.basic().toBuilder()
+              .mapper(KeybindComponent.class, c -> "")
+              .mapper(TranslatableComponent.class, TranslatableComponent::key)
+              .build())
+          .build();
+  static final PermissionProvider DEFAULT_PERMISSIONS =
+      s -> PermissionChecker.always(TriState.NOT_SET);
 
   private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
 
@@ -136,7 +142,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private final MinecraftConnection connection;
   private final @Nullable InetSocketAddress virtualHost;
   private GameProfile profile;
-  private PermissionFunction permissionFunction;
+  private PermissionChecker permissionChecker;
   private int tryIndex = 0;
   private long ping = -1;
   private final boolean onlineMode;
@@ -155,13 +161,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private final Queue<ResourcePackInfo> outstandingResourcePacks = new ArrayDeque<>();
   private @Nullable ResourcePackInfo pendingResourcePack;
   private @Nullable ResourcePackInfo appliedResourcePack;
-  private final @NotNull Pointers pointers =
-      Player.super.pointers().toBuilder().withDynamic(Identity.UUID, this::getUniqueId)
-          .withDynamic(Identity.NAME, this::getUsername)
-          .withDynamic(Identity.DISPLAY_NAME, () -> Component.text(this.getUsername()))
-          .withDynamic(Identity.LOCALE, this::getEffectiveLocale)
-          .withStatic(PermissionChecker.POINTER, getPermissionChecker())
-          .withStatic(FacetPointers.TYPE, Type.PLAYER).build();
+  private final @NotNull Pointers pointers = Player.super.pointers().toBuilder()
+      .withDynamic(Identity.UUID, this::getUniqueId)
+      .withDynamic(Identity.NAME, this::getUsername)
+      .withDynamic(Identity.DISPLAY_NAME, () -> Component.text(this.getUsername()))
+      .withDynamic(Identity.LOCALE, this::getEffectiveLocale)
+      .withDynamic(PermissionChecker.POINTER, () -> this.permissionChecker)
+      .withStatic(FacetPointers.TYPE, Type.PLAYER)
+      .build();
   private @Nullable String clientBrand;
   private @Nullable Locale effectiveLocale;
   private @Nullable IdentifiedKey playerKey;
@@ -176,7 +183,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     this.profile = profile;
     this.connection = connection;
     this.virtualHost = virtualHost;
-    this.permissionFunction = PermissionFunction.ALWAYS_UNDEFINED;
+    this.permissionChecker = PermissionChecker.always(TriState.NOT_SET);
     this.connectionPhase = connection.getType().getInitialClientPhase();
     this.onlineMode = onlineMode;
 
@@ -318,8 +325,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     return Optional.ofNullable(virtualHost);
   }
 
-  void setPermissionFunction(PermissionFunction permissionFunction) {
-    this.permissionFunction = permissionFunction;
+  void setPermissionChecker(PermissionChecker permissionChecker) {
+    this.permissionChecker = permissionChecker;
   }
 
   @Override
@@ -913,8 +920,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public Tristate getPermissionValue(String permission) {
-    return permissionFunction.getPermissionValue(permission);
+  public PermissionChecker getPermissionChecker() {
+    return this.permissionChecker;
   }
 
   @Override

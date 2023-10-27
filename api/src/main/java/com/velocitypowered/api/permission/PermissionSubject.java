@@ -8,6 +8,7 @@
 package com.velocitypowered.api.permission;
 
 import net.kyori.adventure.permission.PermissionChecker;
+import net.kyori.adventure.util.TriState;
 
 /**
  * Represents a object that has a set of queryable permissions.
@@ -21,7 +22,7 @@ public interface PermissionSubject {
    * @return whether or not the subject has the permission
    */
   default boolean hasPermission(String permission) {
-    return getPermissionValue(permission).asBoolean();
+    return this.getPermissionChecker().test(permission);
   }
 
   /**
@@ -30,14 +31,14 @@ public interface PermissionSubject {
    * @param permission the permission
    * @return the value the permission is set to
    */
-  Tristate getPermissionValue(String permission);
+  default TriState getPermissionValue(String permission) {
+    return this.getPermissionChecker().value(permission);
+  }
 
   /**
    * Gets the permission checker for the subject.
    *
    * @return subject's permission checker
    */
-  default PermissionChecker getPermissionChecker() {
-    return permission -> getPermissionValue(permission).toAdventureTriState();
-  }
+  PermissionChecker getPermissionChecker();
 }
