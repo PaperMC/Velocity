@@ -22,7 +22,7 @@ tasks.withType<Jar> {
                     "${project.version} (git-$currentShortRevision-b$buildNumber)"
                 }
             } else {
-                archiveVersion.get()
+                "${project.version}"
             }
         attributes["Implementation-Version"] = velocityHumanVersion
     }

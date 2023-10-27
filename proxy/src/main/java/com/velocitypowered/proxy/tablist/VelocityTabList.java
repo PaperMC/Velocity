@@ -24,7 +24,6 @@ import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.console.VelocityConsole;
 import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfo;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
 import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
@@ -48,7 +47,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class VelocityTabList implements InternalTabList {
 
-  private static final Logger logger = LogManager.getLogger(VelocityConsole.class);
+  private static final Logger logger = LogManager.getLogger(VelocityTabList.class);
   private final ConnectedPlayer player;
   private final MinecraftConnection connection;
   private final Map<UUID, VelocityTabListEntry> entries;
