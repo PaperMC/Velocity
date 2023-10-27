@@ -33,6 +33,8 @@ dependencies {
     api("net.kyori:adventure-text-logger-slf4j")
     api("net.kyori:adventure-text-serializer-ansi")
 
+    api(libs.snakeyaml)
+
     api(libs.slf4j)
     api(libs.guice)
     api(libs.checker.qual)
