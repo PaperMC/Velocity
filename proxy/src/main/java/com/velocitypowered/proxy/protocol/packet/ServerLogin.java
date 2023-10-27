@@ -74,10 +74,7 @@ public class ServerLogin implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "ServerLogin{"
-        + "username='" + username + '\''
-        + "playerKey='" + playerKey + '\''
-        + '}';
+    return "ServerLogin{" + "username='" + username + '\'' + "playerKey='" + playerKey + '\'' + '}';
   }
 
   @Override
@@ -96,6 +93,11 @@ public class ServerLogin implements MinecraftPacket {
         } else {
           playerKey = null;
         }
+      }
+
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_2) >= 0) {
+        this.holderUuid = ProtocolUtils.readUuid(buf);
+        return;
       }
 
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
@@ -123,6 +125,11 @@ public class ServerLogin implements MinecraftPacket {
         } else {
           buf.writeBoolean(false);
         }
+      }
+
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_2) >= 0) {
+        ProtocolUtils.writeUuid(buf, this.holderUuid);
+        return;
       }
 
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {

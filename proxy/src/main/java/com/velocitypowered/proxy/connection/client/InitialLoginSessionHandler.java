@@ -34,6 +34,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
+import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequest;
 import com.velocitypowered.proxy.protocol.packet.EncryptionResponse;
@@ -120,47 +121,45 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
     this.login = packet;
 
     PreLoginEvent event = new PreLoginEvent(inbound, login.getUsername());
-    server.getEventManager().fire(event)
-        .thenRunAsync(() -> {
-          if (mcConnection.isClosed()) {
-            // The player was disconnected
-            return;
+    server.getEventManager().fire(event).thenRunAsync(() -> {
+      if (mcConnection.isClosed()) {
+        // The player was disconnected
+        return;
+      }
+
+      PreLoginComponentResult result = event.getResult();
+      Optional<Component> disconnectReason = result.getReasonComponent();
+      if (disconnectReason.isPresent()) {
+        // The component is guaranteed to be provided if the connection was denied.
+        inbound.disconnect(disconnectReason.get());
+        return;
+      }
+
+      inbound.loginEventFired(() -> {
+        if (mcConnection.isClosed()) {
+          // The player was disconnected
+          return;
+        }
+
+        mcConnection.eventLoop().execute(() -> {
+          if (!result.isForceOfflineMode()
+              && (server.getConfiguration().isOnlineMode() || result.isOnlineModeAllowed())) {
+            // Request encryption.
+            EncryptionRequest request = generateEncryptionRequest();
+            this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
+            mcConnection.write(request);
+            this.currentState = LoginState.ENCRYPTION_REQUEST_SENT;
+          } else {
+            mcConnection.setActiveSessionHandler(StateRegistry.LOGIN,
+                new AuthSessionHandler(server, inbound,
+                    GameProfile.forOfflinePlayer(login.getUsername()), false));
           }
-
-          PreLoginComponentResult result = event.getResult();
-          Optional<Component> disconnectReason = result.getReasonComponent();
-          if (disconnectReason.isPresent()) {
-            // The component is guaranteed to be provided if the connection was denied.
-            inbound.disconnect(disconnectReason.get());
-            return;
-          }
-
-          inbound.loginEventFired(() -> {
-            if (mcConnection.isClosed()) {
-              // The player was disconnected
-              return;
-            }
-
-            mcConnection.eventLoop().execute(() -> {
-              if (!result.isForceOfflineMode() && (server.getConfiguration().isOnlineMode()
-                  || result.isOnlineModeAllowed())) {
-                // Request encryption.
-                EncryptionRequest request = generateEncryptionRequest();
-                this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
-                mcConnection.write(request);
-                this.currentState = LoginState.ENCRYPTION_REQUEST_SENT;
-              } else {
-                mcConnection.setSessionHandler(new AuthSessionHandler(
-                    server, inbound, GameProfile.forOfflinePlayer(login.getUsername()), false
-                ));
-              }
-            });
-          });
-        }, mcConnection.eventLoop())
-        .exceptionally((ex) -> {
-          logger.error("Exception in pre-login stage", ex);
-          return null;
         });
+      });
+    }, mcConnection.eventLoop()).exceptionally((ex) -> {
+      logger.error("Exception in pre-login stage", ex);
+      return null;
+    });
 
     return true;
   }
@@ -246,13 +245,12 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
               }
             }
             // All went well, initialize the session.
-            mcConnection.setSessionHandler(new AuthSessionHandler(
-                server, inbound, profile, true
-            ));
+            mcConnection.setActiveSessionHandler(StateRegistry.LOGIN,
+                new AuthSessionHandler(server, inbound, profile, true));
           } else if (profileResponse.getStatusCode() == 204) {
             // Apparently an offline-mode user logged onto this online-mode proxy.
-            inbound.disconnect(Component.translatable("velocity.error.online-mode-only",
-                NamedTextColor.RED));
+            inbound.disconnect(
+                Component.translatable("velocity.error.online-mode-only", NamedTextColor.RED));
           } else {
             // Something else went wrong
             logger.error(

@@ -27,6 +27,7 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.VelocityConstants;
+import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
@@ -34,6 +35,7 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequest;
+import com.velocitypowered.proxy.protocol.packet.LoginAcknowledged;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginMessage;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
@@ -59,8 +61,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(LoginSessionHandler.class);
 
-  private static final Component MODERN_IP_FORWARDING_FAILURE = Component
-      .translatable("velocity.error.modern-forwarding-failed");
+  private static final Component MODERN_IP_FORWARDING_FAILURE =
+      Component.translatable("velocity.error.modern-forwarding-failed");
 
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
@@ -150,10 +152,26 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     // Move into the PLAY phase.
     MinecraftConnection smc = serverConn.ensureConnected();
-    smc.setState(StateRegistry.PLAY);
+    if (smc.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0) {
+      smc.setActiveSessionHandler(StateRegistry.PLAY,
+          new TransitionSessionHandler(server, serverConn, resultFuture));
+    } else {
+      smc.write(new LoginAcknowledged());
+      smc.setActiveSessionHandler(StateRegistry.CONFIG,
+          new ConfigSessionHandler(server, serverConn, resultFuture));
+      ConnectedPlayer player = serverConn.getPlayer();
+      if (player.getClientSettingsPacket() != null) {
+        smc.write(player.getClientSettingsPacket());
+      }
+      if (player.getConnection().getActiveSessionHandler() instanceof ClientPlaySessionHandler) {
+        smc.setAutoReading(false);
+        ((ClientPlaySessionHandler) player.getConnection()
+            .getActiveSessionHandler()).doSwitch().thenAcceptAsync((unused) -> {
+              smc.setAutoReading(true);
+            }, smc.eventLoop());
+      }
+    }
 
-    // Switch to the transition handler.
-    smc.setSessionHandler(new TransitionSessionHandler(server, serverConn, resultFuture));
     return true;
   }
 
@@ -165,12 +183,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   @Override
   public void disconnected() {
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.LEGACY) {
-      resultFuture.completeExceptionally(
-          new QuietRuntimeException("The connection to the remote server was unexpectedly closed.\n"
-              + "This is usually because the remote server does not have BungeeCord IP forwarding "
+      resultFuture.completeExceptionally(new QuietRuntimeException(
+          "The connection to the remote server was unexpectedly closed.\n"
+              + "This is usually because the remote server "
+              + "does not have BungeeCord IP forwarding "
               + "correctly enabled.\nSee https://velocitypowered.com/wiki/users/forwarding/ "
-              + "for instructions on how to configure player info forwarding correctly.")
-      );
+              + "for instructions on how to configure player info forwarding correctly."));
     } else {
       resultFuture.completeExceptionally(
           new QuietRuntimeException("The connection to the remote server was unexpectedly closed.")

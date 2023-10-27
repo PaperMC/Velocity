@@ -25,7 +25,6 @@ import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.console.VelocityConsole;
-import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfo;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
 import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
@@ -74,7 +73,7 @@ public class VelocityTabList implements InternalTabList {
 
   @Override
   public void clearHeaderAndFooter() {
-    connection.write(HeaderAndFooter.reset());
+    this.player.clearPlayerListHeaderAndFooter();
   }
 
   @Override
@@ -175,6 +174,11 @@ public class VelocityTabList implements InternalTabList {
   @Override
   public void clearAll() {
     this.connection.delayedWrite(new RemovePlayerInfo(new ArrayList<>(this.entries.keySet())));
+    clearAllSilent();
+  }
+
+  @Override
+  public void clearAllSilent() {
     this.entries.clear();
   }
 

@@ -31,8 +31,10 @@ import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.LegacyHandshake;
 import com.velocitypowered.proxy.protocol.packet.LegacyPing;
 import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
+import com.velocitypowered.proxy.protocol.packet.LoginAcknowledged;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginMessage;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
+import com.velocitypowered.proxy.protocol.packet.PingIdentify;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfo;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
@@ -48,6 +50,7 @@ import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
+import com.velocitypowered.proxy.protocol.packet.chat.ChatAcknowledgement;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatCompletion;
 import com.velocitypowered.proxy.protocol.packet.chat.SystemChat;
 import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerChat;
@@ -55,6 +58,11 @@ import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerCommand;
 import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChat;
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChat;
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommand;
+import com.velocitypowered.proxy.protocol.packet.config.ActiveFeatures;
+import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdate;
+import com.velocitypowered.proxy.protocol.packet.config.RegistrySync;
+import com.velocitypowered.proxy.protocol.packet.config.StartUpdate;
+import com.velocitypowered.proxy.protocol.packet.config.TagsUpdate;
 import com.velocitypowered.proxy.protocol.packet.title.LegacyTitlePacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleActionbarPacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleClearPacket;
@@ -277,6 +285,38 @@ public interface MinecraftSessionHandler {
   }
 
   default boolean handle(UpsertPlayerInfo packet) {
+    return false;
+  }
+
+  default boolean handle(LoginAcknowledged packet) {
+    return false;
+  }
+
+  default boolean handle(ActiveFeatures packet) {
+    return false;
+  }
+
+  default boolean handle(FinishedUpdate packet) {
+    return false;
+  }
+
+  default boolean handle(RegistrySync packet) {
+    return false;
+  }
+
+  default boolean handle(TagsUpdate packet) {
+    return false;
+  }
+
+  default boolean handle(StartUpdate packet) {
+    return false;
+  }
+
+  default boolean handle(PingIdentify pingIdentify) {
+    return false;
+  }
+
+  default boolean handle(ChatAcknowledgement chatAcknowledgement) {
     return false;
   }
 }

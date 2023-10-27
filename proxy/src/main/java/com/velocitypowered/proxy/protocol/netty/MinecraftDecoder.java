@@ -35,8 +35,8 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
   public static final boolean DEBUG = Boolean.getBoolean("velocity.packet-decode-logging");
   private static final QuietRuntimeException DECODE_FAILED =
-      new QuietRuntimeException("A packet did not decode successfully (invalid data). If you are a "
-          + "developer, launch Velocity with -Dvelocity.packet-decode-logging=true to see more.");
+      new QuietRuntimeException("A packet did not decode successfully (invalid data). For more "
+          + "information, launch Velocity with -Dvelocity.packet-decode-logging=true to see more.");
 
   private final ProtocolUtils.Direction direction;
   private StateRegistry state;
