@@ -27,7 +27,6 @@ import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
@@ -47,6 +46,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.permission.PermissionChecker;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
@@ -111,14 +111,16 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
           .thenAcceptAsync(event -> {
             if (!mcConnection.isClosed()) {
               // wait for permissions to load, then set the players permission function
-              final PermissionFunction function = event.createFunction(player);
-              if (function == null) {
-                logger.error("A plugin permission provider {} provided an invalid permission "
-                        + "function for player {}. This is a bug in the plugin, not in "
-                        + "Velocity. Falling back to the default permission function.",
-                    event.getProvider().getClass().getName(), player.getUsername());
+              final PermissionChecker checker = event.createChecker(player);
+              if (checker == null) {
+                logger.error(
+                    "A plugin permission provider {} provided an invalid permission function"
+                        + " for player {}. This is a bug in the plugin, not in Velocity. Falling"
+                        + " back to the default permission function.",
+                    event.getProvider().getClass().getName(),
+                    player.getUsername());
               } else {
-                player.setPermissionFunction(function);
+                player.setPermissionChecker(checker);
               }
               startLoginCompletion(player);
             }

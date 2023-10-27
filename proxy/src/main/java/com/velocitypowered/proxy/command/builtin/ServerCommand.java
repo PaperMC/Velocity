@@ -22,7 +22,6 @@ import static net.kyori.adventure.text.event.HoverEvent.showText;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
-import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
@@ -37,6 +36,7 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.util.TriState;
 
 /**
  * Implements Velocity's {@code /server} command.
@@ -161,6 +161,6 @@ public class ServerCommand implements SimpleCommand {
 
   @Override
   public boolean hasPermission(final SimpleCommand.Invocation invocation) {
-    return invocation.source().getPermissionValue("velocity.command.server") != Tristate.FALSE;
+    return invocation.source().getPermissionValue("velocity.command.server") != TriState.FALSE;
   }
 }
