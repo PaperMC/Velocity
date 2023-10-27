@@ -125,8 +125,8 @@ public final class ConnectionManager {
     if (address instanceof InetSocketAddress) {
       bootstrap.childOption(ChannelOption.TCP_NODELAY, true)
           .childOption(ChannelOption.IP_TOS, 0x18);
-      if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
-        bootstrap.option(EpollChannelOption.TCP_FASTOPEN, 3);
+      if (server.getConfiguration().useTcpFastOpen()) {
+        bootstrap.option(ChannelOption.TCP_FASTOPEN, 3);
       }
     }
 
@@ -190,8 +190,8 @@ public final class ConnectionManager {
             this.server.getConfiguration().getConnectTimeout())
         .group(group == null ? this.workerGroup : group)
         .resolver(this.resolver.asGroup());
-    if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
-      bootstrap.option(EpollChannelOption.TCP_FASTOPEN_CONNECT, true);
+    if (server.getConfiguration().useTcpFastOpen()) {
+      bootstrap.option(ChannelOption.TCP_FASTOPEN_CONNECT, true);
     }
     return bootstrap;
   }
