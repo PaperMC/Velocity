@@ -163,16 +163,17 @@ public enum ProtocolUtils {
   }
 
   /**
-   * Writes the specified {@code value} as a 21-bit Minecraft VarInt to the specified {@code buf}.
-   * The upper 11 bits will be discarded.
+   * Writes the specified {@code value} as a 28-bit Minecraft VarInt to the specified {@code buf}.
+   * The upper 4 bits will be discarded.
    *
    * @param buf   the buffer to read from
    * @param value the integer to write
    */
-  public static void write21BitVarInt(ByteBuf buf, int value) {
+  public static void write28BitVarInt(ByteBuf buf, int value) {
     // See https://steinborn.me/posts/performance/how-fast-can-you-write-a-varint/
-    int w = (value & 0x7F | 0x80) << 16 | ((value >>> 7) & 0x7F | 0x80) << 8 | (value >>> 14);
-    buf.writeMedium(w);
+    int w = (value & 0x7F | 0x80) << 24 | (((value >>> 7) & 0x7F | 0x80) << 16)
+        | ((value >>> 14) & 0x7F | 0x80) << 8 | (value >>> 21);
+    buf.writeInt(w);
   }
 
   public static String readString(ByteBuf buf) {

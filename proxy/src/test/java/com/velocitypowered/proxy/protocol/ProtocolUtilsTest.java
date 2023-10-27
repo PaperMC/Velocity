@@ -74,16 +74,16 @@ public class ProtocolUtilsTest {
   }
 
   @Test
-  void test3Bytes() {
+  void test4Bytes() {
     ByteBuf buf = Unpooled.buffer(5);
-    for (int i = 0; i < 2097152; i += 31) {
-      writeReadTest3Bytes(buf, i);
+    for (int i = 0; i < (1 << 28) - 1; i += 31) {
+      writeReadTest4Bytes(buf, i);
     }
   }
 
-  private void writeReadTest3Bytes(ByteBuf buf, int test) {
+  private void writeReadTest4Bytes(ByteBuf buf, int test) {
     buf.clear();
-    ProtocolUtils.write21BitVarInt(buf, test);
+    ProtocolUtils.write28BitVarInt(buf, test);
     assertEquals(test, ProtocolUtils.readVarInt(buf));
   }
 
