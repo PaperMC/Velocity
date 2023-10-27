@@ -17,7 +17,6 @@
 
 package com.velocitypowered.proxy.connection.client;
 
-import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -66,10 +65,9 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
       throw EXPECTED_AWAITING_REQUEST;
     }
     this.pingReceived = true;
-    server.getServerListPingHandler().getInitialPing(this.inbound)
-        .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
-        .thenAcceptAsync(event -> connection.closeWith(
-                LegacyDisconnect.fromServerPing(event.getPing(), packet.getVersion())),
+    server.getServerListPingHandler().getPing(this.inbound)
+        .thenAcceptAsync(ping -> connection.closeWith(
+                LegacyDisconnect.fromServerPing(ping, packet.getVersion())),
             connection.eventLoop())
         .exceptionally((ex) -> {
           logger.error("Exception while handling legacy ping {}", packet, ex);
@@ -91,16 +89,8 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     }
     this.pingReceived = true;
 
-    this.server.getServerListPingHandler().getInitialPing(inbound)
-        .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
-        .thenAcceptAsync(
-            (event) -> {
-              StringBuilder json = new StringBuilder();
-              VelocityServer.getPingGsonInstance(connection.getProtocolVersion())
-                  .toJson(event.getPing(), json);
-              connection.write(new StatusResponse(json));
-            },
-            connection.eventLoop())
+    server.getServerListPingHandler().getPacketResponse(this.inbound)
+        .thenAcceptAsync(connection::write, connection.eventLoop())
         .exceptionally((ex) -> {
           logger.error("Exception while handling status request {}", packet, ex);
           return null;
@@ -112,10 +102,5 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
   public void handleUnknown(ByteBuf buf) {
     // what even is going on?
     connection.close(true);
-  }
-
-  private enum State {
-    AWAITING_REQUEST,
-    RECEIVED_REQUEST
   }
 }

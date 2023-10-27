@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.connection.util;
 
 import com.google.common.collect.ImmutableList;
 import com.spotify.futures.CompletableFutures;
+import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.server.PingOptions;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -27,6 +28,7 @@ import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PingPassthroughMode;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
+import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -157,5 +159,37 @@ public class ServerListPingHandler {
           virtualHostStr, server.getConfiguration().getAttemptConnectionOrder());
       return attemptPingPassthrough(connection, passthroughMode, serversToTry, shownVersion);
     }
+  }
+
+  /**
+   * Gets the current server ping for this connection, firing {@code ProxyPingEvent} if the
+   * ping is not cached.
+   *
+   * @param connection the connection being pinged
+   *
+   * @return the server ping as a completable future
+   */
+  public CompletableFuture<ServerPing> getPing(VelocityInboundConnection connection) {
+    return this.getInitialPing(connection)
+        .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(connection, ping)))
+        .thenApply(ProxyPingEvent::getPing);
+  }
+
+  /**
+   * Gets the current server ping for this connection, firing {@code ProxyPingEvent} if the
+   * ping is not cached.
+   *
+   * @param connection the connection being pinged
+   *
+   * @return the server ping as a completable future
+   */
+  public CompletableFuture<StatusResponse> getPacketResponse(VelocityInboundConnection connection) {
+    return this.getInitialPing(connection)
+        .thenApply(ping -> {
+          StringBuilder json = new StringBuilder();
+          VelocityServer.getPingGsonInstance(connection.getProtocolVersion())
+              .toJson(ping, json);
+          return new StatusResponse(json);
+        });
   }
 }
