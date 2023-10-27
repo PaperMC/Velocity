@@ -34,8 +34,8 @@ import java.net.SocketAddress;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Session handler used to implement
- * {@link VelocityRegisteredServer#ping(EventLoop, ProtocolVersion)}.
+ * Session handler used to implement {@link VelocityRegisteredServer#ping(EventLoop,
+ * ProtocolVersion)}.
  */
 public class PingSessionHandler implements MinecraftSessionHandler {
 
@@ -70,6 +70,7 @@ public class PingSessionHandler implements MinecraftSessionHandler {
     handshake.setProtocolVersion(version);
     connection.delayedWrite(handshake);
 
+    connection.setActiveSessionHandler(StateRegistry.STATUS);
     connection.setState(StateRegistry.STATUS);
     connection.delayedWrite(StatusRequest.INSTANCE);
 

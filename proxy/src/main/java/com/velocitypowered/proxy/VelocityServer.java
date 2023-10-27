@@ -568,6 +568,11 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     shutdown(true);
   }
 
+  @Override
+  public void closeListeners() {
+    this.cm.closeEndpoints(false);
+  }
+
   public AsyncHttpClient getAsyncHttpClient() {
     return cm.getHttpClient();
   }

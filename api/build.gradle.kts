@@ -1,6 +1,7 @@
 plugins {
     `java-library`
     `maven-publish`
+    id("velocity-publish")
 }
 
 java {
@@ -38,6 +39,8 @@ dependencies {
     api("net.kyori:adventure-text-serializer-legacy")
     api("net.kyori:adventure-text-serializer-plain")
     api("net.kyori:adventure-text-minimessage")
+    api("net.kyori:adventure-text-logger-slf4j")
+    api("net.kyori:adventure-text-serializer-ansi")
 
     api("org.slf4j:slf4j-api:$slf4jVersion")
     api("com.google.inject:guice:$guiceVersion")

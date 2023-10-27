@@ -52,7 +52,7 @@ public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
               && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
             logger.fatal("A plugin tried to deny a command with signable component(s). "
                 + "This is not supported. "
-                + "Disconnecting player " + player.getUsername());
+                + "Disconnecting player " + player.getUsername() + ". Command packet: " + packet);
             player.disconnect(Component.text(
                 "A proxy plugin caused an illegal protocol state. "
                     + "Contact your network administrator."));
@@ -75,7 +75,7 @@ public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
               && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
             logger.fatal("A plugin tried to change a command with signed component(s). "
                 + "This is not supported. "
-                + "Disconnecting player " + player.getUsername());
+                + "Disconnecting player " + player.getUsername() + ". Command packet: " + packet);
             player.disconnect(Component.text(
                 "A proxy plugin caused an illegal protocol state. "
                     + "Contact your network administrator."));
@@ -95,7 +95,7 @@ public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
               && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
             logger.fatal("A plugin tried to change a command with signed component(s). "
                 + "This is not supported. "
-                + "Disconnecting player " + player.getUsername());
+                + "Disconnecting player " + player.getUsername() + ". Command packet: " + packet);
             player.disconnect(Component.text(
                 "A proxy plugin caused an illegal protocol state. "
                     + "Contact your network administrator."));

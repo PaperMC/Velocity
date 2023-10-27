@@ -147,10 +147,17 @@ public interface Player extends
   /**
    * Clears the tab list header and footer for the player.
    *
-   * @deprecated Use {@link TabList#clearHeaderAndFooter()}.
+   * @deprecated Use {@link Player#clearPlayerListHeaderAndFooter()}.
    */
   @Deprecated
-  void clearHeaderAndFooter();
+  default void clearHeaderAndFooter() {
+    clearPlayerListHeaderAndFooter();
+  }
+
+  /**
+   * Clears the player list header and footer.
+   */
+  void clearPlayerListHeaderAndFooter();
 
   /**
    * Returns the player's player list header.

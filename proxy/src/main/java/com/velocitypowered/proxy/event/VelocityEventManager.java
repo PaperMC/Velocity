@@ -318,8 +318,7 @@ public class VelocityEventManager implements EventManager {
         if (returnType != void.class && continuationType == Continuation.class) {
           errors.add("method return type must be void if a continuation parameter is provided");
         } else if (returnType != void.class && returnType != EventTask.class) {
-          errors.add("method return type must be void, EventTask, "
-              + "EventTask.Basic or EventTask.WithContinuation");
+          errors.add("method return type must be void or EventTask");
         } else if (returnType == EventTask.class) {
           asyncType = AsyncType.SOMETIMES;
         }

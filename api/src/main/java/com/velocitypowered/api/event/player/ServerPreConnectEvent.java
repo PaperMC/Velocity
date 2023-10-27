@@ -47,7 +47,7 @@ public final class ServerPreConnectEvent implements
    *
    * @param player the player who is connecting to a server
    * @param originalServer the server the player was trying to connect to
-   * @param previousServer the server the player ís connected to
+   * @param previousServer the server the player is connected to
    */
   public ServerPreConnectEvent(Player player, RegisteredServer originalServer,
       @Nullable RegisteredServer previousServer) {
