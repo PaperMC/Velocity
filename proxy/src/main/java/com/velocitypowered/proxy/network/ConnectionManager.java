@@ -26,8 +26,13 @@ import com.velocitypowered.api.event.proxy.ListenerCloseEvent;
 import com.velocitypowered.api.network.ListenerType;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.network.netty.SeparatePoolInetNameResolver;
-import com.velocitypowered.proxy.protocol.netty.GameSpyQueryHandler;
+import com.velocitypowered.proxy.network.pipeline.initializers.BackendChannelInitializer;
+import com.velocitypowered.proxy.network.pipeline.initializers.BackendChannelInitializerHolder;
+import com.velocitypowered.proxy.network.pipeline.initializers.ServerChannelInitializer;
+import com.velocitypowered.proxy.network.pipeline.initializers.ServerChannelInitializerHolder;
+import com.velocitypowered.proxy.network.pipeline.query.GameSpyQueryHandler;
+import com.velocitypowered.proxy.network.util.SeparatePoolInetNameResolver;
+import com.velocitypowered.proxy.network.util.TransportType;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -154,7 +159,7 @@ public final class ConnectionManager {
   public void queryBind(final String hostname, final int port) {
     InetSocketAddress address = new InetSocketAddress(hostname, port);
     final Bootstrap bootstrap = new Bootstrap()
-        .channelFactory(this.transportType.datagramChannelFactory)
+        .channelFactory(this.transportType.getDatagramChannelFactory())
         .group(this.workerGroup)
         .handler(new GameSpyQueryHandler(this.server))
         .localAddress(address);
@@ -177,7 +182,7 @@ public final class ConnectionManager {
   /**
    * Creates a {@link Bootstrap} using Velocity's event loops.
    *
-   * @param group the event loop group to use. Use {@code null} for the default worker group.
+   * @param group  the event loop group to use. Use {@code null} for the default worker group.
    * @param target the address the client will connect to
    * @return a new {@link Bootstrap}
    */

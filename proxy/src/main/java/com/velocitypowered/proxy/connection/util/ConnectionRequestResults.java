@@ -20,7 +20,7 @@ package com.velocitypowered.proxy.connection.util;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder.Status;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import com.velocitypowered.proxy.protocol.packet.Disconnect;
+import com.velocitypowered.proxy.network.protocol.packet.Disconnect;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import net.kyori.adventure.text.Component;

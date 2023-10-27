@@ -17,7 +17,7 @@
 
 package com.velocitypowered.proxy.connection.client;
 
-import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.constructChannelsPacket;
+import static com.velocitypowered.proxy.network.protocol.util.PluginMessageUtil.constructChannelsPacket;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.suggestion.Suggestion;
@@ -38,35 +38,35 @@ import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.BossBar;
-import com.velocitypowered.proxy.protocol.packet.ClientSettings;
-import com.velocitypowered.proxy.protocol.packet.JoinGame;
-import com.velocitypowered.proxy.protocol.packet.KeepAlive;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
-import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
-import com.velocitypowered.proxy.protocol.packet.Respawn;
-import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
-import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
-import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse.Offer;
-import com.velocitypowered.proxy.protocol.packet.chat.ChatHandler;
-import com.velocitypowered.proxy.protocol.packet.chat.ChatTimeKeeper;
-import com.velocitypowered.proxy.protocol.packet.chat.CommandHandler;
-import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedChatHandler;
-import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedCommandHandler;
-import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerChat;
-import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerCommand;
-import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChat;
-import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChatHandler;
-import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyCommandHandler;
-import com.velocitypowered.proxy.protocol.packet.chat.session.SessionChatHandler;
-import com.velocitypowered.proxy.protocol.packet.chat.session.SessionCommandHandler;
-import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChat;
-import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommand;
-import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdate;
-import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
-import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
+import com.velocitypowered.proxy.network.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.network.protocol.StateRegistry;
+import com.velocitypowered.proxy.network.protocol.packet.BossBarPacket;
+import com.velocitypowered.proxy.network.protocol.packet.ClientSettings;
+import com.velocitypowered.proxy.network.protocol.packet.JoinGame;
+import com.velocitypowered.proxy.network.protocol.packet.KeepAlive;
+import com.velocitypowered.proxy.network.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.network.protocol.packet.ResourcePackResponse;
+import com.velocitypowered.proxy.network.protocol.packet.Respawn;
+import com.velocitypowered.proxy.network.protocol.packet.TabCompleteRequest;
+import com.velocitypowered.proxy.network.protocol.packet.TabCompleteResponse;
+import com.velocitypowered.proxy.network.protocol.packet.TabCompleteResponse.Offer;
+import com.velocitypowered.proxy.network.protocol.packet.chat.ChatHandler;
+import com.velocitypowered.proxy.network.protocol.packet.chat.ChatTimeKeeper;
+import com.velocitypowered.proxy.network.protocol.packet.chat.CommandHandler;
+import com.velocitypowered.proxy.network.protocol.packet.chat.keyed.KeyedChatHandler;
+import com.velocitypowered.proxy.network.protocol.packet.chat.keyed.KeyedCommandHandler;
+import com.velocitypowered.proxy.network.protocol.packet.chat.keyed.KeyedPlayerChat;
+import com.velocitypowered.proxy.network.protocol.packet.chat.keyed.KeyedPlayerCommand;
+import com.velocitypowered.proxy.network.protocol.packet.chat.legacy.LegacyChat;
+import com.velocitypowered.proxy.network.protocol.packet.chat.legacy.LegacyChatHandler;
+import com.velocitypowered.proxy.network.protocol.packet.chat.legacy.LegacyCommandHandler;
+import com.velocitypowered.proxy.network.protocol.packet.chat.session.SessionChatHandler;
+import com.velocitypowered.proxy.network.protocol.packet.chat.session.SessionCommandHandler;
+import com.velocitypowered.proxy.network.protocol.packet.chat.session.SessionPlayerChat;
+import com.velocitypowered.proxy.network.protocol.packet.chat.session.SessionPlayerCommand;
+import com.velocitypowered.proxy.network.protocol.packet.config.FinishedUpdate;
+import com.velocitypowered.proxy.network.protocol.packet.title.GenericTitlePacket;
+import com.velocitypowered.proxy.network.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.util.CharacterUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
@@ -529,9 +529,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // Remove previous boss bars. These don't get cleared when sending JoinGame, thus the need to
     // track them.
     for (UUID serverBossBar : serverBossBars) {
-      BossBar deletePacket = new BossBar();
+      BossBarPacket deletePacket = new BossBarPacket();
       deletePacket.setUuid(serverBossBar);
-      deletePacket.setAction(BossBar.REMOVE);
+      deletePacket.setAction(BossBarPacket.REMOVE);
       player.getConnection().delayedWrite(deletePacket);
     }
     serverBossBars.clear();

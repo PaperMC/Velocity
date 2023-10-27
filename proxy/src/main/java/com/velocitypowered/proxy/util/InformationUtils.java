@@ -33,7 +33,7 @@ import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.natives.util.Natives;
-import com.velocitypowered.proxy.network.TransportType;
+import com.velocitypowered.proxy.network.util.TransportType;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;

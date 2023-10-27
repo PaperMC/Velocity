@@ -37,10 +37,11 @@ import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
-import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.Handshake;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
-import com.velocitypowered.proxy.protocol.packet.ServerLogin;
+import com.velocitypowered.proxy.network.protocol.StateRegistry;
+import com.velocitypowered.proxy.network.protocol.packet.Handshake;
+import com.velocitypowered.proxy.network.protocol.packet.JoinGame;
+import com.velocitypowered.proxy.network.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.network.protocol.packet.ServerLogin;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -356,7 +357,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   }
 
   /**
-   * Gets whether the {@link com.velocitypowered.proxy.protocol.packet.JoinGame} packet has been
+   * Gets whether the {@link JoinGame} packet has been
    * sent by this server.
    *
    * @return Whether the join has been completed.

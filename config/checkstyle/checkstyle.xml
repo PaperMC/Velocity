@@ -33,7 +33,7 @@
   <module name="SuppressionFilter">
     <property name="file" value="${org.checkstyle.google.suppressionfilter.config}"
       default="checkstyle-suppressions.xml" />
-    <property name="optional" value="true"/>
+    <!--<property name="optional" value="true"/>-->
   </module>
 
   <!-- Checks for whitespace                               -->

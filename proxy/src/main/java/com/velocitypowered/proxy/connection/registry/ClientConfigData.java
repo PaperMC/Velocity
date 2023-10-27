@@ -18,7 +18,7 @@
 package com.velocitypowered.proxy.connection.registry;
 
 import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
-import com.velocitypowered.proxy.protocol.packet.config.RegistrySync;
+import com.velocitypowered.proxy.network.protocol.packet.config.RegistrySync;
 import net.kyori.adventure.key.Key;
 import org.jetbrains.annotations.Nullable;
 

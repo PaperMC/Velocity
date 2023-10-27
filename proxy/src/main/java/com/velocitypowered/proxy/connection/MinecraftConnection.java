@@ -37,17 +37,18 @@ import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.connection.client.InitialLoginSessionHandler;
 import com.velocitypowered.proxy.connection.client.StatusSessionHandler;
 import com.velocitypowered.proxy.network.Connections;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.VelocityConnectionEvent;
-import com.velocitypowered.proxy.protocol.netty.MinecraftCipherDecoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftCipherEncoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftCompressDecoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftCompressorAndLengthEncoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
-import com.velocitypowered.proxy.protocol.netty.PlayPacketQueueHandler;
+import com.velocitypowered.proxy.network.pipeline.compression.MinecraftCompressDecoder;
+import com.velocitypowered.proxy.network.pipeline.compression.MinecraftCompressorAndLengthEncoder;
+import com.velocitypowered.proxy.network.pipeline.deser.MinecraftDecoder;
+import com.velocitypowered.proxy.network.pipeline.deser.MinecraftEncoder;
+import com.velocitypowered.proxy.network.pipeline.encryption.MinecraftCipherDecoder;
+import com.velocitypowered.proxy.network.pipeline.encryption.MinecraftCipherEncoder;
+import com.velocitypowered.proxy.network.pipeline.framing.MinecraftVarintLengthEncoder;
+import com.velocitypowered.proxy.network.pipeline.util.PlayPacketQueueHandler;
+import com.velocitypowered.proxy.network.pipeline.util.VelocityConnectionEvent;
+import com.velocitypowered.proxy.network.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.network.protocol.StateRegistry;
+import com.velocitypowered.proxy.network.protocol.packet.SetCompression;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
@@ -487,7 +488,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   /**
    * Sets the compression threshold on the connection. You are responsible for sending {@link
-   * com.velocitypowered.proxy.protocol.packet.SetCompression} beforehand.
+   * SetCompression} beforehand.
    *
    * @param threshold the compression threshold to use
    */

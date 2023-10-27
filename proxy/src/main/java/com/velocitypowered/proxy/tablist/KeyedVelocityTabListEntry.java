@@ -22,8 +22,8 @@ import com.velocitypowered.api.proxy.player.ChatSession;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
-import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
+import com.velocitypowered.proxy.network.protocol.packet.LegacyPlayerListItem;
+import com.velocitypowered.proxy.network.protocol.packet.chat.RemoteChatSession;
 import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.Nullable;
 

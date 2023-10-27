@@ -19,7 +19,7 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeClientPhase;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.network.protocol.packet.PluginMessage;
 
 /**
  * Provides connection phase specific actions.

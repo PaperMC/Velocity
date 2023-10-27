@@ -38,24 +38,24 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
-import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
-import com.velocitypowered.proxy.protocol.packet.BossBar;
-import com.velocitypowered.proxy.protocol.packet.ClientSettings;
-import com.velocitypowered.proxy.protocol.packet.Disconnect;
-import com.velocitypowered.proxy.protocol.packet.KeepAlive;
-import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
-import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfo;
-import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
-import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
-import com.velocitypowered.proxy.protocol.packet.ServerData;
-import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
-import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
-import com.velocitypowered.proxy.protocol.packet.config.StartUpdate;
-import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
+import com.velocitypowered.proxy.network.pipeline.deser.MinecraftDecoder;
+import com.velocitypowered.proxy.network.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.network.protocol.StateRegistry;
+import com.velocitypowered.proxy.network.protocol.packet.AvailableCommands;
+import com.velocitypowered.proxy.network.protocol.packet.BossBarPacket;
+import com.velocitypowered.proxy.network.protocol.packet.ClientSettings;
+import com.velocitypowered.proxy.network.protocol.packet.Disconnect;
+import com.velocitypowered.proxy.network.protocol.packet.KeepAlive;
+import com.velocitypowered.proxy.network.protocol.packet.LegacyPlayerListItem;
+import com.velocitypowered.proxy.network.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.network.protocol.packet.RemovePlayerInfo;
+import com.velocitypowered.proxy.network.protocol.packet.ResourcePackRequest;
+import com.velocitypowered.proxy.network.protocol.packet.ResourcePackResponse;
+import com.velocitypowered.proxy.network.protocol.packet.ServerData;
+import com.velocitypowered.proxy.network.protocol.packet.TabCompleteResponse;
+import com.velocitypowered.proxy.network.protocol.packet.UpsertPlayerInfo;
+import com.velocitypowered.proxy.network.protocol.packet.config.StartUpdate;
+import com.velocitypowered.proxy.network.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -154,10 +154,10 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(BossBar packet) {
-    if (packet.getAction() == BossBar.ADD) {
+  public boolean handle(BossBarPacket packet) {
+    if (packet.getAction() == BossBarPacket.ADD) {
       playerSessionHandler.getServerBossBars().add(packet.getUuid());
-    } else if (packet.getAction() == BossBar.REMOVE) {
+    } else if (packet.getAction() == BossBarPacket.REMOVE) {
       playerSessionHandler.getServerBossBars().remove(packet.getUuid());
     }
     return false; // forward
