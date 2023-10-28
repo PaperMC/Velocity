@@ -20,5 +20,5 @@ public interface KeyIdentifiable {
    *
    * @return the key or null if not available
    */
-  @Nullable IdentifiedKey getIdentifiedKey();
+  @Nullable IdentifiedKey identifiedKey();
 }

@@ -24,7 +24,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 @AwaitingEvent
 public final class ServerPreConnectEvent implements
-    ResultedEvent<ServerPreConnectEvent.ServerResult> {
+    ResultedEvent<ServerPreConnectEvent.ServerResult>, PlayerReferentEvent {
 
   private final Player player;
   private final RegisteredServer originalServer;
@@ -39,7 +39,7 @@ public final class ServerPreConnectEvent implements
    */
   public ServerPreConnectEvent(Player player, RegisteredServer originalServer) {
     this(player, originalServer,
-        player.getCurrentServer().map(ServerConnection::getServer).orElse(null));
+        player.connectedServer().map(ServerConnection::server).orElse(null));
   }
 
   /**
@@ -54,7 +54,7 @@ public final class ServerPreConnectEvent implements
     this.player = Preconditions.checkNotNull(player, "player");
     this.originalServer = Preconditions.checkNotNull(originalServer, "originalServer");
     this.previousServer = previousServer;
-    this.result = ServerResult.allowed(originalServer);
+    this.result = ServerResult.connectTo(originalServer);
   }
 
   /**
@@ -62,12 +62,13 @@ public final class ServerPreConnectEvent implements
    *
    * @return the player connecting to the server
    */
-  public Player getPlayer() {
+  @Override
+  public Player player() {
     return player;
   }
 
   @Override
-  public ServerResult getResult() {
+  public ServerResult result() {
     return result;
   }
 
@@ -89,7 +90,7 @@ public final class ServerPreConnectEvent implements
 
   /**
    * Returns the server that the player is currently connected to. Prefer this method over using
-   * {@link Player#getCurrentServer()} as the current server might get reset after server kicks to
+   * {@link Player#connectedServer()} as the current server might get reset after server kicks to
    * prevent connection issues. This is {@code null} if they were not connected to another server
    * beforehand (for instance, if the player has just joined the proxy).
    *
@@ -122,7 +123,7 @@ public final class ServerPreConnectEvent implements
     }
 
     @Override
-    public boolean isAllowed() {
+    public boolean allowed() {
       return server != null;
     }
 
@@ -133,7 +134,7 @@ public final class ServerPreConnectEvent implements
     @Override
     public String toString() {
       if (server != null) {
-        return "allowed: connect to " + server.getServerInfo().getName();
+        return "allowed: connect to " + server.serverInfo().name();
       }
       return "denied";
     }
@@ -145,7 +146,7 @@ public final class ServerPreConnectEvent implements
      *
      * @return a result to deny conneections
      */
-    public static ServerResult denied() {
+    public static ServerResult deny() {
       return DENIED;
     }
 
@@ -155,7 +156,7 @@ public final class ServerPreConnectEvent implements
      * @param server the new server to connect to
      * @return a result to allow the player to connect to the specified server
      */
-    public static ServerResult allowed(RegisteredServer server) {
+    public static ServerResult connectTo(RegisteredServer server) {
       Preconditions.checkNotNull(server, "server");
       return new ServerResult(server);
     }

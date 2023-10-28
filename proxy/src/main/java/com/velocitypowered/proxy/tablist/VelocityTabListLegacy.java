@@ -55,13 +55,13 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
   @Override
   public void addEntry(TabListEntry entry) {
     super.addEntry(entry);
-    nameMapping.put(entry.getProfile().getName(), entry.getProfile().getId());
+    nameMapping.put(entry.getProfile().name(), entry.getProfile().uuid());
   }
 
   @Override
   public Optional<TabListEntry> removeEntry(UUID uuid) {
     Optional<TabListEntry> entry = super.removeEntry(uuid);
-    entry.map(TabListEntry::getProfile).map(GameProfile::getName).ifPresent(nameMapping::remove);
+    entry.map(TabListEntry::getProfile).map(GameProfile::name).ifPresent(nameMapping::remove);
     return entry;
   }
 
@@ -115,7 +115,7 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
 
   @Override
   void updateEntry(int action, TabListEntry entry) {
-    if (entries.containsKey(entry.getProfile().getId())) {
+    if (entries.containsKey(entry.getProfile().uuid())) {
       switch (action) {
         case LegacyPlayerListItem.UPDATE_LATENCY:
         case LegacyPlayerListItem.UPDATE_DISPLAY_NAME: // Add here because we removed beforehand

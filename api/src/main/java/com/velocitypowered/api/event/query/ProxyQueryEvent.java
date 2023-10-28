@@ -41,7 +41,7 @@ public final class ProxyQueryEvent {
    *
    * @return query type
    */
-  public QueryType getQueryType() {
+  public QueryType queryType() {
     return queryType;
   }
 
@@ -50,7 +50,7 @@ public final class ProxyQueryEvent {
    *
    * @return querier address
    */
-  public InetAddress getQuerierAddress() {
+  public InetAddress remoteAddress() {
     return querierAddress;
   }
 
@@ -59,7 +59,7 @@ public final class ProxyQueryEvent {
    *
    * @return the current query response
    */
-  public QueryResponse getResponse() {
+  public QueryResponse response() {
     return response;
   }
 

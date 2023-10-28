@@ -8,7 +8,6 @@
 package com.velocitypowered.api.event;
 
 import com.google.common.base.Preconditions;
-import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -23,7 +22,7 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
    *
    * @return the result of this event
    */
-  R getResult();
+  R result();
 
   /**
    * Sets the result of this event. The result must be non-null.
@@ -38,12 +37,12 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
   interface Result {
 
     /**
-     * Returns whether or not the event is allowed to proceed. Plugins may choose to skip denied
+     * Returns whether the event is allowed to proceed. Plugins may choose to skip denied
      * events, and the proxy will respect the result of this method.
      *
-     * @return whether or not the event is allowed to proceed
+     * @return whether the event is allowed to proceed
      */
-    boolean isAllowed();
+    boolean allowed();
   }
 
   /**
@@ -61,7 +60,7 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
     }
 
     @Override
-    public boolean isAllowed() {
+    public boolean allowed() {
       return status;
     }
 
@@ -70,11 +69,11 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
       return status ? "allowed" : "denied";
     }
 
-    public static GenericResult allowed() {
+    public static GenericResult allow() {
       return ALLOWED;
     }
 
-    public static GenericResult denied() {
+    public static GenericResult deny() {
       return DENIED;
     }
   }
@@ -87,20 +86,20 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
     private static final ComponentResult ALLOWED = new ComponentResult(true, null);
 
     private final boolean status;
-    private final @Nullable Component reason;
+    private final @Nullable Component explanation;
 
-    protected ComponentResult(boolean status, @Nullable Component reason) {
+    private ComponentResult(boolean status, @Nullable Component explanation) {
       this.status = status;
-      this.reason = reason;
+      this.explanation = explanation;
     }
 
     @Override
-    public boolean isAllowed() {
+    public boolean allowed() {
       return status;
     }
 
-    public Optional<Component> getReasonComponent() {
-      return Optional.ofNullable(reason);
+    public @Nullable Component explanation() {
+      return explanation;
     }
 
     @Override
@@ -108,19 +107,19 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
       if (status) {
         return "allowed";
       }
-      if (reason != null) {
-        return "denied: " + PlainTextComponentSerializer.plainText().serialize(reason);
+      if (explanation != null) {
+        return "denied: " + PlainTextComponentSerializer.plainText().serialize(explanation);
       }
       return "denied";
     }
 
-    public static ComponentResult allowed() {
+    public static ComponentResult allow() {
       return ALLOWED;
     }
 
-    public static ComponentResult denied(Component reason) {
-      Preconditions.checkNotNull(reason, "reason");
-      return new ComponentResult(false, reason);
+    public static ComponentResult deny(Component explanation) {
+      Preconditions.checkNotNull(explanation, "explanation");
+      return new ComponentResult(false, explanation);
     }
   }
 }

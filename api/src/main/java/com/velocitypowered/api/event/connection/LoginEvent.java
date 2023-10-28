@@ -10,6 +10,7 @@ package com.velocitypowered.api.event.connection;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
+import com.velocitypowered.api.event.player.PlayerReferentEvent;
 import com.velocitypowered.api.proxy.Player;
 
 /**
@@ -19,22 +20,23 @@ import com.velocitypowered.api.proxy.Player;
  * process.
  */
 @AwaitingEvent
-public final class LoginEvent implements ResultedEvent<ResultedEvent.ComponentResult> {
+public final class LoginEvent implements ResultedEvent<ResultedEvent.ComponentResult>,
+    PlayerReferentEvent {
 
   private final Player player;
   private ComponentResult result;
 
   public LoginEvent(Player player) {
     this.player = Preconditions.checkNotNull(player, "player");
-    this.result = ComponentResult.allowed();
+    this.result = ComponentResult.allow();
   }
 
-  public Player getPlayer() {
+  public Player player() {
     return player;
   }
 
   @Override
-  public ComponentResult getResult() {
+  public ComponentResult result() {
     return result;
   }
 

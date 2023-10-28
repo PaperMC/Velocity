@@ -119,14 +119,14 @@ public class VelocityScheduler implements Scheduler {
       task.cancel();
     }
     timerExecutionService.shutdown();
-    final List<PluginContainer> plugins = new ArrayList<>(this.pluginManager.getPlugins());
+    final List<PluginContainer> plugins = new ArrayList<>(this.pluginManager.plugins());
     final Iterator<PluginContainer> pluginIterator = plugins.iterator();
     while (pluginIterator.hasNext()) {
       final PluginContainer container = pluginIterator.next();
       if (container instanceof VelocityPluginContainer) {
         final VelocityPluginContainer pluginContainer = (VelocityPluginContainer) container;
         if (pluginContainer.hasExecutorService()) {
-          container.getExecutorService().shutdown();
+          container.executorService().shutdown();
         } else {
           pluginIterator.remove();
         }
@@ -137,8 +137,8 @@ public class VelocityScheduler implements Scheduler {
 
     boolean allShutdown = true;
     for (final PluginContainer container : plugins) {
-      final String id = container.getDescription().getId();
-      final ExecutorService service = (container).getExecutorService();
+      final String id = container.description().id();
+      final ExecutorService service = (container).executorService();
 
       try {
         if (!service.awaitTermination(10, TimeUnit.SECONDS)) {
@@ -204,7 +204,7 @@ public class VelocityScheduler implements Scheduler {
     @Override
     public ScheduledTask schedule() {
       VelocityTask task = new VelocityTask(container, runnable, consumer, delay, repeat);
-      tasksByPlugin.put(container.getInstance().get(), task);
+      tasksByPlugin.put(container.instance().get(), task);
       task.schedule();
       return task;
     }
@@ -242,7 +242,7 @@ public class VelocityScheduler implements Scheduler {
     @Override
     public Object plugin() {
       //noinspection OptionalGetWithoutIsPresent
-      return container.getInstance().get();
+      return container.instance().get();
     }
 
     @Override
@@ -278,7 +278,7 @@ public class VelocityScheduler implements Scheduler {
 
     @Override
     public void run() {
-      container.getExecutorService().execute(() -> {
+      container.executorService().execute(() -> {
         currentTaskThread = Thread.currentThread();
         try {
           if (runnable != null) {
@@ -291,8 +291,8 @@ public class VelocityScheduler implements Scheduler {
           if (e instanceof InterruptedException) {
             Thread.currentThread().interrupt();
           } else {
-            String friendlyPluginName = container.getDescription().getName()
-                .orElse(container.getDescription().getId());
+            String friendlyPluginName = container.description().name()
+                .orElse(container.description().id());
             Object unit = consumer == null ? runnable : consumer;
             Log.logger.error("Exception in task {} by plugin {}", unit, friendlyPluginName,
                 e);

@@ -47,17 +47,17 @@ public interface Player extends
    *
    * @return the username
    */
-  String getUsername();
+  String username();
 
   /**
    * Returns the locale the proxy will use to send messages translated via the Adventure global
-   * translator. By default, the value of {@link PlayerSettings#getLocale()} is used.
+   * translator. By default, the value of {@link PlayerSettings#locale()} is used.
    *
    * <p>This can be {@code null} when the client has not yet connected to any server.</p>
    *
    * @return the locale.
    */
-  @Nullable Locale getEffectiveLocale();
+  @Nullable Locale effectiveLocale();
 
   /**
    * Change the locale the proxy will be translating its messages to.
@@ -71,21 +71,21 @@ public interface Player extends
    *
    * @return the UUID
    */
-  UUID getUniqueId();
+  UUID uuid();
 
   /**
    * Returns the server that the player is currently connected to.
    *
    * @return an {@link Optional} the server that the player is connected to, which may be empty
    */
-  Optional<ServerConnection> getCurrentServer();
+  Optional<ServerConnection> connectedServer();
 
   /**
    * Returns the player's client settings.
    *
    * @return the settings
    */
-  PlayerSettings getPlayerSettings();
+  PlayerSettings settings();
 
   /**
    * Returns whether the player has sent its client settings.
@@ -99,14 +99,14 @@ public interface Player extends
    *
    * @return an {@link Optional} the mod info. which may be empty
    */
-  Optional<ModInfo> getModInfo();
+  Optional<ModInfo> modInfo();
 
   /**
    * Gets the player's estimated ping in milliseconds.
    *
    * @return the player's ping or -1 if ping information is currently unknown
    */
-  long getPing();
+  long ping();
 
   /**
    * Returns the player's connection status.
@@ -130,29 +130,19 @@ public interface Player extends
    *
    * @return the player's profile properties
    */
-  List<GameProfile.Property> getGameProfileProperties();
+  List<GameProfile.Property> profileProperties();
 
   /**
    * Sets the player's profile properties.
    *
    * @param properties the properties
    */
-  void setGameProfileProperties(List<GameProfile.Property> properties);
+  void setProfileProperties(List<GameProfile.Property> properties);
 
   /**
    * Returns the player's game profile.
    */
-  GameProfile getGameProfile();
-
-  /**
-   * Clears the tab list header and footer for the player.
-   *
-   * @deprecated Use {@link Player#clearPlayerListHeaderAndFooter()}.
-   */
-  @Deprecated
-  default void clearHeaderAndFooter() {
-    clearPlayerListHeaderAndFooter();
-  }
+  GameProfile profile();
 
   /**
    * Clears the player list header and footer.
@@ -178,7 +168,7 @@ public interface Player extends
    *
    * @return this player's tab list
    */
-  TabList getTabList();
+  TabList tabList();
 
   /**
    * Disconnects the player with the specified reason. Once this method is called, further calls to
@@ -186,7 +176,7 @@ public interface Player extends
    *
    * @param reason component with the reason
    */
-  void disconnect(net.kyori.adventure.text.Component reason);
+  void disconnect(Component reason);
 
   /**
    * Sends chat input onto the players current server as if they typed it into the client chat box.
@@ -194,29 +184,6 @@ public interface Player extends
    * @param input the chat input to send
    */
   void spoofChatInput(String input);
-
-  /**
-   * Sends the specified resource pack from {@code url} to the user. If at all possible, send the
-   * resource pack using {@link #sendResourcePack(String, byte[])}. To monitor the status of the
-   * sent resource pack, subscribe to {@link PlayerResourcePackStatusEvent}.
-   *
-   * @param url the URL for the resource pack
-   * @deprecated Use {@link #sendResourcePackOffer(ResourcePackInfo)} instead
-   */
-  @Deprecated
-  void sendResourcePack(String url);
-
-  /**
-   * Sends the specified resource pack from {@code url} to the user, using the specified 20-byte
-   * SHA-1 hash. To monitor the status of the sent resource pack, subscribe to
-   * {@link PlayerResourcePackStatusEvent}.
-   *
-   * @param url the URL for the resource pack
-   * @param hash the SHA-1 hash value for the resource pack
-   * @deprecated Use {@link #sendResourcePackOffer(ResourcePackInfo)} instead
-   */
-  @Deprecated
-  void sendResourcePack(String url, byte[] hash);
 
   /**
    * Queues and sends a new Resource-pack offer to the player.
@@ -236,7 +203,7 @@ public interface Player extends
    * @return the applied resource pack or null if none.
    */
   @Nullable
-  ResourcePackInfo getAppliedResourcePack();
+  ResourcePackInfo appliedResourcePack();
 
   /**
    * Gets the {@link ResourcePackInfo} of the resource pack
@@ -246,14 +213,14 @@ public interface Player extends
    * @return the pending resource pack or null if none
    */
   @Nullable
-  ResourcePackInfo getPendingResourcePack();
+  ResourcePackInfo pendingResourcePack();
 
   /**
    * <strong>Note that this method does not send a plugin message to the server the player
    * is connected to.</strong> You should only use this method if you are trying to communicate
    * with a mod that is installed on the player's client. To send a plugin message to the server
    * from the player, you should use the equivalent method on the instance returned by
-   * {@link #getCurrentServer()}.
+   * {@link #connectedServer()}.
    *
    * @inheritDoc
    */
@@ -268,8 +235,8 @@ public interface Player extends
   @Override
   default @NotNull HoverEvent<HoverEvent.ShowEntity> asHoverEvent(
           @NotNull UnaryOperator<HoverEvent.ShowEntity> op) {
-    return HoverEvent.showEntity(op.apply(HoverEvent.ShowEntity.of(this, getUniqueId(),
-            Component.text(getUsername()))));
+    return HoverEvent.showEntity(op.apply(HoverEvent.ShowEntity.showEntity(this, uuid(),
+            Component.text(username()))));
   }
 
 

@@ -38,12 +38,12 @@ public class VelocityPluginContainer implements PluginContainer {
   }
 
   @Override
-  public PluginDescription getDescription() {
+  public PluginDescription description() {
     return this.description;
   }
 
   @Override
-  public Optional<?> getInstance() {
+  public Optional<?> instance() {
     return Optional.ofNullable(instance);
   }
 
@@ -52,11 +52,11 @@ public class VelocityPluginContainer implements PluginContainer {
   }
 
   @Override
-  public ExecutorService getExecutorService() {
+  public ExecutorService executorService() {
     if (this.service == null) {
       synchronized (this) {
         if (this.service == null) {
-          String name = this.description.getName().orElse(this.description.getId());
+          String name = this.description.name().orElse(this.description.id());
           this.service = Executors.unconfigurableExecutorService(
               Executors.newCachedThreadPool(
                 new ThreadFactoryBuilder().setDaemon(true)

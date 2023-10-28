@@ -41,11 +41,11 @@ public class RemoteChatSession implements ChatSession {
     this.identifiedKey = identifiedKey;
   }
 
-  public IdentifiedKey getIdentifiedKey() {
+  public IdentifiedKey identifiedKey() {
     return identifiedKey;
   }
 
-  public @Nullable UUID getSessionId() {
+  public @Nullable UUID sessionId() {
     return sessionId;
   }
 

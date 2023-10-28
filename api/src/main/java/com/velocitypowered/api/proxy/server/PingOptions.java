@@ -41,7 +41,7 @@ public final class PingOptions {
    *
    * @return the emulated Minecraft version
    */
-  public ProtocolVersion getProtocolVersion() {
+  public ProtocolVersion protocolVersion() {
     return this.protocolVersion;
   }
 
@@ -50,7 +50,7 @@ public final class PingOptions {
    *
    * @return the server ping timeout in milliseconds
    */
-  public long getTimeout() {
+  public long timeout() {
     return this.timeout;
   }
 

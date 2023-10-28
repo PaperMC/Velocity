@@ -72,7 +72,7 @@ abstract class CommandTestSuite {
   }
 
   final void assertRegisteredAliases(final String... expected) {
-    final Collection<String> actual = manager.getAliases();
+    final Collection<String> actual = manager.aliases();
     assertEquals(expected.length, actual.size());
     final Collection<String> asList = Arrays.asList(expected);
     assertTrue(asList.containsAll(actual));

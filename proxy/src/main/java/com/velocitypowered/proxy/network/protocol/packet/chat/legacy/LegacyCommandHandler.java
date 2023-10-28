@@ -43,8 +43,8 @@ public class LegacyCommandHandler implements CommandHandler<LegacyChat> {
   public void handlePlayerCommandInternal(LegacyChat packet) {
     String command = packet.getMessage().substring(1);
     queueCommandResult(this.server, this.player, event -> {
-      CommandExecuteEvent.CommandResult result = event.getResult();
-      if (result == CommandExecuteEvent.CommandResult.denied()) {
+      CommandExecuteEvent.CommandResult result = event.result();
+      if (result == CommandExecuteEvent.CommandResult.deny()) {
         return CompletableFuture.completedFuture(null);
       }
       String commandToRun = result.getCommand().orElse(command);

@@ -30,11 +30,11 @@ public final class ProxyPingEvent {
     this.ping = Preconditions.checkNotNull(ping, "ping");
   }
 
-  public InboundConnection getConnection() {
+  public InboundConnection connection() {
     return connection;
   }
 
-  public ServerPing getPing() {
+  public ServerPing ping() {
     return ping;
   }
 

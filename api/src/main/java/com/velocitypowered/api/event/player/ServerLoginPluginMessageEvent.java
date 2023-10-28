@@ -54,7 +54,7 @@ public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResu
   }
 
   @Override
-  public ResponseResult getResult() {
+  public ResponseResult result() {
     return this.result;
   }
 
@@ -63,11 +63,11 @@ public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResu
     this.result = checkNotNull(result, "result");
   }
 
-  public ServerConnection getConnection() {
+  public ServerConnection connection() {
     return connection;
   }
 
-  public ChannelIdentifier getIdentifier() {
+  public ChannelIdentifier identifier() {
     return identifier;
   }
 
@@ -76,7 +76,7 @@ public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResu
    *
    * @return the contents of the message
    */
-  public byte[] getContents() {
+  public byte[] rawData() {
     return contents.clone();
   }
 
@@ -86,7 +86,7 @@ public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResu
    *
    * @return the contents of the message as a stream
    */
-  public ByteArrayInputStream contentsAsInputStream() {
+  public ByteArrayInputStream dataAsInputStream() {
     return new ByteArrayInputStream(contents);
   }
 
@@ -96,11 +96,11 @@ public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResu
    *
    * @return the contents of the message as a {@link java.io.DataInput}
    */
-  public ByteArrayDataInput contentsAsDataStream() {
+  public ByteArrayDataInput dataAsDataInput() {
     return ByteStreams.newDataInput(contents);
   }
 
-  public int getSequenceId() {
+  public int sequenceId() {
     return sequenceId;
   }
 
@@ -129,7 +129,7 @@ public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResu
     }
 
     @Override
-    public boolean isAllowed() {
+    public boolean allowed() {
       return response != null;
     }
 
@@ -139,7 +139,7 @@ public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResu
      * @return the response to the message
      * @throws IllegalStateException if there is no reply (an unknown message)
      */
-    public byte[] getResponse() {
+    public byte[] response() {
       if (response == null) {
         throw new IllegalStateException("Fetching response of unknown message result");
       }

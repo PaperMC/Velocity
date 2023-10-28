@@ -12,7 +12,11 @@ package com.velocitypowered.api.event;
  */
 public class PostOrder {
 
-  public static final short FIRST = -32768;
+  private PostOrder() {
+
+  }
+
+  public static final short FIRST = -32767;
   public static final short EARLY = -16384;
   public static final short NORMAL = 0;
   public static final short LATE = 16834;

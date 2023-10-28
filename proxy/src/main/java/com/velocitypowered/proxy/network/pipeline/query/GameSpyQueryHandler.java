@@ -95,7 +95,7 @@ public class GameSpyQueryHandler extends SimpleChannelInboundHandler<DatagramPac
         .maxPlayers(server.getConfiguration().getShowMaxPlayers())
         .proxyPort(((InetSocketAddress) server.getConfiguration().getBind()).getPort())
         .proxyHost(((InetSocketAddress) server.getConfiguration().getBind()).getHostString())
-        .players(server.getAllPlayers().stream().map(Player::getUsername)
+        .players(server.getAllPlayers().stream().map(Player::username)
             .collect(Collectors.toList()))
         .proxyVersion("Velocity")
         .plugins(
@@ -164,22 +164,22 @@ public class GameSpyQueryHandler extends SimpleChannelInboundHandler<DatagramPac
 
               // Start writing the response
               ResponseWriter responseWriter = new ResponseWriter(queryResponse, isBasic);
-              responseWriter.write("hostname", event.getResponse().getHostname());
+              responseWriter.write("hostname", event.response().hostname());
               responseWriter.write("gametype", "SMP");
 
               responseWriter.write("game_id", "MINECRAFT");
-              responseWriter.write("version", event.getResponse().getGameVersion());
-              responseWriter.writePlugins(event.getResponse().getProxyVersion(),
-                  event.getResponse().getPlugins());
+              responseWriter.write("version", event.response().gameVersion());
+              responseWriter.writePlugins(event.response().proxyVersion(),
+                  event.response().plugins());
 
-              responseWriter.write("map", event.getResponse().getMap());
-              responseWriter.write("numplayers", event.getResponse().getCurrentPlayers());
-              responseWriter.write("maxplayers", event.getResponse().getMaxPlayers());
-              responseWriter.write("hostport", event.getResponse().getProxyPort());
-              responseWriter.write("hostip", event.getResponse().getProxyHost());
+              responseWriter.write("map", event.response().map());
+              responseWriter.write("numplayers", event.response().currentPlayers());
+              responseWriter.write("maxplayers", event.response().maxPlayers());
+              responseWriter.write("hostport", event.response().proxyPort());
+              responseWriter.write("hostip", event.response().proxyHost());
 
               if (!responseWriter.isBasic) {
-                responseWriter.writePlayers(event.getResponse().getPlayers());
+                responseWriter.writePlayers(event.response().players());
               }
 
               // Send the response
@@ -205,10 +205,10 @@ public class GameSpyQueryHandler extends SimpleChannelInboundHandler<DatagramPac
 
   private List<QueryResponse.PluginInformation> getRealPluginInformation() {
     List<QueryResponse.PluginInformation> result = new ArrayList<>();
-    for (PluginContainer plugin : server.getPluginManager().getPlugins()) {
-      PluginDescription description = plugin.getDescription();
-      result.add(QueryResponse.PluginInformation.of(description.getName()
-          .orElse(description.getId()), description.getVersion().orElse(null)));
+    for (PluginContainer plugin : server.getPluginManager().plugins()) {
+      PluginDescription description = plugin.description();
+      result.add(QueryResponse.PluginInformation.of(description.name()
+          .orElse(description.id()), description.version().orElse(null)));
     }
     return result;
   }

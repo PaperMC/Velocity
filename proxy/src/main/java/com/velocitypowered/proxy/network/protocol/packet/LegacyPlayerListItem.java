@@ -207,12 +207,12 @@ public class LegacyPlayerListItem implements MinecraftPacket {
     }
 
     public static Item from(TabListEntry entry) {
-      return new Item(entry.getProfile().getId())
-          .setName(entry.getProfile().getName())
-          .setProperties(entry.getProfile().getProperties())
+      return new Item(entry.getProfile().uuid())
+          .setName(entry.getProfile().name())
+          .setProperties(entry.getProfile().properties())
           .setLatency(entry.getLatency())
           .setGameMode(entry.getGameMode())
-          .setPlayerKey(entry.getIdentifiedKey())
+          .setPlayerKey(entry.identifiedKey())
           .setDisplayName(entry.getDisplayNameComponent().orElse(null));
     }
 

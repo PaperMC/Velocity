@@ -94,7 +94,7 @@ public final class ConnectionManager {
     this.resolver = new SeparatePoolInetNameResolver(GlobalEventExecutor.INSTANCE);
     this.httpClient = asyncHttpClient(config()
         .setEventLoopGroup(this.workerGroup)
-        .setUserAgent(server.getVersion().getName() + "/" + server.getVersion().getVersion())
+        .setUserAgent(server.getVersion().name() + "/" + server.getVersion().version())
         .addRequestFilter(new RequestFilter() {
           @Override
           public <T> FilterContext<T> filter(FilterContext<T> ctx) {

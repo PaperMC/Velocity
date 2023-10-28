@@ -20,14 +20,14 @@ public interface PluginContainer {
    *
    * @return the plugin's description
    */
-  PluginDescription getDescription();
+  PluginDescription description();
 
   /**
    * Returns the created plugin if it is available.
    *
    * @return the instance if available
    */
-  default Optional<?> getInstance() {
+  default Optional<?> instance() {
     return Optional.empty();
   }
 
@@ -37,5 +37,5 @@ public interface PluginContainer {
    *
    * @return an {@link ExecutorService} associated with this plugin
    */
-  ExecutorService getExecutorService();
+  ExecutorService executorService();
 }

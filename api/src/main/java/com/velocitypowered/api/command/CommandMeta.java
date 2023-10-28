@@ -22,7 +22,7 @@ public interface CommandMeta {
    *
    * @return the command aliases
    */
-  Collection<String> getAliases();
+  Collection<String> aliases();
 
   /**
    * Returns an immutable collection containing command nodes that provide
@@ -31,7 +31,7 @@ public interface CommandMeta {
    *
    * @return the hinting command nodes
    */
-  Collection<CommandNode<CommandSource>> getHints();
+  Collection<CommandNode<CommandSource>> hints();
 
   /**
    * Returns the plugin who registered the command.
@@ -39,7 +39,7 @@ public interface CommandMeta {
    *
    * @return the registering plugin
    */
-  @Nullable Object getPlugin();
+  @Nullable Object plugin();
 
   /**
    * Provides a fluent interface to create {@link CommandMeta}s.

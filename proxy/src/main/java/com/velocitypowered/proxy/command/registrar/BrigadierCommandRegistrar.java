@@ -39,14 +39,14 @@ public final class BrigadierCommandRegistrar extends AbstractCommandRegistrar<Br
     // The literal name might not match any aliases on the given meta.
     // Register it (if valid), since it's probably what the user expects.
     // If invalid, the metadata contains the same alias, but in lowercase.
-    final LiteralCommandNode<CommandSource> literal = command.getNode();
+    final LiteralCommandNode<CommandSource> literal = command.node();
     final String primaryAlias = literal.getName();
     if (VelocityCommands.isValidAlias(primaryAlias)) {
       // Register directly without copying
       this.register(literal);
     }
 
-    for (final String alias : meta.getAliases()) {
+    for (final String alias : meta.aliases()) {
       if (primaryAlias.equals(alias)) {
         continue;
       }

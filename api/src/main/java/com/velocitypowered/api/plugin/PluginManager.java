@@ -32,14 +32,14 @@ public interface PluginManager {
    * @param id the plugin ID
    * @return the plugin, if available
    */
-  Optional<PluginContainer> getPlugin(String id);
+  Optional<PluginContainer> plugin(String id);
 
   /**
    * Gets a {@link Collection} of all {@link PluginContainer}s.
    *
    * @return the plugins
    */
-  Collection<PluginContainer> getPlugins();
+  Collection<PluginContainer> plugins();
 
   /**
    * Checks if a plugin is loaded based on its ID.

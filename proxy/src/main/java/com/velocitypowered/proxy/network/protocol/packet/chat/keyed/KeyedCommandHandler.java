@@ -44,15 +44,15 @@ public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
   @Override
   public void handlePlayerCommandInternal(KeyedPlayerCommand packet) {
     queueCommandResult(this.server, this.player, event -> {
-      CommandExecuteEvent.CommandResult result = event.getResult();
-      IdentifiedKey playerKey = player.getIdentifiedKey();
-      if (result == CommandExecuteEvent.CommandResult.denied()) {
+      CommandExecuteEvent.CommandResult result = event.result();
+      IdentifiedKey playerKey = player.identifiedKey();
+      if (result == CommandExecuteEvent.CommandResult.deny()) {
         if (playerKey != null) {
           if (!packet.isUnsigned()
-              && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+              && playerKey.revision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
             logger.fatal("A plugin tried to deny a command with signable component(s). "
                 + "This is not supported. "
-                + "Disconnecting player " + player.getUsername() + ". Command packet: " + packet);
+                + "Disconnecting player " + player.username() + ". Command packet: " + packet);
             player.disconnect(Component.text(
                 "A proxy plugin caused an illegal protocol state. "
                     + "Contact your network administrator."));
@@ -72,10 +72,10 @@ public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
           return CompletableFuture.completedFuture(packet);
         } else {
           if (!packet.isUnsigned() && playerKey != null
-              && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+              && playerKey.revision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
             logger.fatal("A plugin tried to change a command with signed component(s). "
                 + "This is not supported. "
-                + "Disconnecting player " + player.getUsername() + ". Command packet: " + packet);
+                + "Disconnecting player " + player.username() + ". Command packet: " + packet);
             player.disconnect(Component.text(
                 "A proxy plugin caused an illegal protocol state. "
                     + "Contact your network administrator."));
@@ -92,10 +92,10 @@ public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
           }
 
           if (!packet.isUnsigned() && playerKey != null
-              && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+              && playerKey.revision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
             logger.fatal("A plugin tried to change a command with signed component(s). "
                 + "This is not supported. "
-                + "Disconnecting player " + player.getUsername() + ". Command packet: " + packet);
+                + "Disconnecting player " + player.username() + ". Command packet: " + packet);
             player.disconnect(Component.text(
                 "A proxy plugin caused an illegal protocol state. "
                     + "Contact your network administrator."));

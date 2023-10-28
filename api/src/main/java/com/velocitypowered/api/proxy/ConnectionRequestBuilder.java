@@ -10,6 +10,7 @@ package com.velocitypowered.api.proxy;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.text.Component;
 
 /**
  * Provides a fluent interface to send a connection request to another server on the proxy. A
@@ -22,7 +23,7 @@ public interface ConnectionRequestBuilder {
    *
    * @return the server this request will connect to
    */
-  RegisteredServer getServer();
+  RegisteredServer server();
 
   /**
    * Initiates the connection to the remote server and emits a result on the {@link
@@ -59,7 +60,7 @@ public interface ConnectionRequestBuilder {
      * @return whether or not the request succeeded
      */
     default boolean isSuccessful() {
-      return getStatus() == Status.SUCCESS;
+      return status() == Status.SUCCESS;
     }
 
     /**
@@ -67,21 +68,21 @@ public interface ConnectionRequestBuilder {
      *
      * @return the status for this result
      */
-    Status getStatus();
+    Status status();
 
     /**
      * Returns an (optional) textual reason for the failure to connect to the server.
      *
      * @return the reason why the user could not connect to the server
      */
-    Optional<net.kyori.adventure.text.Component> getReasonComponent();
+    Optional<Component> reason();
 
     /**
      * Returns the server we actually tried to connect to.
      *
      * @return the server we actually tried to connect to
      */
-    RegisteredServer getAttemptedConnection();
+    RegisteredServer attemptedConnectedTo();
   }
 
   /**

@@ -20,7 +20,7 @@ public interface ResourcePackInfo {
    *
    * @return the location of the resource-pack
    */
-  String getUrl();
+  String url();
 
   /**
    * Gets the {@link Component} that is displayed on the resource-pack prompt.
@@ -29,31 +29,31 @@ public interface ResourcePackInfo {
    * @return the prompt if present or null otherwise
    */
   @Nullable
-  Component getPrompt();
+  Component prompt();
 
   /**
    * Gets whether or not the acceptance of the resource-pack is enforced.
-   * See {@link Builder#setShouldForce(boolean)} for more information.
+   * See {@link Builder#required(boolean)} for more information.
    *
    * @return whether or not to force usage of this resource-pack
    */
-  boolean getShouldForce();
+  boolean required();
 
   /**
    * Gets the SHA-1 hash of the resource-pack
-   * See {@link Builder#setHash(byte[])} for more information.
+   * See {@link Builder#hash(byte[])} for more information.
    *
    * @return the hash if present or null otherwise
    */
   @Nullable
-  byte[] getHash();
+  byte[] hash();
 
   /**
    * Gets the {@link Origin} of this resource-pack.
    *
    * @return the origin of the resource pack
    */
-  Origin getOrigin();
+  Origin origin();
 
   /**
    * Gets the original {@link Origin} of the resource-pack.
@@ -62,16 +62,15 @@ public interface ResourcePackInfo {
    *
    * @return the origin of the resource pack
    */
-  Origin getOriginalOrigin();
+  Origin originalOrigin();
 
   /**
    * Returns a copy of this {@link ResourcePackInfo} instance as a builder so that it can
    * be modified.
    * It is <b>not</b> guaranteed that
    * {@code resourcePackInfo.asBuilder().build().equals(resourcePackInfo)} is true. That is due to
-   * the transient {@link ResourcePackInfo#getOrigin()} and
-   * {@link ResourcePackInfo#getOriginalOrigin()} fields.
-   *
+   * the transient {@link ResourcePackInfo#origin()} and
+   * {@link ResourcePackInfo#originalOrigin()} fields.
    *
    * @return a content-copy of this instance as a {@link ResourcePackInfo.Builder}
    */
@@ -82,8 +81,8 @@ public interface ResourcePackInfo {
    * <p/>
    * It is <b>not</b> guaranteed that
    * {@code resourcePackInfo.asBuilder(resourcePackInfo.getUrl()).build().equals(resourcePackInfo)}
-   * is true, because the {@link ResourcePackInfo#getOrigin()} and
-   * {@link ResourcePackInfo#getOriginalOrigin()} fields are transient.
+   * is true, because the {@link ResourcePackInfo#origin()} and
+   * {@link ResourcePackInfo#originalOrigin()} fields are transient.
    *
    * @param newUrl The new URL to use in the updated builder.
    *
@@ -114,7 +113,7 @@ public interface ResourcePackInfo {
      *
      * @param shouldForce whether or not to force the client to accept the resource pack
      */
-    Builder setShouldForce(boolean shouldForce);
+    Builder required(boolean shouldForce);
 
     /**
      * Sets the SHA-1 hash of the provided resource pack.
@@ -126,7 +125,7 @@ public interface ResourcePackInfo {
      *
      * @param hash the SHA-1 hash of the resource-pack
      */
-    Builder setHash(@Nullable byte[] hash);
+    Builder hash(@Nullable byte[] hash);
 
     /**
      * Sets a {@link Component} to display on the download prompt.
@@ -134,7 +133,7 @@ public interface ResourcePackInfo {
      *
      * @param prompt the component to display
      */
-    Builder setPrompt(@Nullable Component prompt);
+    Builder prompt(@Nullable Component prompt);
 
     /**
      * Builds the {@link ResourcePackInfo} from the provided info for use with

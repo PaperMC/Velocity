@@ -32,7 +32,7 @@ class BuiltinCommandUtil {
 
   static List<RegisteredServer> sortedServerList(ProxyServer proxy) {
     List<RegisteredServer> servers = new ArrayList<>(proxy.getAllServers());
-    servers.sort(Comparator.comparing(RegisteredServer::getServerInfo));
+    servers.sort(Comparator.comparing(RegisteredServer::serverInfo));
     return Collections.unmodifiableList(servers);
   }
 }

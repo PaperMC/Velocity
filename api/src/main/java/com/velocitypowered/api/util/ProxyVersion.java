@@ -33,15 +33,15 @@ public final class ProxyVersion {
     this.version = Preconditions.checkNotNull(version, "version");
   }
 
-  public String getName() {
+  public String name() {
     return name;
   }
 
-  public String getVendor() {
+  public String vendor() {
     return vendor;
   }
 
-  public String getVersion() {
+  public String version() {
     return version;
   }
 

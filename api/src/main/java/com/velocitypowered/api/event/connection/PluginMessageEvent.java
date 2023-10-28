@@ -52,7 +52,7 @@ public final class PluginMessageEvent implements ResultedEvent<PluginMessageEven
   }
 
   @Override
-  public ForwardResult getResult() {
+  public ForwardResult result() {
     return result;
   }
 
@@ -61,19 +61,19 @@ public final class PluginMessageEvent implements ResultedEvent<PluginMessageEven
     this.result = Preconditions.checkNotNull(result, "result");
   }
 
-  public ChannelMessageSource getSource() {
+  public ChannelMessageSource source() {
     return source;
   }
 
-  public ChannelMessageSink getTarget() {
+  public ChannelMessageSink target() {
     return target;
   }
 
-  public ChannelIdentifier getIdentifier() {
+  public ChannelIdentifier identifier() {
     return identifier;
   }
 
-  public byte[] getData() {
+  public byte[] rawData() {
     return Arrays.copyOf(data, data.length);
   }
 
@@ -111,7 +111,7 @@ public final class PluginMessageEvent implements ResultedEvent<PluginMessageEven
     }
 
     @Override
-    public boolean isAllowed() {
+    public boolean allowed() {
       return status;
     }
 

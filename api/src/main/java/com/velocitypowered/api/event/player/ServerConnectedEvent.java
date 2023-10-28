@@ -11,7 +11,6 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -25,7 +24,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * </p>
  */
 @AwaitingEvent
-public final class ServerConnectedEvent {
+public final class ServerConnectedEvent implements PlayerReferentEvent {
 
   private final Player player;
   private final RegisteredServer server;
@@ -45,16 +44,16 @@ public final class ServerConnectedEvent {
     this.previousServer = previousServer;
   }
 
-  public Player getPlayer() {
+  public Player player() {
     return player;
   }
 
-  public RegisteredServer getServer() {
+  public RegisteredServer newServer() {
     return server;
   }
 
-  public Optional<RegisteredServer> getPreviousServer() {
-    return Optional.ofNullable(previousServer);
+  public @Nullable RegisteredServer previousServer() {
+    return previousServer;
   }
 
   @Override

@@ -45,27 +45,27 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
   }
 
   @Override
-  public String getUrl() {
+  public String url() {
     return url;
   }
 
   @Override
-  public @Nullable Component getPrompt() {
+  public @Nullable Component prompt() {
     return prompt;
   }
 
   @Override
-  public boolean getShouldForce() {
+  public boolean required() {
     return shouldForce;
   }
 
   @Override
-  public @Nullable byte[] getHash() {
+  public @Nullable byte[] hash() {
     return hash == null ? null : hash.clone(); // Thanks spotbugs, very helpful.
   }
 
   @Override
-  public Origin getOrigin() {
+  public Origin origin() {
     return origin;
   }
 
@@ -74,24 +74,24 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
   }
 
   @Override
-  public Origin getOriginalOrigin() {
+  public Origin originalOrigin() {
     return originalOrigin;
   }
 
   @Override
   public Builder asBuilder() {
     return new BuilderImpl(url)
-        .setShouldForce(shouldForce)
-        .setHash(hash)
-        .setPrompt(prompt);
+        .required(shouldForce)
+        .hash(hash)
+        .prompt(prompt);
   }
 
   @Override
   public Builder asBuilder(String newUrl) {
     return new BuilderImpl(newUrl)
-        .setShouldForce(shouldForce)
-        .setHash(hash)
-        .setPrompt(prompt);
+        .required(shouldForce)
+        .hash(hash)
+        .prompt(prompt);
   }
 
   /**
@@ -110,13 +110,13 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
     }
 
     @Override
-    public BuilderImpl setShouldForce(boolean shouldForce) {
+    public BuilderImpl required(boolean shouldForce) {
       this.shouldForce = shouldForce;
       return this;
     }
 
     @Override
-    public BuilderImpl setHash(@Nullable byte[] hash) {
+    public BuilderImpl hash(@Nullable byte[] hash) {
       if (hash != null) {
         Preconditions.checkArgument(hash.length == 20, "Hash length is not 20");
         this.hash = hash.clone(); // Thanks spotbugs, very helpful.
@@ -127,7 +127,7 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
     }
 
     @Override
-    public BuilderImpl setPrompt(@Nullable Component prompt) {
+    public BuilderImpl prompt(@Nullable Component prompt) {
       this.prompt = prompt;
       return this;
     }

@@ -67,7 +67,7 @@ public class GlistCommand {
         .<CommandSource, String>argument(SERVER_ARG, StringArgumentType.string())
         .suggests((context, builder) -> {
           for (RegisteredServer server : server.getAllServers()) {
-            builder.suggest(server.getServerInfo().getName());
+            builder.suggest(server.serverInfo().name());
           }
           builder.suggest("all");
           return builder.buildFuture();
@@ -116,13 +116,13 @@ public class GlistCommand {
   }
 
   private void sendServerPlayers(CommandSource target, RegisteredServer server, boolean fromAll) {
-    List<Player> onServer = ImmutableList.copyOf(server.getPlayersConnected());
+    List<Player> onServer = ImmutableList.copyOf(server.players());
     if (onServer.isEmpty() && fromAll) {
       return;
     }
 
     TextComponent.Builder builder = Component.text()
-        .append(Component.text("[" + server.getServerInfo().getName() + "] ",
+        .append(Component.text("[" + server.serverInfo().name() + "] ",
             NamedTextColor.DARK_AQUA))
         .append(Component.text("(" + onServer.size() + ")", NamedTextColor.GRAY))
         .append(Component.text(": "))
@@ -130,7 +130,7 @@ public class GlistCommand {
 
     for (int i = 0; i < onServer.size(); i++) {
       Player player = onServer.get(i);
-      builder.append(Component.text(player.getUsername()));
+      builder.append(Component.text(player.username()));
 
       if (i + 1 < onServer.size()) {
         builder.append(Component.text(", "));

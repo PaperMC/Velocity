@@ -114,7 +114,7 @@ public class KeyedVelocityTabListEntry implements TabListEntry {
   }
 
   @Override
-  public IdentifiedKey getIdentifiedKey() {
+  public IdentifiedKey identifiedKey() {
     return playerKey;
   }
 

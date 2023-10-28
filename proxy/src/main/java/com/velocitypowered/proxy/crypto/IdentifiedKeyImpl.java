@@ -59,32 +59,32 @@ public class IdentifiedKeyImpl implements IdentifiedKey {
   }
 
   @Override
-  public PublicKey getSignedPublicKey() {
+  public PublicKey publicKey() {
     return publicKey;
   }
 
   @Override
-  public PublicKey getSigner() {
+  public PublicKey signer() {
     return EncryptionUtils.getYggdrasilSessionKey();
   }
 
   @Override
-  public Instant getExpiryTemporal() {
+  public Instant signatureExpiry() {
     return expiryTemporal;
   }
 
   @Override
-  public byte[] getSignature() {
+  public byte[] signature() {
     return signature.clone();
   }
 
   @Override
-  public @Nullable UUID getSignatureHolder() {
+  public @Nullable UUID signatureHolder() {
     return holder;
   }
 
   @Override
-  public Revision getKeyRevision() {
+  public Revision revision() {
     return revision;
   }
 
@@ -172,9 +172,9 @@ public class IdentifiedKeyImpl implements IdentifiedKey {
 
     IdentifiedKey that = (IdentifiedKey) o;
 
-    return Objects.equal(this.getSignedPublicKey(), that.getSignedPublicKey())
-        && Objects.equal(this.getExpiryTemporal(), that.getExpiryTemporal())
-        && Arrays.equals(this.getSignature(), that.getSignature())
-        && Objects.equal(this.getSigner(), that.getSigner());
+    return Objects.equal(this.publicKey(), that.publicKey())
+        && Objects.equal(this.signatureExpiry(), that.signatureExpiry())
+        && Arrays.equals(this.signature(), that.signature())
+        && Objects.equal(this.signer(), that.signer());
   }
 }

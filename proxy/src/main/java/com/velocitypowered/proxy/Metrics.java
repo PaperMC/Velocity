@@ -116,7 +116,7 @@ public class Metrics {
               () -> server.getConfiguration().isOnlineMode() ? "online" : "offline")
       );
       metrics.addCustomChart(new SimplePie("velocity_version",
-          () -> server.getVersion().getVersion()));
+          () -> server.getVersion().version()));
 
       metrics.addCustomChart(new DrilldownPie("java_version", () -> {
         Map<String, Map<String, Integer>> map = new HashMap<>();

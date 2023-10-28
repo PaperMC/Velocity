@@ -87,12 +87,12 @@ public class VelocityTabList implements InternalTabList {
     }
 
     EnumSet<UpsertPlayerInfo.Action> actions = EnumSet.noneOf(UpsertPlayerInfo.Action.class);
-    UpsertPlayerInfo.Entry playerInfoEntry = new UpsertPlayerInfo.Entry(entry.getProfile().getId());
+    UpsertPlayerInfo.Entry playerInfoEntry = new UpsertPlayerInfo.Entry(entry.getProfile().uuid());
 
     Preconditions.checkNotNull(entry.getProfile(), "Profile cannot be null");
-    Preconditions.checkNotNull(entry.getProfile().getId(), "Profile ID cannot be null");
+    Preconditions.checkNotNull(entry.getProfile().uuid(), "Profile ID cannot be null");
 
-    TabListEntry previousEntry = this.entries.put(entry.getProfile().getId(), entry);
+    TabListEntry previousEntry = this.entries.put(entry.getProfile().uuid(), entry);
 
     if (previousEntry != null) {
       // we should merge entries here
@@ -121,7 +121,7 @@ public class VelocityTabList implements InternalTabList {
         if (from != null) {
           actions.add(UpsertPlayerInfo.Action.INITIALIZE_CHAT);
           playerInfoEntry.setChatSession(
-              new RemoteChatSession(from.getSessionId(), from.getIdentifiedKey()));
+              new RemoteChatSession(from.sessionId(), from.identifiedKey()));
         }
       }
     } else {
@@ -137,7 +137,7 @@ public class VelocityTabList implements InternalTabList {
         actions.add(UpsertPlayerInfo.Action.INITIALIZE_CHAT);
         ChatSession from = entry.getChatSession();
         playerInfoEntry.setChatSession(
-            new RemoteChatSession(from.getSessionId(), from.getIdentifiedKey()));
+            new RemoteChatSession(from.sessionId(), from.identifiedKey()));
       }
       if (entry.getGameMode() != -1 && entry.getGameMode() != 256) {
         actions.add(UpsertPlayerInfo.Action.UPDATE_GAME_MODE);
@@ -166,7 +166,7 @@ public class VelocityTabList implements InternalTabList {
   }
 
   @Override
-  public Collection<TabListEntry> getEntries() {
+  public Collection<TabListEntry> entries() {
     return this.entries.values().stream().map(e -> (TabListEntry) e).collect(Collectors.toList());
   }
 
@@ -199,8 +199,8 @@ public class VelocityTabList implements InternalTabList {
   protected UpsertPlayerInfo.Entry createRawEntry(VelocityTabListEntry entry) {
     Preconditions.checkNotNull(entry, "entry");
     Preconditions.checkNotNull(entry.getProfile(), "Profile cannot be null");
-    Preconditions.checkNotNull(entry.getProfile().getId(), "Profile ID cannot be null");
-    return new UpsertPlayerInfo.Entry(entry.getProfile().getId());
+    Preconditions.checkNotNull(entry.getProfile().uuid(), "Profile ID cannot be null");
+    return new UpsertPlayerInfo.Entry(entry.getProfile().uuid());
   }
 
   protected void emitActionRaw(UpsertPlayerInfo.Action action, UpsertPlayerInfo.Entry entry) {

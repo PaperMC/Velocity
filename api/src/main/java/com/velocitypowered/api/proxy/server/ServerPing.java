@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -27,12 +28,12 @@ public final class ServerPing {
 
   private final Version version;
   private final @Nullable Players players;
-  private final net.kyori.adventure.text.Component description;
+  private final Component description;
   private final @Nullable Favicon favicon;
   private final @Nullable ModInfo modinfo;
 
   public ServerPing(Version version, @Nullable Players players,
-      net.kyori.adventure.text.Component description, @Nullable Favicon favicon) {
+      Component description, @Nullable Favicon favicon) {
     this(version, players, description, favicon, ModInfo.DEFAULT);
   }
 
@@ -46,7 +47,7 @@ public final class ServerPing {
    * @param modinfo the mods this server runs
    */
   public ServerPing(Version version, @Nullable Players players,
-      net.kyori.adventure.text.Component description, @Nullable Favicon favicon,
+      Component description, @Nullable Favicon favicon,
       @Nullable ModInfo modinfo) {
     this.version = Preconditions.checkNotNull(version, "version");
     this.players = players;
@@ -55,23 +56,23 @@ public final class ServerPing {
     this.modinfo = modinfo;
   }
 
-  public Version getVersion() {
+  public Version version() {
     return version;
   }
 
-  public Optional<Players> getPlayers() {
+  public Optional<Players> players() {
     return Optional.ofNullable(players);
   }
 
-  public net.kyori.adventure.text.Component getDescriptionComponent() {
+  public Component description() {
     return description;
   }
 
-  public Optional<Favicon> getFavicon() {
+  public Optional<Favicon> favicon() {
     return Optional.ofNullable(favicon);
   }
 
-  public Optional<ModInfo> getModinfo() {
+  public Optional<ModInfo> modInfo() {
     return Optional.ofNullable(modinfo);
   }
 
@@ -129,8 +130,8 @@ public final class ServerPing {
     builder.favicon = favicon;
     builder.nullOutModinfo = modinfo == null;
     if (modinfo != null) {
-      builder.modType = modinfo.getType();
-      builder.mods.addAll(modinfo.getMods());
+      builder.modType = modinfo.type();
+      builder.mods.addAll(modinfo.mods());
     }
     return builder;
   }
@@ -150,7 +151,7 @@ public final class ServerPing {
     private final List<SamplePlayer> samplePlayers = new ArrayList<>();
     private String modType = "FML";
     private final List<ModInfo.Mod> mods = new ArrayList<>();
-    private net.kyori.adventure.text.Component description;
+    private Component description;
     private @Nullable Favicon favicon;
     private boolean nullOutPlayers;
     private boolean nullOutModinfo;
@@ -197,9 +198,9 @@ public final class ServerPing {
      */
     public Builder mods(ModInfo mods) {
       Preconditions.checkNotNull(mods, "mods");
-      this.modType = mods.getType();
+      this.modType = mods.type();
       this.mods.clear();
-      this.mods.addAll(mods.getMods());
+      this.mods.addAll(mods.mods());
       return this;
     }
 
@@ -223,7 +224,7 @@ public final class ServerPing {
       return this;
     }
 
-    public Builder description(net.kyori.adventure.text.Component description) {
+    public Builder description(Component description) {
       this.description = Preconditions.checkNotNull(description, "description");
       return this;
     }
@@ -272,7 +273,7 @@ public final class ServerPing {
       return samplePlayers;
     }
 
-    public Optional<net.kyori.adventure.text.Component> getDescriptionComponent() {
+    public Optional<Component> getDescriptionComponent() {
       return Optional.ofNullable(description);
     }
 

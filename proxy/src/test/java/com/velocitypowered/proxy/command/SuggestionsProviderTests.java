@@ -38,9 +38,9 @@ public class SuggestionsProviderTests extends CommandTestSuite {
 
   @Test
   void testSuggestsAliasesForEmptyInput() {
-    manager.register(manager.metaBuilder("foo").build(), NoSuggestionsCommand.INSTANCE);
-    manager.register(manager.metaBuilder("bar").build(), NoSuggestionsCommand.INSTANCE);
-    manager.register(manager.metaBuilder("baz").build(), NoSuggestionsCommand.INSTANCE);
+    manager.register(manager.buildMeta("foo").build(), NoSuggestionsCommand.INSTANCE);
+    manager.register(manager.buildMeta("bar").build(), NoSuggestionsCommand.INSTANCE);
+    manager.register(manager.buildMeta("baz").build(), NoSuggestionsCommand.INSTANCE);
 
     assertSuggestions("", "bar", "baz", "foo"); // in alphabetical order
   }
@@ -48,9 +48,9 @@ public class SuggestionsProviderTests extends CommandTestSuite {
   @Test
   void willNotSuggestAliasesIfNotAnnouncingForPlayer() {
     manager.setAnnounceProxyCommands(false);
-    manager.register(manager.metaBuilder("foo").build(), NoSuggestionsCommand.INSTANCE);
-    manager.register(manager.metaBuilder("bar").build(), NoSuggestionsCommand.INSTANCE);
-    manager.register(manager.metaBuilder("baz").build(), NoSuggestionsCommand.INSTANCE);
+    manager.register(manager.buildMeta("foo").build(), NoSuggestionsCommand.INSTANCE);
+    manager.register(manager.buildMeta("bar").build(), NoSuggestionsCommand.INSTANCE);
+    manager.register(manager.buildMeta("baz").build(), NoSuggestionsCommand.INSTANCE);
 
     assertPlayerSuggestions(""); // for a fake player
     assertSuggestions("", "bar", "baz", "foo"); // for non-players
@@ -58,7 +58,7 @@ public class SuggestionsProviderTests extends CommandTestSuite {
 
   @Test
   void testDoesNotSuggestForLeadingWhitespace() {
-    final var meta = manager.metaBuilder("hello").build();
+    final var meta = manager.buildMeta("hello").build();
     manager.register(meta, NoSuggestionsCommand.INSTANCE);
 
     assertSuggestions(" ");
@@ -66,8 +66,8 @@ public class SuggestionsProviderTests extends CommandTestSuite {
 
   @Test
   void testSuggestsAliasesForPartialAlias() {
-    manager.register(manager.metaBuilder("hello").build(), NoSuggestionsCommand.INSTANCE);
-    manager.register(manager.metaBuilder("hey").build(), NoSuggestionsCommand.INSTANCE);
+    manager.register(manager.buildMeta("hello").build(), NoSuggestionsCommand.INSTANCE);
+    manager.register(manager.buildMeta("hey").build(), NoSuggestionsCommand.INSTANCE);
 
     assertSuggestions("hell", "hello");
     assertSuggestions("He", "hello", "hey");
@@ -75,7 +75,7 @@ public class SuggestionsProviderTests extends CommandTestSuite {
 
   @Test
   void testDoesNotSuggestForFullAlias() {
-    final var meta = manager.metaBuilder("hello").build();
+    final var meta = manager.buildMeta("hello").build();
     manager.register(meta, NoSuggestionsCommand.INSTANCE);
 
     assertSuggestions("hello");
@@ -84,7 +84,7 @@ public class SuggestionsProviderTests extends CommandTestSuite {
 
   @Test
   void testDoesNotSuggestForPartialIncorrectAlias() {
-    final var meta = manager.metaBuilder("hello").build();
+    final var meta = manager.buildMeta("hello").build();
     manager.register(meta, NoSuggestionsCommand.INSTANCE);
 
     assertSuggestions("yo");
@@ -93,7 +93,7 @@ public class SuggestionsProviderTests extends CommandTestSuite {
 
   @Test
   void testDoesNotSuggestArgumentsForIncorrectAlias() {
-    final var meta = manager.metaBuilder("hello").build();
+    final var meta = manager.buildMeta("hello").build();
     manager.register(meta, new RawCommand() {
       @Override
       public void execute(final Invocation invocation) {
@@ -115,7 +115,7 @@ public class SuggestionsProviderTests extends CommandTestSuite {
 
   @Test
   void testSuggestsAllAliases() {
-    final var meta = manager.metaBuilder("foo")
+    final var meta = manager.buildMeta("foo")
         .aliases("bar", "baz")
         .build();
     manager.register(meta, NoSuggestionsCommand.INSTANCE);
@@ -125,7 +125,7 @@ public class SuggestionsProviderTests extends CommandTestSuite {
 
   @Test
   void testSuggestsArgumentsViaAlias() {
-    final var meta = manager.metaBuilder("hello")
+    final var meta = manager.buildMeta("hello")
         .aliases("hi")
         .build();
     manager.register(meta, new RawCommand() {
@@ -150,7 +150,7 @@ public class SuggestionsProviderTests extends CommandTestSuite {
     final var hint = LiteralArgumentBuilder
         .<CommandSource>literal("hint")
         .build();
-    final var meta = manager.metaBuilder("hello")
+    final var meta = manager.buildMeta("hello")
         .hint(hint)
         .build();
     manager.register(meta, NoSuggestionsCommand.INSTANCE);
@@ -170,7 +170,7 @@ public class SuggestionsProviderTests extends CommandTestSuite {
             .suggest("three")
             .buildFuture())
         .build();
-    final var meta = manager.metaBuilder("hello")
+    final var meta = manager.buildMeta("hello")
         .hint(hint)
         .build();
     manager.register(meta, NoSuggestionsCommand.INSTANCE);
@@ -184,7 +184,7 @@ public class SuggestionsProviderTests extends CommandTestSuite {
     final var hint = LiteralArgumentBuilder
         .<CommandSource>literal("bar")
         .build();
-    final var meta = manager.metaBuilder("foo")
+    final var meta = manager.buildMeta("foo")
         .hint(hint)
         .build();
     manager.register(meta, new RawCommand() {
@@ -213,7 +213,7 @@ public class SuggestionsProviderTests extends CommandTestSuite {
         .requires(source1 -> fail())
         .suggests((context, builder) -> builder.suggest("suggestion").buildFuture())
         .build();
-    final var meta = manager.metaBuilder("hello")
+    final var meta = manager.buildMeta("hello")
         .hint(hint)
         .build();
     manager.register(meta, NoSuggestionsCommand.INSTANCE);
@@ -228,7 +228,7 @@ public class SuggestionsProviderTests extends CommandTestSuite {
         .<CommandSource, String>argument("hint", word())
         .suggests((context, builder) -> builder.suggest("suggestion").buildFuture())
         .build();
-    final var meta = manager.metaBuilder("hello")
+    final var meta = manager.buildMeta("hello")
         .hint(hint)
         .build();
     manager.setAnnounceProxyCommands(false);
@@ -245,7 +245,7 @@ public class SuggestionsProviderTests extends CommandTestSuite {
         .<CommandSource, String>argument("hint", word())
         .suggests((context, builder) -> CompletableFuture.failedFuture(new RuntimeException()))
         .build();
-    final var meta = manager.metaBuilder("hello")
+    final var meta = manager.buildMeta("hello")
         .hint(hint)
         .build();
     manager.register(meta, NoSuggestionsCommand.INSTANCE);
@@ -261,7 +261,7 @@ public class SuggestionsProviderTests extends CommandTestSuite {
           throw new RuntimeException();
         })
         .build();
-    final var meta = manager.metaBuilder("hello")
+    final var meta = manager.buildMeta("hello")
         .hint(hint)
         .build();
     manager.register(meta, NoSuggestionsCommand.INSTANCE);

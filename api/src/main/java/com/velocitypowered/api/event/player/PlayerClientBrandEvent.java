@@ -14,7 +14,7 @@ import com.velocitypowered.api.proxy.Player;
  * Fired when a {@link Player} sends the <code>minecraft:brand</code> plugin message. Velocity will
  * not wait on the result of this event.
  */
-public final class PlayerClientBrandEvent {
+public final class PlayerClientBrandEvent implements PlayerReferentEvent {
   private final Player player;
   private final String brand;
 
@@ -29,7 +29,8 @@ public final class PlayerClientBrandEvent {
     this.brand = Preconditions.checkNotNull(brand);
   }
 
-  public Player getPlayer() {
+  @Override
+  public Player player() {
     return player;
   }
 

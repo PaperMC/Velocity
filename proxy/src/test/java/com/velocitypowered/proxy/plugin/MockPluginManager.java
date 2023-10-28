@@ -37,12 +37,12 @@ public class MockPluginManager implements PluginManager {
   }
 
   @Override
-  public Optional<PluginContainer> getPlugin(final String id) {
+  public Optional<PluginContainer> plugin(final String id) {
     return Optional.empty();
   }
 
   @Override
-  public Collection<PluginContainer> getPlugins() {
+  public Collection<PluginContainer> plugins() {
     return ImmutableList.of();
   }
 

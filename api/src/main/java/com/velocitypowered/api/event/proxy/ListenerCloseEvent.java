@@ -24,11 +24,11 @@ public final class ListenerCloseEvent {
     this.listenerType = Preconditions.checkNotNull(listenerType, "listenerType");
   }
 
-  public SocketAddress getAddress() {
+  public SocketAddress address() {
     return address;
   }
 
-  public ListenerType getListenerType() {
+  public ListenerType listenerType() {
     return listenerType;
   }
 

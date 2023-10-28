@@ -23,7 +23,7 @@ public final class ConnectionHandshakeEvent {
     this.connection = Preconditions.checkNotNull(connection, "connection");
   }
 
-  public InboundConnection getConnection() {
+  public InboundConnection connection() {
     return connection;
   }
 

@@ -214,7 +214,7 @@ public interface ProxyServer extends Audience {
    *
    * <p>Do also make sure that the resource pack is in the correct format for the version
    * of the client. It is also highly recommended to always provide the resource-pack SHA-1 hash
-   * of the resource pack with {@link ResourcePackInfo.Builder#setHash(byte[])}
+   * of the resource pack with {@link ResourcePackInfo.Builder#hash(byte[])}
    * whenever possible to save bandwidth. If a hash is present the client will first check
    * if it already has a resource pack by that hash cached.</p>
    *

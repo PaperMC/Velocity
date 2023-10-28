@@ -81,8 +81,8 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void activated() {
-    resourcePackToApply = serverConn.getPlayer().getAppliedResourcePack();
-    serverConn.getPlayer().clearAppliedResourcePack();
+    resourcePackToApply = serverConn.player().appliedResourcePack();
+    serverConn.player().clearAppliedResourcePack();
   }
 
   @Override
@@ -103,7 +103,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(TagsUpdate packet) {
-    serverConn.getPlayer().getConnection().write(packet);
+    serverConn.player().getConnection().write(packet);
     return true;
   }
 
@@ -115,7 +115,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ResourcePackRequest packet) {
-    final MinecraftConnection playerConnection = serverConn.getPlayer().getConnection();
+    final MinecraftConnection playerConnection = serverConn.player().getConnection();
 
     ServerResourcePackSendEvent event =
         new ServerResourcePackSendEvent(packet.toServerPromptedPack(), this.serverConn);
@@ -124,15 +124,15 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
       if (playerConnection.isClosed()) {
         return;
       }
-      if (serverResourcePackSendEvent.getResult().isAllowed()) {
-        ResourcePackInfo toSend = serverResourcePackSendEvent.getProvidedResourcePack();
-        if (toSend != serverResourcePackSendEvent.getReceivedResourcePack()) {
+      if (serverResourcePackSendEvent.result().allowed()) {
+        ResourcePackInfo toSend = serverResourcePackSendEvent.providedResourcePack();
+        if (toSend != serverResourcePackSendEvent.receivedResourcePack()) {
           ((VelocityResourcePackInfo) toSend).setOriginalOrigin(
               ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
         }
 
         resourcePackToApply = null;
-        serverConn.getPlayer().queueResourcePack(toSend);
+        serverConn.player().queueResourcePack(toSend);
       } else if (serverConn.getConnection() != null) {
         serverConn.getConnection().write(new ResourcePackResponse(packet.getHash(),
             PlayerResourcePackStatusEvent.Status.DECLINED));
@@ -152,7 +152,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(FinishedUpdate packet) {
     MinecraftConnection smc = serverConn.ensureConnected();
-    ConnectedPlayer player = serverConn.getPlayer();
+    ConnectedPlayer player = serverConn.player();
     ClientConfigSessionHandler configHandler =
         (ClientConfigSessionHandler) player.getConnection().getActiveSessionHandler();
 
@@ -165,12 +165,12 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
         player.sendPlayerListHeaderAndFooter(
             player.getPlayerListHeader(), player.getPlayerListFooter());
         // The client cleared the tab list. TODO: Restore changes done via TabList API
-        player.getTabList().clearAllSilent();
+        player.tabList().clearAllSilent();
       } else {
         smc.setActiveSessionHandler(StateRegistry.PLAY,
             new TransitionSessionHandler(server, serverConn, resultFuture));
       }
-      if (player.getAppliedResourcePack() == null && resourcePackToApply != null) {
+      if (player.appliedResourcePack() == null && resourcePackToApply != null) {
         player.queueResourcePack(resourcePackToApply);
       }
       smc.setAutoReading(true);
@@ -181,25 +181,25 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(Disconnect packet) {
     serverConn.disconnect();
-    resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
+    resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.server()));
     return true;
   }
 
   @Override
   public boolean handle(PluginMessage packet) {
     if (PluginMessageUtil.isMcBrand(packet)) {
-      serverConn.getPlayer().getConnection().write(
+      serverConn.player().getConnection().write(
           PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion(),
-              serverConn.getPlayer().getProtocolVersion()));
+              serverConn.player().protocolVersion()));
     } else {
-      serverConn.getPlayer().getConnection().write(packet.retain());
+      serverConn.player().getConnection().write(packet.retain());
     }
     return true;
   }
 
   @Override
   public boolean handle(RegistrySync packet) {
-    serverConn.getPlayer().getConnection().write(packet.retain());
+    serverConn.player().getConnection().write(packet.retain());
     return true;
   }
 
@@ -211,13 +211,13 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void handleGeneric(MinecraftPacket packet) {
-    serverConn.getPlayer().getConnection().write(packet);
+    serverConn.player().getConnection().write(packet);
   }
 
   private void switchFailure(Throwable cause) {
-    logger.error("Unable to switch to new server {} for {}", serverConn.getServerInfo().getName(),
-        serverConn.getPlayer().getUsername(), cause);
-    serverConn.getPlayer().disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
+    logger.error("Unable to switch to new server {} for {}", serverConn.serverInfo().name(),
+        serverConn.player().username(), cause);
+    serverConn.player().disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
     resultFuture.completeExceptionally(cause);
   }
 

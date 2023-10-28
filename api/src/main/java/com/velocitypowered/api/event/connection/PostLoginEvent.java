@@ -9,6 +9,7 @@ package com.velocitypowered.api.event.connection;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
+import com.velocitypowered.api.event.player.PlayerReferentEvent;
 import com.velocitypowered.api.proxy.Player;
 
 /**
@@ -19,7 +20,7 @@ import com.velocitypowered.api.proxy.Player;
  * that fires during the login process.
  */
 @AwaitingEvent
-public final class PostLoginEvent {
+public final class PostLoginEvent implements PlayerReferentEvent {
 
   private final Player player;
 
@@ -27,7 +28,7 @@ public final class PostLoginEvent {
     this.player = Preconditions.checkNotNull(player, "player");
   }
 
-  public Player getPlayer() {
+  public Player player() {
     return player;
   }
 

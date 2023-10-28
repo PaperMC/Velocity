@@ -19,5 +19,5 @@ public interface ChatSession extends KeyIdentifiable {
    *
    * @return the session UUID
    */
-  UUID getSessionId();
+  UUID sessionId();
 }

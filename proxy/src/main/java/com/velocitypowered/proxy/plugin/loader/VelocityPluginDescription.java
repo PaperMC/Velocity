@@ -66,47 +66,47 @@ public class VelocityPluginDescription implements PluginDescription {
     this.description = Strings.emptyToNull(description);
     this.url = Strings.emptyToNull(url);
     this.authors = authors == null ? ImmutableList.of() : ImmutableList.copyOf(authors);
-    this.dependencies = Maps.uniqueIndex(dependencies, d -> d == null ? null : d.getId());
+    this.dependencies = Maps.uniqueIndex(dependencies, d -> d == null ? null : d.id());
     this.source = source;
   }
 
   @Override
-  public String getId() {
+  public String id() {
     return id;
   }
 
   @Override
-  public Optional<String> getName() {
+  public Optional<String> name() {
     return Optional.ofNullable(name);
   }
 
   @Override
-  public Optional<String> getVersion() {
+  public Optional<String> version() {
     return Optional.ofNullable(version);
   }
 
   @Override
-  public Optional<String> getDescription() {
+  public Optional<String> description() {
     return Optional.ofNullable(description);
   }
 
   @Override
-  public Optional<String> getUrl() {
+  public Optional<String> url() {
     return Optional.ofNullable(url);
   }
 
   @Override
-  public List<String> getAuthors() {
+  public List<String> authors() {
     return authors;
   }
 
   @Override
-  public Collection<PluginDependency> getDependencies() {
+  public Collection<PluginDependency> dependencies() {
     return dependencies.values();
   }
 
   @Override
-  public Optional<PluginDependency> getDependency(String id) {
+  public Optional<PluginDependency> dependency(String id) {
     return Optional.ofNullable(dependencies.get(id));
   }
 

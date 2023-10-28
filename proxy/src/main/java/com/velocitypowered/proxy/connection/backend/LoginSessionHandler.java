@@ -94,7 +94,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         requestedForwardingVersion = packet.content().readByte();
       }
       ByteBuf forwardingData = createForwardingData(configuration.getForwardingSecret(),
-          serverConn.getPlayerRemoteAddressAsString(), serverConn.getPlayer(),
+          serverConn.getPlayerRemoteAddressAsString(), serverConn.player(),
           requestedForwardingVersion);
 
       LoginPluginResponse response = new LoginPluginResponse(packet.getId(), true, forwardingData);
@@ -113,9 +113,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       this.server.getEventManager().fire(new ServerLoginPluginMessageEvent(serverConn, identifier,
               contents, packet.getId()))
           .thenAcceptAsync(event -> {
-            if (event.getResult().isAllowed()) {
+            if (event.result().allowed()) {
               mc.write(new LoginPluginResponse(packet.getId(), true, Unpooled
-                  .wrappedBuffer(event.getResult().getResponse())));
+                  .wrappedBuffer(event.result().response())));
             } else {
               mc.write(new LoginPluginResponse(packet.getId(), false, Unpooled.EMPTY_BUFFER));
             }
@@ -126,7 +126,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(Disconnect packet) {
-    resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
+    resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.server()));
     serverConn.disconnect();
     return true;
   }
@@ -142,7 +142,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
         && !informationForwarded) {
       resultFuture.complete(ConnectionRequestResults.forDisconnect(MODERN_IP_FORWARDING_FAILURE,
-          serverConn.getServer()));
+          serverConn.server()));
       serverConn.disconnect();
       return true;
     }
@@ -159,7 +159,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       smc.write(new LoginAcknowledged());
       smc.setActiveSessionHandler(StateRegistry.CONFIG,
           new ConfigSessionHandler(server, serverConn, resultFuture));
-      ConnectedPlayer player = serverConn.getPlayer();
+      ConnectedPlayer player = serverConn.player();
       if (player.getClientSettingsPacket() != null) {
         smc.write(player.getClientSettingsPacket());
       }
@@ -200,14 +200,14 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     // Ensure we are in range
     requested = Math.min(requested, VelocityConstants.MODERN_FORWARDING_MAX_VERSION);
     if (requested > VelocityConstants.MODERN_FORWARDING_DEFAULT) {
-      if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
+      if (player.protocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
         return requested >= VelocityConstants.MODERN_LAZY_SESSION
             ? VelocityConstants.MODERN_LAZY_SESSION
             : VelocityConstants.MODERN_FORWARDING_DEFAULT;
       }
-      if (player.getIdentifiedKey() != null) {
+      if (player.identifiedKey() != null) {
         // No enhanced switch on java 11
-        switch (player.getIdentifiedKey().getKeyRevision()) {
+        switch (player.identifiedKey().revision()) {
           case GENERIC_V1:
             return VelocityConstants.MODERN_FORWARDING_WITH_KEY;
           // Since V2 is not backwards compatible we have to throw the key if v2 and requested is v1
@@ -233,15 +233,15 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
       ProtocolUtils.writeVarInt(forwarded, actualVersion);
       ProtocolUtils.writeString(forwarded, address);
-      ProtocolUtils.writeUuid(forwarded, player.getGameProfile().getId());
-      ProtocolUtils.writeString(forwarded, player.getGameProfile().getName());
-      ProtocolUtils.writeProperties(forwarded, player.getGameProfile().getProperties());
+      ProtocolUtils.writeUuid(forwarded, player.profile().uuid());
+      ProtocolUtils.writeString(forwarded, player.profile().name());
+      ProtocolUtils.writeProperties(forwarded, player.profile().properties());
 
       // This serves as additional redundancy. The key normally is stored in the
       // login start to the server, but some setups require this.
       if (actualVersion >= VelocityConstants.MODERN_FORWARDING_WITH_KEY
           && actualVersion < VelocityConstants.MODERN_LAZY_SESSION) {
-        IdentifiedKey key = player.getIdentifiedKey();
+        IdentifiedKey key = player.identifiedKey();
         assert key != null;
         ProtocolUtils.writePlayerKey(forwarded, key);
 
@@ -249,9 +249,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
         // assigned UUID. Doing that breaks the signatures anyway but the server
         // should be able to verify the key independently.
         if (actualVersion >= VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2) {
-          if (key.getSignatureHolder() != null) {
+          if (key.signatureHolder() != null) {
             forwarded.writeBoolean(true);
-            ProtocolUtils.writeUuid(forwarded, key.getSignatureHolder());
+            ProtocolUtils.writeUuid(forwarded, key.signatureHolder());
           } else {
             // Should only not be provided if the player was connected
             // as offline-mode and the signer UUID was not backfilled

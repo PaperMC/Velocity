@@ -20,7 +20,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * to finish firing before forwarding it to the server, if the result allows it.
  */
 @AwaitingEvent
-public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.ChatResult> {
+public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.ChatResult>,
+    PlayerReferentEvent {
 
   private final Player player;
   private final String message;
@@ -35,19 +36,19 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
   public PlayerChatEvent(Player player, String message) {
     this.player = Preconditions.checkNotNull(player, "player");
     this.message = Preconditions.checkNotNull(message, "message");
-    this.result = ChatResult.allowed();
+    this.result = ChatResult.allow();
   }
 
-  public Player getPlayer() {
+  public Player player() {
     return player;
   }
 
-  public String getMessage() {
+  public String message() {
     return message;
   }
 
   @Override
-  public ChatResult getResult() {
+  public ChatResult result() {
     return result;
   }
 
@@ -81,12 +82,12 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
       this.message = message;
     }
 
-    public Optional<String> getMessage() {
+    public Optional<String> modifiedMessage() {
       return Optional.ofNullable(message);
     }
 
     @Override
-    public boolean isAllowed() {
+    public boolean allowed() {
       return status;
     }
 
@@ -100,7 +101,7 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
      *
      * @return the allowed result
      */
-    public static ChatResult allowed() {
+    public static ChatResult allow() {
       return ALLOWED;
     }
 
@@ -109,7 +110,7 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
      *
      * @return the denied result
      */
-    public static ChatResult denied() {
+    public static ChatResult deny() {
       return DENIED;
     }
 
@@ -119,7 +120,7 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
      * @param message the message to use instead
      * @return a result with a new message
      */
-    public static ChatResult message(@NonNull String message) {
+    public static ChatResult modify(@NonNull String message) {
       Preconditions.checkNotNull(message, "message");
       return new ChatResult(true, message);
     }

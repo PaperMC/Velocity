@@ -49,7 +49,7 @@ public final class BrigadierCommand implements Command {
    *
    * @return the command node
    */
-  public LiteralCommandNode<CommandSource> getNode() {
+  public LiteralCommandNode<CommandSource> node() {
     return node;
   }
 }

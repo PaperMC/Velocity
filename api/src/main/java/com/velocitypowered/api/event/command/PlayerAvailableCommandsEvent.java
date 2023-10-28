@@ -12,6 +12,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.annotations.Beta;
 import com.mojang.brigadier.tree.RootCommandNode;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
+import com.velocitypowered.api.event.player.PlayerReferentEvent;
 import com.velocitypowered.api.proxy.Player;
 
 /**
@@ -22,7 +23,7 @@ import com.velocitypowered.api.proxy.Player;
  */
 @AwaitingEvent
 @Beta
-public class PlayerAvailableCommandsEvent {
+public class PlayerAvailableCommandsEvent implements PlayerReferentEvent {
 
   private final Player player;
   private final RootCommandNode<?> rootNode;
@@ -39,7 +40,8 @@ public class PlayerAvailableCommandsEvent {
     this.rootNode = checkNotNull(rootNode, "rootNode");
   }
 
-  public Player getPlayer() {
+  @Override
+  public Player player() {
     return player;
   }
 

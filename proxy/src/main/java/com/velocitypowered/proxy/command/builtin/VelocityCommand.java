@@ -222,19 +222,19 @@ public class VelocityCommand implements SimpleCommand {
 
       ProxyVersion version = server.getVersion();
 
-      Component velocity = Component.text().content(version.getName() + " ")
+      Component velocity = Component.text().content(version.name() + " ")
           .decoration(TextDecoration.BOLD, true)
           .color(VELOCITY_COLOR)
-          .append(Component.text(version.getVersion()).decoration(TextDecoration.BOLD, false))
+          .append(Component.text(version.version()).decoration(TextDecoration.BOLD, false))
           .build();
       Component copyright = Component
           .translatable("velocity.command.version-copyright",
-              Component.text(version.getVendor()),
-              Component.text(version.getName()));
+              Component.text(version.vendor()),
+              Component.text(version.name()));
       source.sendMessage(velocity);
       source.sendMessage(copyright);
 
-      if (version.getName().equals("Velocity")) {
+      if (version.name().equals("Velocity")) {
         TextComponent embellishment = Component.text()
             .append(Component.text().content("velocitypowered.com")
                 .color(NamedTextColor.GREEN)
@@ -274,7 +274,7 @@ public class VelocityCommand implements SimpleCommand {
         return;
       }
 
-      List<PluginContainer> plugins = ImmutableList.copyOf(server.getPluginManager().getPlugins());
+      List<PluginContainer> plugins = ImmutableList.copyOf(server.getPluginManager().plugins());
       int pluginCount = plugins.size();
 
       if (pluginCount == 0) {
@@ -286,7 +286,7 @@ public class VelocityCommand implements SimpleCommand {
       TextComponent.Builder listBuilder = Component.text();
       for (int i = 0; i < pluginCount; i++) {
         PluginContainer plugin = plugins.get(i);
-        listBuilder.append(componentForPlugin(plugin.getDescription()));
+        listBuilder.append(componentForPlugin(plugin.description()));
         if (i + 1 < pluginCount) {
           listBuilder.append(Component.text(", "));
         }
@@ -300,37 +300,37 @@ public class VelocityCommand implements SimpleCommand {
     }
 
     private TextComponent componentForPlugin(PluginDescription description) {
-      String pluginInfo = description.getName().orElse(description.getId())
-          + description.getVersion().map(v -> " " + v).orElse("");
+      String pluginInfo = description.name().orElse(description.id())
+          + description.version().map(v -> " " + v).orElse("");
 
       TextComponent.Builder hoverText = Component.text().content(pluginInfo);
 
-      description.getUrl().ifPresent(url -> {
+      description.url().ifPresent(url -> {
         hoverText.append(Component.newline());
         hoverText.append(Component.translatable(
             "velocity.command.plugin-tooltip-website",
             Component.text(url)));
       });
-      if (!description.getAuthors().isEmpty()) {
+      if (!description.authors().isEmpty()) {
         hoverText.append(Component.newline());
-        if (description.getAuthors().size() == 1) {
+        if (description.authors().size() == 1) {
           hoverText.append(Component.translatable("velocity.command.plugin-tooltip-author",
-              Component.text(description.getAuthors().get(0))));
+              Component.text(description.authors().get(0))));
         } else {
           hoverText.append(
               Component.translatable("velocity.command.plugin-tooltip-author",
-                  Component.text(String.join(", ", description.getAuthors()))
+                  Component.text(String.join(", ", description.authors()))
               )
           );
         }
       }
-      description.getDescription().ifPresent(pdesc -> {
+      description.description().ifPresent(pdesc -> {
         hoverText.append(Component.newline());
         hoverText.append(Component.newline());
         hoverText.append(Component.text(pdesc));
       });
 
-      return Component.text(description.getId(), NamedTextColor.GRAY)
+      return Component.text(description.id(), NamedTextColor.GRAY)
           .hoverEvent(HoverEvent.showText(hoverText.build()));
     }
 
@@ -359,7 +359,7 @@ public class VelocityCommand implements SimpleCommand {
       Collection<RegisteredServer> allServers = ImmutableSet.copyOf(server.getAllServers());
       JsonObject servers = new JsonObject();
       for (RegisteredServer iter : allServers) {
-        servers.add(iter.getServerInfo().getName(),
+        servers.add(iter.serverInfo().name(),
             InformationUtils.collectServerInfo(iter));
       }
       JsonArray connectOrder = new JsonArray();

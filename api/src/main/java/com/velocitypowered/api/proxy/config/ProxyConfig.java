@@ -12,6 +12,7 @@ import com.velocitypowered.api.util.Favicon;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import net.kyori.adventure.text.Component;
 
 /**
  * Exposes certain proxy configuration information that plugins may use.
@@ -51,7 +52,7 @@ public interface ProxyConfig {
    *
    * @return the motd component
    */
-  net.kyori.adventure.text.Component getMotd();
+  Component getMotd();
 
   /**
    * Get the maximum players shown in the tab list.

@@ -17,7 +17,7 @@ import com.velocitypowered.api.proxy.player.PlayerSettings;
  * and typically will be fired multiple times per connection. Velocity will not wait on this event
  * to finish firing.
  */
-public final class PlayerSettingsChangedEvent {
+public final class PlayerSettingsChangedEvent implements PlayerReferentEvent {
 
   private final Player player;
   private final PlayerSettings playerSettings;
@@ -27,7 +27,8 @@ public final class PlayerSettingsChangedEvent {
     this.playerSettings = Preconditions.checkNotNull(playerSettings, "playerSettings");
   }
 
-  public Player getPlayer() {
+  @Override
+  public Player player() {
     return player;
   }
 

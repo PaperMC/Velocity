@@ -52,6 +52,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A session handler that is activated to complete the login phase.
@@ -93,9 +94,9 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
       }
 
       // Initiate a regular connection and move over to it.
-      ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.getGameProfile(),
-          mcConnection, inbound.getVirtualHost().orElse(null), onlineMode,
-          inbound.getIdentifiedKey());
+      ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.profileToUse(),
+          mcConnection, inbound.virtualHost().orElse(null), onlineMode,
+          inbound.identifiedKey());
       this.connectedPlayer = player;
       if (!server.canRegisterConnection(player)) {
         player.disconnect0(
@@ -117,8 +118,8 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
                     "A plugin permission provider {} provided an invalid permission function"
                         + " for player {}. This is a bug in the plugin, not in Velocity. Falling"
                         + " back to the default permission function.",
-                    event.getProvider().getClass().getName(),
-                    player.getUsername());
+                    event.provider().getClass().getName(),
+                    player.username());
               } else {
                 player.setPermissionChecker(checker);
               }
@@ -138,32 +139,32 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
       mcConnection.setCompressionThreshold(threshold);
     }
     VelocityConfiguration configuration = server.getConfiguration();
-    UUID playerUniqueId = player.getUniqueId();
+    UUID playerUniqueId = player.uuid();
     if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.NONE) {
-      playerUniqueId = UuidUtils.generateOfflinePlayerUuid(player.getUsername());
+      playerUniqueId = UuidUtils.generateOfflinePlayerUuid(player.username());
     }
 
-    if (player.getIdentifiedKey() != null) {
-      IdentifiedKey playerKey = player.getIdentifiedKey();
-      if (playerKey.getSignatureHolder() == null) {
+    if (player.identifiedKey() != null) {
+      IdentifiedKey playerKey = player.identifiedKey();
+      if (playerKey.signatureHolder() == null) {
         if (playerKey instanceof IdentifiedKeyImpl) {
           IdentifiedKeyImpl unlinkedKey = (IdentifiedKeyImpl) playerKey;
           // Failsafe
-          if (!unlinkedKey.internalAddHolder(player.getUniqueId())) {
+          if (!unlinkedKey.internalAddHolder(player.uuid())) {
             if (onlineMode) {
               inbound.disconnect(
                   Component.translatable("multiplayer.disconnect.invalid_public_key"));
               return;
             } else {
-              logger.warn("Key for player " + player.getUsername() + " could not be verified!");
+              logger.warn("Key for player " + player.username() + " could not be verified!");
             }
           }
         } else {
-          logger.warn("A custom key type has been set for player " + player.getUsername());
+          logger.warn("A custom key type has been set for player " + player.username());
         }
       } else {
-        if (!Objects.equals(playerKey.getSignatureHolder(), playerUniqueId)) {
-          logger.warn("UUID for Player " + player.getUsername() + " mismatches! "
+        if (!Objects.equals(playerKey.signatureHolder(), playerUniqueId)) {
+          logger.warn("UUID for Player " + player.username() + " mismatches! "
               + "Chat/Commands signatures will not work correctly for this player!");
         }
       }
@@ -201,9 +202,9 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
         return;
       }
 
-      Optional<Component> reason = event.getResult().getReasonComponent();
-      if (reason.isPresent()) {
-        player.disconnect0(reason.get(), true);
+      @Nullable Component explanation = event.result().explanation();
+      if (explanation != null) {
+        player.disconnect0(explanation, true);
       } else {
         if (!server.registerConnection(player)) {
           player.disconnect0(Component.translatable("velocity.error.already-connected-proxy"),
@@ -212,13 +213,13 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
         }
 
         ServerLoginSuccess success = new ServerLoginSuccess();
-        success.setUsername(player.getUsername());
-        success.setProperties(player.getGameProfileProperties());
-        success.setUuid(player.getUniqueId());
+        success.setUsername(player.username());
+        success.setProperties(player.profileProperties());
+        success.setUuid(player.uuid());
         mcConnection.write(success);
 
         loginState = State.SUCCESS_SENT;
-        if (inbound.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0) {
+        if (inbound.protocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0) {
           loginState = State.ACKNOWLEDGED;
           mcConnection.setActiveSessionHandler(StateRegistry.PLAY,
               new InitialConnectSessionHandler(player, server));

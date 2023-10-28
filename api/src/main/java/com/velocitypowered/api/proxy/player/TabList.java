@@ -97,7 +97,7 @@ public interface TabList {
    *
    * @return immutable {@link Collection} of tab list entries
    */
-  Collection<TabListEntry> getEntries();
+  Collection<TabListEntry> entries();
 
   /**
    * Clears all entries from the tab list.

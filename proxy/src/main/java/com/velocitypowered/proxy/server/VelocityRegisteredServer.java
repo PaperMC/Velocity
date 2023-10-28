@@ -63,12 +63,12 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   }
 
   @Override
-  public ServerInfo getServerInfo() {
+  public ServerInfo serverInfo() {
     return serverInfo;
   }
 
   @Override
-  public Collection<Player> getPlayersConnected() {
+  public Collection<Player> players() {
     return ImmutableList.copyOf(players.values());
   }
 
@@ -95,11 +95,11 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
       throw new IllegalStateException("No Velocity proxy instance available");
     }
     CompletableFuture<ServerPing> pingFuture = new CompletableFuture<>();
-    long timeoutMs = pingOptions.getTimeout() == 0
-        ? server.getConfiguration().getReadTimeout() : pingOptions.getTimeout();
-    server.createBootstrap(loop, serverInfo.getAddress())
+    long timeoutMs = pingOptions.timeout() == 0
+        ? server.getConfiguration().getReadTimeout() : pingOptions.timeout();
+    server.createBootstrap(loop, serverInfo.address())
         .handler(new BackendChannelInitializer(timeoutMs))
-        .connect(serverInfo.getAddress())
+        .connect(serverInfo.address())
         .addListener((ChannelFutureListener) future -> {
           if (future.isSuccess()) {
             Channel ch = future.channel();
@@ -107,7 +107,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
             ch.pipeline().addLast(HANDLER, conn);
             conn.setActiveSessionHandler(StateRegistry.HANDSHAKE,
                 new PingSessionHandler(pingFuture, VelocityRegisteredServer.this, conn,
-                    pingOptions.getProtocolVersion()));
+                    pingOptions.protocolVersion()));
           } else {
             pingFuture.completeExceptionally(future.cause());
           }
@@ -116,11 +116,11 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   }
 
   public void addPlayer(ConnectedPlayer player) {
-    players.put(player.getUniqueId(), player);
+    players.put(player.uuid(), player);
   }
 
   public void removePlayer(ConnectedPlayer player) {
-    players.remove(player.getUniqueId(), player);
+    players.remove(player.uuid(), player);
   }
 
   @Override
@@ -140,7 +140,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
     for (ConnectedPlayer player : players.values()) {
       VelocityServerConnection serverConnection = player.getConnectedServer();
       if (serverConnection != null && serverConnection.getConnection() != null
-              && serverConnection.getServer() == this) {
+              && serverConnection.server() == this) {
         return serverConnection.sendPluginMessage(identifier, data);
       }
     }
@@ -156,6 +156,6 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
 
   @Override
   public @NonNull Iterable<? extends Audience> audiences() {
-    return this.getPlayersConnected();
+    return this.players();
   }
 }

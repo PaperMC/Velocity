@@ -56,7 +56,7 @@ public class FakePluginManager implements PluginManager {
   }
 
   @Override
-  public @NonNull Optional<PluginContainer> getPlugin(@NonNull String id) {
+  public @NonNull Optional<PluginContainer> plugin(@NonNull String id) {
     switch (id) {
       case "a":
         return Optional.of(containerA);
@@ -68,7 +68,7 @@ public class FakePluginManager implements PluginManager {
   }
 
   @Override
-  public @NonNull Collection<PluginContainer> getPlugins() {
+  public @NonNull Collection<PluginContainer> plugins() {
     return ImmutableList.of(containerA, containerB);
   }
 
@@ -97,17 +97,17 @@ public class FakePluginManager implements PluginManager {
     }
 
     @Override
-    public @NonNull PluginDescription getDescription() {
+    public @NonNull PluginDescription description() {
       return () -> id;
     }
 
     @Override
-    public Optional<?> getInstance() {
+    public Optional<?> instance() {
       return Optional.of(instance);
     }
 
     @Override
-    public ExecutorService getExecutorService() {
+    public ExecutorService executorService() {
       return service;
     }
   }

@@ -46,12 +46,15 @@ public class LegacyChatHandler implements ChatHandler<LegacyChat> {
     }
     this.server.getEventManager().fire(new PlayerChatEvent(this.player, packet.getMessage()))
         .whenComplete((chatEvent, throwable) -> {
-          if (!chatEvent.getResult().isAllowed()) {
+          if (!chatEvent.result().allowed()) {
             return;
           }
 
-          serverConnection.write(this.player.getChatBuilderFactory().builder()
-              .message(chatEvent.getResult().getMessage().orElse(packet.getMessage())).toServer());
+          serverConnection.write(
+              this.player.getChatBuilderFactory().builder()
+                  .message(chatEvent.result().modifiedMessage().orElse(packet.getMessage()))
+                  .toServer()
+          );
         });
   }
 }

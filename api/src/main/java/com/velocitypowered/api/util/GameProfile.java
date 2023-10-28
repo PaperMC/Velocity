@@ -58,7 +58,7 @@ public final class GameProfile {
    *
    * @return the undashed UUID
    */
-  public String getUndashedId() {
+  public String undashedId() {
     return undashedId;
   }
 
@@ -67,7 +67,7 @@ public final class GameProfile {
    *
    * @return the UUID
    */
-  public UUID getId() {
+  public UUID uuid() {
     return id;
   }
 
@@ -76,7 +76,7 @@ public final class GameProfile {
    *
    * @return the username
    */
-  public String getName() {
+  public String name() {
     return name;
   }
 
@@ -85,7 +85,7 @@ public final class GameProfile {
    *
    * @return the properties associated with this profile
    */
-  public List<Property> getProperties() {
+  public List<Property> properties() {
     return properties;
   }
 
@@ -200,15 +200,15 @@ public final class GameProfile {
       this.signature = Preconditions.checkNotNull(signature, "signature");
     }
 
-    public String getName() {
+    public String name() {
       return name;
     }
 
-    public String getValue() {
+    public String value() {
       return value;
     }
 
-    public String getSignature() {
+    public String signature() {
       return signature;
     }
 

@@ -63,22 +63,22 @@ public class SignedChatCommand implements KeySigned {
   }
 
   @Override
-  public PublicKey getSigner() {
+  public PublicKey signer() {
     return signer;
   }
 
   @Override
-  public Instant getExpiryTemporal() {
+  public Instant signatureExpiry() {
     return expiry;
   }
 
   @Override
-  public @Nullable byte[] getSignature() {
+  public @Nullable byte[] signature() {
     return null;
   }
 
   @Override
-  public byte[] getSalt() {
+  public byte[] salt() {
     return salt;
   }
 

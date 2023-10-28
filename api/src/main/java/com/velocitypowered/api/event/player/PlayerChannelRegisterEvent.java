@@ -16,7 +16,7 @@ import java.util.List;
  * This event is fired when a client ({@link Player}) sends a plugin message through the
  * register channel. Velocity will not wait on this event to finish firing.
  */
-public final class PlayerChannelRegisterEvent {
+public final class PlayerChannelRegisterEvent implements PlayerReferentEvent {
 
   private final Player player;
   private final List<ChannelIdentifier> channels;
@@ -26,11 +26,11 @@ public final class PlayerChannelRegisterEvent {
     this.channels = Preconditions.checkNotNull(channels, "channels");
   }
 
-  public Player getPlayer() {
+  public Player player() {
     return player;
   }
 
-  public List<ChannelIdentifier> getChannels() {
+  public List<ChannelIdentifier> channels() {
     return channels;
   }
 

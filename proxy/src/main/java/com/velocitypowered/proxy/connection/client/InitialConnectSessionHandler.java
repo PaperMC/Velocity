@@ -65,11 +65,11 @@ public class InitialConnectSessionHandler implements MinecraftSessionHandler {
       }
 
       byte[] copy = ByteBufUtil.getBytes(packet.content());
-      PluginMessageEvent event = new PluginMessageEvent(serverConn, serverConn.getPlayer(), id,
+      PluginMessageEvent event = new PluginMessageEvent(serverConn, serverConn.player(), id,
           copy);
       server.getEventManager().fire(event)
           .thenAcceptAsync(pme -> {
-            if (pme.getResult().isAllowed() && serverConn.isActive()) {
+            if (pme.result().allowed() && serverConn.isActive()) {
               PluginMessage copied = new PluginMessage(packet.getChannel(),
                   Unpooled.wrappedBuffer(copy));
               serverConn.ensureConnected().write(copied);

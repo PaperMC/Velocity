@@ -215,12 +215,12 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public InetSocketAddress getRemoteAddress() {
+    public InetSocketAddress remoteAddress() {
       return (InetSocketAddress) connection.getRemoteAddress();
     }
 
     @Override
-    public Optional<InetSocketAddress> getVirtualHost() {
+    public Optional<InetSocketAddress> virtualHost() {
       return Optional.ofNullable(ping.getVhost());
     }
 
@@ -230,13 +230,13 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
-    public ProtocolVersion getProtocolVersion() {
+    public ProtocolVersion protocolVersion() {
       return ProtocolVersion.LEGACY;
     }
 
     @Override
     public String toString() {
-      return "[legacy connection] " + this.getRemoteAddress().toString();
+      return "[legacy connection] " + this.remoteAddress().toString();
     }
 
     @Override

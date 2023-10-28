@@ -46,10 +46,10 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
 
     for (ChannelIdentifier identifier : identifiers) {
       if (identifier instanceof MinecraftChannelIdentifier) {
-        identifierMap.put(identifier.getId(), identifier);
+        identifierMap.put(identifier.id(), identifier);
       } else {
-        String rewritten = PluginMessageUtil.transformLegacyToModernChannel(identifier.getId());
-        identifierMap.put(identifier.getId(), identifier);
+        String rewritten = PluginMessageUtil.transformLegacyToModernChannel(identifier.id());
+        identifierMap.put(identifier.id(), identifier);
         identifierMap.put(rewritten, identifier);
       }
     }
@@ -65,10 +65,10 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
 
     for (ChannelIdentifier identifier : identifiers) {
       if (identifier instanceof MinecraftChannelIdentifier) {
-        identifierMap.remove(identifier.getId());
+        identifierMap.remove(identifier.id());
       } else {
-        String rewritten = PluginMessageUtil.transformLegacyToModernChannel(identifier.getId());
-        identifierMap.remove(identifier.getId());
+        String rewritten = PluginMessageUtil.transformLegacyToModernChannel(identifier.id());
+        identifierMap.remove(identifier.id());
         identifierMap.remove(rewritten);
       }
     }
@@ -82,7 +82,7 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
   public Collection<String> getLegacyChannelIds() {
     Collection<String> ids = new HashSet<>();
     for (ChannelIdentifier value : identifierMap.values()) {
-      ids.add(value.getId());
+      ids.add(value.id());
     }
     return ids;
   }
@@ -96,9 +96,9 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
     Collection<String> ids = new HashSet<>();
     for (ChannelIdentifier value : identifierMap.values()) {
       if (value instanceof MinecraftChannelIdentifier) {
-        ids.add(value.getId());
+        ids.add(value.id());
       } else {
-        ids.add(PluginMessageUtil.transformLegacyToModernChannel(value.getId()));
+        ids.add(PluginMessageUtil.transformLegacyToModernChannel(value.id()));
       }
     }
     return ids;

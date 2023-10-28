@@ -22,7 +22,7 @@ public interface PermissionSubject {
    * @return whether or not the subject has the permission
    */
   default boolean hasPermission(String permission) {
-    return this.getPermissionChecker().test(permission);
+    return this.permissionChecker().test(permission);
   }
 
   /**
@@ -32,7 +32,7 @@ public interface PermissionSubject {
    * @return the value the permission is set to
    */
   default TriState getPermissionValue(String permission) {
-    return this.getPermissionChecker().value(permission);
+    return this.permissionChecker().value(permission);
   }
 
   /**
@@ -40,5 +40,5 @@ public interface PermissionSubject {
    *
    * @return subject's permission checker
    */
-  PermissionChecker getPermissionChecker();
+  PermissionChecker permissionChecker();
 }

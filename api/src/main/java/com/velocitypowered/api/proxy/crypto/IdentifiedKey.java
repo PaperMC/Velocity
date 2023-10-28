@@ -25,7 +25,7 @@ public interface IdentifiedKey extends KeySigned {
    *
    * @return the RSA public key in question
    */
-  PublicKey getSignedPublicKey();
+  PublicKey publicKey();
 
 
   /**
@@ -45,14 +45,14 @@ public interface IdentifiedKey extends KeySigned {
    * @return the holder UUID or null if not present
    */
   @Nullable
-  UUID getSignatureHolder();
+  UUID signatureHolder();
 
   /**
    * Retrieves the key revision.
    *
    * @return the key revision
    */
-  Revision getKeyRevision();
+  Revision revision();
 
   /**
    * The different versions of player keys, per Minecraft version.
@@ -69,11 +69,11 @@ public interface IdentifiedKey extends KeySigned {
       this.applicableTo = applicableTo;
     }
     
-    public Set<Revision> getBackwardsCompatibleTo() {
+    public Set<Revision> backwardsCompatibleTo() {
       return backwardsCompatibleTo;
     }
     
-    public Set<ProtocolVersion> getApplicableTo() {
+    public Set<ProtocolVersion> applicableTo() {
       return applicableTo;
     }
   }

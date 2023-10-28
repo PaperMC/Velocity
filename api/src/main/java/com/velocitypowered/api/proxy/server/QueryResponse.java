@@ -60,7 +60,7 @@ public final class QueryResponse {
    *
    * @return hostname
    */
-  public String getHostname() {
+  public String hostname() {
     return hostname;
   }
 
@@ -70,7 +70,7 @@ public final class QueryResponse {
    *
    * @return game version
    */
-  public String getGameVersion() {
+  public String gameVersion() {
     return gameVersion;
   }
 
@@ -80,7 +80,7 @@ public final class QueryResponse {
    *
    * @return map name
    */
-  public String getMap() {
+  public String map() {
     return map;
   }
 
@@ -89,7 +89,7 @@ public final class QueryResponse {
    *
    * @return online player count
    */
-  public int getCurrentPlayers() {
+  public int currentPlayers() {
     return currentPlayers;
   }
 
@@ -98,7 +98,7 @@ public final class QueryResponse {
    *
    * @return max player count
    */
-  public int getMaxPlayers() {
+  public int maxPlayers() {
     return maxPlayers;
   }
 
@@ -107,7 +107,7 @@ public final class QueryResponse {
    *
    * @return proxy hostname
    */
-  public String getProxyHost() {
+  public String proxyHost() {
     return proxyHost;
   }
 
@@ -116,7 +116,7 @@ public final class QueryResponse {
    *
    * @return proxy port
    */
-  public int getProxyPort() {
+  public int proxyPort() {
     return proxyPort;
   }
 
@@ -125,7 +125,7 @@ public final class QueryResponse {
    *
    * @return collection of players
    */
-  public Collection<String> getPlayers() {
+  public Collection<String> players() {
     return players;
   }
 
@@ -134,7 +134,7 @@ public final class QueryResponse {
    *
    * @return server software
    */
-  public String getProxyVersion() {
+  public String proxyVersion() {
     return proxyVersion;
   }
 
@@ -143,7 +143,7 @@ public final class QueryResponse {
    *
    * @return collection of plugins
    */
-  public Collection<PluginInformation> getPlugins() {
+  public Collection<PluginInformation> plugins() {
     return plugins;
   }
 
@@ -158,16 +158,16 @@ public final class QueryResponse {
    */
   public Builder toBuilder() {
     return QueryResponse.builder()
-        .hostname(getHostname())
-        .gameVersion(getGameVersion())
-        .map(getMap())
-        .currentPlayers(getCurrentPlayers())
-        .maxPlayers(getMaxPlayers())
-        .proxyHost(getProxyHost())
-        .proxyPort(getProxyPort())
-        .players(getPlayers())
-        .proxyVersion(getProxyVersion())
-        .plugins(getPlugins());
+        .hostname(hostname())
+        .gameVersion(gameVersion())
+        .map(map())
+        .currentPlayers(currentPlayers())
+        .maxPlayers(maxPlayers())
+        .proxyHost(proxyHost())
+        .proxyPort(proxyPort())
+        .players(players())
+        .proxyVersion(proxyVersion())
+        .plugins(plugins());
   }
 
   /**
@@ -347,7 +347,7 @@ public final class QueryResponse {
     }
 
     /**
-     * Removes all players from the builder. This does not affect {@link #getCurrentPlayers()}.
+     * Removes all players from the builder. This does not affect {@link #currentPlayers()}.
      *
      * @return this builder, for chaining
      */

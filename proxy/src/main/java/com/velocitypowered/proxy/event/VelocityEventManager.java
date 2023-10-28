@@ -494,7 +494,7 @@ public class VelocityEventManager implements EventManager {
       final E event, final HandlersCache handlersCache) {
     final HandlerRegistration registration = handlersCache.handlers[0];
     if (registration.asyncType == AsyncType.ALWAYS) {
-      registration.plugin.getExecutorService().execute(
+      registration.plugin.executorService().execute(
           () -> fire(future, event, 0, true, handlersCache.handlers));
     } else {
       fire(future, event, 0, false, handlersCache.handlers);
@@ -613,7 +613,7 @@ public class VelocityEventManager implements EventManager {
         if (currentThread == firedOnThread && next.asyncType != AsyncType.ALWAYS) {
           fire(future, event, index + 1, currentlyAsync, registrations);
         } else {
-          next.plugin.getExecutorService().execute(() ->
+          next.plugin.executorService().execute(() ->
               fire(future, event, index + 1, true, registrations));
         }
       }
@@ -641,7 +641,7 @@ public class VelocityEventManager implements EventManager {
             continue;
           }
         } else {
-          registration.plugin.getExecutorService().execute(continuationTask);
+          registration.plugin.executorService().execute(continuationTask);
         }
         // fire will continue in another thread once the async task is
         // executed and the continuation is resumed
@@ -658,6 +658,6 @@ public class VelocityEventManager implements EventManager {
   private static void logHandlerException(
       final HandlerRegistration registration, final Throwable t) {
     logger.error("Couldn't pass {} to {}", registration.eventType.getSimpleName(),
-        registration.plugin.getDescription().getId(), t);
+        registration.plugin.description().id(), t);
   }
 }

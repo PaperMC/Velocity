@@ -36,7 +36,7 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
   public CommandExecuteEvent(CommandSource commandSource, String command) {
     this.commandSource = Preconditions.checkNotNull(commandSource, "commandSource");
     this.command = Preconditions.checkNotNull(command, "command");
-    this.result = CommandResult.allowed();
+    this.result = CommandResult.allow();
   }
 
   public CommandSource getCommandSource() {
@@ -53,7 +53,7 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
   }
 
   @Override
-  public CommandResult getResult() {
+  public CommandResult result() {
     return result;
   }
 
@@ -99,7 +99,7 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
     }
 
     @Override
-    public boolean isAllowed() {
+    public boolean allowed() {
       return status;
     }
 
@@ -113,7 +113,7 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
      *
      * @return the allowed result
      */
-    public static CommandResult allowed() {
+    public static CommandResult allow() {
       return ALLOWED;
     }
 
@@ -122,7 +122,7 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
      *
      * @return the denied result
      */
-    public static CommandResult denied() {
+    public static CommandResult deny() {
       return DENIED;
     }
 

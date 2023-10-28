@@ -57,7 +57,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   private final VelocityServer server;
   private PermissionChecker permissionChecker = PermissionChecker.always(TriState.TRUE);
   private final @NotNull Pointers pointers = ConsoleCommandSource.super.pointers().toBuilder()
-      .withDynamic(PermissionChecker.POINTER, this::getPermissionChecker)
+      .withDynamic(PermissionChecker.POINTER, this::permissionChecker)
       .withDynamic(Identity.LOCALE, () -> ClosestLocaleMatcher.INSTANCE
           .lookupClosest(Locale.getDefault()))
       .withStatic(FacetPointers.TYPE, Type.CONSOLE)
@@ -74,7 +74,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   }
 
   @Override
-  public PermissionChecker getPermissionChecker() {
+  public PermissionChecker permissionChecker() {
     return this.permissionChecker;
   }
 
@@ -99,7 +99,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
           "A plugin permission provider {} provided an invalid permission function"
               + " for the console. This is a bug in the plugin, not in Velocity. Falling"
               + " back to the default permission function.",
-          event.getProvider().getClass().getName());
+          event.provider().getClass().getName());
       this.permissionChecker = PermissionChecker.always(TriState.TRUE);
     }
   }

@@ -44,6 +44,6 @@ public final class FaviconSerializer implements JsonSerializer<Favicon>, JsonDes
 
   @Override
   public JsonElement serialize(Favicon src, Type typeOfSrc, JsonSerializationContext context) {
-    return new JsonPrimitive(src.getBase64Url());
+    return new JsonPrimitive(src.url());
   }
 }

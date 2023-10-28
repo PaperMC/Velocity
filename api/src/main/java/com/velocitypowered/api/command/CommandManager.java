@@ -24,7 +24,7 @@ public interface CommandManager {
    * @param alias the first command alias
    * @return a {@link CommandMeta} builder
    */
-  CommandMeta.Builder metaBuilder(String alias);
+  CommandMeta.Builder buildMeta(String alias);
 
   /**
    * Returns a builder to create a {@link CommandMeta} for
@@ -33,7 +33,7 @@ public interface CommandManager {
    * @param command the command
    * @return a {@link CommandMeta} builder
    */
-  CommandMeta.Builder metaBuilder(BrigadierCommand command);
+  CommandMeta.Builder buildMeta(BrigadierCommand command);
 
   /**
    * Registers the specified command with the specified aliases.
@@ -46,7 +46,7 @@ public interface CommandManager {
    * @see Command for a list of registrable subinterfaces
    */
   default void register(String alias, Command command, String... otherAliases) {
-    register(metaBuilder(alias).aliases(otherAliases).build(), command);
+    register(buildMeta(alias).aliases(otherAliases).build(), command);
   }
 
   /**
@@ -88,7 +88,7 @@ public interface CommandManager {
    * @param alias the command alias to lookup
    * @return an {@link CommandMeta} of the alias
    */
-  @Nullable CommandMeta getCommandMeta(String alias);
+  @Nullable CommandMeta commandMeta(String alias);
 
   /**
    * Attempts to asynchronously execute a command from the given {@code cmdLine}.
@@ -117,7 +117,7 @@ public interface CommandManager {
    *
    * @return the registered aliases
    */
-  Collection<String> getAliases();
+  Collection<String> aliases();
 
   /**
    * Returns whether the given alias is registered on this manager.

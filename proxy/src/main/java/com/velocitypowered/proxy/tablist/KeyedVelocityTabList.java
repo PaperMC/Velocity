@@ -77,7 +77,7 @@ public class KeyedVelocityTabList implements InternalTabList {
     Preconditions.checkNotNull(entry, "entry");
     Preconditions.checkArgument(entry.getTabList().equals(this),
         "The provided entry was not created by this tab list");
-    Preconditions.checkArgument(!entries.containsKey(entry.getProfile().getId()),
+    Preconditions.checkArgument(!entries.containsKey(entry.getProfile().uuid()),
         "this TabList already contains an entry with the same uuid");
     Preconditions.checkArgument(entry instanceof KeyedVelocityTabListEntry,
         "Not a Velocity tab list entry");
@@ -86,7 +86,7 @@ public class KeyedVelocityTabList implements InternalTabList {
     connection.write(
         new LegacyPlayerListItem(LegacyPlayerListItem.ADD_PLAYER,
             Collections.singletonList(packetItem)));
-    entries.put(entry.getProfile().getId(), (KeyedVelocityTabListEntry) entry);
+    entries.put(entry.getProfile().uuid(), (KeyedVelocityTabListEntry) entry);
   }
 
   @Override
@@ -140,7 +140,7 @@ public class KeyedVelocityTabList implements InternalTabList {
   }
 
   @Override
-  public Collection<TabListEntry> getEntries() {
+  public Collection<TabListEntry> entries() {
     return Collections.unmodifiableCollection(this.entries.values());
   }
 
@@ -156,7 +156,7 @@ public class KeyedVelocityTabList implements InternalTabList {
       int gameMode,
       @Nullable ChatSession chatSession, boolean listed) {
     return new KeyedVelocityTabListEntry(this, profile, displayName, latency, gameMode,
-        chatSession == null ? null : chatSession.getIdentifiedKey());
+        chatSession == null ? null : chatSession.identifiedKey());
   }
 
   @Override
@@ -222,19 +222,19 @@ public class KeyedVelocityTabList implements InternalTabList {
   }
 
   void updateEntry(int action, TabListEntry entry) {
-    if (entries.containsKey(entry.getProfile().getId())) {
+    if (entries.containsKey(entry.getProfile().uuid())) {
       LegacyPlayerListItem.Item packetItem = LegacyPlayerListItem.Item.from(entry);
 
       IdentifiedKey selectedKey = packetItem.getPlayerKey();
-      Optional<Player> existing = proxyServer.getPlayer(entry.getProfile().getId());
+      Optional<Player> existing = proxyServer.getPlayer(entry.getProfile().uuid());
       if (existing.isPresent()) {
-        selectedKey = existing.get().getIdentifiedKey();
+        selectedKey = existing.get().identifiedKey();
       }
 
       if (selectedKey != null
-          && selectedKey.getKeyRevision().getApplicableTo()
+          && selectedKey.revision().applicableTo()
           .contains(connection.getProtocolVersion())
-          && Objects.equals(selectedKey.getSignatureHolder(), entry.getProfile().getId())) {
+          && Objects.equals(selectedKey.signatureHolder(), entry.getProfile().uuid())) {
         packetItem.setPlayerKey(selectedKey);
       } else {
         packetItem.setPlayerKey(null);

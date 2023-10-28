@@ -32,11 +32,11 @@ public final class ServerInfo implements Comparable<ServerInfo> {
     this.address = Preconditions.checkNotNull(address, "address");
   }
 
-  public final String getName() {
+  public String name() {
     return name;
   }
 
-  public final SocketAddress getAddress() {
+  public SocketAddress address() {
     return address;
   }
 
@@ -68,6 +68,6 @@ public final class ServerInfo implements Comparable<ServerInfo> {
 
   @Override
   public int compareTo(ServerInfo o) {
-    return this.name.compareTo(o.getName());
+    return this.name.compareTo(o.name());
   }
 }

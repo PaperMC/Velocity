@@ -92,17 +92,17 @@ public class ConnectionRequestResults {
     }
 
     @Override
-    public Status getStatus() {
+    public Status status() {
       return status;
     }
 
     @Override
-    public Optional<Component> getReasonComponent() {
+    public Optional<Component> reason() {
       return Optional.ofNullable(component);
     }
 
     @Override
-    public RegisteredServer getAttemptedConnection() {
+    public RegisteredServer attemptedConnectedTo() {
       return attemptedConnection;
     }
 

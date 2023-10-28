@@ -34,11 +34,11 @@ public final class ModInfo {
     this.modList = ImmutableList.copyOf(modList);
   }
 
-  public String getType() {
+  public String type() {
     return type;
   }
 
-  public List<Mod> getMods() {
+  public List<Mod> mods() {
     return modList;
   }
 
@@ -81,11 +81,11 @@ public final class ModInfo {
       this.version = Preconditions.checkNotNull(version, "version");
     }
 
-    public String getId() {
+    public String id() {
       return id;
     }
 
-    public String getVersion() {
+    public String version() {
       return version;
     }
 

@@ -47,7 +47,7 @@ public class LegacyDisconnect {
    */
   public static LegacyDisconnect fromServerPing(ServerPing response,
       LegacyMinecraftPingVersion version) {
-    Players players = response.getPlayers().orElse(FAKE_PLAYERS);
+    Players players = response.players().orElse(FAKE_PLAYERS);
 
     switch (version) {
       case MINECRAFT_1_3:
@@ -56,7 +56,7 @@ public class LegacyDisconnect {
         // MOTD.
         return new LegacyDisconnect(String.join(LEGACY_COLOR_CODE,
             cleanSectionSymbol(getFirstLine(PlainTextComponentSerializer.plainText().serialize(
-                response.getDescriptionComponent()))),
+                response.description()))),
             Integer.toString(players.getOnline()),
             Integer.toString(players.getMax())));
       case MINECRAFT_1_4:
@@ -64,10 +64,10 @@ public class LegacyDisconnect {
         // Minecraft 1.4-1.6 provide support for more fields, and additionally support color codes.
         return new LegacyDisconnect(String.join("\0",
             LEGACY_COLOR_CODE + "1",
-            Integer.toString(response.getVersion().getProtocol()),
-            response.getVersion().getName(),
+            Integer.toString(response.version().getProtocol()),
+            response.version().getName(),
             getFirstLine(LegacyComponentSerializer.legacySection().serialize(response
-                .getDescriptionComponent())),
+                .description())),
             Integer.toString(players.getOnline()),
             Integer.toString(players.getMax())
         ));

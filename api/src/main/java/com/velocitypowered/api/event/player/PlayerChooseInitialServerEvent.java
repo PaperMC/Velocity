@@ -21,7 +21,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * {@link KickedFromServerEvent} as normal.
  */
 @AwaitingEvent
-public class PlayerChooseInitialServerEvent {
+public class PlayerChooseInitialServerEvent implements PlayerReferentEvent {
 
   private final Player player;
   private @Nullable RegisteredServer initialServer;
@@ -37,7 +37,8 @@ public class PlayerChooseInitialServerEvent {
     this.initialServer = initialServer;
   }
 
-  public Player getPlayer() {
+  @Override
+  public Player player() {
     return player;
   }
 

@@ -44,7 +44,7 @@ public final class PluginDependency {
    *
    * @return the plugin ID
    */
-  public String getId() {
+  public String id() {
     return id;
   }
 
@@ -53,7 +53,7 @@ public final class PluginDependency {
    *
    * @return an {@link Optional} with the plugin version, may be empty
    */
-  public Optional<String> getVersion() {
+  public Optional<String> version() {
     return Optional.ofNullable(version);
   }
 
@@ -62,7 +62,7 @@ public final class PluginDependency {
    *
    * @return true if dependency is optional
    */
-  public boolean isOptional() {
+  public boolean optional() {
     return optional;
   }
 

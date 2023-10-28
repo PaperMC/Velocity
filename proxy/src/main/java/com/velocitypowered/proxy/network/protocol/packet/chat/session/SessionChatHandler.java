@@ -54,15 +54,15 @@ public class SessionChatHandler implements ChatHandler<SessionPlayerChat> {
     chatQueue.queuePacket(
         eventManager.fire(toSend)
             .thenApply(pme -> {
-              PlayerChatEvent.ChatResult chatResult = pme.getResult();
-              if (!chatResult.isAllowed()) {
+              PlayerChatEvent.ChatResult chatResult = pme.result();
+              if (!chatResult.allowed()) {
                 if (packet.isSigned()) {
                   invalidCancel(logger, player);
                 }
                 return null;
               }
 
-              if (chatResult.getMessage().map(str -> !str.equals(packet.getMessage()))
+              if (chatResult.modifiedMessage().map(str -> !str.equals(packet.getMessage()))
                   .orElse(false)) {
                 if (packet.isSigned()) {
                   invalidChange(logger, player);

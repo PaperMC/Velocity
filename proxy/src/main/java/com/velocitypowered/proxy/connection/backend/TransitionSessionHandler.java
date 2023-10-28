@@ -69,7 +69,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     this.serverConn = serverConn;
     this.resultFuture = resultFuture;
     this.bungeecordMessageResponder = new BungeeCordMessageResponder(server,
-        serverConn.getPlayer());
+        serverConn.player());
   }
 
   @Override
@@ -91,10 +91,10 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(JoinGame packet) {
     MinecraftConnection smc = serverConn.ensureConnected();
-    RegisteredServer previousServer = serverConn.getPreviousServer().orElse(null);
-    VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
+    RegisteredServer previousServer = serverConn.previousServer().orElse(null);
+    VelocityServerConnection existingConnection = serverConn.player().getConnectedServer();
 
-    final ConnectedPlayer player = serverConn.getPlayer();
+    final ConnectedPlayer player = serverConn.player();
 
     if (existingConnection != null) {
       // Shut down the existing server connection.
@@ -111,7 +111,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     // The goods are in hand! We got JoinGame. Let's transition completely to the new state.
     smc.setAutoReading(false);
     server.getEventManager()
-        .fire(new ServerConnectedEvent(player, serverConn.getServer(), previousServer))
+        .fire(new ServerConnectedEvent(player, serverConn.server(), previousServer))
         .thenRunAsync(() -> {
           // Make sure we can still transition (player might have disconnected here).
           if (!serverConn.isActive()) {
@@ -142,7 +142,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           smc.setAutoReading(true);
 
           // Now set the connected server.
-          serverConn.getPlayer().setConnectedServer(serverConn);
+          serverConn.player().setConnectedServer(serverConn);
 
           // Send client settings. In 1.20.2+ this is done in the config state.
           if (smc.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0
@@ -153,11 +153,11 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           // We're done! :)
           server.getEventManager().fireAndForget(new ServerPostConnectEvent(player,
               previousServer));
-          resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
+          resultFuture.complete(ConnectionRequestResults.successful(serverConn.server()));
         }, smc.eventLoop()).exceptionally(exc -> {
           logger.error("Unable to switch to new server {} for {}",
-              serverConn.getServerInfo().getName(),
-              player.getUsername(), exc);
+              serverConn.serverInfo().name(),
+              player.username(), exc);
           player.disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
           resultFuture.completeExceptionally(exc);
           return null;
@@ -176,9 +176,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     if (connection.getType() == ConnectionTypes.LEGACY_FORGE
         && !serverConn.getPhase().consideredComplete()) {
       resultFuture.complete(ConnectionRequestResults.forUnsafeDisconnect(packet,
-          serverConn.getServer()));
+          serverConn.server()));
     } else {
-      resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
+      resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.server()));
     }
 
     return true;
@@ -191,23 +191,23 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     }
 
     // We always need to handle plugin messages, for Forge compatibility.
-    if (serverConn.getPhase().handle(serverConn, serverConn.getPlayer(), packet)) {
+    if (serverConn.getPhase().handle(serverConn, serverConn.player(), packet)) {
       // Handled, but check the server connection phase.
       if (serverConn.getPhase() == HELLO) {
-        VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
+        VelocityServerConnection existingConnection = serverConn.player().getConnectedServer();
         if (existingConnection != null && existingConnection.getPhase() != IN_TRANSITION) {
           // Indicate that this connection is "in transition"
           existingConnection.setConnectionPhase(IN_TRANSITION);
 
           // Tell the player that we're leaving and we just aren't coming back.
           existingConnection.getPhase().onDepartForNewServer(existingConnection,
-              serverConn.getPlayer());
+              serverConn.player());
         }
       }
       return true;
     }
 
-    serverConn.getPlayer().getConnection().write(packet.retain());
+    serverConn.player().getConnection().write(packet.retain());
     return true;
   }
 

@@ -51,7 +51,7 @@ public class PluginDependencyUtils {
    */
   public static List<PluginDescription> sortCandidates(List<PluginDescription> candidates) {
     List<PluginDescription> sortedCandidates = new ArrayList<>(candidates);
-    sortedCandidates.sort(Comparator.comparing(PluginDescription::getId));
+    sortedCandidates.sort(Comparator.comparing(PluginDescription::id));
 
     // Create a graph and populate it with plugin dependencies. Specifically, each graph has plugin
     // nodes, and edges that represent the dependencies that plugin relies on. Non-existent plugins
@@ -61,13 +61,13 @@ public class PluginDependencyUtils {
         .expectedNodeCount(sortedCandidates.size())
         .build();
     Map<String, PluginDescription> candidateMap = Maps.uniqueIndex(sortedCandidates,
-        PluginDescription::getId);
+        PluginDescription::id);
 
     for (PluginDescription description : sortedCandidates) {
       graph.addNode(description);
 
-      for (PluginDependency dependency : description.getDependencies()) {
-        PluginDescription in = candidateMap.get(dependency.getId());
+      for (PluginDependency dependency : description.dependencies()) {
+        PluginDescription in = candidateMap.get(dependency.id());
 
         if (in != null) {
           graph.putEdge(description, in);
@@ -102,7 +102,7 @@ public class PluginDependencyUtils {
       // circular dependency, thus we do not have a directed acyclic graph and therefore no
       // topological sort is possible.)
       currentDependencyScanStack.addLast(current);
-      final String loop = currentDependencyScanStack.stream().map(PluginDescription::getId)
+      final String loop = currentDependencyScanStack.stream().map(PluginDescription::id)
           .collect(Collectors.joining(" -> "));
       throw new IllegalStateException("Circular dependency detected: " + loop);
     }

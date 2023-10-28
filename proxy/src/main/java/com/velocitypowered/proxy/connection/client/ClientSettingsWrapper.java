@@ -42,7 +42,7 @@ public class ClientSettingsWrapper implements PlayerSettings {
   }
 
   @Override
-  public Locale getLocale() {
+  public Locale locale() {
     if (locale == null) {
       locale = Locale.forLanguageTag(settings.getLocale().replaceAll("_", "-"));
     }
@@ -50,12 +50,12 @@ public class ClientSettingsWrapper implements PlayerSettings {
   }
 
   @Override
-  public byte getViewDistance() {
+  public byte viewDistance() {
     return settings.getViewDistance();
   }
 
   @Override
-  public ChatMode getChatMode() {
+  public ChatMode chatMode() {
     int chat = settings.getChatVisibility();
     if (chat < 0 || chat > 2) {
       return ChatMode.SHOWN;
@@ -69,12 +69,12 @@ public class ClientSettingsWrapper implements PlayerSettings {
   }
 
   @Override
-  public SkinParts getSkinParts() {
+  public SkinParts skinParts() {
     return parts;
   }
 
   @Override
-  public MainHand getMainHand() {
+  public MainHand mainHand() {
     return settings.getMainHand() == 1 ? MainHand.RIGHT : MainHand.LEFT;
   }
 

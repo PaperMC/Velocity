@@ -54,12 +54,12 @@ public final class InitialInboundConnection implements VelocityInboundConnection
   }
 
   @Override
-  public InetSocketAddress getRemoteAddress() {
+  public InetSocketAddress remoteAddress() {
     return (InetSocketAddress) connection.getRemoteAddress();
   }
 
   @Override
-  public Optional<InetSocketAddress> getVirtualHost() {
+  public Optional<InetSocketAddress> virtualHost() {
     return Optional.of(InetSocketAddress.createUnresolved(cleanedAddress, handshake.getPort()));
   }
 
@@ -69,7 +69,7 @@ public final class InitialInboundConnection implements VelocityInboundConnection
   }
 
   @Override
-  public ProtocolVersion getProtocolVersion() {
+  public ProtocolVersion protocolVersion() {
     return connection.getProtocolVersion();
   }
 
@@ -95,7 +95,7 @@ public final class InitialInboundConnection implements VelocityInboundConnection
       logger.info("{} has disconnected: {}", this,
           LegacyComponentSerializer.legacySection().serialize(translated));
     }
-    connection.closeWith(Disconnect.create(translated, getProtocolVersion()));
+    connection.closeWith(Disconnect.create(translated, protocolVersion()));
   }
 
   /**
@@ -106,6 +106,6 @@ public final class InitialInboundConnection implements VelocityInboundConnection
   public void disconnectQuietly(Component reason) {
     Component translated = GlobalTranslator.render(reason, ClosestLocaleMatcher.INSTANCE
         .lookupClosest(Locale.getDefault()));
-    connection.closeWith(Disconnect.create(translated, getProtocolVersion()));
+    connection.closeWith(Disconnect.create(translated, protocolVersion()));
   }
 }

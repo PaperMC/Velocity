@@ -42,17 +42,17 @@ public class CommandManagerTests extends CommandTestSuite {
 
   @Test
   void testRegisterWithMeta() {
-    final var meta = manager.metaBuilder("hello").build();
+    final var meta = manager.buildMeta("hello").build();
     manager.register(meta, DummyCommand.INSTANCE);
 
     assertTrue(manager.hasCommand("hello"));
     assertRegisteredAliases("hello");
-    assertEquals(meta, manager.getCommandMeta("hello"));
+    assertEquals(meta, manager.commandMeta("hello"));
   }
 
   @Test
   void testRegisterWithMetaContainingMultipleAliases() {
-    final var meta = manager.metaBuilder("foo")
+    final var meta = manager.buildMeta("foo")
         .aliases("bar")
         .aliases("baz", "qux")
         .build();
@@ -63,15 +63,15 @@ public class CommandManagerTests extends CommandTestSuite {
     assertTrue(manager.hasCommand("baz"));
     assertTrue(manager.hasCommand("qux"));
     assertRegisteredAliases("foo", "bar", "baz", "qux");
-    assertEquals(meta, manager.getCommandMeta("foo"));
-    assertEquals(meta, manager.getCommandMeta("bar"));
-    assertEquals(meta, manager.getCommandMeta("baz"));
-    assertEquals(meta, manager.getCommandMeta("qux"));
+    assertEquals(meta, manager.commandMeta("foo"));
+    assertEquals(meta, manager.commandMeta("bar"));
+    assertEquals(meta, manager.commandMeta("baz"));
+    assertEquals(meta, manager.commandMeta("qux"));
   }
 
   @Test
   void testRegisterAliasesAreCaseInsensitive() {
-    final var meta = manager.metaBuilder("Foo")
+    final var meta = manager.buildMeta("Foo")
         .aliases("Bar")
         .build();
     manager.register(meta, DummyCommand.INSTANCE);
@@ -96,13 +96,13 @@ public class CommandManagerTests extends CommandTestSuite {
   void testRegisterOverridesPreviousCommand() {
     final var called = new AtomicBoolean();
 
-    final var oldMeta = manager.metaBuilder("foo").build();
+    final var oldMeta = manager.buildMeta("foo").build();
     manager.register(oldMeta, DummyCommand.INSTANCE); // fails on execution
-    assertEquals(oldMeta, manager.getCommandMeta("foo"));
+    assertEquals(oldMeta, manager.commandMeta("foo"));
 
-    final var newMeta = manager.metaBuilder("foo").build();
+    final var newMeta = manager.buildMeta("foo").build();
     manager.register(newMeta, (RawCommand) invocation -> called.set(true));
-    assertEquals(newMeta, manager.getCommandMeta("foo"));
+    assertEquals(newMeta, manager.commandMeta("foo"));
     manager.executeAsync(MockCommandSource.INSTANCE, "foo").join();
 
     assertTrue(called.get());
@@ -116,7 +116,7 @@ public class CommandManagerTests extends CommandTestSuite {
         .build();
 
     assertThrows(IllegalArgumentException.class, () -> {
-      manager.metaBuilder("hello").hint(hintNode);
+      manager.buildMeta("hello").hint(hintNode);
     });
   }
 
@@ -131,7 +131,7 @@ public class CommandManagerTests extends CommandTestSuite {
         .build();
 
     assertThrows(IllegalArgumentException.class, () -> {
-      manager.metaBuilder("hello").hint(hintNode);
+      manager.buildMeta("hello").hint(hintNode);
     });
   }
 
@@ -156,7 +156,7 @@ public class CommandManagerTests extends CommandTestSuite {
 
   @Test
   void testUnregisterSecondaryAlias() {
-    final var meta = manager.metaBuilder("foo")
+    final var meta = manager.buildMeta("foo")
         .aliases("bar")
         .build();
     manager.register(meta, DummyCommand.INSTANCE);
@@ -164,13 +164,13 @@ public class CommandManagerTests extends CommandTestSuite {
 
     assertFalse(manager.hasCommand("bar"));
     assertTrue(manager.hasCommand("foo"));
-    assertEquals(meta, manager.getCommandMeta("foo"));
+    assertEquals(meta, manager.commandMeta("foo"));
     assertRegisteredAliases("foo");
   }
 
   @Test
   void testUnregisterAllAliases() {
-    final var meta = manager.metaBuilder("foo")
+    final var meta = manager.buildMeta("foo")
         .aliases("bar")
         .build();
     manager.register(meta, DummyCommand.INSTANCE);
@@ -182,19 +182,19 @@ public class CommandManagerTests extends CommandTestSuite {
 
   @Test
   void testUnregisterAliasOverlap() {
-    final var meta1 = manager.metaBuilder("foo")
+    final var meta1 = manager.buildMeta("foo")
         .aliases("bar")
         .build();
     manager.register(meta1, DummyCommand.INSTANCE);
-    final var meta2 = manager.metaBuilder("bar")
+    final var meta2 = manager.buildMeta("bar")
         .build();
     manager.register(meta2, DummyCommand.INSTANCE);
-    assertEquals(meta1, manager.getCommandMeta("foo"));
-    assertEquals(meta2, manager.getCommandMeta("bar"));
+    assertEquals(meta1, manager.commandMeta("foo"));
+    assertEquals(meta2, manager.commandMeta("bar"));
 
     manager.unregister(meta1);
-    assertNull(manager.getCommandMeta("foo"));
-    assertEquals(meta2, manager.getCommandMeta("bar"));
+    assertNull(manager.commandMeta("foo"));
+    assertEquals(meta2, manager.commandMeta("bar"));
   }
 
   // Execution

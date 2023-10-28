@@ -35,11 +35,11 @@ public final class DisconnectEvent {
     this.loginStatus = Preconditions.checkNotNull(loginStatus, "loginStatus");
   }
 
-  public Player getPlayer() {
+  public Player player() {
     return player;
   }
 
-  public LoginStatus getLoginStatus() {
+  public LoginStatus loginStatus() {
     return loginStatus;
   }
 

@@ -132,9 +132,9 @@ public class ServerLogin implements MinecraftPacket {
       }
 
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
-        if (playerKey != null && playerKey.getSignatureHolder() != null) {
+        if (playerKey != null && playerKey.signatureHolder() != null) {
           buf.writeBoolean(true);
-          ProtocolUtils.writeUuid(buf, playerKey.getSignatureHolder());
+          ProtocolUtils.writeUuid(buf, playerKey.signatureHolder());
         } else if (this.holderUuid != null) {
           buf.writeBoolean(true);
           ProtocolUtils.writeUuid(buf, this.holderUuid);

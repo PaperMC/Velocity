@@ -26,12 +26,12 @@ public interface TabListEntry extends KeyIdentifiable {
   @Nullable ChatSession getChatSession();
 
   @Override
-  default IdentifiedKey getIdentifiedKey() {
+  default IdentifiedKey identifiedKey() {
     ChatSession session = getChatSession();
     if (session == null) {
       return null;
     }
-    return getChatSession().getIdentifiedKey();
+    return getChatSession().identifiedKey();
   }
 
   /**
@@ -53,7 +53,7 @@ public interface TabListEntry extends KeyIdentifiable {
   /**
    * Returns {@link Optional} text {@link net.kyori.adventure.text.Component}, which if present is
    * the text displayed for {@code this} entry in the {@link TabList}, otherwise
-   * {@link GameProfile#getName()} is shown.
+   * {@link GameProfile#name()} is shown.
    *
    * @return {@link Optional} text {@link net.kyori.adventure.text.Component} of name displayed in
    *     the tab list
@@ -62,7 +62,7 @@ public interface TabListEntry extends KeyIdentifiable {
 
   /**
    * Sets the text {@link Component} to be displayed for {@code this} {@link TabListEntry}. If
-   * {@code null}, {@link GameProfile#getName()} will be shown.
+   * {@code null}, {@link GameProfile#name()} will be shown.
    *
    * @param displayName to show in the {@link TabList} for {@code this} entry
    * @return {@code this}, for chaining

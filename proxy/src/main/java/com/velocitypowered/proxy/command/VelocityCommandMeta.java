@@ -120,7 +120,7 @@ public final class VelocityCommandMeta implements CommandMeta {
    */
   // This is a static method because most methods take a CommandMeta.
   public static Stream<CommandNode<CommandSource>> copyHints(final CommandMeta meta) {
-    return meta.getHints().stream().map(VelocityCommandMeta::copyForHinting);
+    return meta.hints().stream().map(VelocityCommandMeta::copyForHinting);
   }
 
   private final Set<String> aliases;
@@ -138,17 +138,17 @@ public final class VelocityCommandMeta implements CommandMeta {
   }
 
   @Override
-  public Collection<String> getAliases() {
+  public Collection<String> aliases() {
     return this.aliases;
   }
 
   @Override
-  public Collection<CommandNode<CommandSource>> getHints() {
+  public Collection<CommandNode<CommandSource>> hints() {
     return this.hints;
   }
 
   @Override
-  public @Nullable Object getPlugin() {
+  public @Nullable Object plugin() {
     return plugin;
   }
 

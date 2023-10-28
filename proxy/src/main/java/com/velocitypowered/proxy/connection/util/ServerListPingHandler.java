@@ -66,7 +66,7 @@ public class ServerListPingHandler {
 
   private CompletableFuture<ServerPing> attemptPingPassthrough(VelocityInboundConnection connection,
       PingPassthroughMode mode, List<String> servers, ProtocolVersion responseProtocolVersion) {
-    ServerPing fallback = constructLocalPing(connection.getProtocolVersion());
+    ServerPing fallback = constructLocalPing(connection.protocolVersion());
     List<CompletableFuture<ServerPing>> pings = new ArrayList<>();
     for (String s : servers) {
       Optional<RegisteredServer> rs = server.getServer(s);
@@ -102,7 +102,7 @@ public class ServerListPingHandler {
             if (response == fallback) {
               continue;
             }
-            Optional<ModInfo> modInfo = response.getModinfo();
+            Optional<ModInfo> modInfo = response.modInfo();
             if (modInfo.isPresent()) {
               return fallback.asBuilder().mods(modInfo.get()).build();
             }
@@ -117,16 +117,16 @@ public class ServerListPingHandler {
               continue;
             }
 
-            if (response.getDescriptionComponent() == null) {
+            if (response.description() == null) {
               continue;
             }
 
             return new ServerPing(
-                fallback.getVersion(),
-                fallback.getPlayers().orElse(null),
-                response.getDescriptionComponent(),
-                fallback.getFavicon().orElse(null),
-                response.getModinfo().orElse(null)
+                fallback.version(),
+                fallback.players().orElse(null),
+                response.description(),
+                fallback.favicon().orElse(null),
+                response.modInfo().orElse(null)
             );
           }
           return fallback;
@@ -145,14 +145,14 @@ public class ServerListPingHandler {
    */
   public CompletableFuture<ServerPing> getInitialPing(VelocityInboundConnection connection) {
     VelocityConfiguration configuration = server.getConfiguration();
-    ProtocolVersion shownVersion = ProtocolVersion.isSupported(connection.getProtocolVersion())
-        ? connection.getProtocolVersion() : ProtocolVersion.MAXIMUM_VERSION;
+    ProtocolVersion shownVersion = ProtocolVersion.isSupported(connection.protocolVersion())
+        ? connection.protocolVersion() : ProtocolVersion.MAXIMUM_VERSION;
     PingPassthroughMode passthroughMode = configuration.getPingPassthrough();
 
     if (passthroughMode == PingPassthroughMode.DISABLED) {
       return CompletableFuture.completedFuture(constructLocalPing(shownVersion));
     } else {
-      String virtualHostStr = connection.getVirtualHost().map(InetSocketAddress::getHostString)
+      String virtualHostStr = connection.virtualHost().map(InetSocketAddress::getHostString)
           .map(str -> str.toLowerCase(Locale.ROOT))
           .orElse("");
       List<String> serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(
@@ -172,7 +172,7 @@ public class ServerListPingHandler {
   public CompletableFuture<ServerPing> getPing(VelocityInboundConnection connection) {
     return this.getInitialPing(connection)
         .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(connection, ping)))
-        .thenApply(ProxyPingEvent::getPing);
+        .thenApply(ProxyPingEvent::ping);
   }
 
   /**
@@ -187,7 +187,7 @@ public class ServerListPingHandler {
     return this.getInitialPing(connection)
         .thenApply(ping -> {
           StringBuilder json = new StringBuilder();
-          VelocityServer.getPingGsonInstance(connection.getProtocolVersion())
+          VelocityServer.getPingGsonInstance(connection.protocolVersion())
               .toJson(ping, json);
           return new StatusResponse(json);
         });

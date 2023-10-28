@@ -45,9 +45,9 @@ class VelocityChannelRegistrarTest {
 
     // Two channels cover the modern channel (velocity:test) and the legacy-mapped channel
     // (legacy:velocitytest). Make sure they're what we expect.
-    assertEquals(ImmutableSet.of(MODERN.getId(), SIMPLE_LEGACY_REMAPPED), registrar
+    assertEquals(ImmutableSet.of(MODERN.id(), SIMPLE_LEGACY_REMAPPED), registrar
         .getModernChannelIds());
-    assertEquals(ImmutableSet.of(SIMPLE_LEGACY.getId(), MODERN.getId()), registrar
+    assertEquals(ImmutableSet.of(SIMPLE_LEGACY.id(), MODERN.id()), registrar
         .getLegacyChannelIds());
   }
 
@@ -57,8 +57,8 @@ class VelocityChannelRegistrarTest {
     registrar.register(SPECIAL_REMAP_LEGACY, MODERN_SPECIAL_REMAP);
 
     // This one, just one channel for the modern case.
-    assertEquals(ImmutableSet.of(MODERN_SPECIAL_REMAP.getId()), registrar.getModernChannelIds());
-    assertEquals(ImmutableSet.of(MODERN_SPECIAL_REMAP.getId(), SPECIAL_REMAP_LEGACY.getId()),
+    assertEquals(ImmutableSet.of(MODERN_SPECIAL_REMAP.id()), registrar.getModernChannelIds());
+    assertEquals(ImmutableSet.of(MODERN_SPECIAL_REMAP.id(), SPECIAL_REMAP_LEGACY.id()),
         registrar.getLegacyChannelIds());
   }
 
@@ -68,7 +68,7 @@ class VelocityChannelRegistrarTest {
     registrar.register(MODERN, SIMPLE_LEGACY);
     registrar.unregister(SIMPLE_LEGACY);
 
-    assertEquals(ImmutableSet.of(MODERN.getId()), registrar.getModernChannelIds());
-    assertEquals(ImmutableSet.of(MODERN.getId()), registrar.getLegacyChannelIds());
+    assertEquals(ImmutableSet.of(MODERN.id()), registrar.getModernChannelIds());
+    assertEquals(ImmutableSet.of(MODERN.id()), registrar.getLegacyChannelIds());
   }
 }

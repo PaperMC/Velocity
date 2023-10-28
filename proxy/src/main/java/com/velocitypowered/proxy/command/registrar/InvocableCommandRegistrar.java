@@ -57,7 +57,7 @@ abstract class InvocableCommandRegistrar<T extends InvocableCommand<I>,
 
   @Override
   public void register(final CommandMeta meta, final T command) {
-    final Iterator<String> aliases = meta.getAliases().iterator();
+    final Iterator<String> aliases = meta.aliases().iterator();
 
     final String primaryAlias = aliases.next();
     final LiteralCommandNode<CommandSource> literal =

@@ -36,21 +36,21 @@ public class ServerResourcePackSendEvent implements ResultedEvent<ResultedEvent.
       ResourcePackInfo receivedResourcePack,
       ServerConnection serverConnection
   ) {
-    this.result = ResultedEvent.GenericResult.allowed();
+    this.result = ResultedEvent.GenericResult.allow();
     this.receivedResourcePack = receivedResourcePack;
     this.serverConnection = serverConnection;
     this.providedResourcePack = receivedResourcePack;
   }
 
-  public ServerConnection getServerConnection() {
+  public ServerConnection connection() {
     return serverConnection;
   }
 
-  public ResourcePackInfo getReceivedResourcePack() {
+  public ResourcePackInfo receivedResourcePack() {
     return receivedResourcePack;
   }
 
-  public ResourcePackInfo getProvidedResourcePack() {
+  public ResourcePackInfo providedResourcePack() {
     return providedResourcePack;
   }
 
@@ -59,7 +59,7 @@ public class ServerResourcePackSendEvent implements ResultedEvent<ResultedEvent.
   }
 
   @Override
-  public GenericResult getResult() {
+  public GenericResult result() {
     return this.result;
   }
 

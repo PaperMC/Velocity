@@ -77,8 +77,8 @@ public class ServerCommand implements SimpleCommand {
   }
 
   private void outputServerInformation(Player executor) {
-    String currentServer = executor.getCurrentServer().map(ServerConnection::getServerInfo)
-        .map(ServerInfo::getName).orElse("<unknown>");
+    String currentServer = executor.connectedServer().map(ServerConnection::serverInfo)
+        .map(ServerInfo::name).orElse("<unknown>");
     executor.sendMessage(Component.translatable(
         "velocity.command.server-current-server",
         NamedTextColor.YELLOW,
@@ -108,10 +108,10 @@ public class ServerCommand implements SimpleCommand {
   }
 
   private TextComponent formatServerComponent(String currentPlayerServer, RegisteredServer server) {
-    ServerInfo serverInfo = server.getServerInfo();
-    TextComponent serverTextComponent = Component.text(serverInfo.getName());
+    ServerInfo serverInfo = server.serverInfo();
+    TextComponent serverTextComponent = Component.text(serverInfo.name());
 
-    int connectedPlayers = server.getPlayersConnected().size();
+    int connectedPlayers = server.players().size();
     TranslatableComponent playersTextComponent;
     if (connectedPlayers == 1) {
       playersTextComponent = Component.translatable(
@@ -121,7 +121,7 @@ public class ServerCommand implements SimpleCommand {
           "velocity.command.server-tooltip-players-online");
     }
     playersTextComponent = playersTextComponent.args(Component.text(connectedPlayers));
-    if (serverInfo.getName().equals(currentPlayerServer)) {
+    if (serverInfo.name().equals(currentPlayerServer)) {
       serverTextComponent = serverTextComponent.color(NamedTextColor.GREEN)
           .hoverEvent(
               showText(
@@ -131,7 +131,7 @@ public class ServerCommand implements SimpleCommand {
           );
     } else {
       serverTextComponent = serverTextComponent.color(NamedTextColor.GRAY)
-          .clickEvent(ClickEvent.runCommand("/server " + serverInfo.getName()))
+          .clickEvent(ClickEvent.runCommand("/server " + serverInfo.name()))
           .hoverEvent(
               showText(
                   Component.translatable("velocity.command.server-tooltip-offer-connect-server")
@@ -146,7 +146,7 @@ public class ServerCommand implements SimpleCommand {
   public List<String> suggest(final SimpleCommand.Invocation invocation) {
     final String[] currentArgs = invocation.arguments();
     Stream<String> possibilities = server.getAllServers().stream()
-        .map(rs -> rs.getServerInfo().getName());
+        .map(rs -> rs.serverInfo().name());
 
     if (currentArgs.length == 0) {
       return possibilities.collect(Collectors.toList());

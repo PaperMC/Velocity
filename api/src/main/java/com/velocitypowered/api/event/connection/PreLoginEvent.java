@@ -11,7 +11,7 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
-import java.util.Optional;
+import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -44,7 +44,7 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
   public PreLoginEvent(InboundConnection connection, String username) {
     this.connection = Preconditions.checkNotNull(connection, "connection");
     this.username = Preconditions.checkNotNull(username, "username");
-    this.result = PreLoginComponentResult.allowed();
+    this.result = PreLoginComponentResult.allow();
   }
 
   public InboundConnection getConnection() {
@@ -56,7 +56,7 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
   }
 
   @Override
-  public PreLoginComponentResult getResult() {
+  public PreLoginComponentResult result() {
     return result;
   }
 
@@ -88,7 +88,7 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
         Result.FORCE_OFFLINE, null);
 
     private final Result result;
-    private final net.kyori.adventure.text.Component reason;
+    private final Component reason;
 
     private PreLoginComponentResult(Result result,
         net.kyori.adventure.text.@Nullable Component reason) {
@@ -97,12 +97,12 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
     }
 
     @Override
-    public boolean isAllowed() {
+    public boolean allowed() {
       return result != Result.DISALLOWED;
     }
 
-    public Optional<net.kyori.adventure.text.Component> getReasonComponent() {
-      return Optional.ofNullable(reason);
+    public @Nullable Component explanation() {
+      return reason;
     }
 
     public boolean isOnlineModeAllowed() {
@@ -132,14 +132,14 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
      *
      * @return the allowed result
      */
-    public static PreLoginComponentResult allowed() {
+    public static PreLoginComponentResult allow() {
       return ALLOWED;
     }
 
     /**
      * Returns a result indicating the connection will be allowed through the proxy, but the
      * connection will be forced to use online mode provided that the proxy is in offline mode. This
-     * acts similarly to {@link #allowed()} on an online-mode proxy.
+     * acts similarly to {@link #allow()} on an online-mode proxy.
      *
      * @return the result
      */
@@ -160,12 +160,12 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
     /**
      * Denies the login with the specified reason.
      *
-     * @param reason the reason for disallowing the connection
+     * @param explanation the reason for disallowing the connection
      * @return a new result
      */
-    public static PreLoginComponentResult denied(net.kyori.adventure.text.Component reason) {
-      Preconditions.checkNotNull(reason, "reason");
-      return new PreLoginComponentResult(Result.DISALLOWED, reason);
+    public static PreLoginComponentResult deny(Component explanation) {
+      Preconditions.checkNotNull(explanation, "explanation");
+      return new PreLoginComponentResult(Result.DISALLOWED, explanation);
     }
 
     private enum Result {

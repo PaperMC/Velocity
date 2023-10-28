@@ -44,23 +44,23 @@ public final class GameProfileRequestEvent {
       boolean onlineMode) {
     this.connection = Preconditions.checkNotNull(connection, "connection");
     this.originalProfile = Preconditions.checkNotNull(originalProfile, "originalProfile");
-    this.username = originalProfile.getName();
+    this.username = originalProfile.name();
     this.onlineMode = onlineMode;
   }
 
-  public InboundConnection getConnection() {
+  public InboundConnection connection() {
     return connection;
   }
 
-  public String getUsername() {
+  public String username() {
     return username;
   }
 
-  public GameProfile getOriginalProfile() {
+  public GameProfile originalProfile() {
     return originalProfile;
   }
 
-  public boolean isOnlineMode() {
+  public boolean onlineMode() {
     return onlineMode;
   }
 
@@ -71,7 +71,7 @@ public final class GameProfileRequestEvent {
    *
    * @return the user's {@link GameProfile}
    */
-  public GameProfile getGameProfile() {
+  public GameProfile profileToUse() {
     return gameProfile == null ? originalProfile : gameProfile;
   }
 
@@ -80,7 +80,7 @@ public final class GameProfileRequestEvent {
    *
    * @param gameProfile the profile for this connection, {@code null} uses the original profile
    */
-  public void setGameProfile(@Nullable GameProfile gameProfile) {
+  public void setProfileToUse(@Nullable GameProfile gameProfile) {
     this.gameProfile = gameProfile;
   }
 

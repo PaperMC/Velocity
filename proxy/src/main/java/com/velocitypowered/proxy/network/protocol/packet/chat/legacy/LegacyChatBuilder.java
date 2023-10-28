@@ -35,7 +35,7 @@ public class LegacyChatBuilder extends ChatBuilderV2 {
   public MinecraftPacket toClient() {
     // This is temporary
     UUID identity = sender == null ? (senderIdentity == null ? Identity.nil().uuid()
-        : senderIdentity.uuid()) : sender.getUniqueId();
+        : senderIdentity.uuid()) : sender.uuid();
     Component msg = component == null ? Component.text(message) : component;
 
     return new LegacyChat(ProtocolUtils.getJsonChatSerializer(version).serialize(msg), type.getId(),

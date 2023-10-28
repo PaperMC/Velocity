@@ -22,7 +22,7 @@ public interface KeySigned {
    *
    * @return the key
    */
-  PublicKey getSigner();
+  PublicKey signer();
 
   /**
    * Returns the expiry time point of the key.
@@ -32,7 +32,7 @@ public interface KeySigned {
    *
    * @return the expiry time point
    */
-  Instant getExpiryTemporal();
+  Instant signatureExpiry();
 
 
   /**
@@ -41,7 +41,7 @@ public interface KeySigned {
    * @return true if proxy time is after expiry time
    */
   default boolean hasExpired() {
-    return Instant.now().isAfter(getExpiryTemporal());
+    return Instant.now().isAfter(signatureExpiry());
   }
 
   /**
@@ -50,7 +50,7 @@ public interface KeySigned {
    * @return an RSA signature
    */
   @Nullable
-  byte[] getSignature();
+  byte[] signature();
 
   /**
    * Validates the signature, expiry temporal and key against the
@@ -71,7 +71,7 @@ public interface KeySigned {
    *
    * @return signature salt or null
    */
-  default byte[] getSalt() {
+  default byte[] salt() {
     return null;
   }
 

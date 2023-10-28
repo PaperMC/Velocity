@@ -129,7 +129,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
     }
     for (ConnectedPlayer player : holder.subscribers) {
       Component translated = player.translateMessage(newName);
-      BossBarPacket packet = holder.createTitleUpdate(translated, player.getProtocolVersion());
+      BossBarPacket packet = holder.createTitleUpdate(translated, player.protocolVersion());
       player.getConnection().write(packet);
     }
   }
@@ -211,7 +211,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
       BossBarPacket packet = new BossBarPacket();
       packet.setUuid(this.id);
       packet.setAction(BossBarPacket.ADD);
-      packet.setName(ProtocolUtils.getJsonChatSerializer(player.getProtocolVersion())
+      packet.setName(ProtocolUtils.getJsonChatSerializer(player.protocolVersion())
           .serialize(player.translateMessage(bar.name())));
       packet.setColor(COLORS_TO_PROTOCOL.get(bar.color()));
       packet.setOverlay(OVERLAY_TO_PROTOCOL.get(bar.overlay()));

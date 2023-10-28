@@ -25,14 +25,14 @@ public interface RegisteredServer extends ChannelMessageSink, Audience {
    *
    * @return the server info
    */
-  ServerInfo getServerInfo();
+  ServerInfo serverInfo();
 
   /**
    * Returns a list of all the players currently connected to this server on this proxy.
    *
    * @return the players on this proxy
    */
-  Collection<Player> getPlayersConnected();
+  Collection<Player> players();
 
   /**
    * Attempts to ping the remote server and return the server list ping result.

@@ -200,7 +200,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   @EnsuresNonNull({"serverKeyPair", "servers", "pluginManager", "eventManager", "scheduler",
       "console", "cm", "configuration"})
   void start() {
-    logger.info("Booting up {} {}...", getVersion().getName(), getVersion().getVersion());
+    logger.info("Booting up {} {}...", getVersion().name(), getVersion().version());
     console.setupStreams();
 
     registerTranslations();
@@ -350,19 +350,19 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     }
 
     // Register the plugin main classes so that we can fire the proxy initialize event
-    for (PluginContainer plugin : pluginManager.getPlugins()) {
-      Optional<?> instance = plugin.getInstance();
+    for (PluginContainer plugin : pluginManager.plugins()) {
+      Optional<?> instance = plugin.instance();
       if (instance.isPresent()) {
         try {
           eventManager.registerInternally(plugin, instance.get());
         } catch (Exception e) {
           logger.error("Unable to register plugin listener for {}",
-              plugin.getDescription().getName().orElse(plugin.getDescription().getId()), e);
+              plugin.description().name().orElse(plugin.description().id()), e);
         }
       }
     }
 
-    logger.info("Loaded {} plugins", pluginManager.getPlugins().size());
+    logger.info("Loaded {} plugins", pluginManager.plugins().size());
   }
 
   public Bootstrap createBootstrap(@Nullable EventLoopGroup group, SocketAddress target) {
@@ -404,15 +404,15 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       Optional<RegisteredServer> rs = servers.getServer(entry.getKey());
       if (!rs.isPresent()) {
         servers.register(newInfo);
-      } else if (!rs.get().getServerInfo().equals(newInfo)) {
-        for (Player player : rs.get().getPlayersConnected()) {
+      } else if (!rs.get().serverInfo().equals(newInfo)) {
+        for (Player player : rs.get().players()) {
           if (!(player instanceof ConnectedPlayer)) {
             throw new IllegalStateException("ConnectedPlayer not found for player " + player
-                + " in server " + rs.get().getServerInfo().getName());
+                + " in server " + rs.get().serverInfo().name());
           }
           evacuate.add((ConnectedPlayer) player);
         }
-        servers.unregister(rs.get().getServerInfo());
+        servers.unregister(rs.get().serverInfo());
         servers.register(newInfo);
       }
     }
@@ -591,9 +591,9 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     if (configuration.isOnlineMode() && configuration.isOnlineModeKickExistingPlayers()) {
       return true;
     }
-    String lowerName = connection.getUsername().toLowerCase(Locale.US);
+    String lowerName = connection.username().toLowerCase(Locale.US);
     return !(connectionsByName.containsKey(lowerName)
-        || connectionsByUuid.containsKey(connection.getUniqueId()));
+        || connectionsByUuid.containsKey(connection.uuid()));
   }
 
   /**
@@ -603,25 +603,25 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
    * @return {@code true} if we registered the connection, {@code false} if not
    */
   public boolean registerConnection(ConnectedPlayer connection) {
-    String lowerName = connection.getUsername().toLowerCase(Locale.US);
+    String lowerName = connection.username().toLowerCase(Locale.US);
 
     if (!this.configuration.isOnlineModeKickExistingPlayers()) {
       if (connectionsByName.putIfAbsent(lowerName, connection) != null) {
         return false;
       }
-      if (connectionsByUuid.putIfAbsent(connection.getUniqueId(), connection) != null) {
+      if (connectionsByUuid.putIfAbsent(connection.uuid(), connection) != null) {
         connectionsByName.remove(lowerName, connection);
         return false;
       }
     } else {
-      ConnectedPlayer existing = connectionsByUuid.get(connection.getUniqueId());
+      ConnectedPlayer existing = connectionsByUuid.get(connection.uuid());
       if (existing != null) {
         existing.disconnect(Component.translatable("multiplayer.disconnect.duplicate_login"));
       }
 
       // We can now replace the entries as needed.
       connectionsByName.put(lowerName, connection);
-      connectionsByUuid.put(connection.getUniqueId(), connection);
+      connectionsByUuid.put(connection.uuid(), connection);
     }
     return true;
   }
@@ -632,8 +632,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
    * @param connection the connection to unregister
    */
   public void unregisterConnection(ConnectedPlayer connection) {
-    connectionsByName.remove(connection.getUsername().toLowerCase(Locale.US), connection);
-    connectionsByUuid.remove(connection.getUniqueId(), connection);
+    connectionsByName.remove(connection.username().toLowerCase(Locale.US), connection);
+    connectionsByUuid.remove(connection.uuid(), connection);
     bossBarManager.onDisconnect(connection);
   }
 
@@ -653,7 +653,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   public Collection<Player> matchPlayer(String partialName) {
     Objects.requireNonNull(partialName);
 
-    return getAllPlayers().stream().filter(p -> p.getUsername()
+    return getAllPlayers().stream().filter(p -> p.username()
             .regionMatches(true, 0, partialName, 0, partialName.length()))
         .collect(Collectors.toList());
   }
@@ -662,7 +662,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   public Collection<RegisteredServer> matchServer(String partialName) {
     Objects.requireNonNull(partialName);
 
-    return getAllServers().stream().filter(s -> s.getServerInfo().getName()
+    return getAllServers().stream().filter(s -> s.serverInfo().name()
             .regionMatches(true, 0, partialName, 0, partialName.length()))
         .collect(Collectors.toList());
   }

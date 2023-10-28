@@ -52,7 +52,7 @@ public class KeyedChatHandler implements
   public static void invalidCancel(Logger logger, ConnectedPlayer player) {
     logger.fatal("A plugin tried to cancel a signed chat message."
         + " This is no longer possible in 1.19.1 and newer. "
-        + "Disconnecting player " + player.getUsername());
+        + "Disconnecting player " + player.username());
     player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
         + "Contact your network administrator."));
   }
@@ -60,7 +60,7 @@ public class KeyedChatHandler implements
   public static void invalidChange(Logger logger, ConnectedPlayer player) {
     logger.fatal("A plugin tried to change a signed chat message. "
         + "This is no longer possible in 1.19.1 and newer. "
-        + "Disconnecting player " + player.getUsername());
+        + "Disconnecting player " + player.username());
     player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
         + "Contact your network administrator."));
   }
@@ -73,7 +73,7 @@ public class KeyedChatHandler implements
     CompletableFuture<PlayerChatEvent> future = eventManager.fire(toSend);
 
     CompletableFuture<MinecraftPacket> chatFuture;
-    IdentifiedKey playerKey = this.player.getIdentifiedKey();
+    IdentifiedKey playerKey = this.player.identifiedKey();
 
     if (playerKey != null && !packet.isUnsigned()) {
       // 1.19->1.19.2 signed version
@@ -81,13 +81,13 @@ public class KeyedChatHandler implements
     } else {
       // 1.19->1.19.2 unsigned version
       chatFuture = future.thenApply(pme -> {
-        PlayerChatEvent.ChatResult chatResult = pme.getResult();
-        if (!chatResult.isAllowed()) {
+        PlayerChatEvent.ChatResult chatResult = pme.result();
+        if (!chatResult.allowed()) {
           return null;
         }
 
         return player.getChatBuilderFactory().builder()
-            .message(chatResult.getMessage().orElse(packet.getMessage()))
+            .message(chatResult.modifiedMessage().orElse(packet.getMessage()))
             .setTimestamp(packet.getExpiry()).toServer();
       });
     }
@@ -101,26 +101,26 @@ public class KeyedChatHandler implements
   }
 
   private Function<PlayerChatEvent, MinecraftPacket> handleOldSignedChat(KeyedPlayerChat packet) {
-    IdentifiedKey playerKey = this.player.getIdentifiedKey();
+    IdentifiedKey playerKey = this.player.identifiedKey();
     assert playerKey != null;
     return pme -> {
-      PlayerChatEvent.ChatResult chatResult = pme.getResult();
-      if (!chatResult.isAllowed()) {
-        if (playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+      PlayerChatEvent.ChatResult chatResult = pme.result();
+      if (!chatResult.allowed()) {
+        if (playerKey.revision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
           // Bad, very bad.
           invalidCancel(logger, player);
         }
         return null;
       }
 
-      if (chatResult.getMessage().map(str -> !str.equals(packet.getMessage())).orElse(false)) {
-        if (playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+      if (chatResult.modifiedMessage().map(str -> !str.equals(packet.getMessage())).orElse(false)) {
+        if (playerKey.revision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
           // Bad, very bad.
           invalidChange(logger, player);
         } else {
           logger.warn("A plugin changed a signed chat message. The server may not accept it.");
           return player.getChatBuilderFactory().builder()
-              .message(chatResult.getMessage().get() /* always present at this point */)
+              .message(chatResult.modifiedMessage().get() /* always present at this point */)
               .setTimestamp(packet.getExpiry())
               .toServer();
         }

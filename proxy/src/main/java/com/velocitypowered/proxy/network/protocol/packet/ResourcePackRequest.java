@@ -108,12 +108,12 @@ public class ResourcePackRequest implements MinecraftPacket {
 
   public VelocityResourcePackInfo toServerPromptedPack() {
     ResourcePackInfo.Builder builder =
-        new VelocityResourcePackInfo.BuilderImpl(Preconditions.checkNotNull(url)).setPrompt(prompt)
-            .setShouldForce(isRequired).setOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
+        new VelocityResourcePackInfo.BuilderImpl(Preconditions.checkNotNull(url)).prompt(prompt)
+            .required(isRequired).setOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
 
     if (hash != null && !hash.isEmpty()) {
       if (PLAUSIBLE_SHA1_HASH.matcher(hash).matches()) {
-        builder.setHash(ByteBufUtil.decodeHexDump(hash));
+        builder.hash(ByteBufUtil.decodeHexDump(hash));
       }
     }
     return (VelocityResourcePackInfo) builder.build();

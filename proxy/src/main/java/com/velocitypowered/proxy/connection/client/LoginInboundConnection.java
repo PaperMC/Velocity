@@ -61,13 +61,13 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
   }
 
   @Override
-  public InetSocketAddress getRemoteAddress() {
-    return delegate.getRemoteAddress();
+  public InetSocketAddress remoteAddress() {
+    return delegate.remoteAddress();
   }
 
   @Override
-  public Optional<InetSocketAddress> getVirtualHost() {
-    return delegate.getVirtualHost();
+  public Optional<InetSocketAddress> virtualHost() {
+    return delegate.virtualHost();
   }
 
   @Override
@@ -76,8 +76,8 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
   }
 
   @Override
-  public ProtocolVersion getProtocolVersion() {
-    return delegate.getProtocolVersion();
+  public ProtocolVersion protocolVersion() {
+    return delegate.protocolVersion();
   }
 
   @Override
@@ -92,7 +92,7 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
     if (consumer == null) {
       throw new NullPointerException("consumer");
     }
-    if (delegate.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
+    if (delegate.protocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
       throw new IllegalStateException("Login plugin messages can only be sent to clients running "
           + "Minecraft 1.13 and above");
     }
@@ -100,7 +100,7 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
     final int id = SEQUENCE_UPDATER.incrementAndGet(this);
     this.outstandingResponses.put(id, consumer);
 
-    final LoginPluginMessage message = new LoginPluginMessage(id, identifier.getId(),
+    final LoginPluginMessage message = new LoginPluginMessage(id, identifier.id(),
         Unpooled.wrappedBuffer(contents));
     if (!this.loginEventFired) {
       this.loginMessagesToSend.add(message);
@@ -163,7 +163,7 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
   }
 
   @Override
-  public IdentifiedKey getIdentifiedKey() {
+  public IdentifiedKey identifiedKey() {
     return playerKey;
   }
 }

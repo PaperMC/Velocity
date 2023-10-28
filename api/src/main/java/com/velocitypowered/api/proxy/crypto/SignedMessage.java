@@ -19,14 +19,14 @@ public interface SignedMessage extends KeySigned {
    *
    * @return the message
    */
-  String getMessage();
+  String message();
 
   /**
    * Returns the signers UUID.
    *
    * @return the uuid
    */
-  UUID getSignerUuid();
+  UUID signerUuid();
 
   /**
    * If true the signature of this message applies to a stylized component instead.

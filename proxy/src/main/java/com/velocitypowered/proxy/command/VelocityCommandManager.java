@@ -97,21 +97,21 @@ public class VelocityCommandManager implements CommandManager {
   }
 
   @Override
-  public CommandMeta.Builder metaBuilder(final String alias) {
+  public CommandMeta.Builder buildMeta(final String alias) {
     Preconditions.checkNotNull(alias, "alias");
     return new VelocityCommandMeta.Builder(alias);
   }
 
   @Override
-  public CommandMeta.Builder metaBuilder(final BrigadierCommand command) {
+  public CommandMeta.Builder buildMeta(final BrigadierCommand command) {
     Preconditions.checkNotNull(command, "command");
-    return new VelocityCommandMeta.Builder(command.getNode().getName());
+    return new VelocityCommandMeta.Builder(command.node().getName());
   }
 
   @Override
   public void register(final BrigadierCommand command) {
     Preconditions.checkNotNull(command, "command");
-    register(metaBuilder(command).build(), command);
+    register(buildMeta(command).build(), command);
   }
 
   @Override
@@ -151,7 +151,7 @@ public class VelocityCommandManager implements CommandManager {
       final Command command, final CommandMeta meta) {
     final Class<T> superInterface = registrar.registrableSuperInterface();
     registrar.register(meta, superInterface.cast(command));
-    for (String alias : meta.getAliases()) {
+    for (String alias : meta.aliases()) {
       commandMetas.put(alias, meta);
     }
   }
@@ -188,7 +188,7 @@ public class VelocityCommandManager implements CommandManager {
     try {
       // The literals of secondary aliases will preserve the children of
       // the removed literal in the graph.
-      for (String alias : meta.getAliases()) {
+      for (String alias : meta.aliases()) {
         final String lowercased = alias.toLowerCase(Locale.ENGLISH);
         if (commandMetas.remove(lowercased, meta)) {
           dispatcher.getRoot().removeChildByName(lowercased);
@@ -200,7 +200,7 @@ public class VelocityCommandManager implements CommandManager {
   }
 
   @Override
-  public @Nullable CommandMeta getCommandMeta(String alias) {
+  public @Nullable CommandMeta commandMeta(String alias) {
     Preconditions.checkNotNull(alias, "alias");
     return commandMetas.get(alias);
   }
@@ -250,8 +250,8 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     return callCommandEvent(source, cmdLine).thenApplyAsync(event -> {
-      CommandResult commandResult = event.getResult();
-      if (commandResult.isForwardToServer() || !commandResult.isAllowed()) {
+      CommandResult commandResult = event.result();
+      if (commandResult.isForwardToServer() || !commandResult.allowed()) {
         return false;
       }
       return executeImmediately0(source, commandResult.getCommand().orElse(event.getCommand()));
@@ -321,7 +321,7 @@ public class VelocityCommandManager implements CommandManager {
   }
 
   @Override
-  public Collection<String> getAliases() {
+  public Collection<String> aliases() {
     lock.readLock().lock();
     try {
       // A RootCommandNode may only contain LiteralCommandNode children instances

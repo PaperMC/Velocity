@@ -46,7 +46,6 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.text.Component;
@@ -56,6 +55,7 @@ import org.apache.logging.log4j.Logger;
 import org.asynchttpclient.ListenableFuture;
 import org.asynchttpclient.Response;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Handles authenticating the player to Mojang's servers.
@@ -99,7 +99,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
       }
 
       boolean isKeyValid;
-      if (playerKey.getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
+      if (playerKey.revision() == IdentifiedKey.Revision.LINKED_V2
           && playerKey instanceof IdentifiedKeyImpl) {
         IdentifiedKeyImpl keyImpl = (IdentifiedKeyImpl) playerKey;
         isKeyValid = keyImpl.internalAddHolder(packet.getHolderUuid());
@@ -127,11 +127,11 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
         return;
       }
 
-      PreLoginComponentResult result = event.getResult();
-      Optional<Component> disconnectReason = result.getReasonComponent();
-      if (disconnectReason.isPresent()) {
+      PreLoginComponentResult result = event.result();
+      @Nullable Component disconnectReason = result.explanation();
+      if (disconnectReason != null) {
         // The component is guaranteed to be provided if the connection was denied.
-        inbound.disconnect(disconnectReason.get());
+        inbound.disconnect(disconnectReason);
         return;
       }
 
@@ -185,8 +185,8 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
 
     try {
       KeyPair serverKeyPair = server.getServerKeyPair();
-      if (inbound.getIdentifiedKey() != null) {
-        IdentifiedKey playerKey = inbound.getIdentifiedKey();
+      if (inbound.identifiedKey() != null) {
+        IdentifiedKey playerKey = inbound.identifiedKey();
         if (!playerKey.verifyDataSignature(packet.getVerifyToken(), verify,
             Longs.toByteArray(packet.getSalt()))) {
           throw new IllegalStateException("Invalid client public signature.");
@@ -235,11 +235,11 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
             final GameProfile profile = GENERAL_GSON.fromJson(profileResponse.getResponseBody(),
                 GameProfile.class);
             // Not so fast, now we verify the public key for 1.19.1+
-            if (inbound.getIdentifiedKey() != null
-                && inbound.getIdentifiedKey().getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
-                && inbound.getIdentifiedKey() instanceof IdentifiedKeyImpl) {
-              IdentifiedKeyImpl key = (IdentifiedKeyImpl) inbound.getIdentifiedKey();
-              if (!key.internalAddHolder(profile.getId())) {
+            if (inbound.identifiedKey() != null
+                && inbound.identifiedKey().revision() == IdentifiedKey.Revision.LINKED_V2
+                && inbound.identifiedKey() instanceof IdentifiedKeyImpl) {
+              IdentifiedKeyImpl key = (IdentifiedKeyImpl) inbound.identifiedKey();
+              if (!key.internalAddHolder(profile.uuid())) {
                 inbound.disconnect(
                     Component.translatable("multiplayer.disconnect.invalid_public_key"));
               }

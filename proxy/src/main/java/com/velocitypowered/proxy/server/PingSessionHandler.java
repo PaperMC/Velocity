@@ -58,7 +58,7 @@ public class PingSessionHandler implements MinecraftSessionHandler {
     Handshake handshake = new Handshake();
     handshake.setNextStatus(StateRegistry.STATUS_ID);
 
-    SocketAddress address = server.getServerInfo().getAddress();
+    SocketAddress address = server.serverInfo().address();
     if (address instanceof InetSocketAddress) {
       InetSocketAddress socketAddr = (InetSocketAddress) address;
       handshake.setServerAddress(socketAddr.getHostString());

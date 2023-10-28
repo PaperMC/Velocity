@@ -39,7 +39,7 @@ public final class PermissionsSetupEvent {
     this.provider = this.defaultProvider = Preconditions.checkNotNull(provider, "provider");
   }
 
-  public PermissionSubject getSubject() {
+  public PermissionSubject subject() {
     return this.subject;
   }
 
@@ -53,7 +53,7 @@ public final class PermissionsSetupEvent {
     return this.provider.createChecker(subject);
   }
 
-  public PermissionProvider getProvider() {
+  public PermissionProvider provider() {
     return this.provider;
   }
 

@@ -39,11 +39,11 @@ public final class Favicon {
   }
 
   /**
-   * Returns the Base64-encoded URI for this image.
+   * Returns the Base64-encoded URL for this image.
    *
    * @return a URL representing this favicon
    */
-  public String getBase64Url() {
+  public String url() {
     return base64Url;
   }
 

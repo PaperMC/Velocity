@@ -102,7 +102,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     CompletableFuture<Impl> result = new CompletableFuture<>();
     // Note: we use the event loop for the connection the player is on. This reduces context
     // switches.
-    SocketAddress destinationAddress = registeredServer.getServerInfo().getAddress();
+    SocketAddress destinationAddress = registeredServer.serverInfo().address();
     server.createBootstrap(proxyPlayer.getConnection().eventLoop(), destinationAddress)
         .handler(server.getBackendChannelInitializer())
         .connect(destinationAddress)
@@ -135,7 +135,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   }
 
   String getPlayerRemoteAddressAsString() {
-    final SocketAddress address = proxyPlayer.getRemoteAddress();
+    final SocketAddress address = proxyPlayer.remoteAddress();
     if (!(address instanceof InetSocketAddress)) {
       return address.toString();
     }
@@ -148,9 +148,9 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   }
 
   private String getHandshakeRemoteAddress() {
-    return proxyPlayer.getVirtualHost()
+    return proxyPlayer.virtualHost()
         .map(InetSocketAddress::getHostString)
-        .or(() -> Optional.of(registeredServer.getServerInfo().getAddress())
+        .or(() -> Optional.of(registeredServer.serverInfo().address())
             .filter(addr -> addr instanceof InetSocketAddress)
             .map(addr -> ((InetSocketAddress) addr).getHostString()))
         .orElse("");
@@ -160,7 +160,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     // BungeeCord IP forwarding is simply a special injection after the "address" in the handshake,
     // separated by \0 (the null byte). In order, you send the original host, the player's IP, their
     // UUID (undashed), and if you are in online-mode, their login properties (from Mojang).
-    SocketAddress playerRemoteAddress = proxyPlayer.getRemoteAddress();
+    SocketAddress playerRemoteAddress = proxyPlayer.remoteAddress();
     if (!(playerRemoteAddress instanceof InetSocketAddress)) {
       return getHandshakeRemoteAddress();
     }
@@ -169,10 +169,10 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
         .append('\0')
         .append(getPlayerRemoteAddressAsString())
         .append('\0')
-        .append(proxyPlayer.getGameProfile().getUndashedId())
+        .append(proxyPlayer.profile().undashedId())
         .append('\0');
     GENERAL_GSON
-        .toJson(propertiesTransform.apply(proxyPlayer.getGameProfile().getProperties()), data);
+        .toJson(propertiesTransform.apply(proxyPlayer.profile().properties()), data);
     return data.toString();
   }
 
@@ -208,7 +208,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
       handshake.setServerAddress(getHandshakeRemoteAddress());
     }
 
-    SocketAddress destinationAddr = registeredServer.getServerInfo().getAddress();
+    SocketAddress destinationAddr = registeredServer.serverInfo().address();
     if (destinationAddr instanceof InetSocketAddress) {
       handshake.setPort(((InetSocketAddress) destinationAddr).getPort());
     }
@@ -216,11 +216,11 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
     mc.setProtocolVersion(protocolVersion);
     mc.setActiveSessionHandler(StateRegistry.LOGIN);
-    if (proxyPlayer.getIdentifiedKey() == null
-        && proxyPlayer.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
-      mc.delayedWrite(new ServerLogin(proxyPlayer.getUsername(), proxyPlayer.getUniqueId()));
+    if (proxyPlayer.identifiedKey() == null
+        && proxyPlayer.protocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
+      mc.delayedWrite(new ServerLogin(proxyPlayer.username(), proxyPlayer.uuid()));
     } else {
-      mc.delayedWrite(new ServerLogin(proxyPlayer.getUsername(), proxyPlayer.getIdentifiedKey()));
+      mc.delayedWrite(new ServerLogin(proxyPlayer.username(), proxyPlayer.identifiedKey()));
     }
     mc.flush();
   }
@@ -243,22 +243,22 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   }
 
   @Override
-  public VelocityRegisteredServer getServer() {
+  public VelocityRegisteredServer server() {
     return registeredServer;
   }
 
   @Override
-  public Optional<RegisteredServer> getPreviousServer() {
+  public Optional<RegisteredServer> previousServer() {
     return Optional.ofNullable(this.previousServer);
   }
 
   @Override
-  public ServerInfo getServerInfo() {
-    return registeredServer.getServerInfo();
+  public ServerInfo serverInfo() {
+    return registeredServer.serverInfo();
   }
 
   @Override
-  public ConnectedPlayer getPlayer() {
+  public ConnectedPlayer player() {
     return proxyPlayer;
   }
 
@@ -275,8 +275,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
   @Override
   public String toString() {
-    return "[server connection] " + proxyPlayer.getGameProfile().getName() + " -> "
-        + registeredServer.getServerInfo().getName();
+    return "[server connection] " + proxyPlayer.profile().name() + " -> "
+        + registeredServer.serverInfo().name();
   }
 
   @Override
@@ -297,7 +297,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
     MinecraftConnection mc = ensureConnected();
 
-    PluginMessage message = new PluginMessage(identifier.getId(), data);
+    PluginMessage message = new PluginMessage(identifier.id(), data);
     mc.write(message);
     return true;
   }

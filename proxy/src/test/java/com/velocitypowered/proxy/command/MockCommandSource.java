@@ -29,7 +29,7 @@ public class MockCommandSource implements CommandSource {
   public static final CommandSource INSTANCE = new MockCommandSource();
 
   @Override
-  public PermissionChecker getPermissionChecker() {
+  public PermissionChecker permissionChecker() {
     return PermissionChecker.always(TriState.NOT_SET);
   }
 }
