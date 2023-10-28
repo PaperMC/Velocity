@@ -127,7 +127,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
         PingSessionHandler handler = new PingSessionHandler(pingFuture,
             VelocityRegisteredServer.this, conn, pingOptions.getProtocolVersion());
         conn.setActiveSessionHandler(StateRegistry.HANDSHAKE, handler);
-        conn.addSessionHandler(StateRegistry.LOGIN, handler);
+        conn.addSessionHandler(StateRegistry.STATUS, handler);
       } else {
         pingFuture.completeExceptionally(future.cause());
       }
