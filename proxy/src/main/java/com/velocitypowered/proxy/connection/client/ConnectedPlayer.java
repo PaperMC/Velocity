@@ -282,12 +282,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     return settings != null;
   }
 
-  public void setClientSettingsPacket(ClientSettings clientSettingsPacket) {
+  /**
+   * Sets player settings.
+   *
+   * @param clientSettingsPacket the player settings packet
+   */
+  public void setClientSettings(final ClientSettings clientSettingsPacket) {
     this.clientSettingsPacket = clientSettingsPacket;
-  }
-
-  void setPlayerSettings(ClientSettings settings) {
-    ClientSettingsWrapper cs = new ClientSettingsWrapper(settings);
+    final ClientSettingsWrapper cs = new ClientSettingsWrapper(clientSettingsPacket);
     this.settings = cs;
     server.getEventManager().fireAndForget(new PlayerSettingsChangedEvent(this, cs));
   }
