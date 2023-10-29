@@ -84,8 +84,14 @@ public class SendCommand {
     ArgumentCommandNode<CommandSource, String> serverNode = RequiredArgumentBuilder
         .<CommandSource, String>argument("server", StringArgumentType.word())
         .suggests((context, builder) -> {
+          String argument = context.getArguments().containsKey(SERVER_ARG)
+              ? context.getArgument(SERVER_ARG, String.class)
+              : "";
           for (RegisteredServer server : server.registeredServers()) {
-            builder.suggest(server.serverInfo().name());
+            String serverName = server.serverInfo().name();
+            if (serverName.regionMatches(true, 0, argument, 0, argument.length())) {
+              builder.suggest(server.serverInfo().name());
+            }
           }
           return builder.buildFuture();
         })
