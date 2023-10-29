@@ -70,6 +70,10 @@ public class SendCommand {
               if ("all".regionMatches(true, 0, argument, 0, argument.length())) {
                 builder.suggest("all");
               }
+              if ("current".regionMatches(true, 0, argument, 0, argument.length())
+                  && context.getSource() instanceof Player) {
+                builder.suggest("current");
+              }
               return builder.buildFuture();
             })
             .executes(this::usage)
@@ -113,7 +117,8 @@ public class SendCommand {
       return 0;
     }
 
-    if (server.getPlayer(player).isEmpty() && !Objects.equals(player, "all")) {
+    if (server.getPlayer(player).isEmpty()
+          && !Objects.equals(player, "all") && !Objects.equals(player, "current")) {
       context.getSource().sendMessage(
               CommandMessages.PLAYER_NOT_FOUND.args(Component.text(player))
       );
@@ -125,6 +130,22 @@ public class SendCommand {
         p.createConnectionRequest(server.getServer(serverName).get()).fireAndForget();
       }
       return 1;
+    }
+
+    if (Objects.equals(player, "current")) {
+      if (!(context.getSource() instanceof Player)) {
+        context.getSource().sendMessage(CommandMessages.PLAYERS_ONLY);
+        return 0;
+      }
+
+      Player source = (Player) context.getSource();
+      if (source.getCurrentServer().isPresent()) {
+        for (Player p : source.getCurrentServer().get().getServer().getPlayersConnected()) {
+          p.createConnectionRequest(server.getServer(serverName).get()).fireAndForget();
+        }
+        return 1;
+      }
+      return 0;
     }
 
     server.getPlayer(player).get().createConnectionRequest(
