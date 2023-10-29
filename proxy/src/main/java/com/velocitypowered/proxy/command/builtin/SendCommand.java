@@ -25,13 +25,13 @@ import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.Objects;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.util.TriState;
 
 /**
  * Implements the Velocity default {@code /send} command.
@@ -52,14 +52,14 @@ public class SendCommand {
     LiteralCommandNode<CommandSource> totalNode = LiteralArgumentBuilder
             .<CommandSource>literal("send")
             .requires(source ->
-                    source.getPermissionValue("velocity.command.send") == Tristate.TRUE)
+                    source.getPermissionValue("velocity.command.send") == TriState.TRUE)
             .executes(this::usage)
             .build();
     ArgumentCommandNode<CommandSource, String> playerNode = RequiredArgumentBuilder
             .<CommandSource, String>argument("player", StringArgumentType.word())
             .suggests((context, builder) -> {
               for (Player player : server.getAllPlayers()) {
-                builder.suggest(player.getUsername());
+                builder.suggest(player.username());
               }
               builder.suggest("all");
               return builder.buildFuture();
@@ -70,7 +70,7 @@ public class SendCommand {
             .<CommandSource, String>argument("server", StringArgumentType.word())
             .suggests((context, builder) -> {
               for (RegisteredServer server : server.getAllServers()) {
-                builder.suggest(server.getServerInfo().getName());
+                builder.suggest(server.serverInfo().name());
               }
               return builder.buildFuture();
             })
