@@ -83,7 +83,7 @@ public class SendCommand {
     ArgumentCommandNode<CommandSource, String> serverNode = RequiredArgumentBuilder
             .<CommandSource, String>argument("server", StringArgumentType.word())
             .suggests((context, builder) -> {
-              for (RegisteredServer server : server.getAllServers()) {
+              for (RegisteredServer server : server.registeredServers()) {
                 builder.suggest(server.serverInfo().name());
               }
               return builder.buildFuture();
@@ -92,7 +92,7 @@ public class SendCommand {
             .build();
     totalNode.addChild(playerNode);
     playerNode.addChild(serverNode);
-    server.getCommandManager().register(new BrigadierCommand(totalNode));
+    server.commandManager().register(new BrigadierCommand(totalNode));
   }
 
   private int usage(CommandContext<CommandSource> context) {
@@ -106,15 +106,18 @@ public class SendCommand {
     String serverName = context.getArgument(SERVER_ARG, String.class);
     String player = context.getArgument(PLAYER_ARG, String.class);
 
-    if (server.getServer(serverName).isEmpty()) {
+    Optional<RegisteredServer> maybeServer = server.server(serverName);
+
+    if (maybeServer.isEmpty()) {
       context.getSource().sendMessage(
               CommandMessages.SERVER_DOES_NOT_EXIST.args(Component.text(serverName))
       );
       return 0;
     }
 
-    if (server.getPlayer(player).isEmpty()
-          && !Objects.equals(player, "all") && !Objects.equals(player, "current")) {
+    if (server.player(player).isEmpty()
+        && !Objects.equals(player, "all")
+        && !Objects.equals(player, "current")) {
       context.getSource().sendMessage(
               CommandMessages.PLAYER_NOT_FOUND.args(Component.text(player))
       );
@@ -122,8 +125,8 @@ public class SendCommand {
     }
 
     if (Objects.equals(player, "all")) {
-      for (Player p : server.getAllPlayers()) {
-        p.createConnectionRequest(server.getServer(serverName).get()).fireAndForget();
+      for (Player p : server.onlinePlayers()) {
+        p.createConnectionRequest(server.server(serverName).get()).fireAndForget();
       }
       return 1;
     }
@@ -138,16 +141,14 @@ public class SendCommand {
       Optional<ServerConnection> connectedServer = source.connectedServer();
       if (connectedServer.isPresent()) {
         for (Player p : connectedServer.get().server().players()) {
-          p.createConnectionRequest(server.getServer(serverName).get()).fireAndForget();
+          p.createConnectionRequest(maybeServer.get()).fireAndForget();
         }
         return 1;
       }
       return 0;
     }
 
-    server.getPlayer(player).get().createConnectionRequest(
-            server.getServer(serverName).get()
-    ).fireAndForget();
+    server.player(player).get().createConnectionRequest(maybeServer.get()).fireAndForget();
     return 1;
   }
 }

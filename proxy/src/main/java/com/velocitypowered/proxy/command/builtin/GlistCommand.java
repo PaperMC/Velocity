@@ -66,7 +66,7 @@ public class GlistCommand {
     ArgumentCommandNode<CommandSource, String> serverNode = RequiredArgumentBuilder
         .<CommandSource, String>argument(SERVER_ARG, StringArgumentType.string())
         .suggests((context, builder) -> {
-          for (RegisteredServer server : server.getAllServers()) {
+          for (RegisteredServer server : server.registeredServers()) {
             builder.suggest(server.serverInfo().name());
           }
           builder.suggest("all");
@@ -75,7 +75,7 @@ public class GlistCommand {
         .executes(this::serverCount)
         .build();
     totalNode.addChild(serverNode);
-    server.getCommandManager().register(new BrigadierCommand(totalNode));
+    server.commandManager().register(new BrigadierCommand(totalNode));
   }
 
   private int totalCount(final CommandContext<CommandSource> context) {
@@ -95,7 +95,7 @@ public class GlistCommand {
       }
       sendTotalProxyCount(source);
     } else {
-      Optional<RegisteredServer> registeredServer = server.getServer(serverName);
+      Optional<RegisteredServer> registeredServer = server.server(serverName);
       if (!registeredServer.isPresent()) {
         source.sendMessage(Identity.nil(),
             CommandMessages.SERVER_DOES_NOT_EXIST.args(Component.text(serverName)));
@@ -107,7 +107,7 @@ public class GlistCommand {
   }
 
   private void sendTotalProxyCount(CommandSource target) {
-    int online = server.getPlayerCount();
+    int online = server.onlinePlayerCount();
     TranslatableComponent msg = online == 1
         ? Component.translatable("velocity.command.glist-player-singular")
         : Component.translatable("velocity.command.glist-player-plural");

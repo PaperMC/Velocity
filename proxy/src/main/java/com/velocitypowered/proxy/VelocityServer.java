@@ -166,12 +166,12 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   @Override
-  public VelocityConfiguration getConfiguration() {
+  public VelocityConfiguration configuration() {
     return this.configuration;
   }
 
   @Override
-  public ProxyVersion getVersion() {
+  public ProxyVersion version() {
     Package pkg = VelocityServer.class.getPackage();
     String implName;
     String implVersion;
@@ -190,7 +190,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   @Override
-  public VelocityCommandManager getCommandManager() {
+  public VelocityCommandManager commandManager() {
     return commandManager;
   }
 
@@ -201,7 +201,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   @EnsuresNonNull({"serverKeyPair", "servers", "pluginManager", "eventManager", "scheduler",
       "console", "cm", "configuration"})
   void start() {
-    logger.info("Booting up {} {}...", getVersion().name(), getVersion().version());
+    logger.info("Booting up {} {}...", version().name(), version().version());
     console.setupStreams();
 
     registerTranslations();
@@ -640,13 +640,13 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   @Override
-  public Optional<Player> getPlayer(String username) {
+  public Optional<Player> player(String username) {
     Preconditions.checkNotNull(username, "username");
     return Optional.ofNullable(connectionsByName.get(username.toLowerCase(Locale.US)));
   }
 
   @Override
-  public Optional<Player> getPlayer(UUID uuid) {
+  public Optional<Player> player(UUID uuid) {
     Preconditions.checkNotNull(uuid, "uuid");
     return Optional.ofNullable(connectionsByUuid.get(uuid));
   }
@@ -655,7 +655,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   public Collection<Player> matchPlayer(String partialName) {
     Objects.requireNonNull(partialName);
 
-    return getAllPlayers().stream().filter(p -> p.username()
+    return onlinePlayers().stream().filter(p -> p.username()
             .regionMatches(true, 0, partialName, 0, partialName.length()))
         .collect(Collectors.toList());
   }
@@ -664,28 +664,28 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   public Collection<RegisteredServer> matchServer(String partialName) {
     Objects.requireNonNull(partialName);
 
-    return getAllServers().stream().filter(s -> s.serverInfo().name()
+    return registeredServers().stream().filter(s -> s.serverInfo().name()
             .regionMatches(true, 0, partialName, 0, partialName.length()))
         .collect(Collectors.toList());
   }
 
   @Override
-  public Collection<Player> getAllPlayers() {
+  public Collection<Player> onlinePlayers() {
     return ImmutableList.copyOf(connectionsByUuid.values());
   }
 
   @Override
-  public int getPlayerCount() {
+  public int onlinePlayerCount() {
     return connectionsByUuid.size();
   }
 
   @Override
-  public Optional<RegisteredServer> getServer(String name) {
+  public Optional<RegisteredServer> server(String name) {
     return servers.getServer(name);
   }
 
   @Override
-  public Collection<RegisteredServer> getAllServers() {
+  public Collection<RegisteredServer> registeredServers() {
     return servers.getAllServers();
   }
 
@@ -705,32 +705,32 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   @Override
-  public VelocityConsole getConsoleCommandSource() {
+  public VelocityConsole console() {
     return console;
   }
 
   @Override
-  public PluginManager getPluginManager() {
+  public PluginManager pluginManager() {
     return pluginManager;
   }
 
   @Override
-  public VelocityEventManager getEventManager() {
+  public VelocityEventManager eventManager() {
     return eventManager;
   }
 
   @Override
-  public VelocityScheduler getScheduler() {
+  public VelocityScheduler scheduler() {
     return scheduler;
   }
 
   @Override
-  public VelocityChannelRegistrar getChannelRegistrar() {
+  public VelocityChannelRegistrar channelRegistrar() {
     return channelRegistrar;
   }
 
   @Override
-  public SocketAddress getBoundAddress() {
+  public SocketAddress boundAddress() {
     if (configuration == null) {
       throw new IllegalStateException(
           "No configuration"); // even though you'll never get the chance... heh, heh
@@ -740,9 +740,9 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
   @Override
   public @NonNull Iterable<? extends Audience> audiences() {
-    Collection<Audience> audiences = new ArrayList<>(this.getPlayerCount() + 1);
+    Collection<Audience> audiences = new ArrayList<>(this.onlinePlayerCount() + 1);
     audiences.add(this.console);
-    audiences.addAll(this.getAllPlayers());
+    audiences.addAll(this.onlinePlayers());
     return audiences;
   }
 

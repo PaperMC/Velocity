@@ -44,7 +44,7 @@ public class LegacyChatHandler implements ChatHandler<LegacyChat> {
     if (serverConnection == null) {
       return;
     }
-    this.server.getEventManager().fire(new PlayerChatEvent(this.player, packet.getMessage()))
+    this.server.eventManager().fire(new PlayerChatEvent(this.player, packet.getMessage()))
         .whenComplete((chatEvent, throwable) -> {
           if (!chatEvent.result().allowed()) {
             return;

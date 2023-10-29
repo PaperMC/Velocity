@@ -110,7 +110,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
     // The goods are in hand! We got JoinGame. Let's transition completely to the new state.
     smc.setAutoReading(false);
-    server.getEventManager()
+    server.eventManager()
         .fire(new ServerConnectedEvent(player, serverConn.server(), previousServer))
         .thenRunAsync(() -> {
           // Make sure we can still transition (player might have disconnected here).
@@ -151,7 +151,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           }
 
           // We're done! :)
-          server.getEventManager().fireAndForget(new ServerPostConnectEvent(player,
+          server.eventManager().fireAndForget(new ServerPostConnectEvent(player,
               previousServer));
           resultFuture.complete(ConnectionRequestResults.successful(serverConn.server()));
         }, smc.eventLoop()).exceptionally(exc -> {

@@ -83,7 +83,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
     this.inbound = Preconditions.checkNotNull(inbound, "inbound");
     this.forceKeyAuthentication = System.getProperties().containsKey("auth.forceSecureProfiles")
         ? Boolean.getBoolean("auth.forceSecureProfiles")
-        : server.getConfiguration().isForceKeyAuthentication();
+        : server.configuration().isForceKeyAuthentication();
   }
 
   @Override
@@ -121,7 +121,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
     this.login = packet;
 
     PreLoginEvent event = new PreLoginEvent(inbound, login.getUsername());
-    server.getEventManager().fire(event).thenRunAsync(() -> {
+    server.eventManager().fire(event).thenRunAsync(() -> {
       if (mcConnection.isClosed()) {
         // The player was disconnected
         return;
@@ -143,7 +143,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
 
         mcConnection.eventLoop().execute(() -> {
           if (!result.isForceOfflineMode()
-              && (server.getConfiguration().isOnlineMode() || result.isOnlineModeAllowed())) {
+              && (server.configuration().isOnlineMode() || result.isOnlineModeAllowed())) {
             // Request encryption.
             EncryptionRequest request = generateEncryptionRequest();
             this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
@@ -205,7 +205,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
       String url = String.format(MOJANG_HASJOINED_URL,
           urlFormParameterEscaper().escape(login.getUsername()), serverId);
 
-      if (server.getConfiguration().shouldPreventClientProxyConnections()) {
+      if (server.configuration().shouldPreventClientProxyConnections()) {
         url += "&ip=" + urlFormParameterEscaper().escape(playerIp);
       }
 

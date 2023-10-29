@@ -61,7 +61,7 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
         .addLast(LEGACY_PING_DECODER, new LegacyPingDecoder())
         .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
         .addLast(READ_TIMEOUT,
-            new ReadTimeoutHandler(this.server.getConfiguration().getReadTimeout(),
+            new ReadTimeoutHandler(this.server.configuration().getReadTimeout(),
                 TimeUnit.MILLISECONDS))
         .addLast(LEGACY_PING_ENCODER, LegacyPingEncoder.INSTANCE)
         .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
@@ -73,7 +73,7 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
         new HandshakeSessionHandler(connection, this.server));
     ch.pipeline().addLast(Connections.HANDLER, connection);
 
-    if (this.server.getConfiguration().isProxyProtocol()) {
+    if (this.server.configuration().isProxyProtocol()) {
       ch.pipeline().addFirst(new HAProxyMessageDecoder());
     }
   }

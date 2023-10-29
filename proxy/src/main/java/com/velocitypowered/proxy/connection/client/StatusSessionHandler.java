@@ -52,7 +52,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void activated() {
-    if (server.getConfiguration().isShowPingRequests()) {
+    if (server.configuration().isShowPingRequests()) {
       logger.info("{} is pinging the server with version {}", this.inbound,
           this.connection.getProtocolVersion());
     }

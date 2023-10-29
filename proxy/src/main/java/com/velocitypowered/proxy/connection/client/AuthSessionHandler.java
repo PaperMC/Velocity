@@ -82,12 +82,12 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
   public void activated() {
     // Some connection types may need to alter the game profile.
     profile = mcConnection.getType().addGameProfileTokensIfRequired(profile,
-        server.getConfiguration().getPlayerInfoForwardingMode());
+        server.configuration().getPlayerInfoForwardingMode());
     GameProfileRequestEvent profileRequestEvent = new GameProfileRequestEvent(inbound, profile,
         onlineMode);
     final GameProfile finalProfile = profile;
 
-    server.getEventManager().fire(profileRequestEvent).thenComposeAsync(profileEvent -> {
+    server.eventManager().fire(profileRequestEvent).thenComposeAsync(profileEvent -> {
       if (mcConnection.isClosed()) {
         // The player disconnected after we authenticated them.
         return CompletableFuture.completedFuture(null);
@@ -107,7 +107,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
 
       logger.info("{} has connected", player);
 
-      return server.getEventManager()
+      return server.eventManager()
           .fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
           .thenAcceptAsync(event -> {
             if (!mcConnection.isClosed()) {
@@ -133,12 +133,12 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
   }
 
   private void startLoginCompletion(ConnectedPlayer player) {
-    int threshold = server.getConfiguration().getCompressionThreshold();
+    int threshold = server.configuration().getCompressionThreshold();
     if (threshold >= 0 && mcConnection.getProtocolVersion().compareTo(MINECRAFT_1_8) >= 0) {
       mcConnection.write(new SetCompression(threshold));
       mcConnection.setCompressionThreshold(threshold);
     }
-    VelocityConfiguration configuration = server.getConfiguration();
+    VelocityConfiguration configuration = server.configuration();
     UUID playerUniqueId = player.uuid();
     if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.NONE) {
       playerUniqueId = UuidUtils.generateOfflinePlayerUuid(player.username());
@@ -182,7 +182,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
       mcConnection.setActiveSessionHandler(StateRegistry.CONFIG,
           new ClientConfigSessionHandler(server, connectedPlayer));
 
-      server.getEventManager().fire(new PostLoginEvent(connectedPlayer))
+      server.eventManager().fire(new PostLoginEvent(connectedPlayer))
           .thenCompose((ignored) -> connectToInitialServer(connectedPlayer)).exceptionally((ex) -> {
             logger.error("Exception while connecting {} to initial server", connectedPlayer, ex);
             return null;
@@ -194,10 +194,10 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
   private void completeLoginProtocolPhaseAndInitialize(ConnectedPlayer player) {
     mcConnection.setAssociation(player);
 
-    server.getEventManager().fire(new LoginEvent(player)).thenAcceptAsync(event -> {
+    server.eventManager().fire(new LoginEvent(player)).thenAcceptAsync(event -> {
       if (mcConnection.isClosed()) {
         // The player was disconnected
-        server.getEventManager().fireAndForget(new DisconnectEvent(player,
+        server.eventManager().fireAndForget(new DisconnectEvent(player,
             DisconnectEvent.LoginStatus.CANCELLED_BY_USER_BEFORE_COMPLETE));
         return;
       }
@@ -223,7 +223,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
           loginState = State.ACKNOWLEDGED;
           mcConnection.setActiveSessionHandler(StateRegistry.PLAY,
               new InitialConnectSessionHandler(player, server));
-          server.getEventManager().fire(new PostLoginEvent(player))
+          server.eventManager().fire(new PostLoginEvent(player))
               .thenCompose((ignored) -> connectToInitialServer(player)).exceptionally((ex) -> {
                 logger.error("Exception while connecting {} to initial server", player, ex);
                 return null;
@@ -241,7 +241,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
     PlayerChooseInitialServerEvent event =
         new PlayerChooseInitialServerEvent(player, initialFromConfig.orElse(null));
 
-    return server.getEventManager().fire(event).thenRunAsync(() -> {
+    return server.eventManager().fire(event).thenRunAsync(() -> {
       Optional<RegisteredServer> toTry = event.getInitialServer();
       if (!toTry.isPresent()) {
         player.disconnect0(

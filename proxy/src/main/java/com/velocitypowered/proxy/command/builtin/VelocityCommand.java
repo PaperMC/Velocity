@@ -220,7 +220,7 @@ public class VelocityCommand implements SimpleCommand {
         return;
       }
 
-      ProxyVersion version = server.getVersion();
+      ProxyVersion version = server.version();
 
       Component velocity = Component.text().content(version.name() + " ")
           .decoration(TextDecoration.BOLD, true)
@@ -274,7 +274,7 @@ public class VelocityCommand implements SimpleCommand {
         return;
       }
 
-      List<PluginContainer> plugins = ImmutableList.copyOf(server.getPluginManager().plugins());
+      List<PluginContainer> plugins = ImmutableList.copyOf(server.pluginManager().plugins());
       int pluginCount = plugins.size();
 
       if (pluginCount == 0) {
@@ -356,7 +356,7 @@ public class VelocityCommand implements SimpleCommand {
         return;
       }
 
-      Collection<RegisteredServer> allServers = ImmutableSet.copyOf(server.getAllServers());
+      Collection<RegisteredServer> allServers = ImmutableSet.copyOf(server.registeredServers());
       JsonObject servers = new JsonObject();
       for (RegisteredServer iter : allServers) {
         servers.add(iter.serverInfo().name(),
@@ -364,19 +364,19 @@ public class VelocityCommand implements SimpleCommand {
       }
       JsonArray connectOrder = new JsonArray();
       List<String> attemptedConnectionOrder = ImmutableList.copyOf(
-          server.getConfiguration().getAttemptConnectionOrder());
+          server.configuration().getAttemptConnectionOrder());
       for (String s : attemptedConnectionOrder) {
         connectOrder.add(s);
       }
 
-      JsonObject proxyConfig = InformationUtils.collectProxyConfig(server.getConfiguration());
+      JsonObject proxyConfig = InformationUtils.collectProxyConfig(server.configuration());
       proxyConfig.add("servers", servers);
       proxyConfig.add("connectOrder", connectOrder);
       proxyConfig.add("forcedHosts",
-          InformationUtils.collectForcedHosts(server.getConfiguration()));
+          InformationUtils.collectForcedHosts(server.configuration()));
 
       JsonObject dump = new JsonObject();
-      dump.add("versionInfo", InformationUtils.collectProxyInfo(server.getVersion()));
+      dump.add("versionInfo", InformationUtils.collectProxyInfo(server.version()));
       dump.add("platform", InformationUtils.collectEnvironmentInfo());
       dump.add("config", proxyConfig);
       dump.add("plugins", InformationUtils.collectPluginInfo(server));

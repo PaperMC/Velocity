@@ -52,11 +52,11 @@ public class ServerListPingHandler {
     if (version == ProtocolVersion.UNKNOWN) {
       version = ProtocolVersion.MAXIMUM_VERSION;
     }
-    VelocityConfiguration configuration = server.getConfiguration();
+    VelocityConfiguration configuration = server.configuration();
     return new ServerPing(
         new ServerPing.Version(version.getProtocol(),
             "Velocity " + ProtocolVersion.SUPPORTED_VERSION_STRING),
-        new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(),
+        new ServerPing.Players(server.onlinePlayerCount(), configuration.getShowMaxPlayers(),
             ImmutableList.of()),
         configuration.getMotd(),
         configuration.getFavicon().orElse(null),
@@ -69,7 +69,7 @@ public class ServerListPingHandler {
     ServerPing fallback = constructLocalPing(connection.protocolVersion());
     List<CompletableFuture<ServerPing>> pings = new ArrayList<>();
     for (String s : servers) {
-      Optional<RegisteredServer> rs = server.getServer(s);
+      Optional<RegisteredServer> rs = server.server(s);
       if (rs.isEmpty()) {
         continue;
       }
@@ -144,7 +144,7 @@ public class ServerListPingHandler {
    * @return a future with the initial ping result
    */
   public CompletableFuture<ServerPing> getInitialPing(VelocityInboundConnection connection) {
-    VelocityConfiguration configuration = server.getConfiguration();
+    VelocityConfiguration configuration = server.configuration();
     ProtocolVersion shownVersion = ProtocolVersion.isSupported(connection.protocolVersion())
         ? connection.protocolVersion() : ProtocolVersion.MAXIMUM_VERSION;
     PingPassthroughMode passthroughMode = configuration.getPingPassthrough();
@@ -155,8 +155,8 @@ public class ServerListPingHandler {
       String virtualHostStr = connection.virtualHost().map(InetSocketAddress::getHostString)
           .map(str -> str.toLowerCase(Locale.ROOT))
           .orElse("");
-      List<String> serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(
-          virtualHostStr, server.getConfiguration().getAttemptConnectionOrder());
+      List<String> serversToTry = server.configuration().getForcedHosts().getOrDefault(
+          virtualHostStr, server.configuration().getAttemptConnectionOrder());
       return attemptPingPassthrough(connection, passthroughMode, serversToTry, shownVersion);
     }
   }
@@ -171,7 +171,7 @@ public class ServerListPingHandler {
    */
   public CompletableFuture<ServerPing> getPing(VelocityInboundConnection connection) {
     return this.getInitialPing(connection)
-        .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(connection, ping)))
+        .thenCompose(ping -> server.eventManager().fire(new ProxyPingEvent(connection, ping)))
         .thenApply(ProxyPingEvent::ping);
   }
 

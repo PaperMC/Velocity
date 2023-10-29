@@ -93,7 +93,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
     PermissionsSetupEvent event = new PermissionsSetupEvent(
         this, s -> PermissionChecker.always(TriState.TRUE));
     // we can safely block here, this is before any listeners fire
-    this.permissionChecker = this.server.getEventManager().fire(event).join().createChecker(this);
+    this.permissionChecker = this.server.eventManager().fire(event).join().createChecker(this);
     if (this.permissionChecker == null) {
       logger.error(
           "A plugin permission provider {} provided an invalid permission function"
@@ -110,7 +110,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
         .appName("Velocity")
         .completer((reader, parsedLine, list) -> {
           try {
-            List<String> offers = this.server.getCommandManager()
+            List<String> offers = this.server.commandManager()
                 .offerSuggestions(this, parsedLine.line())
                 .join(); // Console doesn't get harmed much by this...
             for (String offer : offers) {
@@ -131,7 +131,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   @Override
   protected void runCommand(String command) {
     try {
-      if (!this.server.getCommandManager().executeAsync(this, command).join()) {
+      if (!this.server.commandManager().executeAsync(this, command).join()) {
         sendMessage(Component.translatable("velocity.command.command-does-not-exist",
             NamedTextColor.RED));
       }

@@ -113,7 +113,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
       activeSessionHandler.connected();
     }
 
-    if (association != null && server.getConfiguration().isLogPlayerConnections()) {
+    if (association != null && server.configuration().isLogPlayerConnections()) {
       logger.info("{} has connected", association);
     }
   }
@@ -126,7 +126,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     if (association != null && !knownDisconnect
         && !(activeSessionHandler instanceof StatusSessionHandler)
-        && server.getConfiguration().isLogPlayerConnections()) {
+        && server.configuration().isLogPlayerConnections()) {
       logger.info("{} has disconnected", association);
     }
   }
@@ -514,7 +514,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         decoder.setThreshold(threshold);
         encoder.setThreshold(threshold);
       } else {
-        int level = server.getConfiguration().getCompressionLevel();
+        int level = server.configuration().getCompressionLevel();
         VelocityCompressor compressor = Natives.compress.get().create(level);
 
         encoder = new MinecraftCompressorAndLengthEncoder(threshold, compressor);

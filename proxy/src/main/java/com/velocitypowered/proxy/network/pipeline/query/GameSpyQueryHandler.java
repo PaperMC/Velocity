@@ -88,18 +88,18 @@ public class GameSpyQueryHandler extends SimpleChannelInboundHandler<DatagramPac
   private QueryResponse createInitialResponse() {
     return QueryResponse.builder()
         .hostname(
-            PlainTextComponentSerializer.plainText().serialize(server.getConfiguration().getMotd()))
+            PlainTextComponentSerializer.plainText().serialize(server.configuration().getMotd()))
         .gameVersion(ProtocolVersion.SUPPORTED_VERSION_STRING)
-        .map(server.getConfiguration().getQueryMap())
-        .currentPlayers(server.getPlayerCount())
-        .maxPlayers(server.getConfiguration().getShowMaxPlayers())
-        .proxyPort(((InetSocketAddress) server.getConfiguration().getBind()).getPort())
-        .proxyHost(((InetSocketAddress) server.getConfiguration().getBind()).getHostString())
-        .players(server.getAllPlayers().stream().map(Player::username)
+        .map(server.configuration().getQueryMap())
+        .currentPlayers(server.onlinePlayerCount())
+        .maxPlayers(server.configuration().getShowMaxPlayers())
+        .proxyPort(((InetSocketAddress) server.configuration().getBind()).getPort())
+        .proxyHost(((InetSocketAddress) server.configuration().getBind()).getHostString())
+        .players(server.onlinePlayers().stream().map(Player::username)
             .collect(Collectors.toList()))
         .proxyVersion("Velocity")
         .plugins(
-            server.getConfiguration().shouldQueryShowPlugins() ? getRealPluginInformation()
+            server.configuration().shouldQueryShowPlugins() ? getRealPluginInformation()
                 : Collections.emptyList())
         .build();
   }
@@ -154,7 +154,7 @@ public class GameSpyQueryHandler extends SimpleChannelInboundHandler<DatagramPac
         boolean isBasic = !queryMessage.isReadable();
 
         // Call event and write response
-        server.getEventManager()
+        server.eventManager()
             .fire(new ProxyQueryEvent(isBasic ? BASIC : FULL, senderAddress, response))
             .thenAcceptAsync((event) -> {
               // Packet header
@@ -205,7 +205,7 @@ public class GameSpyQueryHandler extends SimpleChannelInboundHandler<DatagramPac
 
   private List<QueryResponse.PluginInformation> getRealPluginInformation() {
     List<QueryResponse.PluginInformation> result = new ArrayList<>();
-    for (PluginContainer plugin : server.getPluginManager().plugins()) {
+    for (PluginContainer plugin : server.pluginManager().plugins()) {
       PluginDescription description = plugin.description();
       result.add(QueryResponse.PluginInformation.of(description.name()
           .orElse(description.id()), description.version().orElse(null)));

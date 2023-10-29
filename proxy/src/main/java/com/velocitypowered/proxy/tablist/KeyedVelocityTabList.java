@@ -226,7 +226,7 @@ public class KeyedVelocityTabList implements InternalTabList {
       LegacyPlayerListItem.Item packetItem = LegacyPlayerListItem.Item.from(entry);
 
       IdentifiedKey selectedKey = packetItem.getPlayerKey();
-      Optional<Player> existing = proxyServer.getPlayer(entry.getProfile().uuid());
+      Optional<Player> existing = proxyServer.player(entry.getProfile().uuid());
       if (existing.isPresent()) {
         selectedKey = existing.get().identifiedKey();
       }

@@ -57,7 +57,7 @@ public enum InformationUtils {
    */
   public static JsonArray collectPluginInfo(ProxyServer proxy) {
     List<PluginContainer> allPlugins = ImmutableList.copyOf(
-        proxy.getPluginManager().plugins());
+        proxy.pluginManager().plugins());
     JsonArray plugins = new JsonArray();
 
     for (PluginContainer plugin : allPlugins) {

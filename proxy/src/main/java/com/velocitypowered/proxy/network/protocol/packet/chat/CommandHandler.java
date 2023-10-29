@@ -48,7 +48,7 @@ public interface CommandHandler<T extends MinecraftPacket> {
   default CompletableFuture<MinecraftPacket> runCommand(VelocityServer server,
       ConnectedPlayer player, String command,
       Function<Boolean, MinecraftPacket> hasRunPacketFunction) {
-    return server.getCommandManager().executeImmediatelyAsync(player, command)
+    return server.commandManager().executeImmediatelyAsync(player, command)
         .thenApply(hasRunPacketFunction);
   }
 
@@ -56,10 +56,10 @@ public interface CommandHandler<T extends MinecraftPacket> {
       Function<CommandExecuteEvent, CompletableFuture<MinecraftPacket>> futurePacketCreator,
       String message, Instant timestamp) {
     player.getChatQueue().queuePacket(
-        server.getCommandManager().callCommandEvent(player, message)
+        server.commandManager().callCommandEvent(player, message)
             .thenComposeAsync(futurePacketCreator)
             .thenApply(pkt -> {
-              if (server.getConfiguration().isLogCommandExecutions()) {
+              if (server.configuration().isLogCommandExecutions()) {
                 logger.info("{} -> executed command /{}", player, message);
               }
               return pkt;

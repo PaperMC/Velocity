@@ -49,7 +49,7 @@ public class SessionChatHandler implements ChatHandler<SessionPlayerChat> {
   @Override
   public void handlePlayerChatInternal(SessionPlayerChat packet) {
     ChatQueue chatQueue = this.player.getChatQueue();
-    EventManager eventManager = this.server.getEventManager();
+    EventManager eventManager = this.server.eventManager();
     PlayerChatEvent toSend = new PlayerChatEvent(player, packet.getMessage());
     chatQueue.queuePacket(
         eventManager.fire(toSend)

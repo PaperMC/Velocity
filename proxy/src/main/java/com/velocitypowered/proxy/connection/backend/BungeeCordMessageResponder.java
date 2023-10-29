@@ -78,7 +78,7 @@ public class BungeeCordMessageResponder {
 
   private void processConnect(ByteBufDataInput in) {
     String serverName = in.readUTF();
-    proxy.getServer(serverName).ifPresent(server -> player.createConnectionRequest(server)
+    proxy.server(serverName).ifPresent(server -> player.createConnectionRequest(server)
         .fireAndForget());
   }
 
@@ -86,8 +86,8 @@ public class BungeeCordMessageResponder {
     String playerName = in.readUTF();
     String serverName = in.readUTF();
 
-    Optional<Player> referencedPlayer = proxy.getPlayer(playerName);
-    Optional<RegisteredServer> referencedServer = proxy.getServer(serverName);
+    Optional<Player> referencedPlayer = proxy.player(playerName);
+    Optional<RegisteredServer> referencedServer = proxy.server(serverName);
     if (referencedPlayer.isPresent() && referencedServer.isPresent()) {
       referencedPlayer.get().createConnectionRequest(referencedServer.get()).fireAndForget();
     }
@@ -118,9 +118,9 @@ public class BungeeCordMessageResponder {
     if (target.equals("ALL")) {
       out.writeUTF("PlayerCount");
       out.writeUTF("ALL");
-      out.writeInt(proxy.getPlayerCount());
+      out.writeInt(proxy.onlinePlayerCount());
     } else {
-      proxy.getServer(target).ifPresent(rs -> {
+      proxy.server(target).ifPresent(rs -> {
         int playersOnServer = rs.players().size();
         out.writeUTF("PlayerCount");
         out.writeUTF(rs.serverInfo().name());
@@ -145,12 +145,12 @@ public class BungeeCordMessageResponder {
       out.writeUTF("ALL");
 
       StringJoiner joiner = new StringJoiner(", ");
-      for (Player online : proxy.getAllPlayers()) {
+      for (Player online : proxy.onlinePlayers()) {
         joiner.add(online.username());
       }
       out.writeUTF(joiner.toString());
     } else {
-      proxy.getServer(target).ifPresent(info -> {
+      proxy.server(target).ifPresent(info -> {
         out.writeUTF("PlayerList");
         out.writeUTF(info.serverInfo().name());
 
@@ -171,7 +171,7 @@ public class BungeeCordMessageResponder {
 
   private void processGetServers() {
     StringJoiner joiner = new StringJoiner(", ");
-    for (RegisteredServer server : proxy.getAllServers()) {
+    for (RegisteredServer server : proxy.registeredServers()) {
       joiner.add(server.serverInfo().name());
     }
 
@@ -200,7 +200,7 @@ public class BungeeCordMessageResponder {
     if (target.equals("ALL")) {
       proxy.sendMessage(Identity.nil(), messageComponent);
     } else {
-      proxy.getPlayer(target).ifPresent(player -> player.sendMessage(Identity.nil(),
+      proxy.player(target).ifPresent(player -> player.sendMessage(Identity.nil(),
           messageComponent));
     }
   }
@@ -226,7 +226,7 @@ public class BungeeCordMessageResponder {
   }
 
   private void processUuidOther(ByteBufDataInput in) {
-    proxy.getPlayer(in.readUTF()).ifPresent(player -> {
+    proxy.player(in.readUTF()).ifPresent(player -> {
       ByteBuf buf = Unpooled.buffer();
       ByteBufDataOutput out = new ByteBufDataOutput(buf);
 
@@ -239,7 +239,7 @@ public class BungeeCordMessageResponder {
   }
 
   private void processIpOther(ByteBufDataInput in) {
-    proxy.getPlayer(in.readUTF()).ifPresent(player -> {
+    proxy.player(in.readUTF()).ifPresent(player -> {
       ByteBuf buf = Unpooled.buffer();
       ByteBufDataOutput out = new ByteBufDataOutput(buf);
 
@@ -260,7 +260,7 @@ public class BungeeCordMessageResponder {
   }
 
   private void processServerIp(ByteBufDataInput in) {
-    proxy.getServer(in.readUTF()).ifPresent(info -> {
+    proxy.server(in.readUTF()).ifPresent(info -> {
       ByteBuf buf = Unpooled.buffer();
       ByteBufDataOutput out = new ByteBufDataOutput(buf);
 
@@ -281,14 +281,14 @@ public class BungeeCordMessageResponder {
   }
 
   private void processKick(ByteBufDataInput in) {
-    proxy.getPlayer(in.readUTF()).ifPresent(player -> {
+    proxy.player(in.readUTF()).ifPresent(player -> {
       String kickReason = in.readUTF();
       player.disconnect(LegacyComponentSerializer.legacySection().deserialize(kickReason));
     });
   }
 
   private void processForwardToPlayer(ByteBufDataInput in) {
-    Optional<Player> player = proxy.getPlayer(in.readUTF());
+    Optional<Player> player = proxy.player(in.readUTF());
     if (player.isPresent()) {
       ByteBuf toForward = in.unwrap().copy();
       sendServerResponse((ConnectedPlayer) player.get(), toForward);
@@ -302,7 +302,7 @@ public class BungeeCordMessageResponder {
         .map(ServerConnection::serverInfo).orElse(null);
     if (target.equals("ALL") || target.equals("ONLINE")) {
       try {
-        for (RegisteredServer rs : proxy.getAllServers()) {
+        for (RegisteredServer rs : proxy.registeredServers()) {
           if (!rs.serverInfo().equals(currentUserServer)) {
             ((VelocityRegisteredServer) rs).sendPluginMessage(LEGACY_CHANNEL,
                 toForward.retainedSlice());
@@ -312,7 +312,7 @@ public class BungeeCordMessageResponder {
         toForward.release();
       }
     } else {
-      Optional<RegisteredServer> server = proxy.getServer(target);
+      Optional<RegisteredServer> server = proxy.server(target);
       if (server.isPresent()) {
         ((VelocityRegisteredServer) server.get()).sendPluginMessage(LEGACY_CHANNEL, toForward);
       } else {
@@ -340,7 +340,7 @@ public class BungeeCordMessageResponder {
   }
 
   boolean process(PluginMessage message) {
-    if (!proxy.getConfiguration().isBungeePluginChannelEnabled()) {
+    if (!proxy.configuration().isBungeePluginChannelEnabled()) {
       return false;
     }
 

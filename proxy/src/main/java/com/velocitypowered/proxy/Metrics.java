@@ -106,17 +106,17 @@ public class Metrics {
       Metrics metrics = new Metrics(logger, 4752, metricsConfig.isEnabled());
 
       metrics.addCustomChart(
-          new SingleLineChart("players", server::getPlayerCount)
+          new SingleLineChart("players", server::onlinePlayerCount)
       );
       metrics.addCustomChart(
-          new SingleLineChart("managed_servers", () -> server.getAllServers().size())
+          new SingleLineChart("managed_servers", () -> server.registeredServers().size())
       );
       metrics.addCustomChart(
           new SimplePie("online_mode",
-              () -> server.getConfiguration().isOnlineMode() ? "online" : "offline")
+              () -> server.configuration().isOnlineMode() ? "online" : "offline")
       );
       metrics.addCustomChart(new SimplePie("velocity_version",
-          () -> server.getVersion().version()));
+          () -> server.version().version()));
 
       metrics.addCustomChart(new DrilldownPie("java_version", () -> {
         Map<String, Map<String, Integer>> map = new HashMap<>();

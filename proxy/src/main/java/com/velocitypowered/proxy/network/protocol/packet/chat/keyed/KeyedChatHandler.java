@@ -68,7 +68,7 @@ public class KeyedChatHandler implements
   @Override
   public void handlePlayerChatInternal(KeyedPlayerChat packet) {
     ChatQueue chatQueue = this.player.getChatQueue();
-    EventManager eventManager = this.server.getEventManager();
+    EventManager eventManager = this.server.eventManager();
     PlayerChatEvent toSend = new PlayerChatEvent(player, packet.getMessage());
     CompletableFuture<PlayerChatEvent> future = eventManager.fire(toSend);
 

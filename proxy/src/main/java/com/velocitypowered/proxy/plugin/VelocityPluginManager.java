@@ -136,9 +136,9 @@ public class VelocityPluginManager implements PluginManager {
       @Override
       protected void configure() {
         bind(ProxyServer.class).toInstance(server);
-        bind(PluginManager.class).toInstance(server.getPluginManager());
-        bind(EventManager.class).toInstance(server.getEventManager());
-        bind(CommandManager.class).toInstance(server.getCommandManager());
+        bind(PluginManager.class).toInstance(server.pluginManager());
+        bind(EventManager.class).toInstance(server.eventManager());
+        bind(CommandManager.class).toInstance(server.commandManager());
         for (PluginContainer container : pluginContainers.keySet()) {
           bind(PluginContainer.class)
               .annotatedWith(Names.named(container.description().id()))

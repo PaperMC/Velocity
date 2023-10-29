@@ -120,7 +120,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
     ServerResourcePackSendEvent event =
         new ServerResourcePackSendEvent(packet.toServerPromptedPack(), this.serverConn);
 
-    server.getEventManager().fire(event).thenAcceptAsync(serverResourcePackSendEvent -> {
+    server.eventManager().fire(event).thenAcceptAsync(serverResourcePackSendEvent -> {
       if (playerConnection.isClosed()) {
         return;
       }
@@ -189,7 +189,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   public boolean handle(PluginMessage packet) {
     if (PluginMessageUtil.isMcBrand(packet)) {
       serverConn.player().getConnection().write(
-          PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion(),
+          PluginMessageUtil.rewriteMinecraftBrand(packet, server.version(),
               serverConn.player().protocolVersion()));
     } else {
       serverConn.player().getConnection().write(packet.retain());

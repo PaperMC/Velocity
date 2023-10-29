@@ -114,7 +114,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
     if (serverConn != null) {
       if (PluginMessageUtil.isMcBrand(packet)) {
         String brand = PluginMessageUtil.readBrandMessage(packet.content());
-        server.getEventManager().fireAndForget(new PlayerClientBrandEvent(player, brand));
+        server.eventManager().fireAndForget(new PlayerClientBrandEvent(player, brand));
         player.setClientBrand(brand);
         // Client sends `minecraft:brand` packet immediately after Login,
         // but at this time the backend server may not be ready, just discard it.

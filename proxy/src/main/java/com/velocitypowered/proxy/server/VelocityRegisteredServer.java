@@ -96,7 +96,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
     }
     CompletableFuture<ServerPing> pingFuture = new CompletableFuture<>();
     long timeoutMs = pingOptions.timeout() == 0
-        ? server.getConfiguration().getReadTimeout() : pingOptions.timeout();
+        ? server.configuration().getReadTimeout() : pingOptions.timeout();
     server.createBootstrap(loop, serverInfo.address())
         .handler(new BackendChannelInitializer(timeoutMs))
         .connect(serverInfo.address())

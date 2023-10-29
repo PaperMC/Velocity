@@ -72,7 +72,7 @@ public class Velocity {
 
     double bootTime = (System.currentTimeMillis() - startTime) / 1000d;
     logger.info("Done ({}s)!", new DecimalFormat("#.##").format(bootTime));
-    server.getConsoleCommandSource().start();
+    server.console().start();
 
     // If we don't have a console available (because SimpleTerminalConsole returned), then we still
     // need to wait, otherwise the JVM will reap us as no non-daemon threads will be active once the

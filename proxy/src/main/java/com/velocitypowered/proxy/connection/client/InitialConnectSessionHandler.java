@@ -58,7 +58,7 @@ public class InitialConnectSessionHandler implements MinecraftSessionHandler {
         return true;
       }
 
-      ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
+      ChannelIdentifier id = server.channelRegistrar().getFromId(packet.getChannel());
       if (id == null) {
         serverConn.ensureConnected().write(packet.retain());
         return true;
@@ -67,7 +67,7 @@ public class InitialConnectSessionHandler implements MinecraftSessionHandler {
       byte[] copy = ByteBufUtil.getBytes(packet.content());
       PluginMessageEvent event = new PluginMessageEvent(serverConn, serverConn.player(), id,
           copy);
-      server.getEventManager().fire(event)
+      server.eventManager().fire(event)
           .thenAcceptAsync(pme -> {
             if (pme.result().allowed() && serverConn.isActive()) {
               PluginMessage copied = new PluginMessage(packet.getChannel(),

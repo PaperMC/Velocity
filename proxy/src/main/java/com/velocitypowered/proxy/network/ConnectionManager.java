@@ -94,7 +94,7 @@ public final class ConnectionManager {
     this.resolver = new SeparatePoolInetNameResolver(GlobalEventExecutor.INSTANCE);
     this.httpClient = asyncHttpClient(config()
         .setEventLoopGroup(this.workerGroup)
-        .setUserAgent(server.getVersion().name() + "/" + server.getVersion().version())
+        .setUserAgent(server.version().name() + "/" + server.version().version())
         .addRequestFilter(new RequestFilter() {
           @Override
           public <T> FilterContext<T> filter(FilterContext<T> ctx) {
@@ -129,7 +129,7 @@ public final class ConnectionManager {
     if (address instanceof InetSocketAddress) {
       bootstrap.childOption(ChannelOption.TCP_NODELAY, true)
           .childOption(ChannelOption.IP_TOS, 0x18);
-      if (server.getConfiguration().useTcpFastOpen()) {
+      if (server.configuration().useTcpFastOpen()) {
         bootstrap.option(ChannelOption.TCP_FASTOPEN, 3);
       }
     }
@@ -142,7 +142,7 @@ public final class ConnectionManager {
             LOGGER.info("Listening on {}", channel.localAddress());
 
             // Fire the proxy bound event after the socket is bound
-            server.getEventManager().fireAndForget(
+            server.eventManager().fireAndForget(
                 new ListenerBoundEvent(address, ListenerType.MINECRAFT));
           } else {
             LOGGER.error("Can't bind to {}", address, future.cause());
@@ -171,7 +171,7 @@ public final class ConnectionManager {
             LOGGER.info("Listening for GS4 query on {}", channel.localAddress());
 
             // Fire the proxy bound event after the socket is bound
-            server.getEventManager().fireAndForget(
+            server.eventManager().fireAndForget(
                 new ListenerBoundEvent(address, ListenerType.QUERY));
           } else {
             LOGGER.error("Can't bind to {}", bootstrap.config().localAddress(), future.cause());
@@ -191,10 +191,10 @@ public final class ConnectionManager {
         .channelFactory(this.transportType.getClientChannelFactory(target))
         .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
-            this.server.getConfiguration().getConnectTimeout())
+            this.server.configuration().getConnectTimeout())
         .group(group == null ? this.workerGroup : group)
         .resolver(this.resolver.asGroup());
-    if (server.getConfiguration().useTcpFastOpen()) {
+    if (server.configuration().useTcpFastOpen()) {
       bootstrap.option(ChannelOption.TCP_FASTOPEN_CONNECT, true);
     }
     return bootstrap;
@@ -210,7 +210,7 @@ public final class ConnectionManager {
 
     // Fire proxy close event to notify plugins of socket close. We block since plugins
     // should have a chance to be notified before the server stops accepting connections.
-    server.getEventManager().fire(new ListenerCloseEvent(oldBind, endpoint.getType())).join();
+    server.eventManager().fire(new ListenerCloseEvent(oldBind, endpoint.getType())).join();
 
     Channel serverChannel = endpoint.getChannel();
 
@@ -231,7 +231,7 @@ public final class ConnectionManager {
 
       // Fire proxy close event to notify plugins of socket close. We block since plugins
       // should have a chance to be notified before the server stops accepting connections.
-      server.getEventManager().fire(new ListenerCloseEvent(address, endpoint.getType())).join();
+      server.eventManager().fire(new ListenerCloseEvent(address, endpoint.getType())).join();
 
       LOGGER.info("Closing endpoint {}", address);
       if (interrupt) {

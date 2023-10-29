@@ -298,7 +298,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     this.clientSettingsPacket = clientSettingsPacket;
     final ClientSettingsWrapper cs = new ClientSettingsWrapper(clientSettingsPacket);
     this.settings = cs;
-    server.getEventManager().fireAndForget(new PlayerSettingsChangedEvent(this, cs));
+    server.eventManager().fireAndForget(new PlayerSettingsChangedEvent(this, cs));
   }
 
   @Override
@@ -308,7 +308,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   public void setModInfo(ModInfo modInfo) {
     this.modInfo = modInfo;
-    server.getEventManager().fireAndForget(new PlayerModInfoEvent(this, modInfo));
+    server.eventManager().fireAndForget(new PlayerModInfoEvent(this, modInfo));
   }
 
   @Override
@@ -584,7 +584,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   public void disconnect0(Component reason, boolean duringLogin) {
     Component translated = this.translateMessage(reason);
 
-    if (server.getConfiguration().isLogPlayerConnections()) {
+    if (server.configuration().isLogPlayerConnections()) {
       logger.info("{} has disconnected: {}", this,
           LegacyComponentSerializer.legacySection().serialize(translated));
     }
@@ -710,7 +710,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   private void handleKickEvent(KickedFromServerEvent originalEvent, Component friendlyReason,
                                boolean kickedFromCurrent) {
-    server.getEventManager().fire(originalEvent).thenAcceptAsync(event -> {
+    server.eventManager().fire(originalEvent).thenAcceptAsync(event -> {
       // There can't be any connection in flight now.
       connectionInFlight = null;
 
@@ -810,12 +810,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       String virtualHostStr = virtualHost().map(InetSocketAddress::getHostString)
           .orElse("")
           .toLowerCase(Locale.ROOT);
-      serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(virtualHostStr,
+      serversToTry = server.configuration().getForcedHosts().getOrDefault(virtualHostStr,
           Collections.emptyList());
     }
 
     if (serversToTry.isEmpty()) {
-      List<String> connOrder = server.getConfiguration().getAttemptConnectionOrder();
+      List<String> connOrder = server.configuration().getAttemptConnectionOrder();
       if (connOrder.isEmpty()) {
         return Optional.empty();
       } else {
@@ -832,7 +832,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       }
 
       tryIndex = i;
-      return server.getServer(toTryName);
+      return server.server(toTryName);
     }
     return Optional.empty();
   }
@@ -881,7 +881,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       connectedServer.disconnect();
     }
 
-    Optional<Player> connectedPlayer = server.getPlayer(this.uuid());
+    Optional<Player> connectedPlayer = server.player(this.uuid());
     server.unregisterConnection(this);
 
     DisconnectEvent.LoginStatus status;
@@ -898,7 +898,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     }
 
     DisconnectEvent event = new DisconnectEvent(this, status);
-    server.getEventManager().fire(event).whenComplete((val, ex) -> {
+    server.eventManager().fire(event).whenComplete((val, ex) -> {
       if (ex == null) {
         this.teardownFuture.complete(null);
       } else {
@@ -913,7 +913,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   @Override
   public String toString() {
-    boolean isPlayerAddressLoggingEnabled = server.getConfiguration()
+    boolean isPlayerAddressLoggingEnabled = server.configuration()
         .isPlayerAddressLoggingEnabled();
     String playerIp =
         isPlayerAddressLoggingEnabled ? remoteAddress().toString() : "<ip address withheld>";
@@ -1041,7 +1041,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     final ResourcePackInfo queued = peek
         ? outstandingResourcePacks.peek() : outstandingResourcePacks.poll();
 
-    server.getEventManager().fire(new PlayerResourcePackStatusEvent(this, status, queued))
+    server.eventManager().fire(new PlayerResourcePackStatusEvent(this, status, queued))
         .thenAcceptAsync(event -> {
           if (event.getStatus() == PlayerResourcePackStatusEvent.Status.DECLINED
               && event.getPackInfo() != null && event.getPackInfo().required()
@@ -1190,7 +1190,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
         ServerPreConnectEvent event =
             new ServerPreConnectEvent(ConnectedPlayer.this, toConnect, previousServer);
-        return server.getEventManager().fire(event).thenComposeAsync(newEvent -> {
+        return server.eventManager().fire(event).thenComposeAsync(newEvent -> {
           Optional<RegisteredServer> newDest = newEvent.result().getServer();
           if (!newDest.isPresent()) {
             return completedFuture(

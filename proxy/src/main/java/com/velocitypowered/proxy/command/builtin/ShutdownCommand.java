@@ -43,7 +43,7 @@ public final class ShutdownCommand {
    */
   public static BrigadierCommand command(final VelocityServer server) {
     return new BrigadierCommand(LiteralArgumentBuilder.<CommandSource>literal("shutdown")
-        .requires(source -> source == server.getConsoleCommandSource())
+        .requires(source -> source == server.console())
         .executes(context -> {
           server.shutdown(true);
           return Command.SINGLE_SUCCESS;

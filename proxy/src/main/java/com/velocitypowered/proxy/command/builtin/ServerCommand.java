@@ -64,7 +64,7 @@ public class ServerCommand implements SimpleCommand {
     if (args.length == 1) {
       // Trying to connect to a server.
       String serverName = args[0];
-      Optional<RegisteredServer> toConnect = server.getServer(serverName);
+      Optional<RegisteredServer> toConnect = server.server(serverName);
       if (toConnect.isEmpty()) {
         player.sendMessage(CommandMessages.SERVER_DOES_NOT_EXIST.args(Component.text(serverName)));
         return;
@@ -145,7 +145,7 @@ public class ServerCommand implements SimpleCommand {
   @Override
   public List<String> suggest(final SimpleCommand.Invocation invocation) {
     final String[] currentArgs = invocation.arguments();
-    Stream<String> possibilities = server.getAllServers().stream()
+    Stream<String> possibilities = server.registeredServers().stream()
         .map(rs -> rs.serverInfo().name());
 
     if (currentArgs.length == 0) {

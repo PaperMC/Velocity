@@ -84,7 +84,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(LoginPluginMessage packet) {
     MinecraftConnection mc = serverConn.ensureConnected();
-    VelocityConfiguration configuration = server.getConfiguration();
+    VelocityConfiguration configuration = server.configuration();
     if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
         && packet.getChannel().equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
 
@@ -102,7 +102,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       informationForwarded = true;
     } else {
       // Don't understand, fire event if we have subscribers
-      if (!this.server.getEventManager().hasSubscribers(ServerLoginPluginMessageEvent.class)) {
+      if (!this.server.eventManager().hasSubscribers(ServerLoginPluginMessageEvent.class)) {
         mc.write(new LoginPluginResponse(packet.getId(), false, Unpooled.EMPTY_BUFFER));
         return true;
       }
@@ -110,7 +110,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       final byte[] contents = ByteBufUtil.getBytes(packet.content());
       final MinecraftChannelIdentifier identifier = MinecraftChannelIdentifier
           .from(packet.getChannel());
-      this.server.getEventManager().fire(new ServerLoginPluginMessageEvent(serverConn, identifier,
+      this.server.eventManager().fire(new ServerLoginPluginMessageEvent(serverConn, identifier,
               contents, packet.getId()))
           .thenAcceptAsync(event -> {
             if (event.result().allowed()) {
@@ -139,7 +139,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ServerLoginSuccess packet) {
-    if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
+    if (server.configuration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
         && !informationForwarded) {
       resultFuture.complete(ConnectionRequestResults.forDisconnect(MODERN_IP_FORWARDING_FAILURE,
           serverConn.server()));
@@ -182,7 +182,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void disconnected() {
-    if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.LEGACY) {
+    if (server.configuration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.LEGACY) {
       resultFuture.completeExceptionally(new QuietRuntimeException(
           "The connection to the remote server was unexpectedly closed.\n"
               + "This is usually because the remote server "

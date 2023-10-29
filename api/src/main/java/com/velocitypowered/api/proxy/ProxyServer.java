@@ -54,7 +54,7 @@ public interface ProxyServer extends Audience {
    * @param username the username to search for
    * @return an {@link Optional} with the player, which may be empty
    */
-  Optional<Player> getPlayer(String username);
+  Optional<Player> player(String username);
 
   /**
    * Retrieves the player currently connected to this proxy by their Minecraft UUID.
@@ -62,7 +62,7 @@ public interface ProxyServer extends Audience {
    * @param uuid the UUID
    * @return an {@link Optional} with the player, which may be empty
    */
-  Optional<Player> getPlayer(UUID uuid);
+  Optional<Player> player(UUID uuid);
 
   /**
    * Retrieves all players currently connected to this proxy. This call may or may not be a snapshot
@@ -70,14 +70,14 @@ public interface ProxyServer extends Audience {
    *
    * @return the players online on this proxy
    */
-  Collection<Player> getAllPlayers();
+  Collection<Player> onlinePlayers();
 
   /**
    * Returns the number of players currently connected to this proxy.
    *
    * @return the players on this proxy
    */
-  int getPlayerCount();
+  int onlinePlayerCount();
 
   /**
    * Retrieves a registered {@link RegisteredServer} instance by its name. The search is
@@ -86,14 +86,14 @@ public interface ProxyServer extends Audience {
    * @param name the name of the server
    * @return the registered server, which may be empty
    */
-  Optional<RegisteredServer> getServer(String name);
+  Optional<RegisteredServer> server(String name);
 
   /**
    * Retrieves all {@link RegisteredServer}s registered with this proxy.
    *
    * @return the servers registered with this proxy
    */
-  Collection<RegisteredServer> getAllServers();
+  Collection<RegisteredServer> registeredServers();
 
   /**
    * Matches all {@link Player}s whose names start with the provided partial name.
@@ -142,42 +142,42 @@ public interface ProxyServer extends Audience {
    *
    * @return the console command invoker
    */
-  ConsoleCommandSource getConsoleCommandSource();
+  ConsoleCommandSource console();
 
   /**
    * Gets the {@link PluginManager} instance.
    *
    * @return the plugin manager instance
    */
-  PluginManager getPluginManager();
+  PluginManager pluginManager();
 
   /**
    * Gets the {@link EventManager} instance.
    *
    * @return the event manager instance
    */
-  EventManager getEventManager();
+  EventManager eventManager();
 
   /**
    * Gets the {@link CommandManager} instance.
    *
    * @return the command manager
    */
-  CommandManager getCommandManager();
+  CommandManager commandManager();
 
   /**
    * Gets the {@link Scheduler} instance.
    *
    * @return the scheduler instance
    */
-  Scheduler getScheduler();
+  Scheduler scheduler();
 
   /**
    * Gets the {@link ChannelRegistrar} instance.
    *
    * @return the channel registrar
    */
-  ChannelRegistrar getChannelRegistrar();
+  ChannelRegistrar channelRegistrar();
 
   /**
    * Gets the address that this proxy is bound to. This does not necessarily indicate the external
@@ -185,21 +185,21 @@ public interface ProxyServer extends Audience {
    *
    * @return the address the proxy is bound to
    */
-  SocketAddress getBoundAddress();
+  SocketAddress boundAddress();
 
   /**
    * Gets the {@link ProxyConfig} instance.
    *
    * @return the proxy config
    */
-  ProxyConfig getConfiguration();
+  ProxyConfig configuration();
 
   /**
    * Returns the version of the proxy.
    *
    * @return the proxy version
    */
-  ProxyVersion getVersion();
+  ProxyVersion version();
 
   /**
    * Creates a builder to build a {@link ResourcePackInfo} instance for use with

@@ -45,7 +45,7 @@ public class BackendChannelInitializer extends ChannelInitializer<Channel> {
   private final long readTimeoutMs;
 
   public BackendChannelInitializer(VelocityServer server) {
-    this(server.getConfiguration().getReadTimeout());
+    this(server.configuration().getReadTimeout());
   }
 
   public BackendChannelInitializer(long readTimeoutMs) {
