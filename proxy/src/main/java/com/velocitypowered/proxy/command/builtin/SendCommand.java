@@ -27,8 +27,10 @@ import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.Objects;
+import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.util.TriState;
@@ -58,10 +60,22 @@ public class SendCommand {
     ArgumentCommandNode<CommandSource, String> playerNode = RequiredArgumentBuilder
             .<CommandSource, String>argument("player", StringArgumentType.word())
             .suggests((context, builder) -> {
+              String argument = context.getArguments().containsKey(PLAYER_ARG)
+                  ? context.getArgument(PLAYER_ARG, String.class)
+                  : "";
               for (Player player : server.getAllPlayers()) {
-                builder.suggest(player.username());
+                String playerName = player.username();
+                if (playerName.regionMatches(true, 0, argument, 0, argument.length())) {
+                  builder.suggest(playerName);
+                }
               }
-              builder.suggest("all");
+              if ("all".regionMatches(true, 0, argument, 0, argument.length())) {
+                builder.suggest("all");
+              }
+              if ("current".regionMatches(true, 0, argument, 0, argument.length())
+                  && context.getSource() instanceof Player) {
+                builder.suggest("current");
+              }
               return builder.buildFuture();
             })
             .executes(this::usage)
@@ -99,7 +113,8 @@ public class SendCommand {
       return 0;
     }
 
-    if (server.getPlayer(player).isEmpty() && !Objects.equals(player, "all")) {
+    if (server.getPlayer(player).isEmpty()
+          && !Objects.equals(player, "all") && !Objects.equals(player, "current")) {
       context.getSource().sendMessage(
               CommandMessages.PLAYER_NOT_FOUND.args(Component.text(player))
       );
@@ -111,6 +126,23 @@ public class SendCommand {
         p.createConnectionRequest(server.getServer(serverName).get()).fireAndForget();
       }
       return 1;
+    }
+
+    if (Objects.equals(player, "current")) {
+      if (!(context.getSource() instanceof Player)) {
+        context.getSource().sendMessage(CommandMessages.PLAYERS_ONLY);
+        return 0;
+      }
+
+      Player source = (Player) context.getSource();
+      Optional<ServerConnection> connectedServer = source.connectedServer();
+      if (connectedServer.isPresent()) {
+        for (Player p : connectedServer.get().server().players()) {
+          p.createConnectionRequest(server.getServer(serverName).get()).fireAndForget();
+        }
+        return 1;
+      }
+      return 0;
     }
 
     server.getPlayer(player).get().createConnectionRequest(
