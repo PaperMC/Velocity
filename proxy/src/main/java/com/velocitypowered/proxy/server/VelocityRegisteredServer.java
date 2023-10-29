@@ -105,9 +105,11 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
             Channel ch = future.channel();
             MinecraftConnection conn = new MinecraftConnection(ch, server);
             ch.pipeline().addLast(HANDLER, conn);
-            conn.setActiveSessionHandler(StateRegistry.HANDSHAKE,
-                new PingSessionHandler(pingFuture, VelocityRegisteredServer.this, conn,
-                    pingOptions.protocolVersion()));
+
+            PingSessionHandler handler = new PingSessionHandler(pingFuture,
+                VelocityRegisteredServer.this, conn, pingOptions.protocolVersion());
+            conn.setActiveSessionHandler(StateRegistry.HANDSHAKE, handler);
+            conn.addSessionHandler(StateRegistry.STATUS, handler);
           } else {
             pingFuture.completeExceptionally(future.cause());
           }
