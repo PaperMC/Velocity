@@ -536,16 +536,20 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       shutdown = true;
 
       if (explicitExit) {
-        AccessController.doPrivileged(new PrivilegedAction<Void>() {
-          @Override
-          @SuppressFBWarnings("DM_EXIT")
-          public Void run() {
-            System.exit(0);
-            return null;
-          }
-        });
+        exitWithPrivilege();
       }
     };
+
+    private void exitWithPrivilege() {
+      AccessController.doPrivileged(new PrivilegedAction<Void>() {
+        @Override
+        @SuppressFBWarnings("DM_EXIT")
+        public Void run() {
+          System.exit(0);
+          return null;
+        }
+      });
+    }
 
     if (explicitExit) {
       Thread thread = new Thread(shutdownProcess);
