@@ -28,8 +28,10 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.Objects;
+import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
@@ -50,50 +52,44 @@ public class SendCommand {
    */
   public void register() {
     LiteralCommandNode<CommandSource> totalNode = LiteralArgumentBuilder
-            .<CommandSource>literal("send")
-            .requires(source ->
-                    source.getPermissionValue("velocity.command.send") == Tristate.TRUE)
-            .executes(this::usage)
-            .build();
+        .<CommandSource>literal("send")
+        .requires(source ->
+            source.getPermissionValue("velocity.command.send") == Tristate.TRUE)
+        .executes(this::usage)
+        .build();
     ArgumentCommandNode<CommandSource, String> playerNode = RequiredArgumentBuilder
-            .<CommandSource, String>argument(PLAYER_ARG, StringArgumentType.word())
-            .suggests((context, builder) -> {
-              String argument = context.getArguments().containsKey(PLAYER_ARG)
-                  ? context.getArgument(PLAYER_ARG, String.class)
-                  : "";
-              for (Player player : server.getAllPlayers()) {
-                String playerName = player.getUsername();
-                if (playerName.regionMatches(true, 0, argument, 0, argument.length())) {
-                  builder.suggest(playerName);
-                }
-              }
-              if ("all".regionMatches(true, 0, argument, 0, argument.length())) {
-                builder.suggest("all");
-              }
-              if ("current".regionMatches(true, 0, argument, 0, argument.length())
-                  && context.getSource() instanceof Player) {
-                builder.suggest("current");
-              }
-              return builder.buildFuture();
-            })
-            .executes(this::usage)
-            .build();
+        .<CommandSource, String>argument("player", StringArgumentType.word())
+        .suggests((context, builder) -> {
+          String argument = context.getArguments().containsKey(PLAYER_ARG)
+              ? context.getArgument(PLAYER_ARG, String.class)
+              : "";
+          for (Player player : server.getAllPlayers()) {
+            String playerName = player.getUsername();
+            if (playerName.regionMatches(true, 0, argument, 0, argument.length())) {
+              builder.suggest(playerName);
+            }
+          }
+          if ("all".regionMatches(true, 0, argument, 0, argument.length())) {
+            builder.suggest("all");
+          }
+          if ("current".regionMatches(true, 0, argument, 0, argument.length())
+              && context.getSource() instanceof Player) {
+            builder.suggest("current");
+          }
+          return builder.buildFuture();
+        })
+        .executes(this::usage)
+        .build();
     ArgumentCommandNode<CommandSource, String> serverNode = RequiredArgumentBuilder
-            .<CommandSource, String>argument(SERVER_ARG, StringArgumentType.word())
-            .suggests((context, builder) -> {
-              String argument = context.getArguments().containsKey(SERVER_ARG)
-                  ? context.getArgument(SERVER_ARG, String.class)
-                  : "";
-              for (RegisteredServer server : server.getAllServers()) {
-                String serverName = server.getServerInfo().getName();
-                if (serverName.regionMatches(true, 0, argument, 0, argument.length())) {
-                  builder.suggest(serverName);
-                }
-              }
-              return builder.buildFuture();
-            })
-            .executes(this::send)
-            .build();
+        .<CommandSource, String>argument("server", StringArgumentType.word())
+        .suggests((context, builder) -> {
+          for (RegisteredServer server : server.getAllServers()) {
+            builder.suggest(server.getServerInfo().getName());
+          }
+          return builder.buildFuture();
+        })
+        .executes(this::send)
+        .build();
     totalNode.addChild(playerNode);
     playerNode.addChild(serverNode);
     server.getCommandManager().register(new BrigadierCommand(totalNode));
@@ -101,7 +97,7 @@ public class SendCommand {
 
   private int usage(CommandContext<CommandSource> context) {
     context.getSource().sendMessage(
-            Component.translatable("velocity.command.send-usage", NamedTextColor.YELLOW)
+        Component.translatable("velocity.command.send-usage", NamedTextColor.YELLOW)
     );
     return 1;
   }
@@ -110,17 +106,20 @@ public class SendCommand {
     String serverName = context.getArgument(SERVER_ARG, String.class);
     String player = context.getArgument(PLAYER_ARG, String.class);
 
-    if (server.getServer(serverName).isEmpty()) {
+    Optional<RegisteredServer> maybeServer = server.getServer(serverName);
+
+    if (maybeServer.isEmpty()) {
       context.getSource().sendMessage(
-              CommandMessages.SERVER_DOES_NOT_EXIST.args(Component.text(serverName))
+          CommandMessages.SERVER_DOES_NOT_EXIST.args(Component.text(serverName))
       );
       return 0;
     }
 
     if (server.getPlayer(player).isEmpty()
-          && !Objects.equals(player, "all") && !Objects.equals(player, "current")) {
+        && !Objects.equals(player, "all")
+        && !Objects.equals(player, "current")) {
       context.getSource().sendMessage(
-              CommandMessages.PLAYER_NOT_FOUND.args(Component.text(player))
+          CommandMessages.PLAYER_NOT_FOUND.args(Component.text(player))
       );
       return 0;
     }
@@ -139,9 +138,10 @@ public class SendCommand {
       }
 
       Player source = (Player) context.getSource();
-      if (source.getCurrentServer().isPresent()) {
-        for (Player p : source.getCurrentServer().get().getServer().getPlayersConnected()) {
-          p.createConnectionRequest(server.getServer(serverName).get()).fireAndForget();
+      Optional<ServerConnection> connectedServer = source.getCurrentServer();
+      if (connectedServer.isPresent()) {
+        for (Player p : connectedServer.get().getServer().getPlayersConnected()) {
+          p.createConnectionRequest(maybeServer.get()).fireAndForget();
         }
         return 1;
       }
@@ -149,8 +149,7 @@ public class SendCommand {
     }
 
     server.getPlayer(player).get().createConnectionRequest(
-            server.getServer(serverName).get()
-    ).fireAndForget();
+        maybeServer.get()).fireAndForget();
     return 1;
   }
 }
