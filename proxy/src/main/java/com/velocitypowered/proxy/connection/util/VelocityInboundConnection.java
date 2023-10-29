@@ -17,7 +17,7 @@
 
 package com.velocitypowered.proxy.connection.util;
 
-import com.velocitypowered.api.proxy.InboundConnection;
+import com.velocitypowered.api.network.connection.InboundConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 
 /**

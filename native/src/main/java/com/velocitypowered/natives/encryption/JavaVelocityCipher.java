@@ -68,7 +68,7 @@ public class JavaVelocityCipher implements VelocityCipher {
          that the output buffer needs more bytes than the input buffer. When we are working with
          AES-CFB8, the output size is equal to the input size. See the problem? */
       throw new AssertionError("Cipher update did not operate in place and requested a larger "
-              + "buffer than the source buffer");
+          + "buffer than the source buffer");
     }
   }
 

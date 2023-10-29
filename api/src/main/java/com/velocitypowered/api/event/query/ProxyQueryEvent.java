@@ -26,9 +26,9 @@ public final class ProxyQueryEvent {
   /**
    * Creates a new event.
    *
-   * @param queryType the type of query
+   * @param queryType      the type of query
    * @param querierAddress the remote address for the query
-   * @param response the current query response
+   * @param response       the current query response
    */
   public ProxyQueryEvent(QueryType queryType, InetAddress querierAddress, QueryResponse response) {
     this.queryType = Preconditions.checkNotNull(queryType, "queryType");

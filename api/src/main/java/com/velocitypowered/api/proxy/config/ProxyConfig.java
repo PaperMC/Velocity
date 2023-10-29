@@ -70,9 +70,9 @@ public interface ProxyConfig {
   boolean isOnlineMode();
 
   /**
-   * If client's ISP/AS sent from this proxy is different from the one from Mojang's
-   * authentication server, the player is kicked. This disallows some VPN and proxy
-   * connections but is a weak form of protection.
+   * If client's ISP/AS sent from this proxy is different from the one from Mojang's authentication
+   * server, the player is kicked. This disallows some VPN and proxy connections but is a weak form
+   * of protection.
    *
    * @return whether to prevent client proxy connections by checking the IP with Mojang servers
    */

@@ -21,8 +21,8 @@ import static com.velocitypowered.proxy.network.Connections.HANDLER;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.player.Player;
 import com.velocitypowered.api.proxy.server.PingOptions;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
@@ -83,10 +83,10 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   }
 
   /**
-   * Pings the specified server using the specified event {@code loop}, claiming to be {@code
-   * version}.
+   * Pings the specified server using the specified event {@code loop}, claiming to be
+   * {@code version}.
    *
-   * @param loop    the event loop to use
+   * @param loop        the event loop to use
    * @param pingOptions the options to apply to this ping
    * @return the server list ping response
    */
@@ -141,7 +141,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
     for (ConnectedPlayer player : players.values()) {
       VelocityServerConnection serverConnection = player.getConnectedServer();
       if (serverConnection != null && serverConnection.getConnection() != null
-              && serverConnection.server() == this) {
+          && serverConnection.server() == this) {
         return serverConnection.sendPluginMessage(identifier, data);
       }
     }

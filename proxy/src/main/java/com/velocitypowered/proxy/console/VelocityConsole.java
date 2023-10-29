@@ -45,14 +45,14 @@ import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 
 /**
- * Implements the Velocity console, including sending commands and being the recipient
- * of messages from plugins.
+ * Implements the Velocity console, including sending commands and being the recipient of messages
+ * from plugins.
  */
 public final class VelocityConsole extends SimpleTerminalConsole implements ConsoleCommandSource {
 
   private static final Logger logger = LogManager.getLogger(VelocityConsole.class);
   private static final ComponentLogger componentLogger = ComponentLogger
-          .logger(VelocityConsole.class);
+      .logger(VelocityConsole.class);
 
   private final VelocityServer server;
   private PermissionChecker permissionChecker = PermissionChecker.always(TriState.TRUE);

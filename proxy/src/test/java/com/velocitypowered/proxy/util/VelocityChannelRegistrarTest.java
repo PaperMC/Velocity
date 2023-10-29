@@ -20,21 +20,21 @@ package com.velocitypowered.proxy.util;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.google.common.collect.ImmutableSet;
-import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
+import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import net.kyori.adventure.key.Key;
 import org.junit.jupiter.api.Test;
 
 class VelocityChannelRegistrarTest {
 
-  private static final MinecraftChannelIdentifier MODERN = MinecraftChannelIdentifier
-      .create("velocity", "test");
-  private static final LegacyChannelIdentifier SIMPLE_LEGACY =
-      new LegacyChannelIdentifier("VelocityTest");
+  private static final ChannelIdentifier MODERN = ChannelIdentifier.ofKey(
+      Key.key("velocity", "test"));
+  private static final ChannelIdentifier SIMPLE_LEGACY =
+      ChannelIdentifier.legacy("VelocityTest");
 
-  private static final MinecraftChannelIdentifier MODERN_SPECIAL_REMAP = MinecraftChannelIdentifier
-      .create("bungeecord", "main");
-  private static final LegacyChannelIdentifier SPECIAL_REMAP_LEGACY =
-      new LegacyChannelIdentifier("BungeeCord");
+  private static final ChannelIdentifier MODERN_SPECIAL_REMAP = ChannelIdentifier.ofKey(
+      Key.key("bungeecord", "main"));
+  private static final ChannelIdentifier SPECIAL_REMAP_LEGACY =
+      ChannelIdentifier.legacy("BungeeCord");
 
   private static final String SIMPLE_LEGACY_REMAPPED = "legacy:velocitytest";
 

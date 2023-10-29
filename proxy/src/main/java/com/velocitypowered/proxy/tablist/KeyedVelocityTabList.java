@@ -18,10 +18,10 @@
 package com.velocitypowered.proxy.tablist;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.player.ChatSession;
+import com.velocitypowered.api.proxy.player.Player;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftConnection;

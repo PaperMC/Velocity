@@ -9,7 +9,7 @@ package com.velocitypowered.api.event.player;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.player.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -18,9 +18,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * connection to the previous server has been de-established.
  *
  * <p>
- *   <strong>Note</strong>: For historical reasons, Velocity does wait on this event to finish
- *   firing before continuing the server connection process. This behavior is
- *   <strong>deprecated</strong> and likely to be removed in Polymer.
+ * <strong>Note</strong>: For historical reasons, Velocity does wait on this event to finish
+ * firing before continuing the server connection process. This behavior is
+ * <strong>deprecated</strong> and likely to be removed in Polymer.
  * </p>
  */
 @AwaitingEvent
@@ -33,8 +33,8 @@ public final class ServerConnectedEvent implements PlayerReferentEvent {
   /**
    * Constructs a ServerConnectedEvent.
    *
-   * @param player the player that was connected
-   * @param server the server the player was connected to
+   * @param player         the player that was connected
+   * @param server         the server the player was connected to
    * @param previousServer the server the player was previously connected to, null if none
    */
   public ServerConnectedEvent(Player player, RegisteredServer server,

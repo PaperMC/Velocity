@@ -30,8 +30,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Handles the play state between exiting the login phase and establishing the first connection
- * to a backend server.
+ * Handles the play state between exiting the login phase and establishing the first connection to a
+ * backend server.
  */
 public class InitialConnectSessionHandler implements MinecraftSessionHandler {
 

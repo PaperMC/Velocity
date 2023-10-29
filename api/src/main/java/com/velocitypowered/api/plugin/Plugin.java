@@ -21,8 +21,8 @@ public @interface Plugin {
 
   /**
    * The ID of the plugin. This ID should be unique as to not conflict with other plugins. The
-   * plugin ID may contain alphanumeric characters, dashes, and underscores, and be a maximum
-   * of 64 characters long.
+   * plugin ID may contain alphanumeric characters, dashes, and underscores, and be a maximum of 64
+   * characters long.
    *
    * @return the ID for this plugin
    */

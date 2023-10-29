@@ -5,7 +5,7 @@
  * reference the LICENSE file in the api top-level directory.
  */
 
-package com.velocitypowered.api.proxy;
+package com.velocitypowered.api.network.connection;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import java.net.InetSocketAddress;

@@ -24,7 +24,7 @@ import static com.velocitypowered.proxy.network.Connections.HANDLER;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.ServerConnection;
+import com.velocitypowered.api.network.connection.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
@@ -95,8 +95,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   /**
    * Connects to the server.
    *
-   * @return a {@link com.velocitypowered.api.proxy.ConnectionRequestBuilder.Result}
-   *     representing whether the connection succeeded
+   * @return a {@link com.velocitypowered.api.proxy.ConnectionRequestBuilder.Result} representing
+   *         whether the connection succeeded
    */
   public CompletableFuture<Impl> connect() {
     CompletableFuture<Impl> result = new CompletableFuture<>();
@@ -357,8 +357,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   }
 
   /**
-   * Gets whether the {@link JoinGame} packet has been
-   * sent by this server.
+   * Gets whether the {@link JoinGame} packet has been sent by this server.
    *
    * @return Whether the join has been completed.
    */

@@ -53,9 +53,8 @@ import org.jetbrains.annotations.VisibleForTesting;
 
 /**
  * The Velocity "scheduler", which is actually a thin wrapper around
- * {@link ScheduledExecutorService} and a dynamically-sized {@link ExecutorService}.
- * Many plugins are accustomed to the Bukkit Scheduler model, although it is not relevant
- * in a proxy context.
+ * {@link ScheduledExecutorService} and a dynamically-sized {@link ExecutorService}. Many plugins
+ * are accustomed to the Bukkit Scheduler model, although it is not relevant in a proxy context.
  */
 public class VelocityScheduler implements Scheduler {
 

@@ -10,7 +10,8 @@ package com.velocitypowered.api.event.connection;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
-import com.velocitypowered.api.proxy.InboundConnection;
+import com.velocitypowered.api.network.connection.InboundConnection;
+import com.velocitypowered.api.network.connection.LoginPhaseConnection;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -23,9 +24,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * the login process.
  *
  * <p>
- *   As of Velocity 3.1.0, you may cast the {@link InboundConnection} to a
- *   {@link com.velocitypowered.api.proxy.LoginPhaseConnection} to allow a
- *   proxy plugin to send login plugin messages to the client.
+ * As of Velocity 3.1.0, you may cast the {@link InboundConnection} to a
+ * {@link LoginPhaseConnection} to allow a proxy plugin to send login plugin messages to the
+ * client.
  * </p>
  */
 @AwaitingEvent
@@ -39,7 +40,7 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
    * Creates a new instance.
    *
    * @param connection the connection logging into the proxy
-   * @param username the player's username
+   * @param username   the player's username
    */
   public PreLoginEvent(InboundConnection connection, String username) {
     this.connection = Preconditions.checkNotNull(connection, "connection");

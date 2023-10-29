@@ -20,7 +20,7 @@ package com.velocitypowered.proxy.connection.backend;
 import com.velocitypowered.api.event.player.ServerLoginPluginMessageEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
+import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
@@ -50,6 +50,7 @@ import java.util.concurrent.CompletableFuture;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -108,8 +109,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       }
 
       final byte[] contents = ByteBufUtil.getBytes(packet.content());
-      final MinecraftChannelIdentifier identifier = MinecraftChannelIdentifier
-          .from(packet.getChannel());
+      final ChannelIdentifier identifier = ChannelIdentifier.ofKey(Key.key(packet.getChannel()));
       this.server.eventManager().fire(new ServerLoginPluginMessageEvent(serverConn, identifier,
               contents, packet.getId()))
           .thenAcceptAsync(event -> {

@@ -13,8 +13,8 @@ import java.util.Optional;
 
 /**
  * Manages plugins loaded on the proxy. This manager can retrieve {@link PluginContainer}s from
- * plugin instances and inject arbitrary JAR files into the plugin classpath with {@link
- * #addToClasspath(Object, Path)}.
+ * plugin instances and inject arbitrary JAR files into the plugin classpath with
+ * {@link #addToClasspath(Object, Path)}.
  */
 public interface PluginManager {
 
@@ -53,7 +53,7 @@ public interface PluginManager {
    * Adds the specified {@code path} to the plugin classpath.
    *
    * @param plugin the plugin
-   * @param path the path to the JAR you want to inject into the classpath
+   * @param path   the path to the JAR you want to inject into the classpath
    * @throws UnsupportedOperationException if the operation is not applicable to this plugin
    */
   void addToClasspath(Object plugin, Path path);

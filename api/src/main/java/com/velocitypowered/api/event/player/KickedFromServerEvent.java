@@ -10,7 +10,7 @@ package com.velocitypowered.api.event.player;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.player.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -19,9 +19,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * Fired when a player is kicked from a server. You may either allow Velocity to kick the player
  * (with an optional reason override) or redirect the player to a separate server. By default,
- * Velocity will notify the user (if they are already connected to a server) or disconnect them
- * (if they are not on a server and no other servers are available). Velocity will wait on this
- * event to finish firing before taking the specified action.
+ * Velocity will notify the user (if they are already connected to a server) or disconnect them (if
+ * they are not on a server and no other servers are available). Velocity will wait on this event to
+ * finish firing before taking the specified action.
  */
 @AwaitingEvent
 public final class KickedFromServerEvent implements
@@ -36,14 +36,14 @@ public final class KickedFromServerEvent implements
   /**
    * Creates a {@code KickedFromServerEvent} instance.
    *
-   * @param player the player affected
-   * @param server the server the player disconnected from
-   * @param originalReason the reason for being kicked, optional
+   * @param player              the player affected
+   * @param server              the server the player disconnected from
+   * @param originalReason      the reason for being kicked, optional
    * @param duringServerConnect whether or not the player was kicked during the connection process
-   * @param result the initial result
+   * @param result              the initial result
    */
   public KickedFromServerEvent(Player player, RegisteredServer server,
-      @Nullable Component originalReason,  boolean duringServerConnect,
+      @Nullable Component originalReason, boolean duringServerConnect,
       ServerKickResult result) {
     this.player = Preconditions.checkNotNull(player, "player");
     this.server = Preconditions.checkNotNull(server, "server");
@@ -88,7 +88,7 @@ public final class KickedFromServerEvent implements
    *
    * @return whether or not the player got kicked
    * @deprecated {@link #kickedDuringServerConnect()} has a better name and reflects the actual
-   *     result
+   *             result
    */
   @Deprecated
   public boolean kickedDuringLogin() {
@@ -161,11 +161,11 @@ public final class KickedFromServerEvent implements
     }
 
     /**
-     * Creates a new redirect result to forward the player to the specified {@code server}.
-     * The specified {@code message} will be sent to the player after the redirection.
-     * Use {@code Component.empty()} to skip sending any messages to the player.
+     * Creates a new redirect result to forward the player to the specified {@code server}. The
+     * specified {@code message} will be sent to the player after the redirection. Use
+     * {@code Component.empty()} to skip sending any messages to the player.
      *
-     * @param server the server to send the player to
+     * @param server  the server to send the player to
      * @param message the message will be sent to the player after redirecting
      * @return the redirect result
      */
@@ -175,8 +175,8 @@ public final class KickedFromServerEvent implements
     }
 
     /**
-     * Creates a new redirect result to forward the player to the specified {@code server}.
-     * The kick reason will be displayed to the player
+     * Creates a new redirect result to forward the player to the specified {@code server}. The kick
+     * reason will be displayed to the player
      *
      * @param server the server to send the player to
      * @return the redirect result

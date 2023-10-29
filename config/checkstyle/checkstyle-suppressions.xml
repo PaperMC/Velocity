@@ -6,7 +6,7 @@
 
 <suppressions>
   <suppress checks="MissingJavadocType"
-    files="src/main/java/com/velocitypowered/proxy/network/protocol/packet/*" />
+    files="src/main/java/com/velocitypowered/proxy/network/protocol/packet/*"/>
   <suppress checks="MissingJavadocMethod"
-    files="src/main/java/com/velocitypowered/proxy/network/protocol/packet/*" />
+    files="src/main/java/com/velocitypowered/proxy/network/protocol/packet/*"/>
 </suppressions>

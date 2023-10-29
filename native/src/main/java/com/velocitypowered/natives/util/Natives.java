@@ -125,7 +125,7 @@ public class Natives {
           new NativeCodeLoader.Variant<>(NativeConstraints.MACOS_AARCH64,
               copyAndLoadNative("/macos_arm64/velocity-cipher.dylib"),
               "native (macOS ARM64 / Apple Silicon)",
-               NativeVelocityCipher.FACTORY),
+              NativeVelocityCipher.FACTORY),
 
           new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {
           }, "Java", JavaVelocityCipher.FACTORY)

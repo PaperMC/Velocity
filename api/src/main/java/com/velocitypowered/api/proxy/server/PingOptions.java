@@ -17,13 +17,13 @@ import net.kyori.adventure.builder.AbstractBuilder;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Contains the parameters used to ping a {@link RegisteredServer}.
- * This class is immutable.
+ * Contains the parameters used to ping a {@link RegisteredServer}. This class is immutable.
  *
- * @since 3.2.0
  * @see RegisteredServer#ping(PingOptions)
+ * @since 3.2.0
  */
 public final class PingOptions {
+
   /**
    * Default PingOptions.
    */
@@ -73,7 +73,7 @@ public final class PingOptions {
     }
     final PingOptions other = (PingOptions) o;
     return Objects.equals(this.protocolVersion, other.protocolVersion)
-            && Objects.equals(this.timeout, other.timeout);
+        && Objects.equals(this.timeout, other.timeout);
   }
 
   @Override
@@ -84,9 +84,9 @@ public final class PingOptions {
   @Override
   public String toString() {
     return "PingOptions{"
-            + "protocolVersion=" + protocolVersion
-            + ", timeout=" + timeout
-            + '}';
+        + "protocolVersion=" + protocolVersion
+        + ", timeout=" + timeout
+        + '}';
   }
 
   /**
@@ -95,6 +95,7 @@ public final class PingOptions {
    * @since 3.2.0
    */
   public static final class Builder implements AbstractBuilder<PingOptions> {
+
     private ProtocolVersion protocolVersion = ProtocolVersion.UNKNOWN;
     private long timeout = 0;
 
@@ -116,11 +117,9 @@ public final class PingOptions {
     /**
      * Sets the maximum time to wait to get the required {@link ServerPing}.
      *
-     * @param timeout the timeout duration
-     *                A value of 0 means that the read-timeout value
-     *                from the Velocity configuration will be used,
-     *                while a negative value means that there will
-     *                be no timeout.
+     * @param timeout the timeout duration A value of 0 means that the read-timeout value from the
+     *                Velocity configuration will be used, while a negative value means that there
+     *                will be no timeout.
      * @return this builder
      */
     public Builder timeout(final @NotNull Duration timeout) {
@@ -132,11 +131,9 @@ public final class PingOptions {
     /**
      * Sets the maximum time to wait to get the required {@link ServerPing}.
      *
-     * @param time the timeout duration
-     *             A value of 0 means that the read-timeout value
-     *             from the Velocity configuration will be used,
-     *             while a negative value means that there will
-     *             be no timeout.
+     * @param time     the timeout duration A value of 0 means that the read-timeout value from the
+     *                 Velocity configuration will be used, while a negative value means that there
+     *                 will be no timeout.
      * @param timeunit the unit of time to be used to provide the timeout duration
      * @return this builder
      */

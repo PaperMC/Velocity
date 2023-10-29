@@ -18,10 +18,9 @@
 package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ServerConnection;
-import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
+import com.velocitypowered.api.network.connection.ServerConnection;
+import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.player.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.UuidUtils;
@@ -41,27 +40,28 @@ import java.net.SocketAddress;
 import java.util.Optional;
 import java.util.StringJoiner;
 import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.ComponentSerializer;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 /**
- * Handles messages coming from servers trying to communicate with the BungeeCord plugin
- * messaging channel interface.
+ * Handles messages coming from servers trying to communicate with the BungeeCord plugin messaging
+ * channel interface.
  */
 @SuppressFBWarnings(
     value = "OS_OPEN_STREAM",
     justification = "Most methods in this class open "
-      + "instances of ByteBufDataOutput backed by heap-allocated ByteBufs. Closing them does "
-      + "nothing."
+        + "instances of ByteBufDataOutput backed by heap-allocated ByteBufs. Closing them does "
+        + "nothing."
 )
 public class BungeeCordMessageResponder {
 
-  private static final MinecraftChannelIdentifier MODERN_CHANNEL = MinecraftChannelIdentifier
-      .create("bungeecord", "main");
-  private static final LegacyChannelIdentifier LEGACY_CHANNEL =
-      new LegacyChannelIdentifier("BungeeCord");
+  private static final ChannelIdentifier MODERN_CHANNEL = ChannelIdentifier.ofKey(
+      Key.key("bungeecord", "main"));
+  private static final ChannelIdentifier LEGACY_CHANNEL =
+      ChannelIdentifier.legacy("BungeeCord");
 
   private final VelocityServer proxy;
   private final ConnectedPlayer player;

@@ -40,11 +40,11 @@ public final class ServerPing {
   /**
    * Constructs a ServerPing instance.
    *
-   * @param version the version of the server
-   * @param players the players on the server
+   * @param version     the version of the server
+   * @param players     the players on the server
    * @param description the MOTD for the server
-   * @param favicon the server's favicon
-   * @param modinfo the mods this server runs
+   * @param favicon     the server's favicon
+   * @param modinfo     the mods this server runs
    */
   public ServerPing(Version version, @Nullable Players players,
       Component description, @Nullable Favicon favicon,
@@ -109,10 +109,9 @@ public final class ServerPing {
   }
 
   /**
-   * Returns a copy of this {@link ServerPing} instance as a builder so that it can be modified.
-   * It is guaranteed that {@code ping.asBuilder().build().equals(ping)} is true: that is, if no
-   * other changes are made to the returned builder, the built instance will equal the original
-   * instance.
+   * Returns a copy of this {@link ServerPing} instance as a builder so that it can be modified. It
+   * is guaranteed that {@code ping.asBuilder().build().equals(ping)} is true: that is, if no other
+   * changes are made to the returned builder, the built instance will equal the original instance.
    *
    * @return a copy of this instance as a {@link Builder}
    */
@@ -307,10 +306,9 @@ public final class ServerPing {
   }
 
   /**
-   * Represents the version of the server sent to the client. A protocol version
-   * that does not match the client's protocol version will show up on the server
-   * list as an incompatible version, but the client will still permit the user
-   * to connect to the server anyway.
+   * Represents the version of the server sent to the client. A protocol version that does not match
+   * the client's protocol version will show up on the server list as an incompatible version, but
+   * the client will still permit the user to connect to the server anyway.
    */
   public static final class Version {
 
@@ -321,7 +319,7 @@ public final class ServerPing {
      * Creates a new instance.
      *
      * @param protocol the protocol version as an integer
-     * @param name a friendly name for the protocol version
+     * @param name     a friendly name for the protocol version
      */
     public Version(int protocol, String name) {
       this.protocol = protocol;
@@ -363,8 +361,8 @@ public final class ServerPing {
   }
 
   /**
-   * Represents what the players the server purports to have online, its maximum capacity,
-   * and a sample of players on the server.
+   * Represents what the players the server purports to have online, its maximum capacity, and a
+   * sample of players on the server.
    */
   public static final class Players {
 
@@ -376,7 +374,7 @@ public final class ServerPing {
      * Creates a new instance.
      *
      * @param online the number of online players
-     * @param max the maximum number of players
+     * @param max    the maximum number of players
      * @param sample a sample of players on the server
      */
     public Players(int online, int max, List<SamplePlayer> sample) {

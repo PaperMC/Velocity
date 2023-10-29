@@ -25,10 +25,8 @@ public interface KeySigned {
   PublicKey signer();
 
   /**
-   * Returns the expiry time point of the key.
-   * Note: this limit is arbitrary. RSA keys don't expire,
-   * but the signature of this key as provided by the session
-   * server will expire.
+   * Returns the expiry time point of the key. Note: this limit is arbitrary. RSA keys don't expire,
+   * but the signature of this key as provided by the session server will expire.
    *
    * @return the expiry time point
    */
@@ -53,9 +51,8 @@ public interface KeySigned {
   byte[] signature();
 
   /**
-   * Validates the signature, expiry temporal and key against the
-   * signer public key. Note: This will **not** check for
-   * expiry. You can check for expiry with {@link KeySigned#hasExpired()}.
+   * Validates the signature, expiry temporal and key against the signer public key. Note: This will
+   * **not** check for expiry. You can check for expiry with {@link KeySigned#hasExpired()}.
    * <p>DOES NOT WORK YET FOR MESSAGES AND COMMANDS!</p>
    * Addendum: Does not work for 1.19.1 until the user has authenticated.
    *

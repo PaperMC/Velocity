@@ -33,7 +33,7 @@ import com.spotify.futures.CompletableFutures;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.player.Player;
 import com.velocitypowered.proxy.command.brigadier.VelocityArgumentCommandNode;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -157,8 +157,8 @@ final class SuggestionsProvider<S> {
     }
 
     final Collection<CommandNode<S>> aliases = contextSoFar.getRootNode().getChildren();
-    @SuppressWarnings("unchecked")
-    final CompletableFuture<Suggestions>[] futures = new CompletableFuture[aliases.size()];
+    @SuppressWarnings("unchecked") final CompletableFuture<Suggestions>[] futures =
+        new CompletableFuture[aliases.size()];
     int i = 0;
     for (final CommandNode<S> node : aliases) {
       CompletableFuture<Suggestions> future = Suggestions.empty();

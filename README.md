@@ -18,7 +18,7 @@ Velocity is licensed under the GPLv3 license.
 * First-class support for Paper, Sponge, Fabric and Forge. (Other implementations
   may work, but we make every endeavor to support these server implementations
   specifically.)
-  
+
 ## Building
 
 Velocity is built with [Gradle](https://gradle.org). We recommend using the

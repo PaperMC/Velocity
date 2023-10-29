@@ -27,6 +27,7 @@ import org.jetbrains.annotations.NotNull;
  * Represents a data tag.
  */
 public class DataTag {
+
   private final ImmutableList<DataTag.Set> entrySets;
 
   public DataTag(ImmutableList<DataTag.Set> entrySets) {

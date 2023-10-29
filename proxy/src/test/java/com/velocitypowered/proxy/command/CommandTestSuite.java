@@ -25,7 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.player.Player;
 import com.velocitypowered.proxy.event.MockEventManager;
 import com.velocitypowered.proxy.event.VelocityEventManager;
 import java.util.Arrays;

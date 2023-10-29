@@ -31,7 +31,7 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
    * Constructs a CommandExecuteEvent.
    *
    * @param commandSource the source executing the command
-   * @param command the command being executed without first slash
+   * @param command       the command being executed without first slash
    */
   public CommandExecuteEvent(CommandSource commandSource, String command) {
     this.commandSource = Preconditions.checkNotNull(commandSource, "commandSource");
@@ -127,8 +127,8 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
     }
 
     /**
-     * Forwards the command to server instead of executing it on the proxy. This is the
-     * default behavior when a command is not registered on Velocity.
+     * Forwards the command to server instead of executing it on the proxy. This is the default
+     * behavior when a command is not registered on Velocity.
      *
      * @return the forward result
      */

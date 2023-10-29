@@ -9,7 +9,7 @@ package com.velocitypowered.api.event.player;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.player.Player;
 import com.velocitypowered.api.util.ModInfo;
 
 /**

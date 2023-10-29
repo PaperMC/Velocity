@@ -32,8 +32,7 @@ public interface PluginContainer {
   }
 
   /**
-   * Returns an executor service for this plugin. The executor will use a cached
-   * thread pool.
+   * Returns an executor service for this plugin. The executor will use a cached thread pool.
    *
    * @return an {@link ExecutorService} associated with this plugin
    */

@@ -35,13 +35,13 @@ import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.PlayerSettingsChangedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.network.connection.ServerConnection;
 import com.velocitypowered.api.permission.PermissionProvider;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
-import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.crypto.KeyIdentifiable;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.player.Player;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -709,7 +709,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   private void handleKickEvent(KickedFromServerEvent originalEvent, Component friendlyReason,
-                               boolean kickedFromCurrent) {
+      boolean kickedFromCurrent) {
     server.eventManager().fire(originalEvent).thenAcceptAsync(event -> {
       // There can't be any connection in flight now.
       connectionInFlight = null;
@@ -1093,7 +1093,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
    */
   public void sendKeepAlive() {
     if (connection.getState() == StateRegistry.PLAY
-            || connection.getState() == StateRegistry.CONFIG) {
+        || connection.getState() == StateRegistry.CONFIG) {
       KeepAlive keepAlive = new KeepAlive();
       keepAlive.setRandomId(ThreadLocalRandom.current().nextLong());
       connection.write(keepAlive);
@@ -1107,7 +1107,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     CompletableFuture.runAsync(() -> {
       connection.write(new StartUpdate());
       connection.getChannel().pipeline()
-              .get(MinecraftEncoder.class).setState(StateRegistry.CONFIG);
+          .get(MinecraftEncoder.class).setState(StateRegistry.CONFIG);
       // Make sure we don't send any play packets to the player after update start
       connection.addPlayPacketQueueHandler();
     }, connection.eventLoop()).exceptionally((ex) -> {

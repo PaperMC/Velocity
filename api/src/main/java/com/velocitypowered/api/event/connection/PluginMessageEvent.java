@@ -12,18 +12,19 @@ import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
-import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ServerConnection;
+import com.velocitypowered.api.network.connection.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
+import com.velocitypowered.api.proxy.player.Player;
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 
 /**
- * This event is fired when a plugin message is sent to the proxy, either from a client ({@link
- * Player}) or a server ({@link ServerConnection}). Velocity will wait on this event to finish
- * firing before discarding the sent plugin message (if handled) or forwarding it to the server.
+ * This event is fired when a plugin message is sent to the proxy, either from a client
+ * ({@link Player}) or a server ({@link ServerConnection}). Velocity will wait on this event to
+ * finish firing before discarding the sent plugin message (if handled) or forwarding it to the
+ * server.
  */
 @AwaitingEvent
 public final class PluginMessageEvent implements ResultedEvent<PluginMessageEvent.ForwardResult> {
@@ -37,10 +38,10 @@ public final class PluginMessageEvent implements ResultedEvent<PluginMessageEven
   /**
    * Creates a new instance.
    *
-   * @param source the source of the plugin message
-   * @param target the destination of the plugin message
+   * @param source     the source of the plugin message
+   * @param target     the destination of the plugin message
    * @param identifier the channel for this plugin message
-   * @param data the payload of the plugin message
+   * @param data       the payload of the plugin message
    */
   public PluginMessageEvent(ChannelMessageSource source, ChannelMessageSink target,
       ChannelIdentifier identifier, byte[] data) {

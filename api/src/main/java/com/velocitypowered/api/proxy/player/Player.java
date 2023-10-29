@@ -5,17 +5,18 @@
  * reference the LICENSE file in the api top-level directory.
  */
 
-package com.velocitypowered.api.proxy;
+package com.velocitypowered.api.proxy.player;
 
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
+import com.velocitypowered.api.network.connection.InboundConnection;
+import com.velocitypowered.api.network.connection.ServerConnection;
+import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
+import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.crypto.KeyIdentifiable;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
-import com.velocitypowered.api.proxy.player.PlayerSettings;
-import com.velocitypowered.api.proxy.player.ResourcePackInfo;
-import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
@@ -186,19 +187,17 @@ public interface Player extends
   void spoofChatInput(String input);
 
   /**
-   * Queues and sends a new Resource-pack offer to the player.
-   * To monitor the status of the sent resource pack, subscribe to
-   * {@link PlayerResourcePackStatusEvent}.
-   * To create a {@link ResourcePackInfo} use the
-   * {@link ProxyServer#createResourcePackBuilder(String)} builder.
+   * Queues and sends a new Resource-pack offer to the player. To monitor the status of the sent
+   * resource pack, subscribe to {@link PlayerResourcePackStatusEvent}. To create a
+   * {@link ResourcePackInfo} use the {@link ProxyServer#createResourcePackBuilder(String)}
+   * builder.
    *
    * @param packInfo the resource-pack in question
    */
   void sendResourcePackOffer(ResourcePackInfo packInfo);
 
   /**
-   * Gets the {@link ResourcePackInfo} of the currently applied
-   * resource-pack or null if none.
+   * Gets the {@link ResourcePackInfo} of the currently applied resource-pack or null if none.
    *
    * @return the applied resource pack or null if none.
    */
@@ -206,9 +205,8 @@ public interface Player extends
   ResourcePackInfo appliedResourcePack();
 
   /**
-   * Gets the {@link ResourcePackInfo} of the resource pack
-   * the user is currently downloading or is currently
-   * prompted to install or null if none.
+   * Gets the {@link ResourcePackInfo} of the resource pack the user is currently downloading or is
+   * currently prompted to install or null if none.
    *
    * @return the pending resource pack or null if none
    */
@@ -217,9 +215,9 @@ public interface Player extends
 
   /**
    * <strong>Note that this method does not send a plugin message to the server the player
-   * is connected to.</strong> You should only use this method if you are trying to communicate
-   * with a mod that is installed on the player's client. To send a plugin message to the server
-   * from the player, you should use the equivalent method on the instance returned by
+   * is connected to.</strong> You should only use this method if you are trying to communicate with
+   * a mod that is installed on the player's client. To send a plugin message to the server from the
+   * player, you should use the equivalent method on the instance returned by
    * {@link #connectedServer()}.
    *
    * @inheritDoc
@@ -234,9 +232,9 @@ public interface Player extends
 
   @Override
   default @NotNull HoverEvent<HoverEvent.ShowEntity> asHoverEvent(
-          @NotNull UnaryOperator<HoverEvent.ShowEntity> op) {
+      @NotNull UnaryOperator<HoverEvent.ShowEntity> op) {
     return HoverEvent.showEntity(op.apply(HoverEvent.ShowEntity.showEntity(this, uuid(),
-            Component.text(username()))));
+        Component.text(username()))));
   }
 
 

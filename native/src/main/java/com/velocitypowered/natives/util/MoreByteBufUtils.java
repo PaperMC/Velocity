@@ -25,6 +25,7 @@ import io.netty.buffer.ByteBufAllocator;
  * Additional utilities for {@link ByteBuf}.
  */
 public class MoreByteBufUtils {
+
   private MoreByteBufUtils() {
     throw new AssertionError();
   }
@@ -34,9 +35,9 @@ public class MoreByteBufUtils {
    * is called, you should decrement the reference count on the {@code buf} with
    * {@link ByteBuf#release()}.
    *
-   * @param alloc the {@link ByteBufAllocator} to use
+   * @param alloc       the {@link ByteBufAllocator} to use
    * @param nativeStuff the native we are working with
-   * @param buf the buffer we are working with
+   * @param buf         the buffer we are working with
    * @return a buffer compatible with the native
    */
   public static ByteBuf ensureCompatible(ByteBufAllocator alloc, Native nativeStuff, ByteBuf buf) {
@@ -70,8 +71,8 @@ public class MoreByteBufUtils {
    * Creates a {@link ByteBuf} that will have the best performance with the specified
    * {@code nativeStuff}.
    *
-   * @param alloc the {@link ByteBufAllocator} to use
-   * @param nativeStuff the native we are working with
+   * @param alloc           the {@link ByteBufAllocator} to use
+   * @param nativeStuff     the native we are working with
    * @param initialCapacity the initial capacity to allocate
    * @return a buffer compatible with the native
    */

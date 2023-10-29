@@ -8,8 +8,8 @@
 package com.velocitypowered.api.event;
 
 /**
- * Represents a continuation of a paused event handler. Any of the resume methods
- * may only be called once otherwise an {@link IllegalStateException} is expected.
+ * Represents a continuation of a paused event handler. Any of the resume methods may only be called
+ * once otherwise an {@link IllegalStateException} is expected.
  */
 public interface Continuation {
 

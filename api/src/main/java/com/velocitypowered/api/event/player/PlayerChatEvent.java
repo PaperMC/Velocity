@@ -10,14 +10,14 @@ package com.velocitypowered.api.event.player;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.player.Player;
 import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * This event is fired when a player types in a chat message. Velocity will wait on this event
- * to finish firing before forwarding it to the server, if the result allows it.
+ * This event is fired when a player types in a chat message. Velocity will wait on this event to
+ * finish firing before forwarding it to the server, if the result allows it.
  */
 @AwaitingEvent
 public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.ChatResult>,
@@ -30,7 +30,7 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
   /**
    * Constructs a PlayerChatEvent.
    *
-   * @param player the player sending the message
+   * @param player  the player sending the message
    * @param message the message being sent
    */
   public PlayerChatEvent(Player player, String message) {

@@ -15,8 +15,8 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Represents an implementation of brigadier's {@link Message}, providing support for {@link
- * Component} messages.
+ * Represents an implementation of brigadier's {@link Message}, providing support for
+ * {@link Component} messages.
  */
 public final class VelocityBrigadierMessage implements Message, ComponentLike {
 

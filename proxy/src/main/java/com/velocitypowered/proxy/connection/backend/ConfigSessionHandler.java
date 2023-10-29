@@ -72,7 +72,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
    * @param resultFuture the result future
    */
   ConfigSessionHandler(VelocityServer server, VelocityServerConnection serverConn,
-                       CompletableFuture<Impl> resultFuture) {
+      CompletableFuture<Impl> resultFuture) {
     this.server = server;
     this.serverConn = serverConn;
     this.resultFuture = resultFuture;

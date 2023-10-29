@@ -10,7 +10,7 @@ package com.velocitypowered.api.event.player;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.player.Player;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -67,8 +67,8 @@ public class PlayerResourcePackStatusEvent implements PlayerReferentEvent {
   }
 
   /**
-   * Gets whether or not to override the kick resulting from
-   * {@link ResourcePackInfo#required()} being true.
+   * Gets whether or not to override the kick resulting from {@link ResourcePackInfo#required()}
+   * being true.
    *
    * @return whether or not to overwrite the result
    */
@@ -77,11 +77,10 @@ public class PlayerResourcePackStatusEvent implements PlayerReferentEvent {
   }
 
   /**
-   * Set to true to prevent {@link ResourcePackInfo#required()}
-   * from kicking the player.
-   * Overwriting this kick is only possible on versions older than 1.17,
-   * as the client or server will enforce this regardless. Cancelling the resulting
-   * kick-events will not prevent the player from disconnecting from the proxy.
+   * Set to true to prevent {@link ResourcePackInfo#required()} from kicking the player. Overwriting
+   * this kick is only possible on versions older than 1.17, as the client or server will enforce
+   * this regardless. Cancelling the resulting kick-events will not prevent the player from
+   * disconnecting from the proxy.
    *
    * @param overwriteKick whether or not to cancel the kick
    * @throws IllegalArgumentException if the player version is 1.17 or newer
@@ -89,7 +88,7 @@ public class PlayerResourcePackStatusEvent implements PlayerReferentEvent {
   public void setOverwriteKick(boolean overwriteKick) {
     Preconditions.checkArgument(player.protocolVersion()
             .compareTo(ProtocolVersion.MINECRAFT_1_17) < 0,
-            "overwriteKick is not supported on 1.17 or newer");
+        "overwriteKick is not supported on 1.17 or newer");
     this.overwriteKick = overwriteKick;
   }
 

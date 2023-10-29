@@ -53,4 +53,3 @@ public class ConnectionTypeImpl implements ConnectionType {
     return original;
   }
 }
-

@@ -32,7 +32,7 @@
   <!-- https://checkstyle.org/config_filters.html#SuppressionFilter -->
   <module name="SuppressionFilter">
     <property name="file" value="${org.checkstyle.google.suppressionfilter.config}"
-      default="checkstyle-suppressions.xml" />
+      default="checkstyle-suppressions.xml"/>
     <!--<property name="optional" value="true"/>-->
   </module>
 
@@ -45,7 +45,8 @@
   <module name="LineLength">
     <property name="fileExtensions" value="java"/>
     <property name="max" value="100"/>
-    <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
+    <property name="ignorePattern"
+      value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
   </module>
 
   <module name="TreeWalker">
@@ -104,7 +105,7 @@
       <property name="query" value="//RCURLY[parent::SLIST[count(./*)=1]
                                      or preceding-sibling::*[last()][self::LCURLY]]"/>
     </module>
-    <module name="WhitespaceAfter" />
+    <module name="WhitespaceAfter"/>
     <module name="WhitespaceAround">
       <property name="allowEmptyConstructors" value="true"/>
       <property name="allowEmptyLambdas" value="true"/>
@@ -356,14 +357,14 @@
     <!-- https://checkstyle.org/config_filters.html#SuppressionXpathFilter -->
     <module name="SuppressionXpathFilter">
       <property name="file" value="${org.checkstyle.google.suppressionxpathfilter.config}"
-        default="checkstyle-xpath-suppressions.xml" />
+        default="checkstyle-xpath-suppressions.xml"/>
       <property name="optional" value="true"/>
     </module>
-    <module name="SuppressWarningsHolder" />
+    <module name="SuppressWarningsHolder"/>
     <module name="SuppressionCommentFilter">
-      <property name="offCommentFormat" value="CHECKSTYLE.OFF\: ([\w\|]+)" />
-      <property name="onCommentFormat" value="CHECKSTYLE.ON\: ([\w\|]+)" />
-      <property name="checkFormat" value="$1" />
+      <property name="offCommentFormat" value="CHECKSTYLE.OFF\: ([\w\|]+)"/>
+      <property name="onCommentFormat" value="CHECKSTYLE.ON\: ([\w\|]+)"/>
+      <property name="checkFormat" value="$1"/>
     </module>
     <module name="SuppressWithNearbyCommentFilter">
       <property name="commentFormat" value="CHECKSTYLE.SUPPRESS\: ([\w\|]+)"/>

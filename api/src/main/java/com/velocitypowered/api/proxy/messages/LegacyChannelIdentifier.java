@@ -17,7 +17,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * messages, please see {@link MinecraftChannelIdentifier}. This class is immutable and safe for
  * multi-threaded use.
  */
-public final class LegacyChannelIdentifier implements ChannelIdentifier {
+final class LegacyChannelIdentifier implements ChannelIdentifier {
 
   private final String name;
 
@@ -26,7 +26,7 @@ public final class LegacyChannelIdentifier implements ChannelIdentifier {
    *
    * @param name the name for the channel
    */
-  public LegacyChannelIdentifier(String name) {
+  LegacyChannelIdentifier(String name) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(name), "provided name is empty");
     this.name = name;
   }
@@ -54,7 +54,7 @@ public final class LegacyChannelIdentifier implements ChannelIdentifier {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name);
+    return name.hashCode();
   }
 
   @Override

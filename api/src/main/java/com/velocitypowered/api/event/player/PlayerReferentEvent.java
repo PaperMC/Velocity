@@ -7,7 +7,7 @@
 
 package com.velocitypowered.api.event.player;
 
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.player.Player;
 
 /**
  * Defines any event that refers to a player.

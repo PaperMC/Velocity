@@ -17,25 +17,25 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public interface CommandMeta {
 
   /**
-   * Returns a non-empty collection containing the case-insensitive aliases
-   * used to execute the command.
+   * Returns a non-empty collection containing the case-insensitive aliases used to execute the
+   * command.
    *
    * @return the command aliases
    */
   Collection<String> aliases();
 
   /**
-   * Returns an immutable collection containing command nodes that provide
-   * additional argument metadata and tab-complete suggestions.
-   * Note some {@link Command} implementations may not support hinting.
+   * Returns an immutable collection containing command nodes that provide additional argument
+   * metadata and tab-complete suggestions. Note some {@link Command} implementations may not
+   * support hinting.
    *
    * @return the hinting command nodes
    */
   Collection<CommandNode<CommandSource>> hints();
 
   /**
-   * Returns the plugin who registered the command.
-   * Note some {@link Command} registrations may not provide this information.
+   * Returns the plugin who registered the command. Note some {@link Command} registrations may not
+   * provide this information.
    *
    * @return the registering plugin
    */
@@ -55,13 +55,13 @@ public interface CommandMeta {
     Builder aliases(String... aliases);
 
     /**
-     * Specifies a command node providing additional argument metadata and
-     * tab-complete suggestions.
+     * Specifies a command node providing additional argument metadata and tab-complete
+     * suggestions.
      *
      * @param node the command node
      * @return this builder, for chaining
      * @throws IllegalArgumentException if the node is executable, i.e. has a non-null
-     *         {@link com.mojang.brigadier.Command}, or has a redirect.
+     *                                  {@link com.mojang.brigadier.Command}, or has a redirect.
      */
     Builder hint(CommandNode<CommandSource> node);
 

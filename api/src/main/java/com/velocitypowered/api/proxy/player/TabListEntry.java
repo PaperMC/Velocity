@@ -18,6 +18,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * Represents a single entry in a {@link TabList}.
  */
 public interface TabListEntry extends KeyIdentifiable {
+
   /**
    * Returns the {@link ChatSession} associated with this entry.
    *
@@ -56,7 +57,7 @@ public interface TabListEntry extends KeyIdentifiable {
    * {@link GameProfile#name()} is shown.
    *
    * @return {@link Optional} text {@link net.kyori.adventure.text.Component} of name displayed in
-   *     the tab list
+   *         the tab list
    */
   Optional<Component> getDisplayNameComponent();
 

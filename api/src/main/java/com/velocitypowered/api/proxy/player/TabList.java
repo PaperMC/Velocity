@@ -7,7 +7,6 @@
 
 package com.velocitypowered.api.proxy.player;
 
-import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.util.GameProfile;
 import java.util.Collection;
@@ -71,7 +70,7 @@ public interface TabList {
    *
    * @param uuid of the entry
    * @return {@link Optional} containing the removed {@link TabListEntry} if present, otherwise
-   *     {@link Optional#empty()}
+   *         {@link Optional#empty()}
    */
   Optional<TabListEntry> removeEntry(UUID uuid);
 
@@ -88,7 +87,7 @@ public interface TabList {
    *
    * @param uuid The player's {@link UUID} the {@link TabListEntry} is in reference to.
    * @return {@code Optional.empty()} if the player is not present in the provided player's
-   *     {@link TabList} otherwise a present {@link TabListEntry} in relation to the player.
+   *         {@link TabList} otherwise a present {@link TabListEntry} in relation to the player.
    */
   Optional<TabListEntry> getEntry(UUID uuid);
 
@@ -116,7 +115,7 @@ public interface TabList {
    */
   @Deprecated
   default TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
-                          int gameMode) {
+      int gameMode) {
     return buildEntry(profile, displayName, latency, gameMode, null, true);
   }
 
@@ -133,7 +132,7 @@ public interface TabList {
    */
   @Deprecated
   default TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
-                          int gameMode, @Nullable IdentifiedKey key) {
+      int gameMode, @Nullable IdentifiedKey key) {
     return buildEntry(profile, displayName, latency, gameMode, null, true);
   }
 
@@ -151,7 +150,7 @@ public interface TabList {
    */
   @Deprecated
   default TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
-                          int gameMode, @Nullable ChatSession chatSession) {
+      int gameMode, @Nullable ChatSession chatSession) {
     return buildEntry(profile, displayName, latency, gameMode, chatSession, true);
   }
 
@@ -169,5 +168,5 @@ public interface TabList {
    */
   @Deprecated
   TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
-                          int gameMode, @Nullable ChatSession chatSession, boolean listed);
+      int gameMode, @Nullable ChatSession chatSession, boolean listed);
 }

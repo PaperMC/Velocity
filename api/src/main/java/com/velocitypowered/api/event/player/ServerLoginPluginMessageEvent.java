@@ -15,7 +15,7 @@ import com.google.common.io.ByteStreams;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.event.player.ServerLoginPluginMessageEvent.ResponseResult;
-import com.velocitypowered.api.proxy.ServerConnection;
+import com.velocitypowered.api.network.connection.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
@@ -23,12 +23,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Fired when a server sends a login plugin message to the proxy. Plugins have the opportunity to
- * respond to the messages as needed. Velocity will wait on this event to finish. The server will
- * be responsible for continuing the login process once the server is satisfied with any login
- * plugin responses sent by proxy plugins (or messages indicating a lack of response).
+ * respond to the messages as needed. Velocity will wait on this event to finish. The server will be
+ * responsible for continuing the login process once the server is satisfied with any login plugin
+ * responses sent by proxy plugins (or messages indicating a lack of response).
  */
 @AwaitingEvent
 public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResult> {
+
   private final ServerConnection connection;
   private final ChannelIdentifier identifier;
   private final byte[] contents;
@@ -40,7 +41,7 @@ public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResu
    *
    * @param connection the connection on which the plugin message was sent
    * @param identifier the channel identifier for the message sent
-   * @param contents the contents of the message
+   * @param contents   the contents of the message
    * @param sequenceId the ID of the message
    */
   public ServerLoginPluginMessageEvent(
@@ -122,7 +123,7 @@ public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResu
 
     private static final ResponseResult UNKNOWN = new ResponseResult(null);
 
-    private final byte@Nullable [] response;
+    private final byte @Nullable [] response;
 
     private ResponseResult(byte @Nullable [] response) {
       this.response = response;

@@ -29,14 +29,15 @@ import org.slf4j.LoggerFactory;
  */
 @SuppressWarnings("UnstableApiUsage")
 public final class ComponentLoggerProviderImpl implements ComponentLoggerProvider {
+
   private static final ANSIComponentSerializer SERIALIZER = ANSIComponentSerializer.builder()
-          .flattener(TranslatableMapper.FLATTENER)
-          .build();
+      .flattener(TranslatableMapper.FLATTENER)
+      .build();
 
   @Override
   public @NotNull ComponentLogger logger(
-          final @NotNull LoggerHelper helper,
-          final @NotNull String name
+      final @NotNull LoggerHelper helper,
+      final @NotNull String name
   ) {
     return helper.delegating(LoggerFactory.getLogger(name), SERIALIZER::serialize);
   }

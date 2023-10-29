@@ -20,8 +20,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public interface IdentifiedKey extends KeySigned {
 
   /**
-   * Returns RSA public key.
-   * Note: this key is at least 2048 bits but may be larger.
+   * Returns RSA public key. Note: this key is at least 2048 bits but may be larger.
    *
    * @return the RSA public key in question
    */
@@ -32,15 +31,14 @@ public interface IdentifiedKey extends KeySigned {
    * Validates a signature against this public key.
    *
    * @param signature the signature data
-   * @param toVerify the signed data
-   *
+   * @param toVerify  the signed data
    * @return validity of the signature
    */
   boolean verifyDataSignature(byte[] signature, byte[]... toVerify);
 
   /**
-   * Retrieves the signature holders UUID.
-   * Returns null before the {@link com.velocitypowered.api.event.connection.LoginEvent}.
+   * Retrieves the signature holders UUID. Returns null before the
+   * {@link com.velocitypowered.api.event.connection.LoginEvent}.
    *
    * @return the holder UUID or null if not present
    */
@@ -68,11 +66,11 @@ public interface IdentifiedKey extends KeySigned {
       this.backwardsCompatibleTo = backwardsCompatibleTo;
       this.applicableTo = applicableTo;
     }
-    
+
     public Set<Revision> backwardsCompatibleTo() {
       return backwardsCompatibleTo;
     }
-    
+
     public Set<ProtocolVersion> applicableTo() {
       return applicableTo;
     }

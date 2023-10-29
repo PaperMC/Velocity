@@ -399,7 +399,8 @@ public class EventTest {
                 + "the second is the fancy continuation");
           }
         },
-        new TypeToken<TriConsumer<Object, Object, FancyContinuation>>() {},
+        new TypeToken<TriConsumer<Object, Object, FancyContinuation>>() {
+        },
         invokeFunction -> (instance, event) ->
             EventTask.withContinuation(continuation ->
                 invokeFunction.accept(instance, event, new FancyContinuationImpl(continuation))

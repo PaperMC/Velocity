@@ -8,7 +8,7 @@
 package com.velocitypowered.api.event.player;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.player.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -18,6 +18,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * firing.
  */
 public class ServerPostConnectEvent implements PlayerReferentEvent {
+
   private final Player player;
   private final RegisteredServer previousServer;
 
@@ -38,7 +39,8 @@ public class ServerPostConnectEvent implements PlayerReferentEvent {
 
   /**
    * Returns the previous server the player was connected to. This is {@code null} if they were not
-   * connected to another server beforehand (for instance, if the player has just joined the proxy).
+   * connected to another server beforehand (for instance, if the player has just joined the
+   * proxy).
    *
    * @return the previous server the player was connected to
    */

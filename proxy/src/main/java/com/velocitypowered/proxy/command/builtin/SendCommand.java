@@ -25,9 +25,9 @@ import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.network.connection.ServerConnection;
 import com.velocitypowered.api.proxy.ProxyServer;
-import com.velocitypowered.api.proxy.ServerConnection;
+import com.velocitypowered.api.proxy.player.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.Objects;
 import java.util.Optional;
@@ -39,6 +39,7 @@ import net.kyori.adventure.util.TriState;
  * Implements the Velocity default {@code /send} command.
  */
 public class SendCommand {
+
   private final ProxyServer server;
   private static final String SERVER_ARG = "server";
   private static final String PLAYER_ARG = "player";
@@ -52,44 +53,44 @@ public class SendCommand {
    */
   public void register() {
     LiteralCommandNode<CommandSource> totalNode = LiteralArgumentBuilder
-            .<CommandSource>literal("send")
-            .requires(source ->
-                    source.getPermissionValue("velocity.command.send") == TriState.TRUE)
-            .executes(this::usage)
-            .build();
+        .<CommandSource>literal("send")
+        .requires(source ->
+            source.getPermissionValue("velocity.command.send") == TriState.TRUE)
+        .executes(this::usage)
+        .build();
     ArgumentCommandNode<CommandSource, String> playerNode = RequiredArgumentBuilder
-            .<CommandSource, String>argument("player", StringArgumentType.word())
-            .suggests((context, builder) -> {
-              String argument = context.getArguments().containsKey(PLAYER_ARG)
-                  ? context.getArgument(PLAYER_ARG, String.class)
-                  : "";
-              for (Player player : server.getAllPlayers()) {
-                String playerName = player.username();
-                if (playerName.regionMatches(true, 0, argument, 0, argument.length())) {
-                  builder.suggest(playerName);
-                }
-              }
-              if ("all".regionMatches(true, 0, argument, 0, argument.length())) {
-                builder.suggest("all");
-              }
-              if ("current".regionMatches(true, 0, argument, 0, argument.length())
-                  && context.getSource() instanceof Player) {
-                builder.suggest("current");
-              }
-              return builder.buildFuture();
-            })
-            .executes(this::usage)
-            .build();
+        .<CommandSource, String>argument("player", StringArgumentType.word())
+        .suggests((context, builder) -> {
+          String argument = context.getArguments().containsKey(PLAYER_ARG)
+              ? context.getArgument(PLAYER_ARG, String.class)
+              : "";
+          for (Player player : server.onlinePlayers()) {
+            String playerName = player.username();
+            if (playerName.regionMatches(true, 0, argument, 0, argument.length())) {
+              builder.suggest(playerName);
+            }
+          }
+          if ("all".regionMatches(true, 0, argument, 0, argument.length())) {
+            builder.suggest("all");
+          }
+          if ("current".regionMatches(true, 0, argument, 0, argument.length())
+              && context.getSource() instanceof Player) {
+            builder.suggest("current");
+          }
+          return builder.buildFuture();
+        })
+        .executes(this::usage)
+        .build();
     ArgumentCommandNode<CommandSource, String> serverNode = RequiredArgumentBuilder
-            .<CommandSource, String>argument("server", StringArgumentType.word())
-            .suggests((context, builder) -> {
-              for (RegisteredServer server : server.registeredServers()) {
-                builder.suggest(server.serverInfo().name());
-              }
-              return builder.buildFuture();
-            })
-            .executes(this::send)
-            .build();
+        .<CommandSource, String>argument("server", StringArgumentType.word())
+        .suggests((context, builder) -> {
+          for (RegisteredServer server : server.registeredServers()) {
+            builder.suggest(server.serverInfo().name());
+          }
+          return builder.buildFuture();
+        })
+        .executes(this::send)
+        .build();
     totalNode.addChild(playerNode);
     playerNode.addChild(serverNode);
     server.commandManager().register(new BrigadierCommand(totalNode));
@@ -97,7 +98,7 @@ public class SendCommand {
 
   private int usage(CommandContext<CommandSource> context) {
     context.getSource().sendMessage(
-            Component.translatable("velocity.command.send-usage", NamedTextColor.YELLOW)
+        Component.translatable("velocity.command.send-usage", NamedTextColor.YELLOW)
     );
     return 1;
   }
@@ -110,7 +111,7 @@ public class SendCommand {
 
     if (maybeServer.isEmpty()) {
       context.getSource().sendMessage(
-              CommandMessages.SERVER_DOES_NOT_EXIST.args(Component.text(serverName))
+          CommandMessages.SERVER_DOES_NOT_EXIST.args(Component.text(serverName))
       );
       return 0;
     }
@@ -119,7 +120,7 @@ public class SendCommand {
         && !Objects.equals(player, "all")
         && !Objects.equals(player, "current")) {
       context.getSource().sendMessage(
-              CommandMessages.PLAYER_NOT_FOUND.args(Component.text(player))
+          CommandMessages.PLAYER_NOT_FOUND.args(Component.text(player))
       );
       return 0;
     }

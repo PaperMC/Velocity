@@ -18,7 +18,7 @@
 package com.velocitypowered.proxy.network.protocol.packet.chat.builder;
 
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.player.Player;
 import com.velocitypowered.proxy.network.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.network.protocol.packet.chat.ChatType;
 import java.time.Instant;

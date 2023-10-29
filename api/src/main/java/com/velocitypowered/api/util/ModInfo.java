@@ -26,7 +26,7 @@ public final class ModInfo {
   /**
    * Constructs a new ModInfo instance.
    *
-   * @param type the Forge server list version to use
+   * @param type    the Forge server list version to use
    * @param modList the mods to present to the client
    */
   public ModInfo(String type, List<Mod> modList) {

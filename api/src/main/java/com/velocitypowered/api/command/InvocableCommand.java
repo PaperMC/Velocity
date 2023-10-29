@@ -15,9 +15,8 @@ import java.util.concurrent.CompletableFuture;
  * A command that can be executed with arbitrary arguments.
  *
  * <p>Modifying the command tree (e.g. registering a command via
- * {@link CommandManager#register(CommandMeta, Command)}) during
- * permission checking and suggestions provision results in
- * undefined behavior, which may include deadlocks.
+ * {@link CommandManager#register(CommandMeta, Command)}) during permission checking and suggestions
+ * provision results in undefined behavior, which may include deadlocks.
  *
  * @param <I> the type of the command invocation object
  */

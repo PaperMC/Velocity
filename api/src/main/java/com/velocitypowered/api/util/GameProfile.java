@@ -25,8 +25,8 @@ public final class GameProfile {
   /**
    * Creates a new Mojang game profile.
    *
-   * @param id the UUID for the profile
-   * @param name the profile's username
+   * @param id         the UUID for the profile
+   * @param name       the profile's username
    * @param properties properties for the profile
    */
   public GameProfile(UUID id, String name, List<Property> properties) {
@@ -38,7 +38,7 @@ public final class GameProfile {
    * Creates a new Mojang game profile.
    *
    * @param undashedId the undashed, Mojang-style UUID for the profile
-   * @param name the profile's username
+   * @param name       the profile's username
    * @param properties properties for the profile
    */
   public GameProfile(String undashedId, String name, List<Property> properties) {
@@ -190,8 +190,8 @@ public final class GameProfile {
     /**
      * Creates a profile property entry.
      *
-     * @param name the name of the property
-     * @param value the value of the property
+     * @param name      the name of the property
+     * @param value     the value of the property
      * @param signature the Mojang signature for the property
      */
     public Property(String name, String value, String signature) {

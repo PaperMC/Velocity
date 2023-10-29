@@ -25,6 +25,7 @@ import java.util.function.BooleanSupplier;
  * Statically-computed constraints for native code.
  */
 public class NativeConstraints {
+
   private static final boolean NATIVES_ENABLED = !Boolean.getBoolean("velocity.natives-disabled");
   private static final boolean IS_AMD64;
   private static final boolean IS_AARCH64;

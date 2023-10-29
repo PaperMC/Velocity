@@ -75,7 +75,7 @@ public class ServerListPingHandler {
       }
       VelocityRegisteredServer vrs = (VelocityRegisteredServer) rs.get();
       pings.add(vrs.ping(connection.getConnection().eventLoop(), PingOptions.builder()
-              .version(responseProtocolVersion).build()));
+          .version(responseProtocolVersion).build()));
     }
     if (pings.isEmpty()) {
       return CompletableFuture.completedFuture(fallback);
@@ -162,11 +162,10 @@ public class ServerListPingHandler {
   }
 
   /**
-   * Gets the current server ping for this connection, firing {@code ProxyPingEvent} if the
-   * ping is not cached.
+   * Gets the current server ping for this connection, firing {@code ProxyPingEvent} if the ping is
+   * not cached.
    *
    * @param connection the connection being pinged
-   *
    * @return the server ping as a completable future
    */
   public CompletableFuture<ServerPing> getPing(VelocityInboundConnection connection) {
@@ -176,11 +175,10 @@ public class ServerListPingHandler {
   }
 
   /**
-   * Gets the current server ping for this connection, firing {@code ProxyPingEvent} if the
-   * ping is not cached.
+   * Gets the current server ping for this connection, firing {@code ProxyPingEvent} if the ping is
+   * not cached.
    *
    * @param connection the connection being pinged
-   *
    * @return the server ping as a completable future
    */
   public CompletableFuture<StatusResponse> getPacketResponse(VelocityInboundConnection connection) {

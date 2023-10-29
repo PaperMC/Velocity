@@ -122,15 +122,15 @@ public class VelocityCommandManager implements CommandManager {
     final List<CommandRegistrar<?>> commandRegistrars = this.implementedRegistrars(command);
     if (commandRegistrars.isEmpty()) {
       throw new IllegalArgumentException(
-              command + " does not implement a registrable Command subinterface");
+          command + " does not implement a registrable Command subinterface");
     } else if (commandRegistrars.size() > 1) {
       final String implementedInterfaces = commandRegistrars.stream()
-              .map(CommandRegistrar::registrableSuperInterface)
-              .map(Class::getSimpleName)
-              .collect(Collectors.joining(", "));
+          .map(CommandRegistrar::registrableSuperInterface)
+          .map(Class::getSimpleName)
+          .collect(Collectors.joining(", "));
       throw new IllegalArgumentException(
-              command + " implements multiple registrable Command subinterfaces: "
-                      + implementedInterfaces);
+          command + " implements multiple registrable Command subinterfaces: "
+              + implementedInterfaces);
     } else {
       this.internalRegister(commandRegistrars.get(0), command, meta);
     }

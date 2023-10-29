@@ -22,7 +22,7 @@ public interface Scheduler {
   /**
    * Initializes a new {@link TaskBuilder} for creating a task on the proxy.
    *
-   * @param plugin the plugin to request the task for
+   * @param plugin   the plugin to request the task for
    * @param runnable the task to run when scheduled
    * @return the task builder
    */
@@ -31,7 +31,7 @@ public interface Scheduler {
   /**
    * Initializes a new {@link TaskBuilder} for creating a task on the proxy.
    *
-   * @param plugin the plugin to request the task for
+   * @param plugin   the plugin to request the task for
    * @param consumer the task to be run when scheduled with the capacity to cancel itself
    * @return the task builder
    */

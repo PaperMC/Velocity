@@ -8,13 +8,13 @@
 package com.velocitypowered.api.event.player;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.player.Player;
 import java.util.List;
 
 /**
- * This event is fired when a client ({@link Player}) sends a plugin message through the
- * register channel. Velocity will not wait on this event to finish firing.
+ * This event is fired when a client ({@link Player}) sends a plugin message through the register
+ * channel. Velocity will not wait on this event to finish firing.
  */
 public final class PlayerChannelRegisterEvent implements PlayerReferentEvent {
 
@@ -37,8 +37,8 @@ public final class PlayerChannelRegisterEvent implements PlayerReferentEvent {
   @Override
   public String toString() {
     return "PlayerChannelRegisterEvent{"
-            + "player=" + player
-            + ", channels=" + channels
-            + '}';
+        + "player=" + player
+        + ", channels=" + channels
+        + '}';
   }
 }

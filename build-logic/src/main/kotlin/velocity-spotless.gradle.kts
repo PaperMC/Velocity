@@ -10,6 +10,7 @@ extensions.configure<SpotlessExtension> {
         } else {
             licenseHeaderFile(rootProject.file("HEADER.txt"))
         }
+        importOrder()
         removeUnusedImports()
     }
 }

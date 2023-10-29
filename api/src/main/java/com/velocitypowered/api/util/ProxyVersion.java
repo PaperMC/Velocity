@@ -23,8 +23,8 @@ public final class ProxyVersion {
   /**
    * Creates a new {@link ProxyVersion} instance.
    *
-   * @param name the name for the proxy implementation
-   * @param vendor the vendor for the proxy implementation
+   * @param name    the name for the proxy implementation
+   * @param vendor  the vendor for the proxy implementation
    * @param version the version for the proxy implementation
    */
   public ProxyVersion(String name, String vendor, String version) {

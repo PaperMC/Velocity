@@ -7,11 +7,11 @@
 
 package com.velocitypowered.api.command;
 
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.player.Player;
 
 /**
- * Represents a command that can be executed by a {@link CommandSource}
- * such as a {@link Player} or the console.
+ * Represents a command that can be executed by a {@link CommandSource} such as a {@link Player} or
+ * the console.
  *
  * <p><strong>You must not subclass <code>Command</code></strong>. Use one of the following
  * <i>registrable</i> subinterfaces:</p>
@@ -30,4 +30,5 @@ import com.velocitypowered.api.proxy.Player;
  * </ul>
  */
 public interface Command {
+
 }

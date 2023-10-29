@@ -8,13 +8,14 @@
 package com.velocitypowered.api.event.player;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.player.Player;
 
 /**
  * Fired when a {@link Player} sends the <code>minecraft:brand</code> plugin message. Velocity will
  * not wait on the result of this event.
  */
 public final class PlayerClientBrandEvent implements PlayerReferentEvent {
+
   private final Player player;
   private final String brand;
 
@@ -22,7 +23,7 @@ public final class PlayerClientBrandEvent implements PlayerReferentEvent {
    * Creates a new instance.
    *
    * @param player the {@link Player} of the sent client brand
-   * @param brand the sent client brand
+   * @param brand  the sent client brand
    */
   public PlayerClientBrandEvent(Player player, String brand) {
     this.player = Preconditions.checkNotNull(player);
@@ -41,9 +42,8 @@ public final class PlayerClientBrandEvent implements PlayerReferentEvent {
   @Override
   public String toString() {
     return "PlayerClientBrandEvent{"
-      + "player=" + player
-      + ", brand='" + brand + '\''
-      + '}';
+        + "player=" + player
+        + ", brand='" + brand + '\''
+        + '}';
   }
 }
-

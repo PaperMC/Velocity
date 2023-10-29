@@ -15,8 +15,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public interface KeyIdentifiable {
 
   /**
-   * Returns the timed identified key of the object context. This is only available if the client
-   * is running Minecraft 1.19 or newer.
+   * Returns the timed identified key of the object context. This is only available if the client is
+   * running Minecraft 1.19 or newer.
    *
    * @return the key or null if not available
    */

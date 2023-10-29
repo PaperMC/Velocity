@@ -36,19 +36,19 @@ public enum TranslatableMapper implements BiConsumer<TranslatableComponent, Cons
   INSTANCE;
 
   public static final ComponentFlattener FLATTENER = ComponentFlattener.basic().toBuilder()
-          .complexMapper(TranslatableComponent.class, TranslatableMapper.INSTANCE)
-          .build();
+      .complexMapper(TranslatableComponent.class, TranslatableMapper.INSTANCE)
+      .build();
 
   @Override
   public void accept(
-          final TranslatableComponent translatableComponent,
-          final Consumer<Component> componentConsumer
+      final TranslatableComponent translatableComponent,
+      final Consumer<Component> componentConsumer
   ) {
     for (final Translator source : GlobalTranslator.translator().sources()) {
       if (source instanceof TranslationRegistry
-              && ((TranslationRegistry) source).contains(translatableComponent.key())) {
+          && ((TranslationRegistry) source).contains(translatableComponent.key())) {
         componentConsumer.accept(GlobalTranslator.render(translatableComponent,
-                ClosestLocaleMatcher.INSTANCE.lookupClosest(Locale.getDefault())));
+            ClosestLocaleMatcher.INSTANCE.lookupClosest(Locale.getDefault())));
         return;
       }
     }
@@ -58,10 +58,10 @@ public enum TranslatableMapper implements BiConsumer<TranslatableComponent, Cons
     }
     for (final Translator source : GlobalTranslator.translator().sources()) {
       if (source instanceof TranslationRegistry
-              && ((TranslationRegistry) source).contains(fallback)) {
+          && ((TranslationRegistry) source).contains(fallback)) {
         componentConsumer.accept(
-                GlobalTranslator.render(Component.translatable(fallback),
-                        ClosestLocaleMatcher.INSTANCE.lookupClosest(Locale.getDefault())));
+            GlobalTranslator.render(Component.translatable(fallback),
+                ClosestLocaleMatcher.INSTANCE.lookupClosest(Locale.getDefault())));
         return;
       }
     }

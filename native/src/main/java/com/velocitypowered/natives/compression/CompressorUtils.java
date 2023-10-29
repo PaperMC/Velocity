@@ -21,6 +21,7 @@ import io.netty.buffer.ByteBuf;
 import java.util.zip.DataFormatException;
 
 class CompressorUtils {
+
   /**
    * The default preferred output buffer size for zlib.
    */

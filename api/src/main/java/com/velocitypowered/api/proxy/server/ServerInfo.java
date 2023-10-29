@@ -24,7 +24,7 @@ public final class ServerInfo implements Comparable<ServerInfo> {
   /**
    * Creates a new ServerInfo object.
    *
-   * @param name the name for the server
+   * @param name    the name for the server
    * @param address the address of the server to connect to
    */
   public ServerInfo(String name, SocketAddress address) {

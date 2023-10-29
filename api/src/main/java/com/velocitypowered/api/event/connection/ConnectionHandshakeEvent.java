@@ -8,12 +8,12 @@
 package com.velocitypowered.api.event.connection;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.proxy.InboundConnection;
+import com.velocitypowered.api.network.connection.InboundConnection;
 
 /**
- * This event is fired when a handshake is established between a client and the proxy.
- * Velocity will fire this event asynchronously and will not wait for it to complete before
- * handling the connection.
+ * This event is fired when a handshake is established between a client and the proxy. Velocity will
+ * fire this event asynchronously and will not wait for it to complete before handling the
+ * connection.
  */
 public final class ConnectionHandshakeEvent {
 

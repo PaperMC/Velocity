@@ -7,8 +7,8 @@
 
 package com.velocitypowered.api.proxy.server;
 
-import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
+import com.velocitypowered.api.proxy.player.Player;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.audience.Audience;
@@ -42,8 +42,8 @@ public interface RegisteredServer extends ChannelMessageSink, Audience {
   CompletableFuture<ServerPing> ping();
 
   /**
-   * Attempts to ping the remote server and return the server list ping result
-   * according to the options provided.
+   * Attempts to ping the remote server and return the server list ping result according to the
+   * options provided.
    *
    * @param pingOptions the options provided for pinging the server
    * @return the server ping result from the server

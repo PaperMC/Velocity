@@ -561,8 +561,8 @@ public class VelocityEventManager implements EventManager {
     }
 
     /**
-     * Executes the task and returns whether the next handler should be executed immediately
-     * after this one, without additional scheduling.
+     * Executes the task and returns whether the next handler should be executed immediately after
+     * this one, without additional scheduling.
      */
     boolean execute() {
       state = TASK_STATE_EXECUTING;

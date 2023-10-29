@@ -28,8 +28,8 @@ public final class PluginDependency {
   /**
    * Creates a new instance.
    *
-   * @param id the plugin ID
-   * @param version an optional version
+   * @param id       the plugin ID
+   * @param version  an optional version
    * @param optional whether or not this dependency is optional
    */
   public PluginDependency(String id, @Nullable String version, boolean optional) {

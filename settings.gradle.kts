@@ -24,9 +24,9 @@ plugins {
 rootProject.name = "velocity"
 
 sequenceOf(
-    "api",
-    "native",
-    "proxy",
+        "api",
+        "native",
+        "proxy",
 ).forEach {
     val project = ":velocity-$it"
     include(project)

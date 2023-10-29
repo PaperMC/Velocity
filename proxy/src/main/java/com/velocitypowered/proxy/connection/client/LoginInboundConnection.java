@@ -18,7 +18,7 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.LoginPhaseConnection;
+import com.velocitypowered.api.network.connection.LoginPhaseConnection;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.crypto.KeyIdentifiable;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;

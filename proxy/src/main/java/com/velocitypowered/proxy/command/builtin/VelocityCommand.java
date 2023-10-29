@@ -413,6 +413,7 @@ public class VelocityCommand implements SimpleCommand {
    * Heap SubCommand.
    */
   public static class Heap implements SubCommand {
+
     private static final Logger logger = LogManager.getLogger(Heap.class);
     private MethodHandle heapGenerator;
     private Consumer<CommandSource> heapConsumer;

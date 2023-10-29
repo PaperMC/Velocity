@@ -24,8 +24,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * The main class. Responsible for parsing command line arguments and then launching the
- * proxy.
+ * The main class. Responsible for parsing command line arguments and then launching the proxy.
  */
 public class Velocity {
 

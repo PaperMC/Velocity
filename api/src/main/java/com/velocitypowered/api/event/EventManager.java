@@ -15,36 +15,36 @@ import java.util.concurrent.CompletableFuture;
 public interface EventManager {
 
   /**
-   * Requests that the specified {@code listener} listen for events and associate it with the {@code
-   * plugin}.
+   * Requests that the specified {@code listener} listen for events and associate it with the
+   * {@code plugin}.
    *
-   * @param plugin the plugin to associate with the listener
+   * @param plugin   the plugin to associate with the listener
    * @param listener the listener to register
    */
   void register(Object plugin, Object listener);
 
   /**
-   * Requests that the specified {@code handler} listen for events and associate it with the {@code
-   * plugin}.
+   * Requests that the specified {@code handler} listen for events and associate it with the
+   * {@code plugin}.
    *
-   * @param plugin the plugin to associate with the handler
+   * @param plugin     the plugin to associate with the handler
    * @param eventClass the class for the event handler to register
-   * @param handler the handler to register
-   * @param <E> the event type to handle
+   * @param handler    the handler to register
+   * @param <E>        the event type to handle
    */
   default <E> void register(Object plugin, Class<E> eventClass, EventHandler<E> handler) {
     register(plugin, eventClass, PostOrder.NORMAL, handler);
   }
 
   /**
-   * Requests that the specified {@code handler} listen for events and associate it with the {@code
-   * plugin}.
+   * Requests that the specified {@code handler} listen for events and associate it with the
+   * {@code plugin}.
    *
-   * @param plugin the plugin to associate with the handler
+   * @param plugin     the plugin to associate with the handler
    * @param eventClass the class for the event handler to register
-   * @param postOrder the order in which events should be posted to the handler
-   * @param handler the handler to register
-   * @param <E> the event type to handle
+   * @param postOrder  the order in which events should be posted to the handler
+   * @param handler    the handler to register
+   * @param <E>        the event type to handle
    */
   <E> void register(Object plugin, Class<E> eventClass, short postOrder,
       EventHandler<E> handler);
@@ -78,7 +78,7 @@ public interface EventManager {
   /**
    * Unregisters a specific listener for a specific plugin.
    *
-   * @param plugin the plugin associated with the listener
+   * @param plugin   the plugin associated with the listener
    * @param listener the listener to deregister
    */
   void unregisterListener(Object plugin, Object listener);
@@ -86,9 +86,9 @@ public interface EventManager {
   /**
    * Unregisters a specific event handler for a specific plugin.
    *
-   * @param plugin the plugin to associate with the handler
+   * @param plugin  the plugin to associate with the handler
    * @param handler the handler to register
-   * @param <E> the event type to handle
+   * @param <E>     the event type to handle
    */
   <E> void unregister(Object plugin, EventHandler<E> handler);
 }

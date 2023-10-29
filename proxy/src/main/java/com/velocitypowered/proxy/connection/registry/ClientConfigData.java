@@ -23,8 +23,7 @@ import net.kyori.adventure.key.Key;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Holds the registry data that is sent
- * to the client during the config stage.
+ * Holds the registry data that is sent to the client during the config stage.
  */
 public class ClientConfigData {
 
@@ -35,7 +34,7 @@ public class ClientConfigData {
   private final String brand;
 
   private ClientConfigData(@Nullable VelocityResourcePackInfo resourcePackInfo, DataTag tag,
-                           RegistrySync registry, Key[] features, String brand) {
+      RegistrySync registry, Key[] features, String brand) {
     this.resourcePackInfo = resourcePackInfo;
     this.tag = tag;
     this.registry = registry;
@@ -76,6 +75,7 @@ public class ClientConfigData {
    * Builder for ClientConfigData.
    */
   public static class Builder {
+
     private VelocityResourcePackInfo resourcePackInfo;
     private DataTag tag;
     private RegistrySync registry;

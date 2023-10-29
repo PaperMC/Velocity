@@ -7,6 +7,7 @@
 
 package com.velocitypowered.api.proxy;
 
+import com.velocitypowered.api.proxy.player.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -26,8 +27,8 @@ public interface ConnectionRequestBuilder {
   RegisteredServer server();
 
   /**
-   * Initiates the connection to the remote server and emits a result on the {@link
-   * CompletableFuture} after the user has logged on. No messages will be communicated to the
+   * Initiates the connection to the remote server and emits a result on the
+   * {@link CompletableFuture} after the user has logged on. No messages will be communicated to the
    * client: the user is responsible for all error handling.
    *
    * @return a {@link CompletableFuture} representing the status of this connection
@@ -35,9 +36,9 @@ public interface ConnectionRequestBuilder {
   CompletableFuture<Result> connect();
 
   /**
-   * Initiates the connection to the remote server and emits a result on the {@link
-   * CompletableFuture} after the user has logged on. Velocity's own built-in handling will be used
-   * to provide errors to the client.
+   * Initiates the connection to the remote server and emits a result on the
+   * {@link CompletableFuture} after the user has logged on. Velocity's own built-in handling will
+   * be used to provide errors to the client.
    *
    * @return a {@link CompletableFuture} representing the status of this connection
    */

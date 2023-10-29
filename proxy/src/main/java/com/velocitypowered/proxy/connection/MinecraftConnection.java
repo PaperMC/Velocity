@@ -381,8 +381,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   public void addPlayPacketQueueHandler() {
     if (this.channel.pipeline().get(Connections.PLAY_PACKET_QUEUE) == null) {
       this.channel.pipeline().addAfter(Connections.MINECRAFT_ENCODER, Connections.PLAY_PACKET_QUEUE,
-           new PlayPacketQueueHandler(this.protocolVersion,
-                channel.pipeline().get(MinecraftEncoder.class).getDirection()));
+          new PlayPacketQueueHandler(this.protocolVersion,
+              channel.pipeline().get(MinecraftEncoder.class).getDirection()));
     }
   }
 
@@ -429,7 +429,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * @param sessionHandler the handler to use
    */
   public void setActiveSessionHandler(StateRegistry registry,
-                                      MinecraftSessionHandler sessionHandler) {
+      MinecraftSessionHandler sessionHandler) {
     Preconditions.checkNotNull(registry);
     ensureInEventLoop();
 
@@ -487,8 +487,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   }
 
   /**
-   * Sets the compression threshold on the connection. You are responsible for sending {@link
-   * SetCompression} beforehand.
+   * Sets the compression threshold on the connection. You are responsible for sending
+   * {@link SetCompression} beforehand.
    *
    * @param threshold the compression threshold to use
    */

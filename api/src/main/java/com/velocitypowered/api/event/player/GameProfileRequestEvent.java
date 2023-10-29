@@ -9,7 +9,7 @@ package com.velocitypowered.api.event.player;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
-import com.velocitypowered.api.proxy.InboundConnection;
+import com.velocitypowered.api.network.connection.InboundConnection;
 import com.velocitypowered.api.util.GameProfile;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -19,9 +19,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * a user, i.e. skin replacement.
  *
  * <p>
- *   Velocity will wait for this event to finish firing before proceeding with the rest of the login
- *   process, but you should try to limit the work done in any event that fires during the login
- *   process.
+ * Velocity will wait for this event to finish firing before proceeding with the rest of the login
+ * process, but you should try to limit the work done in any event that fires during the login
+ * process.
  * </p>
  */
 @AwaitingEvent
@@ -36,9 +36,9 @@ public final class GameProfileRequestEvent {
   /**
    * Creates a new instance.
    *
-   * @param connection the connection connecting to the proxy
+   * @param connection      the connection connecting to the proxy
    * @param originalProfile the original {@link GameProfile} for the user
-   * @param onlineMode whether or not the user connected in online or offline mode
+   * @param onlineMode      whether or not the user connected in online or offline mode
    */
   public GameProfileRequestEvent(InboundConnection connection, GameProfile originalProfile,
       boolean onlineMode) {

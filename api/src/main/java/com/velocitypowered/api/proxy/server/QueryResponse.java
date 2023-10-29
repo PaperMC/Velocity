@@ -55,8 +55,8 @@ public final class QueryResponse {
   }
 
   /**
-   * Get hostname which will be used to reply to the query. By default it is {@link
-   * ProxyConfig#getMotd()} in plain text without colour codes.
+   * Get hostname which will be used to reply to the query. By default it is
+   * {@link ProxyConfig#getMotd()} in plain text without colour codes.
    *
    * @return hostname
    */
@@ -75,8 +75,8 @@ public final class QueryResponse {
   }
 
   /**
-   * Get map name which will be used to reply to the query. By default {@link
-   * ProxyConfig#getQueryMap()} is sent.
+   * Get map name which will be used to reply to the query. By default
+   * {@link ProxyConfig#getQueryMap()} is sent.
    *
    * @return map name
    */
@@ -149,10 +149,10 @@ public final class QueryResponse {
 
 
   /**
-   * Creates a new {@link Builder} instance from data represented by this response, so that you
-   * may create a new {@link QueryResponse} with new data. It is guaranteed that
-   * {@code queryResponse.toBuilder().build().equals(queryResponse)}: that is, if no other
-   * changes are made to the returned builder, the built instance will equal the original instance.
+   * Creates a new {@link Builder} instance from data represented by this response, so that you may
+   * create a new {@link QueryResponse} with new data. It is guaranteed that
+   * {@code queryResponse.toBuilder().build().equals(queryResponse)}: that is, if no other changes
+   * are made to the returned builder, the built instance will equal the original instance.
    *
    * @return {@link QueryResponse} builder
    */
@@ -227,6 +227,7 @@ public final class QueryResponse {
    * A builder for {@link QueryResponse} objects.
    */
   public static final class Builder {
+
     private @MonotonicNonNull String hostname;
     private @MonotonicNonNull String gameVersion;
     private @MonotonicNonNull String map;

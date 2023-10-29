@@ -27,6 +27,7 @@ import java.util.zip.DataFormatException;
  * implementation.
  */
 public interface VelocityCompressor extends Disposable, Native {
+
   void inflate(ByteBuf source, ByteBuf destination, int uncompressedSize)
       throws DataFormatException;
 

@@ -153,7 +153,7 @@ public enum ProtocolVersion {
    *
    * @return the protocol name
    * @deprecated A protocol may be shared by multiple versions. Use @link{#getVersionIntroducedIn()}
-   *     or @link{#getVersionsSupportedBy()} to get more accurate version names.
+   *             or @link{#getVersionsSupportedBy()} to get more accurate version names.
    */
   @Deprecated
   public String getName() {
@@ -161,8 +161,7 @@ public enum ProtocolVersion {
   }
 
   /**
-   * Returns the user-friendly name of the version
-   * this protocol was introduced in.
+   * Returns the user-friendly name of the version this protocol was introduced in.
    *
    * @return the version name
    */
@@ -171,8 +170,7 @@ public enum ProtocolVersion {
   }
 
   /**
-   * Returns the user-friendly name of the last
-   * version this protocol is valid for.
+   * Returns the user-friendly name of the last version this protocol is valid for.
    *
    * @return the version name
    */

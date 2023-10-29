@@ -37,8 +37,8 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
   interface Result {
 
     /**
-     * Returns whether the event is allowed to proceed. Plugins may choose to skip denied
-     * events, and the proxy will respect the result of this method.
+     * Returns whether the event is allowed to proceed. Plugins may choose to skip denied events,
+     * and the proxy will respect the result of this method.
      *
      * @return whether the event is allowed to proceed
      */

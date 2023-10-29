@@ -17,12 +17,9 @@
 
 package com.velocitypowered.proxy.util;
 
-import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.ChannelRegistrar;
-import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.proxy.network.protocol.util.PluginMessageUtil;
 import java.util.Collection;
 import java.util.HashSet;
@@ -37,15 +34,14 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
 
   private final Map<String, ChannelIdentifier> identifierMap = new ConcurrentHashMap<>();
 
+  private static boolean isModernIdentifier(ChannelIdentifier identifier) {
+    return identifier.id().indexOf(':') != -1;
+  }
+
   @Override
   public void register(ChannelIdentifier... identifiers) {
     for (ChannelIdentifier identifier : identifiers) {
-      Preconditions.checkArgument(identifier instanceof LegacyChannelIdentifier
-          || identifier instanceof MinecraftChannelIdentifier, "identifier is unknown");
-    }
-
-    for (ChannelIdentifier identifier : identifiers) {
-      if (identifier instanceof MinecraftChannelIdentifier) {
+      if (isModernIdentifier(identifier)) {
         identifierMap.put(identifier.id(), identifier);
       } else {
         String rewritten = PluginMessageUtil.transformLegacyToModernChannel(identifier.id());
@@ -58,13 +54,7 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
   @Override
   public void unregister(ChannelIdentifier... identifiers) {
     for (ChannelIdentifier identifier : identifiers) {
-      Preconditions.checkArgument(identifier instanceof LegacyChannelIdentifier
-              || identifier instanceof MinecraftChannelIdentifier,
-          "identifier is unknown");
-    }
-
-    for (ChannelIdentifier identifier : identifiers) {
-      if (identifier instanceof MinecraftChannelIdentifier) {
+      if (isModernIdentifier(identifier)) {
         identifierMap.remove(identifier.id());
       } else {
         String rewritten = PluginMessageUtil.transformLegacyToModernChannel(identifier.id());
@@ -95,7 +85,7 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
   public Collection<String> getModernChannelIds() {
     Collection<String> ids = new HashSet<>();
     for (ChannelIdentifier value : identifierMap.values()) {
-      if (value instanceof MinecraftChannelIdentifier) {
+      if (isModernIdentifier(value)) {
         ids.add(value.id());
       } else {
         ids.add(PluginMessageUtil.transformLegacyToModernChannel(value.id()));

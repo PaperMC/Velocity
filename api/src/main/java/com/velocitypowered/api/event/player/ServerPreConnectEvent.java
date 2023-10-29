@@ -10,10 +10,10 @@ package com.velocitypowered.api.event.player;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
+import com.velocitypowered.api.network.connection.ServerConnection;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder.Status;
-import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ServerConnection;
+import com.velocitypowered.api.proxy.player.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -34,7 +34,7 @@ public final class ServerPreConnectEvent implements
   /**
    * Creates the ServerPreConnectEvent.
    *
-   * @param player the player who is connecting to a server
+   * @param player         the player who is connecting to a server
    * @param originalServer the server the player was trying to connect to
    */
   public ServerPreConnectEvent(Player player, RegisteredServer originalServer) {
@@ -45,7 +45,7 @@ public final class ServerPreConnectEvent implements
   /**
    * Creates the ServerPreConnectEvent.
    *
-   * @param player the player who is connecting to a server
+   * @param player         the player who is connecting to a server
    * @param originalServer the server the player was trying to connect to
    * @param previousServer the server the player is connected to
    */
@@ -78,9 +78,9 @@ public final class ServerPreConnectEvent implements
   }
 
   /**
-   * Returns the server that the player originally tried to connect to. To get the server the
-   * player will connect to, see the {@link ServerResult} of this event. To get the server the
-   * player is currently on when this event is fired, use {@link #getPreviousServer()}.
+   * Returns the server that the player originally tried to connect to. To get the server the player
+   * will connect to, see the {@link ServerResult} of this event. To get the server the player is
+   * currently on when this event is fired, use {@link #getPreviousServer()}.
    *
    * @return the server that the player originally tried to connect to
    */

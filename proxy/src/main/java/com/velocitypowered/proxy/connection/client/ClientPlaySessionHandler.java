@@ -28,8 +28,6 @@ import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
 import com.velocitypowered.api.event.player.TabCompleteEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
-import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -80,6 +78,7 @@ import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
@@ -288,9 +287,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // Handling edge case when packet with FML client handshake (state COMPLETE)
     // arrives after JoinGame packet from destination server
     VelocityServerConnection serverConn =
-            (player.getConnectedServer() == null
-                    && packet.getChannel().equals(
-                            LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL))
+        (player.getConnectedServer() == null
+            && packet.getChannel().equals(
+            LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL))
             ? player.getConnectionInFlight() : player.getConnectedServer();
 
     MinecraftConnection backendConn = serverConn != null ? serverConn.getConnection() : null;
@@ -303,9 +302,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         List<ChannelIdentifier> channelIdentifiers = new ArrayList<>();
         for (String channel : channels) {
           try {
-            channelIdentifiers.add(MinecraftChannelIdentifier.from(channel));
+            channelIdentifiers.add(ChannelIdentifier.ofKey(Key.key(channel)));
           } catch (IllegalArgumentException e) {
-            channelIdentifiers.add(new LegacyChannelIdentifier(channel));
+            channelIdentifiers.add(ChannelIdentifier.legacy(channel));
           }
         }
         server.eventManager()
@@ -539,7 +538,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // Tell the server about the proxy's plugin message channels.
     ProtocolVersion serverVersion = serverMc.getProtocolVersion();
     final Collection<String> channels = server.channelRegistrar()
-            .getChannelsForProtocol(serverMc.getProtocolVersion());
+        .getChannelsForProtocol(serverMc.getProtocolVersion());
     if (!channels.isEmpty()) {
       serverMc.delayedWrite(constructChannelsPacket(serverVersion, channels));
     }

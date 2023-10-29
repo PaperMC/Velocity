@@ -13,13 +13,12 @@ import com.google.common.annotations.Beta;
 import com.mojang.brigadier.tree.RootCommandNode;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.event.player.PlayerReferentEvent;
-import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.player.Player;
 
 /**
- * Allows plugins to modify the packet indicating commands available on the server to a
- * Minecraft 1.13+ client. The given {@link RootCommandNode} is mutable. Velocity will wait
- * for this event to finish firing before sending the list of available commands to the
- * client.
+ * Allows plugins to modify the packet indicating commands available on the server to a Minecraft
+ * 1.13+ client. The given {@link RootCommandNode} is mutable. Velocity will wait for this event to
+ * finish firing before sending the list of available commands to the client.
  */
 @AwaitingEvent
 @Beta
@@ -31,7 +30,7 @@ public class PlayerAvailableCommandsEvent implements PlayerReferentEvent {
   /**
    * Constructs an available commands event.
    *
-   * @param player the targeted player
+   * @param player   the targeted player
    * @param rootNode the Brigadier root node
    */
   public PlayerAvailableCommandsEvent(Player player,
