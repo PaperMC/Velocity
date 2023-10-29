@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage")
+
 dependencyResolutionManagement {
     repositories {
         mavenCentral()
@@ -9,3 +11,5 @@ dependencyResolutionManagement {
         }
     }
 }
+
+rootProject.name = "build-logic"
