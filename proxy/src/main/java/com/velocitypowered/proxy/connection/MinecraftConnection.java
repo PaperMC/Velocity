@@ -379,9 +379,9 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    */
   public void addPlayPacketQueueHandler() {
     if (this.channel.pipeline().get(Connections.PLAY_PACKET_QUEUE) == null) {
-      this.channel.pipeline().addAfter(Connections.MINECRAFT_ENCODER, Connections.PLAY_PACKET_QUEUE,
+      this.channel.pipeline().addAfter(MINECRAFT_PRE_ENCODER, Connections.PLAY_PACKET_QUEUE,
            new PlayPacketQueueHandler(this.protocolVersion,
-                channel.pipeline().get(MinecraftEncoder.class).getDirection()));
+                channel.pipeline().get(MinecraftPreEncoder.class).getDirection()));
     }
   }
 

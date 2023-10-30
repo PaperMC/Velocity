@@ -38,8 +38,8 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.netty.MinecraftCompressAndIdDecoder;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.netty.MinecraftCompressAndIdDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftPreEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
@@ -120,7 +120,8 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
             .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
             .addLast(COMPRESSION_DECODER, new MinecraftCompressAndIdDecoder())
             .addLast(MINECRAFT_DECODER, new MinecraftDecoder(ProtocolUtils.Direction.CLIENTBOUND))
-            .addLast(MINECRAFT_PRE_ENCODER, new MinecraftPreEncoder(ProtocolUtils.Direction.SERVERBOUND));
+            .addLast(MINECRAFT_PRE_ENCODER,
+                new MinecraftPreEncoder(ProtocolUtils.Direction.SERVERBOUND));
 
         ch.pipeline().addLast(HANDLER, new MinecraftConnection(ch, server));
       }
