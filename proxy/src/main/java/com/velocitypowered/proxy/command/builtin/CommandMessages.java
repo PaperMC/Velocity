@@ -30,4 +30,6 @@ public class CommandMessages {
       "velocity.command.players-only", NamedTextColor.RED);
   public static final TranslatableComponent SERVER_DOES_NOT_EXIST = Component.translatable(
       "velocity.command.server-does-not-exist", NamedTextColor.RED);
+  public static final TranslatableComponent PLAYER_NOT_FOUND = Component.translatable(
+      "velocity.command.player-not-found", NamedTextColor.RED);
 }

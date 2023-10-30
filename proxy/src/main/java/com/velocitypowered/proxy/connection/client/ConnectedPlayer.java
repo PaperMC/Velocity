@@ -59,6 +59,7 @@ import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.connection.util.VelocityInboundConnection;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
@@ -69,6 +70,7 @@ import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatType;
 import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderFactory;
 import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChat;
+import com.velocitypowered.proxy.protocol.packet.config.StartUpdate;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.InternalTabList;
@@ -77,6 +79,7 @@ import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import com.velocitypowered.proxy.util.DurationUtils;
+import com.velocitypowered.proxy.util.TranslatableMapper;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
@@ -98,9 +101,6 @@ import net.kyori.adventure.platform.facet.FacetPointers;
 import net.kyori.adventure.platform.facet.FacetPointers.Type;
 import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.KeybindComponent;
-import net.kyori.adventure.text.TranslatableComponent;
-import net.kyori.adventure.text.flattener.ComponentFlattener;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -123,12 +123,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   private static final int MAX_PLUGIN_CHANNELS = 1024;
   private static final PlainTextComponentSerializer PASS_THRU_TRANSLATE =
-      PlainTextComponentSerializer.builder()
-          .flattener(ComponentFlattener.basic().toBuilder()
-              .mapper(KeybindComponent.class, c -> "")
-              .mapper(TranslatableComponent.class, TranslatableComponent::key)
-              .build())
-          .build();
+      PlainTextComponentSerializer.builder().flattener(TranslatableMapper.FLATTENER).build();
   static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
 
   private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
@@ -159,17 +154,17 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private final Queue<ResourcePackInfo> outstandingResourcePacks = new ArrayDeque<>();
   private @Nullable ResourcePackInfo pendingResourcePack;
   private @Nullable ResourcePackInfo appliedResourcePack;
-  private final @NotNull Pointers pointers = Player.super.pointers().toBuilder()
-      .withDynamic(Identity.UUID, this::getUniqueId)
-      .withDynamic(Identity.NAME, this::getUsername)
-      .withDynamic(Identity.DISPLAY_NAME, () -> Component.text(this.getUsername()))
-      .withDynamic(Identity.LOCALE, this::getEffectiveLocale)
-      .withStatic(PermissionChecker.POINTER, getPermissionChecker())
-      .withStatic(FacetPointers.TYPE, Type.PLAYER)
-      .build();
+  private final @NotNull Pointers pointers =
+      Player.super.pointers().toBuilder().withDynamic(Identity.UUID, this::getUniqueId)
+          .withDynamic(Identity.NAME, this::getUsername)
+          .withDynamic(Identity.DISPLAY_NAME, () -> Component.text(this.getUsername()))
+          .withDynamic(Identity.LOCALE, this::getEffectiveLocale)
+          .withStatic(PermissionChecker.POINTER, getPermissionChecker())
+          .withStatic(FacetPointers.TYPE, Type.PLAYER).build();
   private @Nullable String clientBrand;
   private @Nullable Locale effectiveLocale;
   private @Nullable IdentifiedKey playerKey;
+  private @Nullable ClientSettings clientSettingsPacket;
   private final ChatQueue chatQueue;
   private final ChatBuilderFactory chatBuilderFactory;
 
@@ -278,13 +273,23 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     return settings == null ? ClientSettingsWrapper.DEFAULT : this.settings;
   }
 
+  public ClientSettings getClientSettingsPacket() {
+    return clientSettingsPacket;
+  }
+
   @Override
   public boolean hasSentPlayerSettings() {
     return settings != null;
   }
 
-  void setPlayerSettings(ClientSettings settings) {
-    ClientSettingsWrapper cs = new ClientSettingsWrapper(settings);
+  /**
+   * Sets player settings.
+   *
+   * @param clientSettingsPacket the player settings packet
+   */
+  public void setClientSettings(final ClientSettings clientSettingsPacket) {
+    this.clientSettingsPacket = clientSettingsPacket;
+    final ClientSettingsWrapper cs = new ClientSettingsWrapper(clientSettingsPacket);
     this.settings = cs;
     server.getEventManager().fireAndForget(new PlayerSettingsChangedEvent(this, cs));
   }
@@ -537,8 +542,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public void clearHeaderAndFooter() {
-    tabList.clearHeaderAndFooter();
+  public void clearPlayerListHeaderAndFooter() {
+    clearPlayerListHeaderAndFooterSilent();
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      this.connection.write(HeaderAndFooter.reset());
+    }
+  }
+
+  public void clearPlayerListHeaderAndFooterSilent() {
+    this.playerListHeader = Component.empty();
+    this.playerListFooter = Component.empty();
   }
 
   @Override
@@ -674,8 +687,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     ServerKickResult result;
     if (kickedFromCurrent) {
       Optional<RegisteredServer> next = getNextServerToTry(rs);
-      result = next.map(RedirectPlayer::create)
-          .orElseGet(() -> DisconnectPlayer.create(friendlyReason));
+      result =
+          next.map(RedirectPlayer::create).orElseGet(() -> DisconnectPlayer.create(friendlyReason));
     } else {
       // If we were kicked by going to another server, the connection should not be in flight
       if (connectionInFlight != null && connectionInFlight.getServer().equals(rs)) {
@@ -689,86 +702,83 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   private void handleKickEvent(KickedFromServerEvent originalEvent, Component friendlyReason,
-      boolean kickedFromCurrent) {
-    server.getEventManager().fire(originalEvent)
-        .thenAcceptAsync(event -> {
-          // There can't be any connection in flight now.
-          connectionInFlight = null;
+                               boolean kickedFromCurrent) {
+    server.getEventManager().fire(originalEvent).thenAcceptAsync(event -> {
+      // There can't be any connection in flight now.
+      connectionInFlight = null;
 
-          // Make sure we clear the current connected server as the connection is invalid.
-          VelocityServerConnection previousConnection = connectedServer;
-          if (kickedFromCurrent) {
-            connectedServer = null;
-          }
+      // Make sure we clear the current connected server as the connection is invalid.
+      VelocityServerConnection previousConnection = connectedServer;
+      if (kickedFromCurrent) {
+        connectedServer = null;
+      }
 
-          if (!isActive()) {
-            // If the connection is no longer active, it makes no sense to try and recover it.
-            return;
-          }
+      if (!isActive()) {
+        // If the connection is no longer active, it makes no sense to try and recover it.
+        return;
+      }
 
-          if (event.getResult() instanceof DisconnectPlayer) {
-            DisconnectPlayer res = (DisconnectPlayer) event.getResult();
-            disconnect(res.getReasonComponent());
-          } else if (event.getResult() instanceof RedirectPlayer) {
-            RedirectPlayer res = (RedirectPlayer) event.getResult();
-            createConnectionRequest(res.getServer(), previousConnection)
-                .connect()
-                .whenCompleteAsync((status, throwable) -> {
-                  if (throwable != null) {
-                    handleConnectionException(status != null ? status.getAttemptedConnection()
-                        : res.getServer(), throwable, true);
-                    return;
+      if (event.getResult() instanceof DisconnectPlayer) {
+        DisconnectPlayer res = (DisconnectPlayer) event.getResult();
+        disconnect(res.getReasonComponent());
+      } else if (event.getResult() instanceof RedirectPlayer) {
+        RedirectPlayer res = (RedirectPlayer) event.getResult();
+        createConnectionRequest(res.getServer(), previousConnection).connect()
+            .whenCompleteAsync((status, throwable) -> {
+              if (throwable != null) {
+                handleConnectionException(
+                    status != null ? status.getAttemptedConnection() : res.getServer(), throwable,
+                    true);
+                return;
+              }
+
+              switch (status.getStatus()) {
+                // Impossible/nonsensical cases
+                case ALREADY_CONNECTED:
+                  logger.error("{}: already connected to {}", this,
+                      status.getAttemptedConnection().getServerInfo().getName());
+                  break;
+                case CONNECTION_IN_PROGRESS:
+                  // Fatal case
+                case CONNECTION_CANCELLED:
+                  Component fallbackMsg = res.getMessageComponent();
+                  if (fallbackMsg == null) {
+                    fallbackMsg = friendlyReason;
                   }
-
-                  switch (status.getStatus()) {
-                    // Impossible/nonsensical cases
-                    case ALREADY_CONNECTED:
-                      logger.error("{}: already connected to {}",
-                          this,
-                          status.getAttemptedConnection().getServerInfo().getName()
-                      );
-                      break;
-                    case CONNECTION_IN_PROGRESS:
-                      // Fatal case
-                    case CONNECTION_CANCELLED:
-                      Component fallbackMsg = res.getMessageComponent();
-                      if (fallbackMsg == null) {
-                        fallbackMsg = friendlyReason;
-                      }
-                      disconnect(status.getReasonComponent().orElse(fallbackMsg));
-                      break;
-                    case SERVER_DISCONNECTED:
-                      Component reason = status.getReasonComponent()
-                          .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
-                      handleConnectionException(res.getServer(), Disconnect.create(reason,
-                          getProtocolVersion()), ((Impl) status).isSafe());
-                      break;
-                    case SUCCESS:
-                      Component requestedMessage = res.getMessageComponent();
-                      if (requestedMessage == null) {
-                        requestedMessage = friendlyReason;
-                      }
-                      if (requestedMessage != Component.empty()) {
-                        sendMessage(requestedMessage);
-                      }
-                      break;
-                    default:
-                      // The only remaining value is successful (no need to do anything!)
-                      break;
+                  disconnect(status.getReasonComponent().orElse(fallbackMsg));
+                  break;
+                case SERVER_DISCONNECTED:
+                  Component reason = status.getReasonComponent()
+                      .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
+                  handleConnectionException(res.getServer(),
+                      Disconnect.create(reason, getProtocolVersion()), ((Impl) status).isSafe());
+                  break;
+                case SUCCESS:
+                  Component requestedMessage = res.getMessageComponent();
+                  if (requestedMessage == null) {
+                    requestedMessage = friendlyReason;
                   }
-                }, connection.eventLoop());
-          } else if (event.getResult() instanceof Notify) {
-            Notify res = (Notify) event.getResult();
-            if (event.kickedDuringServerConnect() && previousConnection != null) {
-              sendMessage(Identity.nil(), res.getMessageComponent());
-            } else {
-              disconnect(res.getMessageComponent());
-            }
-          } else {
-            // In case someone gets creative, assume we want to disconnect the player.
-            disconnect(friendlyReason);
-          }
-        }, connection.eventLoop());
+                  if (requestedMessage != Component.empty()) {
+                    sendMessage(requestedMessage);
+                  }
+                  break;
+                default:
+                  // The only remaining value is successful (no need to do anything!)
+                  break;
+              }
+            }, connection.eventLoop());
+      } else if (event.getResult() instanceof Notify) {
+        Notify res = (Notify) event.getResult();
+        if (event.kickedDuringServerConnect() && previousConnection != null) {
+          sendMessage(Identity.nil(), res.getMessageComponent());
+        } else {
+          disconnect(res.getMessageComponent());
+        }
+      } else {
+        // In case someone gets creative, assume we want to disconnect the player.
+        disconnect(friendlyReason);
+      }
+    }, connection.eventLoop());
   }
 
   /**
@@ -1022,6 +1032,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   /**
+   * Clears the applied resource pack field.
+   */
+  public void clearAppliedResourcePack() {
+    appliedResourcePack = null;
+  }
+
+  /**
    * Processes a client response to a sent resource-pack.
    */
   public boolean onResourcePackResponse(PlayerResourcePackStatusEvent.Status status) {
@@ -1069,15 +1086,39 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   /**
+   * Gives an indication about the previous resource pack responses.
+   */
+  public @Nullable Boolean getPreviousResourceResponse() {
+    return previousResourceResponse;
+  }
+
+  /**
    * Sends a {@link KeepAlive} packet to the player with a random ID. The response will be ignored
    * by Velocity as it will not match the ID last sent by the server.
    */
   public void sendKeepAlive() {
-    if (connection.getState() == StateRegistry.PLAY) {
+    if (connection.getState() == StateRegistry.PLAY
+            || connection.getState() == StateRegistry.CONFIG) {
       KeepAlive keepAlive = new KeepAlive();
       keepAlive.setRandomId(ThreadLocalRandom.current().nextLong());
       connection.write(keepAlive);
     }
+  }
+
+  /**
+   * Switches the connection to the client into config state.
+   */
+  public void switchToConfigState() {
+    CompletableFuture.runAsync(() -> {
+      connection.write(new StartUpdate());
+      connection.getChannel().pipeline()
+              .get(MinecraftEncoder.class).setState(StateRegistry.CONFIG);
+      // Make sure we don't send any play packets to the player after update start
+      connection.addPlayPacketQueueHandler();
+    }, connection.eventLoop()).exceptionally((ex) -> {
+      logger.error("Error switching player connection to config state:", ex);
+      return null;
+    });
   }
 
   /**
@@ -1147,37 +1188,34 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     }
 
     private CompletableFuture<Impl> internalConnect() {
-      return this.getInitialStatus()
-          .thenCompose(initialCheck -> {
-            if (initialCheck.isPresent()) {
-              return completedFuture(plainResult(initialCheck.get(), toConnect));
-            }
+      return this.getInitialStatus().thenCompose(initialCheck -> {
+        if (initialCheck.isPresent()) {
+          return completedFuture(plainResult(initialCheck.get(), toConnect));
+        }
 
-            ServerPreConnectEvent event = new ServerPreConnectEvent(ConnectedPlayer.this,
-                toConnect, previousServer);
-            return server.getEventManager().fire(event)
-                .thenComposeAsync(newEvent -> {
-                  Optional<RegisteredServer> newDest = newEvent.getResult().getServer();
-                  if (!newDest.isPresent()) {
-                    return completedFuture(
-                        plainResult(ConnectionRequestBuilder.Status.CONNECTION_CANCELLED, toConnect)
-                    );
-                  }
+        ServerPreConnectEvent event =
+            new ServerPreConnectEvent(ConnectedPlayer.this, toConnect, previousServer);
+        return server.getEventManager().fire(event).thenComposeAsync(newEvent -> {
+          Optional<RegisteredServer> newDest = newEvent.getResult().getServer();
+          if (!newDest.isPresent()) {
+            return completedFuture(
+                plainResult(ConnectionRequestBuilder.Status.CONNECTION_CANCELLED, toConnect));
+          }
 
-                  RegisteredServer realDestination = newDest.get();
-                  Optional<ConnectionRequestBuilder.Status> check = checkServer(realDestination);
-                  if (check.isPresent()) {
-                    return completedFuture(plainResult(check.get(), realDestination));
-                  }
+          RegisteredServer realDestination = newDest.get();
+          Optional<ConnectionRequestBuilder.Status> check = checkServer(realDestination);
+          if (check.isPresent()) {
+            return completedFuture(plainResult(check.get(), realDestination));
+          }
 
-                  VelocityRegisteredServer vrs = (VelocityRegisteredServer) realDestination;
-                  VelocityServerConnection con = new VelocityServerConnection(vrs,
-                      previousServer, ConnectedPlayer.this, server);
-                  connectionInFlight = con;
-                  return con.connect().whenCompleteAsync(
-                      (result, exception) -> this.resetIfInFlightIs(con), connection.eventLoop());
-                }, connection.eventLoop());
-          });
+          VelocityRegisteredServer vrs = (VelocityRegisteredServer) realDestination;
+          VelocityServerConnection con =
+              new VelocityServerConnection(vrs, previousServer, ConnectedPlayer.this, server);
+          connectionInFlight = con;
+          return con.connect().whenCompleteAsync((result, exception) -> this.resetIfInFlightIs(con),
+              connection.eventLoop());
+        }, connection.eventLoop());
+      });
     }
 
     private void resetIfInFlightIs(VelocityServerConnection establishedConnection) {
@@ -1188,50 +1226,46 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
     @Override
     public CompletableFuture<Result> connect() {
-      return this.internalConnect()
-          .whenCompleteAsync((status, throwable) -> {
-            if (status != null && !status.isSuccessful()) {
-              if (!status.isSafe()) {
-                handleConnectionException(status.getAttemptedConnection(), throwable, false);
-              }
-            }
-          }, connection.eventLoop())
-          .thenApply(x -> x);
+      return this.internalConnect().whenCompleteAsync((status, throwable) -> {
+        if (status != null && !status.isSuccessful()) {
+          if (!status.isSafe()) {
+            handleConnectionException(status.getAttemptedConnection(), throwable, false);
+          }
+        }
+      }, connection.eventLoop()).thenApply(x -> x);
     }
 
     @Override
     public CompletableFuture<Boolean> connectWithIndication() {
-      return internalConnect()
-          .whenCompleteAsync((status, throwable) -> {
-            if (throwable != null) {
-              // TODO: The exception handling from this is not very good. Find a better way.
-              handleConnectionException(status != null ? status.getAttemptedConnection()
-                  : toConnect, throwable, true);
-              return;
-            }
+      return internalConnect().whenCompleteAsync((status, throwable) -> {
+        if (throwable != null) {
+          // TODO: The exception handling from this is not very good. Find a better way.
+          handleConnectionException(status != null ? status.getAttemptedConnection() : toConnect,
+              throwable, true);
+          return;
+        }
 
-            switch (status.getStatus()) {
-              case ALREADY_CONNECTED:
-                sendMessage(Identity.nil(), ConnectionMessages.ALREADY_CONNECTED);
-                break;
-              case CONNECTION_IN_PROGRESS:
-                sendMessage(Identity.nil(), ConnectionMessages.IN_PROGRESS);
-                break;
-              case CONNECTION_CANCELLED:
-                // Ignored; the plugin probably already handled this.
-                break;
-              case SERVER_DISCONNECTED:
-                Component reason = status.getReasonComponent()
-                    .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
-                handleConnectionException(toConnect, Disconnect.create(reason,
-                    getProtocolVersion()), status.isSafe());
-                break;
-              default:
-                // The only remaining value is successful (no need to do anything!)
-                break;
-            }
-          }, connection.eventLoop())
-          .thenApply(Result::isSuccessful);
+        switch (status.getStatus()) {
+          case ALREADY_CONNECTED:
+            sendMessage(Identity.nil(), ConnectionMessages.ALREADY_CONNECTED);
+            break;
+          case CONNECTION_IN_PROGRESS:
+            sendMessage(Identity.nil(), ConnectionMessages.IN_PROGRESS);
+            break;
+          case CONNECTION_CANCELLED:
+            // Ignored; the plugin probably already handled this.
+            break;
+          case SERVER_DISCONNECTED:
+            Component reason = status.getReasonComponent()
+                .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
+            handleConnectionException(toConnect, Disconnect.create(reason, getProtocolVersion()),
+                status.isSafe());
+            break;
+          default:
+            // The only remaining value is successful (no need to do anything!)
+            break;
+        }
+      }, connection.eventLoop()).thenApply(Result::isSuccessful);
     }
 
     @Override

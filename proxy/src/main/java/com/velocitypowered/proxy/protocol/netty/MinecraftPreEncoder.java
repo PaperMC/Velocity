@@ -66,4 +66,8 @@ public class MinecraftPreEncoder extends MessageToMessageEncoder<MinecraftPacket
     this.state = state;
     this.setProtocolVersion(registry.version);
   }
+
+  public ProtocolUtils.Direction getDirection() {
+    return direction;
+  }
 }

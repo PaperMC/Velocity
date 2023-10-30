@@ -35,4 +35,6 @@ public interface InternalTabList extends TabList {
 
   default void processRemove(RemovePlayerInfo infoPacket) {
   }
+
+  void clearAllSilent();
 }

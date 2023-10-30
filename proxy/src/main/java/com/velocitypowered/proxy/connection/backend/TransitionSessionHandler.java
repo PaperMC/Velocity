@@ -22,6 +22,7 @@ import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHands
 
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.event.player.ServerPostConnectEvent;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
@@ -32,6 +33,7 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
+import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.JoinGame;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
@@ -103,7 +105,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
       player.sendKeepAlive();
 
       // Reset Tablist header and footer to prevent desync
-      player.clearHeaderAndFooter();
+      player.clearPlayerListHeaderAndFooter();
     }
 
     // The goods are in hand! We got JoinGame. Let's transition completely to the new state.
@@ -120,17 +122,21 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
           // Change the client to use the ClientPlaySessionHandler if required.
           ClientPlaySessionHandler playHandler;
-          if (player.getConnection().getSessionHandler() instanceof ClientPlaySessionHandler) {
-            playHandler = (ClientPlaySessionHandler) player.getConnection().getSessionHandler();
+          if (player.getConnection()
+              .getActiveSessionHandler() instanceof ClientPlaySessionHandler) {
+            playHandler =
+                (ClientPlaySessionHandler) player.getConnection().getActiveSessionHandler();
           } else {
             playHandler = new ClientPlaySessionHandler(server, player);
-            player.getConnection().setSessionHandler(playHandler);
+            player.getConnection().setActiveSessionHandler(StateRegistry.PLAY, playHandler);
           }
+          assert playHandler != null;
           playHandler.handleBackendJoinGame(packet, serverConn);
 
           // Set the new play session handler for the server. We will have nothing more to do
           // with this connection once this task finishes up.
-          smc.setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
+          smc.setActiveSessionHandler(StateRegistry.PLAY,
+              new BackendPlaySessionHandler(server, serverConn));
 
           // Clean up disabling auto-read while the connected event was being processed.
           smc.setAutoReading(true);
@@ -138,12 +144,17 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           // Now set the connected server.
           serverConn.getPlayer().setConnectedServer(serverConn);
 
+          // Send client settings. In 1.20.2+ this is done in the config state.
+          if (smc.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0
+              && player.getClientSettingsPacket() != null) {
+            serverConn.ensureConnected().write(player.getClientSettingsPacket());
+          }
+
           // We're done! :)
           server.getEventManager().fireAndForget(new ServerPostConnectEvent(player,
               previousServer));
           resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
-        }, smc.eventLoop())
-        .exceptionally(exc -> {
+        }, smc.eventLoop()).exceptionally(exc -> {
           logger.error("Unable to switch to new server {} for {}",
               serverConn.getServerInfo().getName(),
               player.getUsername(), exc);

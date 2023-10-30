@@ -26,6 +26,7 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +50,7 @@ class VelocityPluginModule implements Module {
     binder.bind(description.getMainClass()).in(Scopes.SINGLETON);
 
     binder.bind(Logger.class).toInstance(LoggerFactory.getLogger(description.getId()));
+    binder.bind(ComponentLogger.class).toInstance(ComponentLogger.logger(description.getId()));
     binder.bind(Path.class).annotatedWith(DataDirectory.class)
         .toInstance(basePluginPath.resolve(description.getId()));
     binder.bind(PluginDescription.class).toInstance(description);

@@ -39,6 +39,7 @@ import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.netty.MinecraftCompressAndIdDecoder;
+import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftPreEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
@@ -96,8 +97,8 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   }
 
   /**
-   * Pings the specified server using the specified event {@code loop}, claiming to be
-   * {@code version}.
+   * Pings the specified server using the specified event {@code loop}, claiming to be {@code
+   * version}.
    *
    * @param loop    the event loop to use
    * @param pingOptions the options to apply to this ping
@@ -108,36 +109,31 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
       throw new IllegalStateException("No Velocity proxy instance available");
     }
     CompletableFuture<ServerPing> pingFuture = new CompletableFuture<>();
-    server.createBootstrap(loop)
-        .handler(new ChannelInitializer<Channel>() {
-          @Override
-          protected void initChannel(Channel ch) throws Exception {
-            ch.pipeline()
-                .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
-                .addLast(READ_TIMEOUT,
-                    new ReadTimeoutHandler(pingOptions.getTimeout() == 0
-                            ? server.getConfiguration().getReadTimeout() : pingOptions.getTimeout(),
-                        TimeUnit.MILLISECONDS))
-                .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
-                .addLast(COMPRESSION_DECODER, new MinecraftCompressAndIdDecoder())
-                .addLast(MINECRAFT_DECODER,
-                    new MinecraftDecoder(ProtocolUtils.Direction.CLIENTBOUND))
-                .addLast(MINECRAFT_PRE_ENCODER,
-                    new MinecraftPreEncoder(ProtocolUtils.Direction.SERVERBOUND));
+    server.createBootstrap(loop).handler(new ChannelInitializer<Channel>() {
+      @Override
+      protected void initChannel(Channel ch) throws Exception {
+        ch.pipeline().addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
+            .addLast(READ_TIMEOUT, new ReadTimeoutHandler(
+                pingOptions.getTimeout() == 0
+                    ? server.getConfiguration().getReadTimeout()
+                    : pingOptions.getTimeout(), TimeUnit.MILLISECONDS))
+            .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
+            .addLast(COMPRESSION_DECODER, new MinecraftCompressAndIdDecoder())
+            .addLast(MINECRAFT_DECODER, new MinecraftDecoder(ProtocolUtils.Direction.CLIENTBOUND))
+            .addLast(MINECRAFT_PRE_ENCODER, new MinecraftPreEncoder(ProtocolUtils.Direction.SERVERBOUND));
 
-            ch.pipeline().addLast(HANDLER, new MinecraftConnection(ch, server));
-          }
-        })
-        .connect(serverInfo.getAddress())
-        .addListener((ChannelFutureListener) future -> {
-          if (future.isSuccess()) {
-            MinecraftConnection conn = future.channel().pipeline().get(MinecraftConnection.class);
-            conn.setSessionHandler(new PingSessionHandler(
-                pingFuture, VelocityRegisteredServer.this, conn, pingOptions.getProtocolVersion()));
-          } else {
-            pingFuture.completeExceptionally(future.cause());
-          }
-        });
+        ch.pipeline().addLast(HANDLER, new MinecraftConnection(ch, server));
+      }
+    }).connect(serverInfo.getAddress()).addListener((ChannelFutureListener) future -> {
+      if (future.isSuccess()) {
+        MinecraftConnection conn = future.channel().pipeline().get(MinecraftConnection.class);
+        PingSessionHandler handler = new PingSessionHandler(pingFuture,
+            VelocityRegisteredServer.this, conn, pingOptions.getProtocolVersion());
+        conn.setActiveSessionHandler(StateRegistry.HANDSHAKE, handler);
+      } else {
+        pingFuture.completeExceptionally(future.cause());
+      }
+    });
     return pingFuture;
   }
 
