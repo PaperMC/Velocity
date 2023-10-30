@@ -66,7 +66,7 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
                 TimeUnit.MILLISECONDS))
         .addLast(LEGACY_PING_ENCODER, LegacyPingEncoder.INSTANCE)
         .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
-        .addLast(COMPRESSION_DECODER, new MinecraftCompressAndIdDecoder())
+        .addLast(COMPRESSION_DECODER, new MinecraftCompressAndIdDecoder(this.server))
         .addLast(MINECRAFT_DECODER, new MinecraftDecoder(ProtocolUtils.Direction.SERVERBOUND))
         .addLast(MINECRAFT_PRE_ENCODER,
             new MinecraftPreEncoder(ProtocolUtils.Direction.CLIENTBOUND));

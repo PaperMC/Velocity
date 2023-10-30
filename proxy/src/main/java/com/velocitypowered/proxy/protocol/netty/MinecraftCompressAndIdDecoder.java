@@ -17,10 +17,12 @@
 
 package com.velocitypowered.proxy.protocol.netty;
 
+import static com.velocitypowered.natives.util.MoreByteBufUtils.ensureCompatible;
 import static com.velocitypowered.natives.util.MoreByteBufUtils.preferredBuffer;
 import static com.velocitypowered.proxy.protocol.util.NettyPreconditions.checkFrame;
 
 import com.velocitypowered.natives.compression.VelocityCompressor;
+import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.netty.data.CompressedPacket;
 import com.velocitypowered.proxy.protocol.netty.data.UncompressedPacket;
@@ -37,6 +39,7 @@ public class MinecraftCompressAndIdDecoder extends MessageToMessageDecoder<ByteB
   private int threshold;
   private final VelocityCompressor compressor;
   private final VelocityCompressor javaCompressor;
+  private final VelocityServer server;
 
   /**
    * Constructs new Minecraft packet decompressor and id decoder.
@@ -46,14 +49,15 @@ public class MinecraftCompressAndIdDecoder extends MessageToMessageDecoder<ByteB
    * @param javaCompressor Java compressor for partial decompression.
    */
   public MinecraftCompressAndIdDecoder(int threshold, VelocityCompressor compressor,
-                                       VelocityCompressor javaCompressor) {
+                                       VelocityCompressor javaCompressor, VelocityServer server) {
     this.threshold = threshold;
     this.compressor = compressor;
     this.javaCompressor = javaCompressor;
+    this.server = server;
   }
 
-  public MinecraftCompressAndIdDecoder() {
-    this(0, null, null);
+  public MinecraftCompressAndIdDecoder(VelocityServer server) {
+    this(0, null, null, server);
   }
 
   @Override
@@ -76,14 +80,31 @@ public class MinecraftCompressAndIdDecoder extends MessageToMessageDecoder<ByteB
     checkFrame(claimedUncompressedSize >= threshold, "Uncompressed size %s is less than"
         + " threshold %s", claimedUncompressedSize, threshold);
 
-    ByteBuf packetIdBuf = preferredBuffer(ctx.alloc(), this.compressor, 5);
-    int readerIndex = in.readerIndex();
-    this.javaCompressor.inflatePartial(in, packetIdBuf, 5);
-    in.readerIndex(readerIndex);
-    int packetId = ProtocolUtils.readVarInt(packetIdBuf);
-    packetIdBuf.release();
+    if (claimedUncompressedSize < this.server.getConfiguration().getDecompressionThreshold()) {
+      ByteBuf compatibleIn = ensureCompatible(ctx.alloc(), this.compressor, in);
+      ByteBuf uncompressed = preferredBuffer(ctx.alloc(), this.compressor, claimedUncompressedSize);
+      try {
+        this.compressor.inflate(compatibleIn, uncompressed, claimedUncompressedSize);
+        int originalReaderIndex = uncompressed.readerIndex();
+        int packetId = ProtocolUtils.readVarInt(uncompressed);
+        out.add(new UncompressedPacket(packetId, uncompressed.readerIndex(originalReaderIndex)));
+      } catch (Exception e) {
+        uncompressed.release();
+        throw e;
+      } finally {
+        compatibleIn.release();
+      }
+    } else {
+      ByteBuf packetIdBuf = preferredBuffer(ctx.alloc(), this.compressor, 5);
+      int readerIndex = in.readerIndex();
+      this.javaCompressor.inflatePartial(in, packetIdBuf, 5);
+      in.readerIndex(readerIndex);
+      int packetId = ProtocolUtils.readVarInt(packetIdBuf);
+      packetIdBuf.release();
 
-    out.add(new CompressedPacket(packetId, claimedUncompressedSize, in.retain(), this.compressor));
+      out.add(new CompressedPacket(
+          packetId, claimedUncompressedSize, in.retain(), this.compressor));
+    }
   }
 
   @Override

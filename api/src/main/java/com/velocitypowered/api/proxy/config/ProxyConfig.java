@@ -115,6 +115,13 @@ public interface ProxyConfig {
   int getCompressionLevel();
 
   /**
+   * Get the minimum packet size required to check whether a packet can be passed as is.
+   *
+   * @return the decompression threshold
+   */
+  int getDecompressionThreshold();
+
+  /**
    * Get the limit for how long a player must wait to log back in.
    *
    * @return the login rate limit (in milliseconds)

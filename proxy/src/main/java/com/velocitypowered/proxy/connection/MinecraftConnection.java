@@ -496,8 +496,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     ensureInEventLoop();
 
     if (threshold == -1) {
-      channel.pipeline()
-          .replace(COMPRESSION_DECODER, COMPRESSION_DECODER, new MinecraftCompressAndIdDecoder());
+      channel.pipeline().replace(COMPRESSION_DECODER, COMPRESSION_DECODER,
+          new MinecraftCompressAndIdDecoder(server));
       final ChannelHandler removedEncoder = channel.pipeline().remove(COMPRESSION_ENCODER);
 
       if (removedEncoder != null) {
@@ -519,7 +519,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
         encoder = new MinecraftCompressorAndLengthEncoder(threshold, compressor);
         decoder = new MinecraftCompressAndIdDecoder(threshold, compressor,
-            JavaVelocityCompressor.FACTORY.create(1));
+            JavaVelocityCompressor.FACTORY.create(1), server);
 
         channel.pipeline().remove(FRAME_ENCODER);
         channel.pipeline().replace(COMPRESSION_DECODER, COMPRESSION_DECODER, decoder);
