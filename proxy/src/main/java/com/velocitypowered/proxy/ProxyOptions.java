@@ -72,7 +72,7 @@ public final class ProxyOptions {
     return this.port;
   }
 
-  public Boolean isHaproxy() {
+  public boolean isHaproxy() {
     return this.haproxy;
   }
 }
