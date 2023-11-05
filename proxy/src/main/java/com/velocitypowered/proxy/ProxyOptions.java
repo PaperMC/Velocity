@@ -44,8 +44,10 @@ public final class ProxyOptions {
     final OptionSpec<Integer> port = parser.acceptsAll(Arrays.asList("p", "port"),
             "Specify the bind port to be used. The configuration bind port will be ignored.")
         .withRequiredArg().ofType(Integer.class);
-    final OptionSpec<Boolean> haproxy = parser.acceptsAll(Arrays.asList("haproxy", "haproxy-protocol"),
-            "Choose whether to enable haproxy protocol. The configuration haproxy protocol will be ignored.")
+    final OptionSpec<Boolean> haproxy = parser.acceptsAll(
+            Arrays.asList("haproxy", "haproxy-protocol"),
+            "Choose whether to enable haproxy protocol. " +
+                    "The configuration haproxy protocol will be ignored.")
         .withRequiredArg().ofType(Boolean.class);
     final OptionSet set = parser.parse(args);
 
