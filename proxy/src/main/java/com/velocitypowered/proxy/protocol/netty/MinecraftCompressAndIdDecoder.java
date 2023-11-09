@@ -95,7 +95,7 @@ public class MinecraftCompressAndIdDecoder extends MessageToMessageDecoder<ByteB
         compatibleIn.release();
       }
     } else {
-      ByteBuf packetIdBuf = preferredBuffer(ctx.alloc(), this.compressor, 5);
+      ByteBuf packetIdBuf = preferredBuffer(ctx.alloc(), this.javaCompressor, 5);
       int readerIndex = in.readerIndex();
       this.javaCompressor.inflatePartial(in, packetIdBuf, 5);
       in.readerIndex(readerIndex);
