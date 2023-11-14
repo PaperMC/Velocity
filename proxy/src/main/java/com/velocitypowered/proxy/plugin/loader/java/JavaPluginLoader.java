@@ -81,11 +81,9 @@ public class JavaPluginLoader implements PluginLoader {
       throw new IllegalArgumentException("Description provided isn't of the Java plugin loader");
     }
 
-    if (candidate.getSource().isEmpty()) {
-      throw new InvalidPluginException("Description provided does not have a source path");
-    }
-
-    URL pluginJarUrl = candidate.getSource().get().toUri().toURL();
+    URL pluginJarUrl = candidate.getSource().orElseThrow(
+        () -> new InvalidPluginException("Description provided does not have a source path")
+    ).toUri().toURL();
     PluginClassLoader loader = AccessController.doPrivileged(
         (PrivilegedAction<PluginClassLoader>) () -> new PluginClassLoader(new URL[]{pluginJarUrl}));
     loader.addToClassloaders();
