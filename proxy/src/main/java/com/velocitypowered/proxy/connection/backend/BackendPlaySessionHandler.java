@@ -49,11 +49,13 @@ import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfo;
+import com.velocitypowered.proxy.protocol.packet.RemoveResourcePack;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.ServerData;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdate;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
@@ -167,7 +169,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   public boolean handle(ResourcePackRequest packet) {
     ResourcePackInfo.Builder builder = new VelocityResourcePackInfo.BuilderImpl(
         Preconditions.checkNotNull(packet.getUrl()))
-        .setPrompt(packet.getPrompt())
+        .setId(packet.getId())
+        .setPrompt(packet.getPrompt() == null ? null : packet.getPrompt().getComponent())
         .setShouldForce(packet.isRequired())
         .setOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
 
@@ -211,6 +214,11 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     });
 
     return true;
+  }
+
+  @Override
+  public boolean handle(RemoveResourcePack packet) {
+    //TODO
   }
 
   @Override
@@ -304,7 +312,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         ping -> server.getEventManager()
             .fire(new ProxyPingEvent(this.serverConn.getPlayer(), ping)),
         playerConnection.eventLoop()).thenAcceptAsync(pingEvent -> this.playerConnection.write(
-            new ServerData(pingEvent.getPing().getDescriptionComponent(),
+            new ServerData(new ComponentHolder(this.serverConn.ensureConnected().getProtocolVersion(),
+                    pingEvent.getPing().getDescriptionComponent()),
                 pingEvent.getPing().getFavicon().orElse(null), packet.isSecureChatEnforced())),
         playerConnection.eventLoop());
     return true;

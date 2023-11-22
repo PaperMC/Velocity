@@ -165,7 +165,7 @@ public class Respawn implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0
           && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
-        this.currentDimensionData = ProtocolUtils.readCompoundTag(buf, BinaryTagIO.reader());
+        this.currentDimensionData = ProtocolUtils.readCompoundTag(buf, version, BinaryTagIO.reader());
         dimensionIdentifier = ProtocolUtils.readString(buf);
       } else {
         dimensionIdentifier = ProtocolUtils.readString(buf);
@@ -209,7 +209,7 @@ public class Respawn implements MinecraftPacket {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0
           && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
-        ProtocolUtils.writeCompoundTag(buf, currentDimensionData);
+        ProtocolUtils.writeBinaryTag(buf, version, currentDimensionData);
         ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
       } else {
         ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());

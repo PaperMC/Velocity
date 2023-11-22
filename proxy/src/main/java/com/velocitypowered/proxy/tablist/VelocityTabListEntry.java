@@ -23,6 +23,8 @@ import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
 import java.util.Optional;
+
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -78,7 +80,7 @@ public class VelocityTabListEntry implements TabListEntry {
   public TabListEntry setDisplayName(@Nullable Component displayName) {
     this.displayName = displayName;
     UpsertPlayerInfo.Entry upsertEntry = this.tabList.createRawEntry(this);
-    upsertEntry.setDisplayName(displayName);
+    upsertEntry.setDisplayName(new ComponentHolder(this.tabList.getPlayer().getProtocolVersion(), displayName));
     this.tabList.emitActionRaw(UpsertPlayerInfo.Action.UPDATE_DISPLAY_NAME, upsertEntry);
     return this;
   }
