@@ -20,7 +20,7 @@ package com.velocitypowered.proxy.util.bossbar;
 import com.google.common.collect.MapMaker;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import com.velocitypowered.proxy.util.collect.Enum2IntMap;
 import com.velocitypowered.proxy.util.concurrent.Once;
 import java.util.Collections;
@@ -212,8 +212,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
           .proxy.protocol.packet.BossBar();
       packet.setUuid(this.id);
       packet.setAction(com.velocitypowered.proxy.protocol.packet.BossBar.ADD);
-      packet.setName(ProtocolUtils.getJsonChatSerializer(player.getProtocolVersion())
-          .serialize(player.translateMessage(bar.name())));
+      packet.setName(new ComponentHolder(player.getProtocolVersion(), player.translateMessage(bar.name())));
       packet.setColor(COLORS_TO_PROTOCOL.get(bar.color()));
       packet.setOverlay(OVERLAY_TO_PROTOCOL.get(bar.overlay()));
       packet.setPercent(bar.progress());
@@ -247,7 +246,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
           .proxy.protocol.packet.BossBar();
       packet.setUuid(this.id);
       packet.setAction(com.velocitypowered.proxy.protocol.packet.BossBar.UPDATE_NAME);
-      packet.setName(ProtocolUtils.getJsonChatSerializer(version).serialize(name));
+      packet.setName(new ComponentHolder(version, name));
       return packet;
     }
 

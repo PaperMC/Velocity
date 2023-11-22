@@ -255,12 +255,12 @@ public class JoinGame implements MinecraftPacket {
     this.previousGamemode = buf.readByte();
 
     this.levelNames = ImmutableSet.copyOf(ProtocolUtils.readStringArray(buf));
-    this.registry = ProtocolUtils.readCompoundTag(buf, JOINGAME_READER);
+    this.registry = ProtocolUtils.readCompoundTag(buf, version, JOINGAME_READER);
     String dimensionIdentifier;
     String levelName = null;
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0
         && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
-      this.currentDimensionData = ProtocolUtils.readCompoundTag(buf, JOINGAME_READER);
+      this.currentDimensionData = ProtocolUtils.readCompoundTag(buf, version, JOINGAME_READER);
       dimensionIdentifier = ProtocolUtils.readString(buf);
     } else {
       dimensionIdentifier = ProtocolUtils.readString(buf);
@@ -390,10 +390,10 @@ public class JoinGame implements MinecraftPacket {
     buf.writeByte(previousGamemode);
 
     ProtocolUtils.writeStringArray(buf, levelNames.toArray(String[]::new));
-    ProtocolUtils.writeCompoundTag(buf, this.registry);
+    ProtocolUtils.writeBinaryTag(buf, version, this.registry);
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0
         && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
-      ProtocolUtils.writeCompoundTag(buf, currentDimensionData);
+      ProtocolUtils.writeBinaryTag(buf, version, currentDimensionData);
       ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
     } else {
       ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());

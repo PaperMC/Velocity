@@ -68,6 +68,7 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatType;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderFactory;
 import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChat;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdate;
@@ -84,6 +85,7 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
 import java.util.ArrayDeque;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -1015,20 +1017,34 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
         request.setHash("");
       }
       request.setRequired(queued.getShouldForce());
-      request.setPrompt(queued.getPrompt());
+      request.setPrompt(queued.getPrompt() == null ? null : new ComponentHolder(getProtocolVersion(), queued.getPrompt()));
 
       connection.write(request);
     }
   }
 
   @Override
+  @Deprecated
   public @Nullable ResourcePackInfo getAppliedResourcePack() {
+    //TODO which resource pack should be returned here?
     return appliedResourcePack;
   }
 
   @Override
+  @Deprecated
   public @Nullable ResourcePackInfo getPendingResourcePack() {
+    //TODO which resource pack should be returned here?
     return pendingResourcePack;
+  }
+
+  @Override
+  public Collection<ResourcePackInfo> getAppliedResourcePacks() {
+    //TODO
+  }
+
+  @Override
+  public Collection<ResourcePackInfo> getPendingResourcePacks() {
+    //TODO
   }
 
   /**
@@ -1089,6 +1105,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
    * Gives an indication about the previous resource pack responses.
    */
   public @Nullable Boolean getPreviousResourceResponse() {
+    //TODO can probably be removed
     return previousResourceResponse;
   }
 
