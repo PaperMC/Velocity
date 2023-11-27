@@ -73,6 +73,7 @@ public class SessionChatHandler implements ChatHandler<SessionPlayerChatPacket> 
                 }
                 return this.player.getChatBuilderFactory().builder().message(packet.message)
                     .setTimestamp(packet.timestamp)
+                    .setLastSeenMessages(newLastSeenMessages)
                     .toServer();
               }
               return packet.withLastSeenMessages(newLastSeenMessages);

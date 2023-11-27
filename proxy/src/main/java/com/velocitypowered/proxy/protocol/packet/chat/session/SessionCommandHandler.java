@@ -86,6 +86,7 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
     return this.player.getChatBuilderFactory()
         .builder()
         .setTimestamp(packet.timeStamp)
+        .setLastSeenMessages(packet.lastSeenMessages)
         .asPlayer(this.player)
         .message("/" + newCommand)
         .toServer();
