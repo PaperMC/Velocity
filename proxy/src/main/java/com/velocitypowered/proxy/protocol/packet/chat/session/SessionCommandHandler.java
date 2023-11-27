@@ -52,7 +52,7 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
 
   @Nullable
   private MinecraftPacket forwardCommand(SessionPlayerCommandPacket packet, String newCommand) {
-    if (packet.isSigned() && newCommand.equals(packet.command)) {
+    if (newCommand.equals(packet.command)) {
       return packet;
     }
     return modifyCommand(packet, newCommand);
