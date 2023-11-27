@@ -1112,6 +1112,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       ChatBuilderV2 message = getChatBuilderFactory().builder().asPlayer(this).message(input);
       this.chatQueue.queuePacket(chatState -> {
         message.setTimestamp(chatState.lastTimestamp);
+        message.setLastSeenMessages(chatState.createLastSeen());
         return message.toServer();
       });
     } else {
