@@ -52,10 +52,6 @@ public class LastSeenMessages {
     buf.writeBytes(Arrays.copyOf(acknowledged.toByteArray(), DIV_FLOOR));
   }
 
-  public boolean isEmpty() {
-    return acknowledged.isEmpty();
-  }
-
   public int getOffset() {
     return this.offset;
   }

@@ -60,7 +60,11 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
     }
     // An unsigned command with a 'last seen' update will not happen as of 1.20.5+, but for earlier versions - we still
     // need to pass through the acknowledgement
-    return new ChatAcknowledgementPacket(packet.lastSeenMessages.getOffset());
+    final int offset = packet.lastSeenMessages.getOffset();
+    if (offset != 0) {
+      return new ChatAcknowledgementPacket(offset);
+    }
+    return null;
   }
 
   @Nullable
