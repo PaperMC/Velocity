@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.connection.client;
 
+import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -25,9 +26,11 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
+import com.velocitypowered.proxy.protocol.packet.PingIdentify;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdate;
+import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
@@ -84,7 +87,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ClientSettings packet) {
-    player.setClientSettingsPacket(packet);
+    player.setClientSettings(packet);
     return true;
   }
 
@@ -102,6 +105,31 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
         .setActiveSessionHandler(StateRegistry.PLAY, new ClientPlaySessionHandler(server, player));
 
     configSwitchFuture.complete(null);
+    return true;
+  }
+
+  @Override
+  public boolean handle(PluginMessage packet) {
+    VelocityServerConnection serverConn = player.getConnectionInFlight();
+    if (serverConn != null) {
+      if (PluginMessageUtil.isMcBrand(packet)) {
+        String brand = PluginMessageUtil.readBrandMessage(packet.content());
+        server.getEventManager().fireAndForget(new PlayerClientBrandEvent(player, brand));
+        player.setClientBrand(brand);
+        // Client sends `minecraft:brand` packet immediately after Login,
+        // but at this time the backend server may not be ready, just discard it.
+      } else {
+        serverConn.ensureConnected().write(packet.retain());
+      }
+    }
+    return true;
+  }
+
+  @Override
+  public boolean handle(PingIdentify packet) {
+    if (player.getConnectionInFlight() != null) {
+      player.getConnectionInFlight().ensureConnected().write(packet);
+    }
     return true;
   }
 
