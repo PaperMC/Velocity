@@ -46,6 +46,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   private static final Logger logger = LogManager.getLogger(ClientConfigSessionHandler.class);
   private final VelocityServer server;
   private final ConnectedPlayer player;
+  private PluginMessage brandPacket = null;
 
   private CompletableFuture<Void> configSwitchFuture;
 
@@ -117,7 +118,8 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
         server.getEventManager().fireAndForget(new PlayerClientBrandEvent(player, brand));
         player.setClientBrand(brand);
         // Client sends `minecraft:brand` packet immediately after Login,
-        // but at this time the backend server may not be ready, just discard it.
+        // but at this time the backend server may not be ready
+        brandPacket = packet.retain();
       } else {
         serverConn.ensureConnected().write(packet.retain());
       }
@@ -182,6 +184,11 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
    * @return a future that completes when the config stage is finished
    */
   public CompletableFuture<Void> handleBackendFinishUpdate(VelocityServerConnection serverConn) {
+      if (brandPacket != null) {
+          serverConn.ensureConnected().write(
+                  PluginMessageUtil.rewriteMinecraftBrand(brandPacket, server.getVersion(),
+                          player.getProtocolVersion()));
+      }
     player.getConnection().write(new FinishedUpdate());
     serverConn.ensureConnected().write(new FinishedUpdate());
     return configSwitchFuture;
