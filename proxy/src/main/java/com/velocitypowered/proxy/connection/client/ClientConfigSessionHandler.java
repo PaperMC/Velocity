@@ -184,11 +184,11 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
    * @return a future that completes when the config stage is finished
    */
   public CompletableFuture<Void> handleBackendFinishUpdate(VelocityServerConnection serverConn) {
-      if (brandPacket != null) {
-          serverConn.ensureConnected().write(
+    if (brandPacket != null) {
+      serverConn.ensureConnected().write(
                   PluginMessageUtil.rewriteMinecraftBrand(brandPacket, server.getVersion(),
                           player.getProtocolVersion()));
-      }
+    }
     player.getConnection().write(new FinishedUpdate());
     serverConn.ensureConnected().write(new FinishedUpdate());
     return configSwitchFuture;
