@@ -32,6 +32,7 @@ import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdate;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -46,7 +47,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   private static final Logger logger = LogManager.getLogger(ClientConfigSessionHandler.class);
   private final VelocityServer server;
   private final ConnectedPlayer player;
-  private PluginMessage brandPacket = null;
+  private String brandChannel = null;
 
   private CompletableFuture<Void> configSwitchFuture;
 
@@ -117,9 +118,9 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
         String brand = PluginMessageUtil.readBrandMessage(packet.content());
         server.getEventManager().fireAndForget(new PlayerClientBrandEvent(player, brand));
         player.setClientBrand(brand);
+        brandChannel = packet.getChannel();
         // Client sends `minecraft:brand` packet immediately after Login,
         // but at this time the backend server may not be ready
-        brandPacket = packet.retain();
       } else {
         serverConn.ensureConnected().write(packet.retain());
       }
@@ -184,11 +185,16 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
    * @return a future that completes when the config stage is finished
    */
   public CompletableFuture<Void> handleBackendFinishUpdate(VelocityServerConnection serverConn) {
-    if (brandPacket != null) {
+    String brand = serverConn.getPlayer().getClientBrand();
+    if (brand != null && brandChannel != null) {
+      PluginMessage brandPacket = new PluginMessage(
+              brandChannel, Unpooled.wrappedBuffer(brand.getBytes()));
+
       serverConn.ensureConnected().write(
-                  PluginMessageUtil.rewriteMinecraftBrand(brandPacket, server.getVersion(),
-                          player.getProtocolVersion()));
+              PluginMessageUtil.rewriteMinecraftBrand(brandPacket.retain(), server.getVersion(),
+                      player.getProtocolVersion()));
     }
+
     player.getConnection().write(new FinishedUpdate());
     serverConn.ensureConnected().write(new FinishedUpdate());
     return configSwitchFuture;
