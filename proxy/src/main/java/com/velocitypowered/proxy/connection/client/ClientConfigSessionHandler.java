@@ -23,6 +23,7 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
@@ -33,7 +34,6 @@ import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdate;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -189,7 +189,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
     String brand = serverConn.getPlayer().getClientBrand();
     if (brand != null && brandChannel != null) {
       ByteBuf buf = Unpooled.buffer();
-      buf.writeCharSequence(brand, StandardCharsets.UTF_8);
+      ProtocolUtils.writeString(buf, brand);
       PluginMessage brandPacket = new PluginMessage(brandChannel, buf);
       serverConn.ensureConnected().write(brandPacket);
     }
