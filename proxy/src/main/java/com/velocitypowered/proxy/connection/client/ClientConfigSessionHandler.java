@@ -33,6 +33,7 @@ import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdate;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -187,8 +188,9 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   public CompletableFuture<Void> handleBackendFinishUpdate(VelocityServerConnection serverConn) {
     String brand = serverConn.getPlayer().getClientBrand();
     if (brand != null && brandChannel != null) {
-      PluginMessage brandPacket = new PluginMessage(
-              brandChannel, Unpooled.wrappedBuffer(brand.getBytes()));
+      ByteBuf buf = Unpooled.buffer();
+      buf.writeCharSequence(brand, StandardCharsets.UTF_8);
+      PluginMessage brandPacket = new PluginMessage(brandChannel, buf);
       serverConn.ensureConnected().write(brandPacket);
     }
 
