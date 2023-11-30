@@ -189,10 +189,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
     if (brand != null && brandChannel != null) {
       PluginMessage brandPacket = new PluginMessage(
               brandChannel, Unpooled.wrappedBuffer(brand.getBytes()));
-
-      serverConn.ensureConnected().write(
-              PluginMessageUtil.rewriteMinecraftBrand(brandPacket, server.getVersion(),
-                      player.getProtocolVersion()));
+      serverConn.ensureConnected().write(brandPacket);
     }
 
     player.getConnection().write(new FinishedUpdate());
