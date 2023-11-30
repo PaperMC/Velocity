@@ -191,7 +191,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
               brandChannel, Unpooled.wrappedBuffer(brand.getBytes()));
 
       serverConn.ensureConnected().write(
-              PluginMessageUtil.rewriteMinecraftBrand(brandPacket.retain(), server.getVersion(),
+              PluginMessageUtil.rewriteMinecraftBrand(brandPacket, server.getVersion(),
                       player.getProtocolVersion()));
     }
 
