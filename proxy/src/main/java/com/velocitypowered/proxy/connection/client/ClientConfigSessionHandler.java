@@ -32,6 +32,8 @@ import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdate;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -46,6 +48,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   private static final Logger logger = LogManager.getLogger(ClientConfigSessionHandler.class);
   private final VelocityServer server;
   private final ConnectedPlayer player;
+  private String brandChannel = null;
 
   private CompletableFuture<Void> configSwitchFuture;
 
@@ -116,8 +119,9 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
         String brand = PluginMessageUtil.readBrandMessage(packet.content());
         server.getEventManager().fireAndForget(new PlayerClientBrandEvent(player, brand));
         player.setClientBrand(brand);
+        brandChannel = packet.getChannel();
         // Client sends `minecraft:brand` packet immediately after Login,
-        // but at this time the backend server may not be ready, just discard it.
+        // but at this time the backend server may not be ready
       } else {
         serverConn.ensureConnected().write(packet.retain());
       }
@@ -182,6 +186,14 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
    * @return a future that completes when the config stage is finished
    */
   public CompletableFuture<Void> handleBackendFinishUpdate(VelocityServerConnection serverConn) {
+    String brand = serverConn.getPlayer().getClientBrand();
+    if (brand != null && brandChannel != null) {
+      ByteBuf buf = Unpooled.buffer();
+      buf.writeCharSequence(brand, StandardCharsets.UTF_8);
+      PluginMessage brandPacket = new PluginMessage(brandChannel, buf);
+      serverConn.ensureConnected().write(brandPacket);
+    }
+
     player.getConnection().write(new FinishedUpdate());
     serverConn.ensureConnected().write(new FinishedUpdate());
     return configSwitchFuture;
