@@ -39,12 +39,18 @@ public class RemoveResourcePack implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    this.id = ProtocolUtils.readUuid(buf);
+    if (buf.readBoolean()) {
+      this.id = ProtocolUtils.readUuid(buf);
+    }
   }
 
   @Override
   public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    ProtocolUtils.writeUuid(buf, id);
+    buf.writeBoolean(id != null);
+
+    if (id != null) {
+      ProtocolUtils.writeUuid(buf, id);
+    }
   }
 
   @Override

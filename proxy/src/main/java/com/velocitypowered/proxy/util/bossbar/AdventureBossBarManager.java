@@ -121,7 +121,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
 
   @Override
   public void bossBarNameChanged(@NonNull BossBar bar, @NonNull Component oldName,
-      @NonNull Component newName) {
+                                 @NonNull Component newName) {
     BossBarHolder holder = this.getHandler(bar);
     if (holder == null) {
       return;
@@ -149,7 +149,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
 
   @Override
   public void bossBarColorChanged(@NonNull BossBar bar, @NonNull Color oldColor,
-      @NonNull Color newColor) {
+                                  @NonNull Color newColor) {
     BossBarHolder holder = this.getHandler(bar);
     if (holder == null) {
       return;
@@ -162,7 +162,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
 
   @Override
   public void bossBarOverlayChanged(@NonNull BossBar bar, @NonNull Overlay oldOverlay,
-      @NonNull Overlay newOverlay) {
+                                    @NonNull Overlay newOverlay) {
     BossBarHolder holder = this.getHandler(bar);
     if (holder == null) {
       return;
@@ -176,7 +176,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
 
   @Override
   public void bossBarFlagsChanged(@NonNull BossBar bar, @NonNull Set<Flag> added,
-      @NonNull Set<Flag> removed) {
+                                  @NonNull Set<Flag> removed) {
     BossBarHolder holder = this.getHandler(bar);
     if (holder == null) {
       return;
@@ -212,7 +212,8 @@ public class AdventureBossBarManager implements BossBar.Listener {
           .proxy.protocol.packet.BossBar();
       packet.setUuid(this.id);
       packet.setAction(com.velocitypowered.proxy.protocol.packet.BossBar.ADD);
-      packet.setName(new ComponentHolder(player.getProtocolVersion(), player.translateMessage(bar.name())));
+      packet.setName(
+          new ComponentHolder(player.getProtocolVersion(), player.translateMessage(bar.name())));
       packet.setColor(COLORS_TO_PROTOCOL.get(bar.color()));
       packet.setOverlay(OVERLAY_TO_PROTOCOL.get(bar.overlay()));
       packet.setPercent(bar.progress());
@@ -241,7 +242,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
     }
 
     com.velocitypowered.proxy.protocol.packet.BossBar createTitleUpdate(Component name,
-        ProtocolVersion version) {
+                                                                        ProtocolVersion version) {
       com.velocitypowered.proxy.protocol.packet.BossBar packet = new com.velocitypowered
           .proxy.protocol.packet.BossBar();
       packet.setUuid(this.id);

@@ -19,10 +19,9 @@ package com.velocitypowered.proxy.connection.player;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
+import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
-
-import java.util.UUID;
 
 /**
  * Implements {@link ResourcePackInfo}.
@@ -38,7 +37,7 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
   private Origin originalOrigin;
 
   private VelocityResourcePackInfo(UUID id, String url, @Nullable byte[] hash, boolean shouldForce,
-      @Nullable Component prompt, Origin origin) {
+                                   @Nullable Component prompt, Origin origin) {
     this.id = id;
     this.url = url;
     this.hash = hash;

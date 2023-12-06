@@ -22,9 +22,8 @@ import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
-import java.util.Optional;
-
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
+import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -45,8 +44,8 @@ public class VelocityTabListEntry implements TabListEntry {
    * Constructs the instance.
    */
   public VelocityTabListEntry(VelocityTabList tabList, GameProfile profile, Component displayName,
-      int latency,
-      int gameMode, @Nullable ChatSession session, boolean listed) {
+                              int latency,
+                              int gameMode, @Nullable ChatSession session, boolean listed) {
     this.tabList = tabList;
     this.profile = profile;
     this.displayName = displayName;
@@ -80,7 +79,8 @@ public class VelocityTabListEntry implements TabListEntry {
   public TabListEntry setDisplayName(@Nullable Component displayName) {
     this.displayName = displayName;
     UpsertPlayerInfo.Entry upsertEntry = this.tabList.createRawEntry(this);
-    upsertEntry.setDisplayName(new ComponentHolder(this.tabList.getPlayer().getProtocolVersion(), displayName));
+    upsertEntry.setDisplayName(
+        new ComponentHolder(this.tabList.getPlayer().getProtocolVersion(), displayName));
     this.tabList.emitActionRaw(UpsertPlayerInfo.Action.UPDATE_DISPLAY_NAME, upsertEntry);
     return this;
   }

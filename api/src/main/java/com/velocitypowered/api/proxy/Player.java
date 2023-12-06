@@ -19,7 +19,6 @@ import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
