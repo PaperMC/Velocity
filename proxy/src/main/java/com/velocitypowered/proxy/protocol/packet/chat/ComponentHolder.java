@@ -268,7 +268,7 @@ public class ComponentHolder {
     }
   }
 
-  public void write(ByteBuf buf, ProtocolVersion version) {
+  public void write(ByteBuf buf) {
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_3) >= 0) {
       ProtocolUtils.writeBinaryTag(buf, version, getBinaryTag());
     } else {

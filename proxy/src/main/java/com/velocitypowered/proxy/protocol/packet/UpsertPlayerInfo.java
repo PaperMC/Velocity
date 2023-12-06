@@ -186,7 +186,7 @@ public class UpsertPlayerInfo implements MinecraftPacket {
     }, (version, buf, info) -> { // write
       buf.writeBoolean(info.displayName != null);
       if (info.displayName != null) {
-        info.displayName.write(buf, version);
+        info.displayName.write(buf);
       }
     });
 
