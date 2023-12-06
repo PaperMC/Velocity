@@ -198,6 +198,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         serverConn.getPlayer().queueResourcePack(toSend);
       } else if (serverConn.getConnection() != null) {
         serverConn.getConnection().write(new ResourcePackResponse(
+            packet.getId(),
             packet.getHash(),
             PlayerResourcePackStatusEvent.Status.DECLINED
         ));
@@ -205,6 +206,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     }, playerConnection.eventLoop()).exceptionally((ex) -> {
       if (serverConn.getConnection() != null) {
         serverConn.getConnection().write(new ResourcePackResponse(
+            packet.getId(),
             packet.getHash(),
             PlayerResourcePackStatusEvent.Status.DECLINED
         ));
@@ -218,7 +220,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(RemoveResourcePack packet) {
-    //TODO
+    return false; //TODO
   }
 
   @Override
@@ -312,8 +314,9 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         ping -> server.getEventManager()
             .fire(new ProxyPingEvent(this.serverConn.getPlayer(), ping)),
         playerConnection.eventLoop()).thenAcceptAsync(pingEvent -> this.playerConnection.write(
-            new ServerData(new ComponentHolder(this.serverConn.ensureConnected().getProtocolVersion(),
-                    pingEvent.getPing().getDescriptionComponent()),
+            new ServerData(new ComponentHolder(
+                this.serverConn.ensureConnected().getProtocolVersion(),
+                pingEvent.getPing().getDescriptionComponent()),
                 pingEvent.getPing().getFavicon().orElse(null), packet.isSecureChatEnforced())),
         playerConnection.eventLoop());
     return true;
