@@ -651,7 +651,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       return;
     }
 
-    Component disconnectReason = GsonComponentSerializer.gson().deserialize(disconnect.getReason());
+    Component disconnectReason = disconnect.getReason().getComponent();
     String plainTextReason = PASS_THRU_TRANSLATE.serialize(disconnectReason);
     if (connectedServer != null && connectedServer.getServerInfo().equals(server.getServerInfo())) {
       logger.info("{}: kicked from server {}: {}", this, server.getServerInfo().getName(),

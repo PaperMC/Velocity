@@ -158,7 +158,7 @@ public class BossBar implements MinecraftPacket {
         if (name == null) {
           throw new IllegalStateException("No name specified!");
         }
-        name.write(buf, version);
+        name.write(buf);
         buf.writeFloat(percent);
         ProtocolUtils.writeVarInt(buf, color);
         ProtocolUtils.writeVarInt(buf, overlay);
@@ -173,7 +173,7 @@ public class BossBar implements MinecraftPacket {
         if (name == null) {
           throw new IllegalStateException("No name specified!");
         }
-        name.write(buf, version);
+        name.write(buf);
         break;
       case UPDATE_STYLE:
         ProtocolUtils.writeVarInt(buf, color);

@@ -118,7 +118,7 @@ public class ResourcePackRequest implements MinecraftPacket {
       buf.writeBoolean(isRequired);
       if (prompt != null) {
         buf.writeBoolean(true);
-        prompt.write(buf, protocolVersion);
+        prompt.write(buf);
       } else {
         buf.writeBoolean(false);
       }
