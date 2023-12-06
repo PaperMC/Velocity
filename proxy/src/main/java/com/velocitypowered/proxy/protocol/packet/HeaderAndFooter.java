@@ -57,8 +57,8 @@ public class HeaderAndFooter implements MinecraftPacket {
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    header.write(buf, version);
-    footer.write(buf, version);
+    header.write(buf);
+    footer.write(buf);
   }
 
   @Override

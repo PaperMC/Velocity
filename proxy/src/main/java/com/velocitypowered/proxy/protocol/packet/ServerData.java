@@ -76,7 +76,7 @@ public class ServerData implements MinecraftPacket {
       buf.writeBoolean(hasDescription);
     }
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_4) >= 0 || hasDescription) {
-      this.description.write(buf, protocolVersion);
+      this.description.write(buf);
     }
 
     boolean hasFavicon = this.favicon != null;
