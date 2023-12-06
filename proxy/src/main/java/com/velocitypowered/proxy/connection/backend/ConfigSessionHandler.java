@@ -134,12 +134,12 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
         resourcePackToApply = null;
         serverConn.getPlayer().queueResourcePack(toSend);
       } else if (serverConn.getConnection() != null) {
-        serverConn.getConnection().write(new ResourcePackResponse(packet.getHash(),
+        serverConn.getConnection().write(new ResourcePackResponse(packet.getId(), packet.getHash(),
             PlayerResourcePackStatusEvent.Status.DECLINED));
       }
     }, playerConnection.eventLoop()).exceptionally((ex) -> {
       if (serverConn.getConnection() != null) {
-        serverConn.getConnection().write(new ResourcePackResponse(packet.getHash(),
+        serverConn.getConnection().write(new ResourcePackResponse(packet.getId(), packet.getHash(),
             PlayerResourcePackStatusEvent.Status.DECLINED));
       }
       logger.error("Exception while handling resource pack send for {}", playerConnection, ex);

@@ -171,8 +171,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private final ChatBuilderFactory chatBuilderFactory;
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
-      @Nullable InetSocketAddress virtualHost, boolean onlineMode,
-      @Nullable IdentifiedKey playerKey) {
+                  @Nullable InetSocketAddress virtualHost, boolean onlineMode,
+                  @Nullable IdentifiedKey playerKey) {
     this.server = server;
     this.profile = profile;
     this.connection = connection;
@@ -357,7 +357,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   @Override
   public void sendMessage(@NonNull Identity identity, @NonNull Component message,
-      @NonNull MessageType type) {
+                          @NonNull MessageType type) {
     Preconditions.checkNotNull(message, "message");
     Preconditions.checkNotNull(type, "type");
 
@@ -606,7 +606,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
    * @param safe      whether or not we can safely reconnect to a new server
    */
   public void handleConnectionException(RegisteredServer server, Throwable throwable,
-      boolean safe) {
+                                        boolean safe) {
     if (!isActive()) {
       // If the connection is no longer active, it makes no sense to try and recover it.
       return;
@@ -645,7 +645,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
    * @param safe       whether or not we can safely reconnect to a new server
    */
   public void handleConnectionException(RegisteredServer server, Disconnect disconnect,
-      boolean safe) {
+                                        boolean safe) {
     if (!isActive()) {
       // If the connection is no longer active, it makes no sense to try and recover it.
       return;
@@ -671,7 +671,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   private void handleConnectionException(RegisteredServer rs,
-      @Nullable Component kickReason, Component friendlyReason, boolean safe) {
+                                         @Nullable Component kickReason, Component friendlyReason,
+                                         boolean safe) {
     if (!isActive()) {
       // If the connection is no longer active, it makes no sense to try and recover it.
       return;
@@ -1010,6 +1011,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       }
 
       ResourcePackRequest request = new ResourcePackRequest();
+      request.setId(queued.getId());
       request.setUrl(queued.getUrl());
       if (queued.getHash() != null) {
         request.setHash(ByteBufUtil.hexDump(queued.getHash()));
@@ -1017,7 +1019,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
         request.setHash("");
       }
       request.setRequired(queued.getShouldForce());
-      request.setPrompt(queued.getPrompt() == null ? null : new ComponentHolder(getProtocolVersion(), queued.getPrompt()));
+      request.setPrompt(queued.getPrompt() == null ? null :
+          new ComponentHolder(getProtocolVersion(), queued.getPrompt()));
 
       connection.write(request);
     }
@@ -1039,12 +1042,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   @Override
   public Collection<ResourcePackInfo> getAppliedResourcePacks() {
-    //TODO
+    return Collections.EMPTY_LIST; //TODO
   }
 
   @Override
   public Collection<ResourcePackInfo> getPendingResourcePacks() {
-    //TODO
+    return Collections.EMPTY_LIST; //TODO
   }
 
   /**
@@ -1115,7 +1118,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
    */
   public void sendKeepAlive() {
     if (connection.getState() == StateRegistry.PLAY
-            || connection.getState() == StateRegistry.CONFIG) {
+        || connection.getState() == StateRegistry.CONFIG) {
       KeepAlive keepAlive = new KeepAlive();
       keepAlive.setRandomId(ThreadLocalRandom.current().nextLong());
       connection.write(keepAlive);
@@ -1129,7 +1132,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     CompletableFuture.runAsync(() -> {
       connection.write(new StartUpdate());
       connection.getChannel().pipeline()
-              .get(MinecraftEncoder.class).setState(StateRegistry.CONFIG);
+          .get(MinecraftEncoder.class).setState(StateRegistry.CONFIG);
       // Make sure we don't send any play packets to the player after update start
       connection.addPlayPacketQueueHandler();
     }, connection.eventLoop()).exceptionally((ex) -> {
@@ -1176,7 +1179,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     private final @Nullable VelocityRegisteredServer previousServer;
 
     ConnectionRequestBuilderImpl(RegisteredServer toConnect,
-        @Nullable VelocityServerConnection previousConnection) {
+                                 @Nullable VelocityServerConnection previousConnection) {
       this.toConnect = Preconditions.checkNotNull(toConnect, "info");
       this.previousServer = previousConnection == null ? null : previousConnection.getServer();
     }

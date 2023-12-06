@@ -109,7 +109,9 @@ import java.util.Objects;
 import java.util.function.Supplier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-/** Registry of all Minecraft protocol states and the packets for each state. */
+/**
+ * Registry of all Minecraft protocol states and the packets for each state.
+ */
 public enum StateRegistry {
 
   HANDSHAKE {
@@ -158,14 +160,14 @@ public enum StateRegistry {
       clientbound.register(
           RemoveResourcePack.class, RemoveResourcePack::new, map(0x06, MINECRAFT_1_20_3, false));
       clientbound.register(ResourcePackRequest.class, ResourcePackRequest::new,
-              map(0x06, MINECRAFT_1_20_2, false),
-              map(0x07, MINECRAFT_1_20_3, false));
+          map(0x06, MINECRAFT_1_20_2, false),
+          map(0x07, MINECRAFT_1_20_3, false));
       clientbound.register(ActiveFeatures.class, ActiveFeatures::new,
-              map(0x07, MINECRAFT_1_20_2, false),
-              map(0x08, MINECRAFT_1_20_3, false));
+          map(0x07, MINECRAFT_1_20_2, false),
+          map(0x08, MINECRAFT_1_20_3, false));
       clientbound.register(TagsUpdate.class, TagsUpdate::new,
-              map(0x08, MINECRAFT_1_20_2, false),
-              map(0x09, MINECRAFT_1_20_3, false));
+          map(0x08, MINECRAFT_1_20_2, false),
+          map(0x09, MINECRAFT_1_20_3, false));
     }
   },
   PLAY {
@@ -194,9 +196,9 @@ public enum StateRegistry {
           map(0x02, MINECRAFT_1_12_1, false),
           map(0x03, MINECRAFT_1_14, MINECRAFT_1_18_2, false));
       serverbound.register(
-              ChatAcknowledgement.class,
-              ChatAcknowledgement::new,
-              map(0x03, MINECRAFT_1_19_3, false));
+          ChatAcknowledgement.class,
+          ChatAcknowledgement::new,
+          map(0x03, MINECRAFT_1_19_3, false));
       serverbound.register(KeyedPlayerCommand.class, KeyedPlayerCommand::new,
           map(0x03, MINECRAFT_1_19, false),
           map(0x04, MINECRAFT_1_19_1, MINECRAFT_1_19_1, false));
@@ -399,7 +401,9 @@ public enum StateRegistry {
           map(0x43, MINECRAFT_1_20_2, true),
           map(0x45, MINECRAFT_1_20_3, true));
       clientbound.register(
-              RemoveResourcePack.class, RemoveResourcePack::new, map(0x43, MINECRAFT_1_20_3, false));
+          RemoveResourcePack.class,
+          RemoveResourcePack::new,
+          map(0x43, MINECRAFT_1_20_3, false));
       clientbound.register(
           ResourcePackRequest.class,
           ResourcePackRequest::new,
@@ -546,10 +550,10 @@ public enum StateRegistry {
           map(0x47, MINECRAFT_1_20_2, false),
           map(0x49, MINECRAFT_1_20_3, false));
       clientbound.register(
-              StartUpdate.class,
-              StartUpdate::new,
-              map(0x65, MINECRAFT_1_20_2, false),
-              map(0x67, MINECRAFT_1_20_3, false));
+          StartUpdate.class,
+          StartUpdate::new,
+          map(0x65, MINECRAFT_1_20_2, false),
+          map(0x67, MINECRAFT_1_20_3, false));
     }
   },
   LOGIN {
@@ -584,7 +588,9 @@ public enum StateRegistry {
     return (direction == SERVERBOUND ? serverbound : clientbound).getProtocolRegistry(version);
   }
 
-  /** Packet registry. */
+  /**
+   * Packet registry.
+   */
   public static class PacketRegistry {
 
     private final Direction direction;
@@ -618,7 +624,7 @@ public enum StateRegistry {
     }
 
     <P extends MinecraftPacket> void register(Class<P> clazz, Supplier<P> packetSupplier,
-        PacketMapping... mappings) {
+                                              PacketMapping... mappings) {
       if (mappings.length == 0) {
         throw new IllegalArgumentException("At least one mapping must be provided.");
       }
@@ -682,7 +688,9 @@ public enum StateRegistry {
       }
     }
 
-    /** Protocol registry. */
+    /**
+     * Protocol registry.
+     */
     public class ProtocolRegistry {
 
       public final ProtocolVersion version;
@@ -723,7 +731,7 @@ public enum StateRegistry {
           throw new IllegalArgumentException(String.format(
               "Unable to find id for packet of type %s in %s protocol %s phase %s",
               packet.getClass().getName(), PacketRegistry.this.direction,
-                  this.version, PacketRegistry.this.registry
+              this.version, PacketRegistry.this.registry
           ));
         }
         return id;
@@ -741,7 +749,9 @@ public enum StateRegistry {
     }
   }
 
-  /** Packet mapping. */
+  /**
+   * Packet mapping.
+   */
   public static final class PacketMapping {
 
     private final int id;
@@ -750,7 +760,7 @@ public enum StateRegistry {
     private final @Nullable ProtocolVersion lastValidProtocolVersion;
 
     PacketMapping(int id, ProtocolVersion protocolVersion,
-        ProtocolVersion lastValidProtocolVersion, boolean packetDecoding) {
+                  ProtocolVersion lastValidProtocolVersion, boolean packetDecoding) {
       this.id = id;
       this.protocolVersion = protocolVersion;
       this.lastValidProtocolVersion = lastValidProtocolVersion;
@@ -812,7 +822,7 @@ public enum StateRegistry {
    * @return PacketMapping with the provided arguments
    */
   private static PacketMapping map(int id, ProtocolVersion version,
-      ProtocolVersion lastValidProtocolVersion, boolean encodeOnly) {
+                                   ProtocolVersion lastValidProtocolVersion, boolean encodeOnly) {
     return new PacketMapping(id, version, lastValidProtocolVersion, encodeOnly);
   }
 

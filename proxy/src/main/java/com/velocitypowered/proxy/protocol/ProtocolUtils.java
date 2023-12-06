@@ -66,10 +66,10 @@ public enum ProtocolUtils {
 
   public static final int DEFAULT_MAX_STRING_SIZE = 65536; // 64KiB
   private static final BinaryTagType<? extends BinaryTag>[] BINARY_TAG_TYPES = new BinaryTagType[] {
-          BinaryTagTypes.END, BinaryTagTypes.BYTE, BinaryTagTypes.SHORT, BinaryTagTypes.INT,
-          BinaryTagTypes.LONG, BinaryTagTypes.FLOAT, BinaryTagTypes.DOUBLE,
-          BinaryTagTypes.BYTE_ARRAY, BinaryTagTypes.STRING, BinaryTagTypes.LIST,
-          BinaryTagTypes.COMPOUND, BinaryTagTypes.INT_ARRAY, BinaryTagTypes.LONG_ARRAY};
+      BinaryTagTypes.END, BinaryTagTypes.BYTE, BinaryTagTypes.SHORT, BinaryTagTypes.INT,
+      BinaryTagTypes.LONG, BinaryTagTypes.FLOAT, BinaryTagTypes.DOUBLE,
+      BinaryTagTypes.BYTE_ARRAY, BinaryTagTypes.STRING, BinaryTagTypes.LIST,
+      BinaryTagTypes.COMPOUND, BinaryTagTypes.INT_ARRAY, BinaryTagTypes.LONG_ARRAY};
   private static final QuietDecoderException BAD_VARINT_CACHED =
       new QuietDecoderException("Bad VarInt decoded");
   private static final int[] VARINT_EXACT_BYTE_LENGTHS = new int[33];
@@ -376,10 +376,12 @@ public enum ProtocolUtils {
    * @param reader the {@link BinaryTagIO.Reader} to use
    * @return {@link net.kyori.adventure.nbt.CompoundBinaryTag} the CompoundTag from the buffer
    */
-  public static CompoundBinaryTag readCompoundTag(ByteBuf buf, ProtocolVersion version, BinaryTagIO.Reader reader) {
+  public static CompoundBinaryTag readCompoundTag(ByteBuf buf, ProtocolVersion version,
+                                                  BinaryTagIO.Reader reader) {
     BinaryTag binaryTag = readBinaryTag(buf, version, reader);
     if (binaryTag.type() != BinaryTagTypes.COMPOUND) {
-      throw new DecoderException("Expected root tag to be CompoundTag, but is " + binaryTag.getClass().getSimpleName());
+      throw new DecoderException(
+          "Expected root tag to be CompoundTag, but is " + binaryTag.getClass().getSimpleName());
     }
     return (CompoundBinaryTag) binaryTag;
   }
@@ -391,7 +393,8 @@ public enum ProtocolUtils {
    * @param reader the {@link BinaryTagIO.Reader} to use
    * @return {@link net.kyori.adventure.nbt.BinaryTag} the BinaryTag from the buffer
    */
-  public static BinaryTag readBinaryTag(ByteBuf buf, ProtocolVersion version, BinaryTagIO.Reader reader) {
+  public static BinaryTag readBinaryTag(ByteBuf buf, ProtocolVersion version,
+                                        BinaryTagIO.Reader reader) {
     BinaryTagType<?> type = BINARY_TAG_TYPES[buf.readByte()];
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0) {
       buf.skipBytes(buf.readUnsignedShort());
@@ -409,7 +412,8 @@ public enum ProtocolUtils {
    * @param buf the buffer to write to
    * @param tag the BinaryTag to write
    */
-  public static <T extends BinaryTag> void writeBinaryTag(ByteBuf buf, ProtocolVersion version, T tag) {
+  public static <T extends BinaryTag> void writeBinaryTag(ByteBuf buf, ProtocolVersion version,
+                                                          T tag) {
     BinaryTagType<T> type = (BinaryTagType<T>) tag.type();
     buf.writeByte(type.id());
     try {
