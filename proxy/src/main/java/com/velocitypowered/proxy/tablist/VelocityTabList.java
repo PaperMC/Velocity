@@ -252,7 +252,8 @@ public class VelocityTabList implements InternalTabList {
       currentEntry.setLatencyWithoutUpdate(entry.getLatency());
     }
     if (actions.contains(UpsertPlayerInfo.Action.UPDATE_DISPLAY_NAME)) {
-      currentEntry.setDisplayNameWithoutUpdate(entry.getDisplayName().getComponent());
+      currentEntry.setDisplayNameWithoutUpdate(entry.getDisplayName() != null
+          ? entry.getDisplayName().getComponent() : null);
     }
     if (actions.contains(UpsertPlayerInfo.Action.INITIALIZE_CHAT)) {
       currentEntry.setChatSession(entry.getChatSession());
