@@ -52,13 +52,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ComponentHolder {
-  public static ComponentHolder EMPTY = new ComponentHolder(null, Component.empty());
   private static final Logger logger = LogManager.getLogger(ComponentHolder.class);
-
-  static {
-    EMPTY.json = "{\"text\":\"\"}";
-    EMPTY.binaryTag = StringBinaryTag.stringBinaryTag("");
-  }
 
   private final ProtocolVersion version;
   private @MonotonicNonNull Component component;
