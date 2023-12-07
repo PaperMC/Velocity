@@ -579,7 +579,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       logger.info("{} has disconnected: {}", this,
           LegacyComponentSerializer.legacySection().serialize(translated));
     }
-    connection.closeWith(Disconnect.create(translated, this.getProtocolVersion()));
+    connection.closeWith(Disconnect.create(translated, this.getProtocolVersion(), duringLogin));
   }
 
   public @Nullable VelocityServerConnection getConnectedServer() {
@@ -750,7 +750,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
                   Component reason = status.getReasonComponent()
                       .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
                   handleConnectionException(res.getServer(),
-                      Disconnect.create(reason, getProtocolVersion()), ((Impl) status).isSafe());
+                      Disconnect.create(reason, getProtocolVersion(), false),
+                      ((Impl) status).isSafe());
                   break;
                 case SUCCESS:
                   Component requestedMessage = res.getMessageComponent();
@@ -1274,8 +1275,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
           case SERVER_DISCONNECTED:
             Component reason = status.getReasonComponent()
                 .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
-            handleConnectionException(toConnect, Disconnect.create(reason, getProtocolVersion()),
-                status.isSafe());
+            handleConnectionException(toConnect,
+                Disconnect.create(reason, getProtocolVersion(), false), status.isSafe());
             break;
           default:
             // The only remaining value is successful (no need to do anything!)

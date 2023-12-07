@@ -149,7 +149,8 @@ public enum StateRegistry {
 
       clientbound.register(
           PluginMessage.class, PluginMessage::new, map(0x00, MINECRAFT_1_20_2, false));
-      clientbound.register(Disconnect.class, Disconnect::new, map(0x01, MINECRAFT_1_20_2, false));
+      clientbound.register(
+          Disconnect.class, () -> new Disconnect(false), map(0x01, MINECRAFT_1_20_2, false));
       clientbound.register(
           FinishedUpdate.class, FinishedUpdate::new, map(0x02, MINECRAFT_1_20_2, false));
       clientbound.register(KeepAlive.class, KeepAlive::new, map(0x03, MINECRAFT_1_20_2, false));
@@ -335,7 +336,7 @@ public enum StateRegistry {
           map(0x18, MINECRAFT_1_20_2, false));
       clientbound.register(
           Disconnect.class,
-          Disconnect::new,
+          () -> new Disconnect(false),
           map(0x40, MINECRAFT_1_7_2, false),
           map(0x1A, MINECRAFT_1_9, false),
           map(0x1B, MINECRAFT_1_13, false),
@@ -566,7 +567,8 @@ public enum StateRegistry {
       serverbound.register(
           LoginAcknowledged.class, LoginAcknowledged::new, map(0x03, MINECRAFT_1_20_2, false));
 
-      clientbound.register(Disconnect.class, Disconnect::new, map(0x00, MINECRAFT_1_7_2, false));
+      clientbound.register(
+          Disconnect.class, () -> new Disconnect(true), map(0x00, MINECRAFT_1_7_2, false));
       clientbound.register(
           EncryptionRequest.class, EncryptionRequest::new, map(0x01, MINECRAFT_1_7_2, false));
       clientbound.register(
