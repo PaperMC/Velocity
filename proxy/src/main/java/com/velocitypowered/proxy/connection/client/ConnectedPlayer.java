@@ -543,7 +543,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   public void clearPlayerListHeaderAndFooter() {
     clearPlayerListHeaderAndFooterSilent();
     if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
-      this.connection.write(HeaderAndFooter.reset());
+      this.connection.write(HeaderAndFooter.reset(this.getProtocolVersion()));
     }
   }
 

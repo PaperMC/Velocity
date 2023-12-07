@@ -28,13 +28,11 @@ import net.kyori.adventure.text.Component;
 
 public class HeaderAndFooter implements MinecraftPacket {
 
-  private static final HeaderAndFooter RESET = new HeaderAndFooter();
-
   private final ComponentHolder header;
   private final ComponentHolder footer;
 
   public HeaderAndFooter() {
-    this(ComponentHolder.EMPTY, ComponentHolder.EMPTY);
+    throw new UnsupportedOperationException("Decode is not implemented");
   }
 
   public HeaderAndFooter(ComponentHolder header, ComponentHolder footer) {
@@ -72,7 +70,8 @@ public class HeaderAndFooter implements MinecraftPacket {
       new ComponentHolder(protocolVersion, footer));
   }
 
-  public static HeaderAndFooter reset() {
-    return RESET;
+  public static HeaderAndFooter reset(ProtocolVersion version) {
+    ComponentHolder empty = new ComponentHolder(version, Component.empty());
+    return new HeaderAndFooter(empty, empty);
   }
 }
