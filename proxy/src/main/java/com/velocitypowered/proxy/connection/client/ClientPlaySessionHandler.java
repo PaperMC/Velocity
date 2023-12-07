@@ -53,6 +53,7 @@ import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse.Offer;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatTimeKeeper;
 import com.velocitypowered.proxy.protocol.packet.chat.CommandHandler;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedChatHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedCommandHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerChat;
@@ -631,10 +632,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           List<Offer> offers = new ArrayList<>();
           for (Suggestion suggestion : suggestions.getList()) {
             String offer = suggestion.getText();
-            Component tooltip = null;
+            ComponentHolder tooltip = null;
             if (suggestion.getTooltip() != null
                 && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
-              tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
+              tooltip = new ComponentHolder(player.getProtocolVersion(),
+                  ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent());
             }
             offers.add(new Offer(offer, tooltip));
           }
@@ -696,10 +698,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
               if (legacy && offer.startsWith(command)) {
                 offer = offer.substring(command.length());
               }
-              Component tooltip = null;
+              ComponentHolder tooltip = null;
               if (suggestion.getTooltip() != null
                   && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
-                tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
+                tooltip = new ComponentHolder(player.getProtocolVersion(),
+                        ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent());
               }
               response.getOffers().add(new Offer(offer, tooltip));
             }
