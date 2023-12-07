@@ -1057,7 +1057,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
    * Processes a client response to a sent resource-pack.
    */
   public boolean onResourcePackResponse(PlayerResourcePackStatusEvent.Status status) {
-    final boolean peek = status == PlayerResourcePackStatusEvent.Status.ACCEPTED;
+    final boolean peek = status.isIntermediate();
     final ResourcePackInfo queued = peek
         ? outstandingResourcePacks.peek() : outstandingResourcePacks.poll();
 
