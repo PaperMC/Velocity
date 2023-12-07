@@ -85,8 +85,8 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
     ConnectedPlayer player = serverConn.getPlayer();
     if (player.getProtocolVersion() == ProtocolVersion.MINECRAFT_1_20_2) {
       resourcePackToApply = player.getAppliedResourcePack();
+      player.clearAppliedResourcePack();
     }
-    player.clearAppliedResourcePack();
   }
 
   @Override
