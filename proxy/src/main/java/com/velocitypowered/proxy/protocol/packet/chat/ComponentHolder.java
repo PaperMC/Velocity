@@ -21,6 +21,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.google.gson.internal.LazilyParsedNumber;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
@@ -42,6 +43,8 @@ import net.kyori.adventure.nbt.ShortBinaryTag;
 import net.kyori.adventure.nbt.StringBinaryTag;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 import java.util.ArrayList;
@@ -50,6 +53,7 @@ import java.util.Map;
 
 public class ComponentHolder {
   public static ComponentHolder EMPTY = new ComponentHolder(null, Component.empty());
+  private static final Logger logger = LogManager.getLogger(ComponentHolder.class);
 
   static {
     EMPTY.json = "{\"text\":\"\"}";
@@ -81,8 +85,16 @@ public class ComponentHolder {
       if (json != null) {
         component = ProtocolUtils.getJsonChatSerializer(version).deserialize(json);
       } else if (binaryTag != null) {
-        component = ProtocolUtils.getJsonChatSerializer(version)
-            .deserialize(deserialize(binaryTag).toString());
+        // TODO: replace this with adventure-text-serializer-nbt
+        try {
+          json = deserialize(binaryTag).toString();
+          component = ProtocolUtils.getJsonChatSerializer(version).deserialize(json);
+        } catch (Exception ex) {
+          logger.error(
+              "Error converting binary component to JSON component! "
+              + "Binary: " + binaryTag + " JSON: " + json, ex);
+          throw ex;
+        }
       }
     }
     return component;
@@ -97,6 +109,7 @@ public class ComponentHolder {
 
   public BinaryTag getBinaryTag() {
     if (binaryTag == null) {
+      // TODO: replace this with adventure-text-serializer-nbt
       binaryTag = serialize(GsonComponentSerializer.gson().serializeToTree(getComponent()));
     }
     return binaryTag;
@@ -121,6 +134,8 @@ public class ComponentHolder {
           return FloatBinaryTag.floatBinaryTag((Float) number);
         } else if (number instanceof Double) {
           return DoubleBinaryTag.doubleBinaryTag((Double) number);
+        } else if (number instanceof LazilyParsedNumber) {
+          return IntBinaryTag.intBinaryTag(number.intValue());
         }
       } else if (jsonPrimitive.isString()) {
         return StringBinaryTag.stringBinaryTag(jsonPrimitive.getAsString());
@@ -233,7 +248,14 @@ public class ComponentHolder {
         CompoundBinaryTag compound = (CompoundBinaryTag) tag;
         JsonObject jsonObject = new JsonObject();
 
-        compound.keySet().forEach(key -> jsonObject.add(key, deserialize(compound.get(key))));
+        compound.keySet().forEach(key -> {
+          // [{"text":"test1"},"test2"] can't be represented as a binary list tag
+          // it is represented by a list tag with two compound tags
+          // the second compound tag will have an empty key mapped to "test2"
+          // without this fix this would lead to an invalid json component:
+          // [{"text":"test1"},{"":"test2"}]
+          jsonObject.add(key.isEmpty() ? "text" : key, deserialize(compound.get(key)));
+        });
 
         return jsonObject;
       case 11://BinaryTagTypes.INT_ARRAY:
