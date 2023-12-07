@@ -30,11 +30,14 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class Disconnect implements MinecraftPacket {
 
   private @Nullable ComponentHolder reason;
+  private final boolean login;
 
-  public Disconnect() {
+  public Disconnect(boolean login) {
+    this.login = login;
   }
 
-  public Disconnect(ComponentHolder reason) {
+  private Disconnect(boolean login, ComponentHolder reason) {
+    this.login = login;
     this.reason = Preconditions.checkNotNull(reason, "reason");
   }
 
@@ -58,7 +61,7 @@ public class Disconnect implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    reason = ComponentHolder.read(buf, version);
+	  reason = ComponentHolder.read(buf, login ? ProtocolVersion.MINECRAFT_1_20_2 : version);
   }
 
   @Override
@@ -71,8 +74,8 @@ public class Disconnect implements MinecraftPacket {
     return handler.handle(this);
   }
 
-  public static Disconnect create(Component component, ProtocolVersion version) {
+  public static Disconnect create(Component component, ProtocolVersion version, boolean login) {
     Preconditions.checkNotNull(component, "component");
-    return new Disconnect(new ComponentHolder(version, component));
+    return new Disconnect(login, new ComponentHolder(login ? ProtocolVersion.MINECRAFT_1_20_2 : version, component));
   }
 }
