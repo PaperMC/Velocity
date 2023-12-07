@@ -57,7 +57,6 @@ import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.connection.util.VelocityInboundConnection;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
@@ -104,7 +103,6 @@ import net.kyori.adventure.platform.facet.FacetPointers.Type;
 import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.title.Title.Times;
@@ -378,8 +376,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       // Use the title packet instead.
       GenericTitlePacket pkt = GenericTitlePacket.constructTitlePacket(
           GenericTitlePacket.ActionType.SET_ACTION_BAR, playerVersion);
-      pkt.setComponent(ProtocolUtils.getJsonChatSerializer(playerVersion)
-          .serialize(translated));
+      pkt.setComponent(new ComponentHolder(playerVersion, translated));
       connection.write(pkt);
     } else {
       // Due to issues with action bar packets, we'll need to convert the text message into a
@@ -428,8 +425,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   @Override
   public void showTitle(net.kyori.adventure.title.@NonNull Title title) {
     if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
-      GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this
-          .getProtocolVersion());
       GenericTitlePacket timesPkt = GenericTitlePacket.constructTitlePacket(
           GenericTitlePacket.ActionType.SET_TIMES, this.getProtocolVersion());
       net.kyori.adventure.title.Title.Times times = title.times();
@@ -442,12 +437,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
       GenericTitlePacket subtitlePkt = GenericTitlePacket.constructTitlePacket(
           GenericTitlePacket.ActionType.SET_SUBTITLE, this.getProtocolVersion());
-      subtitlePkt.setComponent(serializer.serialize(translateMessage(title.subtitle())));
+      subtitlePkt.setComponent(new ComponentHolder(
+          this.getProtocolVersion(), translateMessage(title.subtitle())));
       connection.delayedWrite(subtitlePkt);
 
       GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
           GenericTitlePacket.ActionType.SET_TITLE, this.getProtocolVersion());
-      titlePkt.setComponent(serializer.serialize(translateMessage(title.title())));
+      titlePkt.setComponent(new ComponentHolder(
+          this.getProtocolVersion(), translateMessage(title.title())));
       connection.delayedWrite(titlePkt);
 
       connection.flush();
@@ -467,18 +464,17 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       return;
     }
 
-    GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(this
-        .getProtocolVersion());
-
     if (part == TitlePart.TITLE) {
       GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
           GenericTitlePacket.ActionType.SET_TITLE, this.getProtocolVersion());
-      titlePkt.setComponent(serializer.serialize(translateMessage((Component) value)));
+      titlePkt.setComponent(new ComponentHolder(
+          this.getProtocolVersion(), translateMessage((Component) value)));
       connection.write(titlePkt);
     } else if (part == TitlePart.SUBTITLE) {
       GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
           GenericTitlePacket.ActionType.SET_SUBTITLE, this.getProtocolVersion());
-      titlePkt.setComponent(serializer.serialize(translateMessage((Component) value)));
+      titlePkt.setComponent(new ComponentHolder(
+          this.getProtocolVersion(), translateMessage((Component) value)));
       connection.write(titlePkt);
     } else if (part == TitlePart.TIMES) {
       Times times = (Times) value;
