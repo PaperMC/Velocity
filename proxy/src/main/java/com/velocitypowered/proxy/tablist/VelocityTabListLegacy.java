@@ -17,14 +17,13 @@
 
 package com.velocitypowered.proxy.tablist;
 
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem.Item;
-import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -69,7 +68,7 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
   public void clearAll() {
     for (TabListEntry value : entries.values()) {
       connection.delayedWrite(new LegacyPlayerListItem(LegacyPlayerListItem.REMOVE_PLAYER,
-          Collections.singletonList(LegacyPlayerListItem.Item.from(value))));
+          List.of(LegacyPlayerListItem.Item.from(value))));
     }
     clearAllSilent();
   }
@@ -96,7 +95,7 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
           nameMapping.put(item.getName(), uuid);
           entries.put(uuid, (KeyedVelocityTabListEntry) TabListEntry.builder()
               .tabList(this)
-              .profile(new GameProfile(uuid, item.getName(), ImmutableList.of()))
+              .profile(new GameProfile(uuid, item.getName(), List.of()))
               .latency(item.getLatency())
               .build());
         }
@@ -122,7 +121,7 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
           connection
               .write(new LegacyPlayerListItem(LegacyPlayerListItem.ADD_PLAYER,
                   // ADD_PLAYER also updates ping
-                  Collections.singletonList(LegacyPlayerListItem.Item.from(entry))));
+                  List.of(LegacyPlayerListItem.Item.from(entry))));
           break;
         default:
           // Can't do anything else

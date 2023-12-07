@@ -20,7 +20,6 @@ package com.velocitypowered.proxy.plugin.loader;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
@@ -65,7 +64,7 @@ public class VelocityPluginDescription implements PluginDescription {
     this.version = Strings.emptyToNull(version);
     this.description = Strings.emptyToNull(description);
     this.url = Strings.emptyToNull(url);
-    this.authors = authors == null ? ImmutableList.of() : ImmutableList.copyOf(authors);
+    this.authors = authors == null ? List.of() : List.copyOf(authors);
     this.dependencies = Maps.uniqueIndex(dependencies, d -> d == null ? null : d.getId());
     this.source = source;
   }

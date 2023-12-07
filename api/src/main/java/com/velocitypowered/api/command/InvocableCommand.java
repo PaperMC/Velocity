@@ -7,7 +7,6 @@
 
 package com.velocitypowered.api.command;
 
-import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -37,7 +36,7 @@ public interface InvocableCommand<I extends CommandInvocation<?>> extends Comman
    * @return the tab complete suggestions
    */
   default List<String> suggest(final I invocation) {
-    return ImmutableList.of();
+    return List.of();
   }
 
   /**

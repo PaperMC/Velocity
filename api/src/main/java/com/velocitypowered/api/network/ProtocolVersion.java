@@ -7,8 +7,6 @@
 
 package com.velocitypowered.api.network;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -90,7 +88,7 @@ public enum ProtocolVersion {
   /**
    * A map linking the protocol version number to its {@link ProtocolVersion} representation.
    */
-  public static final ImmutableMap<Integer, ProtocolVersion> ID_TO_PROTOCOL_CONSTANT;
+  public static final Map<Integer, ProtocolVersion> ID_TO_PROTOCOL_CONSTANT;
 
   static {
     Map<Integer, ProtocolVersion> versions = new HashMap<>();
@@ -104,7 +102,7 @@ public enum ProtocolVersion {
       }
     }
 
-    ID_TO_PROTOCOL_CONSTANT = ImmutableMap.copyOf(versions);
+    ID_TO_PROTOCOL_CONSTANT = Map.copyOf(versions);
   }
 
   /**
@@ -186,7 +184,7 @@ public enum ProtocolVersion {
    * @return the version names
    */
   public List<String> getVersionsSupportedBy() {
-    return ImmutableList.copyOf(names);
+    return List.of(this.names);
   }
 
   /**

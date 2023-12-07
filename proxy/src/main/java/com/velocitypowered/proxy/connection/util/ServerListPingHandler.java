@@ -17,7 +17,6 @@
 
 package com.velocitypowered.proxy.connection.util;
 
-import com.google.common.collect.ImmutableList;
 import com.spotify.futures.CompletableFutures;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.server.PingOptions;
@@ -55,7 +54,7 @@ public class ServerListPingHandler {
         new ServerPing.Version(version.getProtocol(),
             "Velocity " + ProtocolVersion.SUPPORTED_VERSION_STRING),
         new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(),
-            ImmutableList.of()),
+            List.of()),
         configuration.getMotd(),
         configuration.getFavicon().orElse(null),
         configuration.isAnnounceForge() ? ModInfo.DEFAULT : null

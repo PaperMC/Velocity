@@ -37,9 +37,9 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.proxy.command.brigadier.VelocityArgumentCommandNode;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.locks.Lock;
 import org.apache.logging.log4j.LogManager;
@@ -346,7 +346,7 @@ final class SuggestionsProvider<S> {
       }
       return potentials.get(0);
     }
-    return new ParseResults<>(contextSoFar, originalReader, Collections.emptyMap());
+    return new ParseResults<>(contextSoFar, originalReader, Map.of());
   }
 
   /**

@@ -19,7 +19,6 @@ package com.velocitypowered.proxy.command.builtin;
 
 import static net.kyori.adventure.text.event.HoverEvent.showText;
 
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.permission.Tristate;
@@ -155,7 +154,7 @@ public class ServerCommand implements SimpleCommand {
           .filter(name -> name.regionMatches(true, 0, currentArgs[0], 0, currentArgs[0].length()))
           .collect(Collectors.toList());
     } else {
-      return ImmutableList.of();
+      return List.of();
     }
   }
 

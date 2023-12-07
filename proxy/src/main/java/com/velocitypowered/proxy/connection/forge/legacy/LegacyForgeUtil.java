@@ -74,7 +74,7 @@ class LegacyForgeUtil {
       return mods.build();
     }
 
-    return ImmutableList.of();
+    return List.of();
   }
 
   /**

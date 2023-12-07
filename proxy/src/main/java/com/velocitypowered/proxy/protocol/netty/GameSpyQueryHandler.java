@@ -22,7 +22,6 @@ import static com.velocitypowered.api.event.query.ProxyQueryEvent.QueryType.FULL
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.event.query.ProxyQueryEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.plugin.PluginContainer;
@@ -39,10 +38,10 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -63,7 +62,7 @@ public class GameSpyQueryHandler extends SimpleChannelInboundHandler<DatagramPac
       0x79, 0x65, 0x72, 0x5F, 0x00, 0x00};
 
   // Contents to add into basic stat response. See ResponseWriter class below
-  private static final ImmutableSet<String> QUERY_BASIC_RESPONSE_CONTENTS = ImmutableSet.of(
+  private static final Set<String> QUERY_BASIC_RESPONSE_CONTENTS = Set.of(
       "hostname",
       "gametype",
       "map",
@@ -99,7 +98,7 @@ public class GameSpyQueryHandler extends SimpleChannelInboundHandler<DatagramPac
         .proxyVersion("Velocity")
         .plugins(
             server.getConfiguration().shouldQueryShowPlugins() ? getRealPluginInformation()
-                : Collections.emptyList())
+                : List.of())
         .build();
   }
 

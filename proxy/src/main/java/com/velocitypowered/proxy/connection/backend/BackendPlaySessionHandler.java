@@ -20,7 +20,6 @@ package com.velocitypowered.proxy.connection.backend;
 import static com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder.getBungeeCordChannel;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.tree.RootCommandNode;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.command.PlayerAvailableCommandsEvent;
@@ -61,6 +60,7 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.handler.timeout.ReadTimeoutException;
+import java.util.List;
 import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -108,7 +108,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     MinecraftConnection serverMc = serverConn.ensureConnected();
     if (server.getConfiguration().isBungeePluginChannelEnabled()) {
       serverMc.write(PluginMessageUtil.constructChannelsPacket(serverMc.getProtocolVersion(),
-          ImmutableList.of(getBungeeCordChannel(serverMc.getProtocolVersion()))
+          List.of(getBungeeCordChannel(serverMc.getProtocolVersion()))
       ));
     }
 

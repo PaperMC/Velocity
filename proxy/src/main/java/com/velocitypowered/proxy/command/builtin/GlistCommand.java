@@ -19,7 +19,6 @@ package com.velocitypowered.proxy.command.builtin;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.getString;
 
-import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
@@ -124,7 +123,7 @@ public class GlistCommand {
   }
 
   private void sendServerPlayers(CommandSource target, RegisteredServer server, boolean fromAll) {
-    List<Player> onServer = ImmutableList.copyOf(server.getPlayersConnected());
+    List<Player> onServer = List.copyOf(server.getPlayersConnected());
     if (onServer.isEmpty() && fromAll) {
       return;
     }

@@ -17,7 +17,6 @@
 
 package com.velocitypowered.proxy.protocol.packet;
 
-import com.google.common.collect.Lists;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
@@ -51,7 +50,7 @@ public class RemovePlayerInfo implements MinecraftPacket {
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
       ProtocolVersion protocolVersion) {
     int length = ProtocolUtils.readVarInt(buf);
-    Collection<UUID> profilesToRemove = Lists.newArrayListWithCapacity(length);
+    Collection<UUID> profilesToRemove = new ArrayList<>(length);
     for (int idx = 0; idx < length; idx++) {
       profilesToRemove.add(ProtocolUtils.readUuid(buf));
     }

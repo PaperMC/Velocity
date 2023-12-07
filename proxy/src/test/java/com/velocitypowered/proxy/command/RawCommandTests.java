@@ -22,12 +22,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -219,7 +217,7 @@ public class RawCommandTests extends CommandTestSuite {
       public List<String> suggest(final Invocation invocation) {
         assertEquals("hello", invocation.alias());
         assertEquals("", invocation.arguments());
-        return ImmutableList.of("world", "people"); // ensures we don't mutate the user's list
+        return List.of("world", "people"); // ensures we don't mutate the user's list
       }
     });
 
@@ -238,7 +236,7 @@ public class RawCommandTests extends CommandTestSuite {
       @Override
       public List<String> suggest(final Invocation invocation) {
         assertEquals("hello", invocation.alias());
-        return ImmutableList.of("world");
+        return List.of("world");
       }
     });
 
@@ -257,7 +255,7 @@ public class RawCommandTests extends CommandTestSuite {
       @Override
       public List<String> suggest(final Invocation invocation) {
         assertEquals("12345678", invocation.arguments());
-        return Collections.singletonList("9");
+        return List.of("9");
       }
     });
 
@@ -450,7 +448,7 @@ public class RawCommandTests extends CommandTestSuite {
 
       @Override
       public List<String> suggest(final Invocation invocation) {
-        return ImmutableList.of("world");
+        return List.of("world");
       }
     });
 
@@ -476,7 +474,7 @@ public class RawCommandTests extends CommandTestSuite {
 
       @Override
       public List<String> suggest(final Invocation invocation) {
-        return ImmutableList.of("world");
+        return List.of("world");
       }
     });
 

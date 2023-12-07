@@ -19,9 +19,9 @@ package com.velocitypowered.proxy.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class VelocityChannelRegistrarTest {
@@ -45,9 +45,9 @@ class VelocityChannelRegistrarTest {
 
     // Two channels cover the modern channel (velocity:test) and the legacy-mapped channel
     // (legacy:velocitytest). Make sure they're what we expect.
-    assertEquals(ImmutableSet.of(MODERN.getId(), SIMPLE_LEGACY_REMAPPED), registrar
+    assertEquals(Set.of(MODERN.getId(), SIMPLE_LEGACY_REMAPPED), registrar
         .getModernChannelIds());
-    assertEquals(ImmutableSet.of(SIMPLE_LEGACY.getId(), MODERN.getId()), registrar
+    assertEquals(Set.of(SIMPLE_LEGACY.getId(), MODERN.getId()), registrar
         .getLegacyChannelIds());
   }
 
@@ -57,8 +57,8 @@ class VelocityChannelRegistrarTest {
     registrar.register(SPECIAL_REMAP_LEGACY, MODERN_SPECIAL_REMAP);
 
     // This one, just one channel for the modern case.
-    assertEquals(ImmutableSet.of(MODERN_SPECIAL_REMAP.getId()), registrar.getModernChannelIds());
-    assertEquals(ImmutableSet.of(MODERN_SPECIAL_REMAP.getId(), SPECIAL_REMAP_LEGACY.getId()),
+    assertEquals(Set.of(MODERN_SPECIAL_REMAP.getId()), registrar.getModernChannelIds());
+    assertEquals(Set.of(MODERN_SPECIAL_REMAP.getId(), SPECIAL_REMAP_LEGACY.getId()),
         registrar.getLegacyChannelIds());
   }
 
@@ -68,7 +68,7 @@ class VelocityChannelRegistrarTest {
     registrar.register(MODERN, SIMPLE_LEGACY);
     registrar.unregister(SIMPLE_LEGACY);
 
-    assertEquals(ImmutableSet.of(MODERN.getId()), registrar.getModernChannelIds());
-    assertEquals(ImmutableSet.of(MODERN.getId()), registrar.getLegacyChannelIds());
+    assertEquals(Set.of(MODERN.getId()), registrar.getModernChannelIds());
+    assertEquals(Set.of(MODERN.getId()), registrar.getLegacyChannelIds());
   }
 }

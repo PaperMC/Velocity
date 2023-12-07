@@ -30,7 +30,6 @@ import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -84,8 +83,7 @@ public class KeyedVelocityTabList implements InternalTabList {
 
     LegacyPlayerListItem.Item packetItem = LegacyPlayerListItem.Item.from(entry);
     connection.write(
-        new LegacyPlayerListItem(LegacyPlayerListItem.ADD_PLAYER,
-            Collections.singletonList(packetItem)));
+        new LegacyPlayerListItem(LegacyPlayerListItem.ADD_PLAYER, List.of(packetItem)));
     entries.put(entry.getProfile().getId(), (KeyedVelocityTabListEntry) entry);
   }
 
@@ -97,8 +95,7 @@ public class KeyedVelocityTabList implements InternalTabList {
     if (entry != null) {
       LegacyPlayerListItem.Item packetItem = LegacyPlayerListItem.Item.from(entry);
       connection.write(
-          new LegacyPlayerListItem(LegacyPlayerListItem.REMOVE_PLAYER,
-              Collections.singletonList(packetItem)));
+          new LegacyPlayerListItem(LegacyPlayerListItem.REMOVE_PLAYER, List.of(packetItem)));
     }
 
     return Optional.ofNullable(entry);
@@ -141,7 +138,7 @@ public class KeyedVelocityTabList implements InternalTabList {
 
   @Override
   public Collection<TabListEntry> getEntries() {
-    return Collections.unmodifiableCollection(this.entries.values());
+    return List.copyOf(this.entries.values());
   }
 
   @Override
@@ -240,7 +237,7 @@ public class KeyedVelocityTabList implements InternalTabList {
         packetItem.setPlayerKey(null);
       }
 
-      connection.write(new LegacyPlayerListItem(action, Collections.singletonList(packetItem)));
+      connection.write(new LegacyPlayerListItem(action, List.of(packetItem)));
     }
   }
 }

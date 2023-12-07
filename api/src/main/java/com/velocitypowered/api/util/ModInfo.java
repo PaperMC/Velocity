@@ -8,7 +8,6 @@
 package com.velocitypowered.api.util;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.gson.annotations.SerializedName;
 import java.util.List;
 import java.util.Objects;
@@ -18,7 +17,7 @@ import java.util.Objects;
  */
 public final class ModInfo {
 
-  public static final ModInfo DEFAULT = new ModInfo("FML", ImmutableList.of());
+  public static final ModInfo DEFAULT = new ModInfo("FML", List.of());
 
   private final String type;
   private final List<Mod> modList;
@@ -31,7 +30,7 @@ public final class ModInfo {
    */
   public ModInfo(String type, List<Mod> modList) {
     this.type = Preconditions.checkNotNull(type, "type");
-    this.modList = ImmutableList.copyOf(modList);
+    this.modList = List.copyOf(modList);
   }
 
   public String getType() {

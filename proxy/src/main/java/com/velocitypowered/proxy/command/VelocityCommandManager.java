@@ -79,7 +79,7 @@ public class VelocityCommandManager implements CommandManager {
     this.dispatcher = new CommandDispatcher<>();
     this.eventManager = Preconditions.checkNotNull(eventManager);
     final RootCommandNode<CommandSource> root = this.dispatcher.getRoot();
-    this.registrars = ImmutableList.of(
+    this.registrars = List.of(
         new BrigadierCommandRegistrar(root, this.lock.writeLock()),
         new SimpleCommandRegistrar(root, this.lock.writeLock()),
         new RawCommandRegistrar(root, this.lock.writeLock()));

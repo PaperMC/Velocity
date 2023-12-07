@@ -49,7 +49,7 @@ public class KeyedPlayerCommand implements MinecraftPacket {
   private boolean signedPreview; // purely for pass through for 1.19 -> 1.19.2 - this will never be implemented
   private SignaturePair[] previousMessages = new SignaturePair[0];
   private @Nullable SignaturePair lastMessage;
-  private Map<String, byte[]> arguments = ImmutableMap.of();
+  private Map<String, byte[]> arguments = Map.of();
 
   public Instant getTimestamp() {
     return timestamp;

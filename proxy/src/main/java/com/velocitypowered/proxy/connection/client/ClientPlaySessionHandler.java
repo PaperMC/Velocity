@@ -19,7 +19,6 @@ package com.velocitypowered.proxy.connection.client;
 
 import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.constructChannelsPacket;
 
-import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.velocitypowered.api.command.VelocityBrigadierMessage;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
@@ -310,7 +309,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }
         server.getEventManager()
             .fireAndForget(
-                new PlayerChannelRegisterEvent(player, ImmutableList.copyOf(channelIdentifiers)));
+                new PlayerChannelRegisterEvent(player, List.copyOf(channelIdentifiers)));
         backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isUnregister(packet)) {
         backendConn.write(packet.retain());

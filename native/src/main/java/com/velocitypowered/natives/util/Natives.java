@@ -17,7 +17,6 @@
 
 package com.velocitypowered.natives.util;
 
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.natives.NativeSetupException;
 import com.velocitypowered.natives.compression.JavaVelocityCompressor;
 import com.velocitypowered.natives.compression.LibdeflateVelocityCompressor;
@@ -30,6 +29,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 
 /**
  * Enumerates all supported natives for Velocity.
@@ -79,7 +79,7 @@ public class Natives {
   }
 
   public static final NativeCodeLoader<VelocityCompressorFactory> compress = new NativeCodeLoader<>(
-      ImmutableList.of(
+      List.of(
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
               copyAndLoadNative("/linux_x86_64/velocity-compress.so"),
               "libdeflate (Linux x86_64)",
@@ -98,7 +98,7 @@ public class Natives {
   );
 
   public static final NativeCodeLoader<VelocityCipherFactory> cipher = new NativeCodeLoader<>(
-      ImmutableList.of(
+      List.of(
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
               copyAndLoadNative("/linux_x86_64/velocity-cipher.so"), // Any local version
               "OpenSSL local (Linux x86_64)", NativeVelocityCipher.FACTORY),

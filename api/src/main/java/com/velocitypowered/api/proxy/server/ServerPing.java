@@ -9,7 +9,6 @@ package com.velocitypowered.api.proxy.server;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.ModInfo;
 import java.util.ArrayList;
@@ -381,7 +380,7 @@ public final class ServerPing {
     public Players(int online, int max, List<SamplePlayer> sample) {
       this.online = online;
       this.max = max;
-      this.sample = ImmutableList.copyOf(sample);
+      this.sample = List.copyOf(sample);
     }
 
     public int getOnline() {
@@ -393,7 +392,7 @@ public final class ServerPing {
     }
 
     public List<SamplePlayer> getSample() {
-      return sample == null ? ImmutableList.of() : sample;
+      return sample == null ? List.of() : sample;
     }
 
     @Override

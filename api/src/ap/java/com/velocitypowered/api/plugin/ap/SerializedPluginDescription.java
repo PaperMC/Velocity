@@ -9,7 +9,6 @@ package com.velocitypowered.api.plugin.ap;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.plugin.Plugin;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,9 +45,9 @@ public final class SerializedPluginDescription {
     this.version = Strings.emptyToNull(version);
     this.description = Strings.emptyToNull(description);
     this.url = Strings.emptyToNull(url);
-    this.authors = authors == null || authors.isEmpty() ? ImmutableList.of() : authors;
+    this.authors = authors == null || authors.isEmpty() ? List.of() : authors;
     this.dependencies =
-        dependencies == null || dependencies.isEmpty() ? ImmutableList.of() : dependencies;
+        dependencies == null || dependencies.isEmpty() ? List.of() : dependencies;
     this.main = Preconditions.checkNotNull(main, "main");
   }
 
@@ -84,11 +83,11 @@ public final class SerializedPluginDescription {
   }
 
   public List<String> getAuthors() {
-    return authors == null ? ImmutableList.of() : authors;
+    return authors == null ? List.of() : authors;
   }
 
   public List<Dependency> getDependencies() {
-    return dependencies == null ? ImmutableList.of() : dependencies;
+    return dependencies == null ? List.of() : dependencies;
   }
 
   public String getMain() {

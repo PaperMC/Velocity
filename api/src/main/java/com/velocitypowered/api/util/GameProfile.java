@@ -25,25 +25,25 @@ public final class GameProfile {
   /**
    * Creates a new Mojang game profile.
    *
-   * @param id the UUID for the profile
-   * @param name the profile's username
+   * @param id         the UUID for the profile
+   * @param name       the profile's username
    * @param properties properties for the profile
    */
   public GameProfile(UUID id, String name, List<Property> properties) {
     this(Preconditions.checkNotNull(id, "id"), UuidUtils.toUndashed(id),
-        Preconditions.checkNotNull(name, "name"), ImmutableList.copyOf(properties));
+        Preconditions.checkNotNull(name, "name"), List.copyOf(properties));
   }
 
   /**
    * Creates a new Mojang game profile.
    *
    * @param undashedId the undashed, Mojang-style UUID for the profile
-   * @param name the profile's username
+   * @param name       the profile's username
    * @param properties properties for the profile
    */
   public GameProfile(String undashedId, String name, List<Property> properties) {
     this(UuidUtils.fromUndashed(Preconditions.checkNotNull(undashedId, "undashedId")), undashedId,
-        Preconditions.checkNotNull(name, "name"), ImmutableList.copyOf(properties));
+        Preconditions.checkNotNull(name, "name"), List.copyOf(properties));
   }
 
   private GameProfile(UUID id, String undashedId, String name, List<Property> properties) {
@@ -130,7 +130,7 @@ public final class GameProfile {
    * @return the new {@code GameProfile}
    */
   public GameProfile withProperties(List<Property> properties) {
-    return new GameProfile(this.id, this.undashedId, this.name, ImmutableList.copyOf(properties));
+    return new GameProfile(this.id, this.undashedId, this.name, List.copyOf(properties));
   }
 
   /**
@@ -165,8 +165,7 @@ public final class GameProfile {
    */
   public static GameProfile forOfflinePlayer(String username) {
     Preconditions.checkNotNull(username, "username");
-    return new GameProfile(UuidUtils.generateOfflinePlayerUuid(username), username,
-        ImmutableList.of());
+    return new GameProfile(UuidUtils.generateOfflinePlayerUuid(username), username, List.of());
   }
 
   @Override
@@ -190,8 +189,8 @@ public final class GameProfile {
     /**
      * Creates a profile property entry.
      *
-     * @param name the name of the property
-     * @param value the value of the property
+     * @param name      the name of the property
+     * @param value     the value of the property
      * @param signature the Mojang signature for the property
      */
     public Property(String name, String value, String signature) {

@@ -99,7 +99,6 @@ import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.collection.IntObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Map;
@@ -577,7 +576,7 @@ public enum StateRegistry {
         }
       }
 
-      this.versions = Collections.unmodifiableMap(mutableVersions);
+      this.versions = Map.copyOf(mutableVersions);
     }
 
     ProtocolRegistry getProtocolRegistry(final ProtocolVersion version) {

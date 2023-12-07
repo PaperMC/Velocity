@@ -10,8 +10,6 @@ package com.velocitypowered.api.proxy.server;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,14 +32,14 @@ public final class QueryResponse {
   private final int maxPlayers;
   private final String proxyHost;
   private final int proxyPort;
-  private final ImmutableCollection<String> players;
+  private final Collection<String> players;
   private final String proxyVersion;
-  private final ImmutableCollection<PluginInformation> plugins;
+  private final Collection<PluginInformation> plugins;
 
   @VisibleForTesting
   QueryResponse(String hostname, String gameVersion, String map, int currentPlayers,
-      int maxPlayers, String proxyHost, int proxyPort, ImmutableCollection<String> players,
-      String proxyVersion, ImmutableCollection<PluginInformation> plugins) {
+      int maxPlayers, String proxyHost, int proxyPort, Collection<String> players,
+      String proxyVersion, Collection<PluginInformation> plugins) {
     this.hostname = hostname;
     this.gameVersion = gameVersion;
     this.map = map;
@@ -414,9 +412,9 @@ public final class QueryResponse {
           maxPlayers,
           Preconditions.checkNotNull(proxyHost, "proxyHost"),
           proxyPort,
-          ImmutableList.copyOf(players),
+          List.copyOf(players),
           Preconditions.checkNotNull(proxyVersion, "proxyVersion"),
-          ImmutableList.copyOf(plugins)
+          List.copyOf(plugins)
       );
     }
   }

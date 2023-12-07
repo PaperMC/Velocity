@@ -7,7 +7,6 @@
 
 package com.velocitypowered.api.proxy.crypto;
 
-import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import java.security.PublicKey;
 import java.util.Set;
@@ -58,8 +57,8 @@ public interface IdentifiedKey extends KeySigned {
    * The different versions of player keys, per Minecraft version.
    */
   enum Revision {
-    GENERIC_V1(ImmutableSet.of(), ImmutableSet.of(ProtocolVersion.MINECRAFT_1_19)),
-    LINKED_V2(ImmutableSet.of(), ImmutableSet.of(ProtocolVersion.MINECRAFT_1_19_1));
+    GENERIC_V1(Set.of(), Set.of(ProtocolVersion.MINECRAFT_1_19)),
+    LINKED_V2(Set.of(), Set.of(ProtocolVersion.MINECRAFT_1_19_1));
 
     final Set<Revision> backwardsCompatibleTo;
     final Set<ProtocolVersion> applicableTo;

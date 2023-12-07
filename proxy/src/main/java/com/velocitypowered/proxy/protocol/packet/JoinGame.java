@@ -17,13 +17,13 @@
 
 package com.velocitypowered.proxy.protocol.packet;
 
-import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.registry.DimensionInfo;
 import com.velocitypowered.proxy.protocol.*;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.Pair;
+import java.util.Set;
 import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -43,7 +43,7 @@ public class JoinGame implements MinecraftPacket {
   private boolean reducedDebugInfo;
   private boolean showRespawnScreen;
   private boolean doLimitedCrafting; // 1.20.2+
-  private ImmutableSet<String> levelNames; // 1.16+
+  private Set<String> levelNames; // 1.16+
   private CompoundBinaryTag registry; // 1.16+
   private DimensionInfo dimensionInfo; // 1.16+
   private CompoundBinaryTag currentDimensionData; // 1.16.2+
@@ -254,7 +254,7 @@ public class JoinGame implements MinecraftPacket {
     }
     this.previousGamemode = buf.readByte();
 
-    this.levelNames = ImmutableSet.copyOf(ProtocolUtils.readStringArray(buf));
+    this.levelNames = Set.of(ProtocolUtils.readStringArray(buf));
     this.registry = ProtocolUtils.readCompoundTag(buf, JOINGAME_READER);
     String dimensionIdentifier;
     String levelName = null;
@@ -300,7 +300,7 @@ public class JoinGame implements MinecraftPacket {
     this.entityId = buf.readInt();
     this.isHardcore = buf.readBoolean();
 
-    this.levelNames = ImmutableSet.copyOf(ProtocolUtils.readStringArray(buf));
+    this.levelNames = Set.of(ProtocolUtils.readStringArray(buf));
 
     this.maxPlayers = ProtocolUtils.readVarInt(buf);
 

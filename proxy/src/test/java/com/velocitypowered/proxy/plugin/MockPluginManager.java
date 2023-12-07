@@ -17,11 +17,11 @@
 
 package com.velocitypowered.proxy.plugin;
 
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -43,7 +43,7 @@ public class MockPluginManager implements PluginManager {
 
   @Override
   public Collection<PluginContainer> getPlugins() {
-    return ImmutableList.of();
+    return List.of();
   }
 
   @Override

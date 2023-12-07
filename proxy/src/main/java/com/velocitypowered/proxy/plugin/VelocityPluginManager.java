@@ -42,7 +42,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
@@ -183,7 +182,7 @@ public class VelocityPluginManager implements PluginManager {
 
   @Override
   public Collection<PluginContainer> getPlugins() {
-    return Collections.unmodifiableCollection(pluginsById.values());
+    return List.copyOf(pluginsById.values());
   }
 
   @Override

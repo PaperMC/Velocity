@@ -17,7 +17,6 @@
 
 package com.velocitypowered.proxy.protocol.packet.chat.session;
 
-import com.google.common.collect.Lists;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
@@ -26,6 +25,7 @@ import com.velocitypowered.proxy.protocol.packet.chat.LastSeenMessages;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 public class SessionPlayerCommand implements MinecraftPacket {
@@ -100,7 +100,7 @@ public class SessionPlayerCommand implements MinecraftPacket {
             String.format("Too many argument signatures, %d is above limit %d", size, 8));
       }
 
-      this.entries = Lists.newArrayListWithCapacity(size);
+      this.entries = new ArrayList<>(size);
       for (int i = 0; i < size; i++) {
         this.entries.add(new ArgumentSignature(buf));
       }

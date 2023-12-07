@@ -19,7 +19,6 @@ package com.velocitypowered.proxy.network.netty;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.netty.resolver.AddressResolver;
 import io.netty.resolver.AddressResolverGroup;
@@ -79,7 +78,7 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
       resolveExecutor.execute(() -> {
         promise.addListener(future -> {
           if (future.isSuccess()) {
-            cache.put(inetHost, ImmutableList.of((InetAddress) future.getNow()));
+            cache.put(inetHost, List.of((InetAddress) future.getNow()));
           }
         });
         this.delegate.resolve(inetHost, promise);

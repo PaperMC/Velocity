@@ -17,8 +17,6 @@
 
 package com.velocitypowered.proxy.util;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -55,7 +53,7 @@ public enum InformationUtils {
    * @return {@link JsonArray} containing zero or more {@link JsonObject}
    */
   public static JsonArray collectPluginInfo(ProxyServer proxy) {
-    List<PluginContainer> allPlugins = ImmutableList.copyOf(
+    List<PluginContainer> allPlugins = List.copyOf(
         proxy.getPluginManager().getPlugins());
     JsonArray plugins = new JsonArray();
 
@@ -126,7 +124,7 @@ public enum InformationUtils {
    */
   public static JsonObject collectForcedHosts(ProxyConfig config) {
     JsonObject forcedHosts = new JsonObject();
-    Map<String, List<String>> allForcedHosts = ImmutableMap.copyOf(
+    Map<String, List<String>> allForcedHosts = Map.copyOf(
         config.getForcedHosts());
     for (Map.Entry<String, List<String>> entry : allForcedHosts.entrySet()) {
       JsonArray host = new JsonArray();

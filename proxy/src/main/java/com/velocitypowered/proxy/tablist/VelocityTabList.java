@@ -30,7 +30,6 @@ import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
 import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -206,7 +205,7 @@ public class VelocityTabList implements InternalTabList {
 
   protected void emitActionRaw(UpsertPlayerInfo.Action action, UpsertPlayerInfo.Entry entry) {
     this.connection.write(
-        new UpsertPlayerInfo(EnumSet.of(action), Collections.singletonList(entry)));
+        new UpsertPlayerInfo(EnumSet.of(action), List.of(entry)));
   }
 
   private void processUpsert(EnumSet<UpsertPlayerInfo.Action> actions,

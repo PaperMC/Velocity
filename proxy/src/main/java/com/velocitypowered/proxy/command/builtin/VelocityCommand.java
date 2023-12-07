@@ -18,8 +18,6 @@
 package com.velocitypowered.proxy.command.builtin;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.velocitypowered.api.command.CommandSource;
@@ -73,7 +71,7 @@ public class VelocityCommand implements SimpleCommand {
     void execute(final CommandSource source, final String @NonNull [] args);
 
     default List<String> suggest(final CommandSource source, final String @NonNull [] currentArgs) {
-      return ImmutableList.of();
+      return List.of();
     }
 
     boolean hasPermission(final CommandSource source, final String @NonNull [] args);
@@ -87,13 +85,13 @@ public class VelocityCommand implements SimpleCommand {
    * @param server the Velocity server
    */
   public VelocityCommand(VelocityServer server) {
-    this.commands = ImmutableMap.<String, SubCommand>builder()
-        .put("version", new Info(server))
-        .put("plugins", new Plugins(server))
-        .put("reload", new Reload(server))
-        .put("dump", new Dump(server))
-        .put("heap", new Heap())
-        .build();
+    this.commands = Map.of(
+        "version", new Info(server),
+        "plugins", new Plugins(server),
+        "reload", new Reload(server),
+        "dump", new Dump(server),
+        "heap", new Heap()
+    );
   }
 
   private void usage(CommandSource source) {
@@ -148,7 +146,7 @@ public class VelocityCommand implements SimpleCommand {
 
     SubCommand command = commands.get(currentArgs[0].toLowerCase(Locale.US));
     if (command == null) {
-      return ImmutableList.of();
+      return List.of();
     }
     @SuppressWarnings("nullness")
     String[] actualArgs = Arrays.copyOfRange(currentArgs, 1, currentArgs.length);
@@ -274,7 +272,7 @@ public class VelocityCommand implements SimpleCommand {
         return;
       }
 
-      List<PluginContainer> plugins = ImmutableList.copyOf(server.getPluginManager().getPlugins());
+      List<PluginContainer> plugins = List.copyOf(server.getPluginManager().getPlugins());
       int pluginCount = plugins.size();
 
       if (pluginCount == 0) {
@@ -356,14 +354,14 @@ public class VelocityCommand implements SimpleCommand {
         return;
       }
 
-      Collection<RegisteredServer> allServers = ImmutableSet.copyOf(server.getAllServers());
+      Collection<RegisteredServer> allServers = List.copyOf(server.getAllServers());
       JsonObject servers = new JsonObject();
       for (RegisteredServer iter : allServers) {
         servers.add(iter.getServerInfo().getName(),
             InformationUtils.collectServerInfo(iter));
       }
       JsonArray connectOrder = new JsonArray();
-      List<String> attemptedConnectionOrder = ImmutableList.copyOf(
+      List<String> attemptedConnectionOrder = List.copyOf(
           server.getConfiguration().getAttemptConnectionOrder());
       for (String s : attemptedConnectionOrder) {
         connectOrder.add(s);

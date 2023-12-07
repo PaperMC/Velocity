@@ -84,7 +84,6 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
 import java.util.ArrayDeque;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -804,7 +803,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
           .orElse("")
           .toLowerCase(Locale.ROOT);
       serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(virtualHostStr,
-          Collections.emptyList());
+          List.of());
     }
 
     if (serversToTry.isEmpty()) {

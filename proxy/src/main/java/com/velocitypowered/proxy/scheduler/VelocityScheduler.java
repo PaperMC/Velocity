@@ -20,7 +20,6 @@ package com.velocitypowered.proxy.scheduler;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -113,7 +112,7 @@ public class VelocityScheduler implements Scheduler {
   public boolean shutdown() throws InterruptedException {
     Collection<ScheduledTask> terminating;
     synchronized (tasksByPlugin) {
-      terminating = ImmutableList.copyOf(tasksByPlugin.values());
+      terminating = List.copyOf(tasksByPlugin.values());
     }
     for (ScheduledTask task : terminating) {
       task.cancel();

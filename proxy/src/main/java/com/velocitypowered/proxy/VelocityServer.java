@@ -19,7 +19,6 @@ package com.velocitypowered.proxy;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
@@ -78,6 +77,7 @@ import java.security.KeyPair;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -493,7 +493,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       // done first to refuse new connections
       cm.shutdown();
 
-      ImmutableList<ConnectedPlayer> players = ImmutableList.copyOf(connectionsByUuid.values());
+      List<ConnectedPlayer> players = List.copyOf(connectionsByUuid.values());
       for (ConnectedPlayer player : players) {
         player.disconnect(reason);
       }
@@ -675,7 +675,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
   @Override
   public Collection<Player> getAllPlayers() {
-    return ImmutableList.copyOf(connectionsByUuid.values());
+    return List.copyOf(connectionsByUuid.values());
   }
 
   @Override

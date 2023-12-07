@@ -18,11 +18,11 @@
 package com.velocitypowered.proxy.server;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -54,7 +54,7 @@ public class ServerMap {
   }
 
   public Collection<RegisteredServer> getAllServers() {
-    return ImmutableList.copyOf(servers.values());
+    return List.copyOf(servers.values());
   }
 
   /**

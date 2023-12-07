@@ -17,7 +17,6 @@
 
 package com.velocitypowered.proxy.protocol.packet;
 
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.player.TabListEntry;
@@ -191,7 +190,7 @@ public class LegacyPlayerListItem implements MinecraftPacket {
 
     private final UUID uuid;
     private String name = "";
-    private List<GameProfile.Property> properties = ImmutableList.of();
+    private List<GameProfile.Property> properties = List.of();
     private int gameMode;
     private int latency;
     private @Nullable Component displayName;

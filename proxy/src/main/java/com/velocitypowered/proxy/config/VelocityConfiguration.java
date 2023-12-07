@@ -21,8 +21,6 @@ import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.gson.annotations.Expose;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
@@ -610,12 +608,12 @@ public class VelocityConfiguration implements ProxyConfig {
 
   private static class Servers {
 
-    private Map<String, String> servers = ImmutableMap.of(
+    private Map<String, String> servers = Map.of(
         "lobby", "127.0.0.1:30066",
         "factions", "127.0.0.1:30067",
         "minigames", "127.0.0.1:30068"
     );
-    private List<String> attemptConnectionOrder = ImmutableList.of("lobby");
+    private List<String> attemptConnectionOrder = List.of("lobby");
 
     private Servers() {
     }
@@ -633,7 +631,7 @@ public class VelocityConfiguration implements ProxyConfig {
             }
           }
         }
-        this.servers = ImmutableMap.copyOf(servers);
+        this.servers = Map.copyOf(servers);
         this.attemptConnectionOrder = config.getOrElse("try", attemptConnectionOrder);
       }
     }
@@ -682,10 +680,10 @@ public class VelocityConfiguration implements ProxyConfig {
 
   private static class ForcedHosts {
 
-    private Map<String, List<String>> forcedHosts = ImmutableMap.of(
-        "lobby.example.com", ImmutableList.of("lobby"),
-        "factions.example.com", ImmutableList.of("factions"),
-        "minigames.example.com", ImmutableList.of("minigames")
+    private Map<String, List<String>> forcedHosts = Map.of(
+        "lobby.example.com", List.of("lobby"),
+        "factions.example.com", List.of("factions"),
+        "minigames.example.com", List.of("minigames")
     );
 
     private ForcedHosts() {
@@ -697,16 +695,16 @@ public class VelocityConfiguration implements ProxyConfig {
         for (UnmodifiableConfig.Entry entry : config.entrySet()) {
           if (entry.getValue() instanceof String) {
             forcedHosts.put(entry.getKey().toLowerCase(Locale.ROOT),
-                ImmutableList.of(entry.getValue()));
+                List.of(entry.getValue()));
           } else if (entry.getValue() instanceof List) {
             forcedHosts.put(entry.getKey().toLowerCase(Locale.ROOT),
-                ImmutableList.copyOf((List<String>) entry.getValue()));
+                List.copyOf(entry.getValue()));
           } else {
             throw new IllegalStateException(
                 "Invalid value of type " + entry.getValue().getClass() + " in forced hosts!");
           }
         }
-        this.forcedHosts = ImmutableMap.copyOf(forcedHosts);
+        this.forcedHosts = Map.copyOf(forcedHosts);
       }
     }
 

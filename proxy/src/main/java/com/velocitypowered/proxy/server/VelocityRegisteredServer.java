@@ -25,7 +25,6 @@ import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.server.PingOptions;
@@ -50,6 +49,7 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoop;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -81,7 +81,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
 
   @Override
   public Collection<Player> getPlayersConnected() {
-    return ImmutableList.copyOf(players.values());
+    return List.copyOf(players.values());
   }
 
   @Override

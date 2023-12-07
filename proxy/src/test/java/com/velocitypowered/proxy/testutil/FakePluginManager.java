@@ -17,12 +17,12 @@
 
 package com.velocitypowered.proxy.testutil;
 
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
@@ -64,7 +64,7 @@ public class FakePluginManager implements PluginManager {
 
   @Override
   public @NonNull Collection<PluginContainer> getPlugins() {
-    return ImmutableList.of(PC_A, PC_B);
+    return List.of(PC_A, PC_B);
   }
 
   @Override
