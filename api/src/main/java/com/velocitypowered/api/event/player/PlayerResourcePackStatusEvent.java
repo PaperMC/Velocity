@@ -135,6 +135,10 @@ public class PlayerResourcePackStatusEvent {
      */
     ACCEPTED,
     /**
+     * The player has downloaded the resource pack.
+     */
+    DOWNLOADED,
+    /**
      * The URL of the resource pack failed to load.
      */
     INVALID_URL,
@@ -145,6 +149,10 @@ public class PlayerResourcePackStatusEvent {
     /**
      * The resource pack was discarded.
      */
-    DISCARDED,
+    DISCARDED;
+
+    public boolean isIntermediate() {
+      return this == ACCEPTED || this == DOWNLOADED;
+    }
   }
 }
