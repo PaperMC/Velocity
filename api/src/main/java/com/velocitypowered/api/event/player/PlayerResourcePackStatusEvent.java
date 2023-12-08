@@ -151,6 +151,13 @@ public class PlayerResourcePackStatusEvent {
      */
     DISCARDED;
 
+    /**
+     * Returns true if the resource pack status is intermediate, indicating that the player has
+     * either accepted the resource pack and is currently downloading it or has successfully
+     * downloaded it.
+     *
+     * @return true if the status is intermediate (ACCEPTED or DOWNLOADED), false otherwise
+     */
     public boolean isIntermediate() {
       return this == ACCEPTED || this == DOWNLOADED;
     }
