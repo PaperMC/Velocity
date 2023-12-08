@@ -211,7 +211,7 @@ public enum StateRegistry {
       serverbound.register(
           SessionPlayerChat.class,
           SessionPlayerChat::new,
-          map(0x05, MINECRAFT_1_19_3, MINECRAFT_1_20_2, false));
+          map(0x05, MINECRAFT_1_19_3, false));
       serverbound.register(
           ClientSettings.class,
           ClientSettings::new,
