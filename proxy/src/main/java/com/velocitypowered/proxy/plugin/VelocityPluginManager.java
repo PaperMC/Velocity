@@ -168,8 +168,8 @@ public class VelocityPluginManager implements PluginManager {
   public Optional<PluginContainer> fromInstance(Object instance) {
     checkNotNull(instance, "instance");
 
-    if (instance instanceof PluginContainer) {
-      return Optional.of((PluginContainer) instance);
+    if (instance instanceof PluginContainer container) {
+      return Optional.of(container);
     }
 
     return Optional.ofNullable(pluginInstances.get(instance));
@@ -200,9 +200,9 @@ public class VelocityPluginManager implements PluginManager {
     Optional<?> optInstance = optContainer.get().getInstance();
     checkArgument(optInstance.isPresent(), "plugin has no instance");
 
-    ClassLoader pluginClassloader = optInstance.get().getClass().getClassLoader();
-    if (pluginClassloader instanceof PluginClassLoader) {
-      ((PluginClassLoader) pluginClassloader).addPath(path);
+    ClassLoader loader = optInstance.get().getClass().getClassLoader();
+    if (loader instanceof PluginClassLoader pluginClassLoader) {
+      pluginClassLoader.addPath(path);
     } else {
       throw new UnsupportedOperationException(
           "Operation is not supported on non-Java Velocity plugins.");

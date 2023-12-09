@@ -123,8 +123,7 @@ public class VelocityScheduler implements Scheduler {
     final Iterator<PluginContainer> pluginIterator = plugins.iterator();
     while (pluginIterator.hasNext()) {
       final PluginContainer container = pluginIterator.next();
-      if (container instanceof VelocityPluginContainer) {
-        final VelocityPluginContainer pluginContainer = (VelocityPluginContainer) container;
+      if (container instanceof VelocityPluginContainer pluginContainer) {
         if (pluginContainer.hasExecutorService()) {
           container.getExecutorService().shutdown();
         } else {

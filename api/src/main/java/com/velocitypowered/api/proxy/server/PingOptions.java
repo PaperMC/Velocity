@@ -68,10 +68,9 @@ public final class PingOptions {
     if (o == null) {
       return false;
     }
-    if (!(o instanceof PingOptions)) {
+    if (!(o instanceof PingOptions other)) {
       return false;
     }
-    final PingOptions other = (PingOptions) o;
     return Objects.equals(this.protocolVersion, other.protocolVersion)
             && Objects.equals(this.timeout, other.timeout);
   }

@@ -58,20 +58,20 @@ public class PlayPacketQueueHandler extends ChannelDuplexHandler {
   @Override
   public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
       throws Exception {
-    if (!(msg instanceof MinecraftPacket)) {
+    if (!(msg instanceof MinecraftPacket minecraftPacket)) {
       ctx.write(msg, promise);
       return;
     }
 
     // If the packet exists in the CONFIG state, we want to always
     // ensure that it gets sent out to the client
-    if (this.registry.containsPacket(((MinecraftPacket) msg))) {
+    if (this.registry.containsPacket(minecraftPacket)) {
       ctx.write(msg, promise);
       return;
     }
 
     // Otherwise, queue the packet
-    this.queue.offer((MinecraftPacket) msg);
+    this.queue.offer(minecraftPacket);
   }
 
   @Override

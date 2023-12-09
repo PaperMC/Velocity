@@ -118,30 +118,23 @@ public class BossBar implements MinecraftPacket {
     this.uuid = ProtocolUtils.readUuid(buf);
     this.action = ProtocolUtils.readVarInt(buf);
     switch (action) {
-      case ADD:
+      case ADD -> {
         this.name = ProtocolUtils.readString(buf);
         this.percent = buf.readFloat();
         this.color = ProtocolUtils.readVarInt(buf);
         this.overlay = ProtocolUtils.readVarInt(buf);
         this.flags = buf.readUnsignedByte();
-        break;
-      case REMOVE:
-        break;
-      case UPDATE_PERCENT:
-        this.percent = buf.readFloat();
-        break;
-      case UPDATE_NAME:
-        this.name = ProtocolUtils.readString(buf);
-        break;
-      case UPDATE_STYLE:
+      }
+      case REMOVE -> {
+      }
+      case UPDATE_PERCENT -> this.percent = buf.readFloat();
+      case UPDATE_NAME -> this.name = ProtocolUtils.readString(buf);
+      case UPDATE_STYLE -> {
         this.color = ProtocolUtils.readVarInt(buf);
         this.overlay = ProtocolUtils.readVarInt(buf);
-        break;
-      case UPDATE_PROPERTIES:
-        this.flags = buf.readUnsignedByte();
-        break;
-      default:
-        throw new UnsupportedOperationException("Unknown action " + action);
+      }
+      case UPDATE_PROPERTIES -> this.flags = buf.readUnsignedByte();
+      default -> throw new UnsupportedOperationException("Unknown action " + action);
     }
   }
 
@@ -153,7 +146,7 @@ public class BossBar implements MinecraftPacket {
     ProtocolUtils.writeUuid(buf, uuid);
     ProtocolUtils.writeVarInt(buf, action);
     switch (action) {
-      case ADD:
+      case ADD -> {
         if (name == null) {
           throw new IllegalStateException("No name specified!");
         }
@@ -162,27 +155,22 @@ public class BossBar implements MinecraftPacket {
         ProtocolUtils.writeVarInt(buf, color);
         ProtocolUtils.writeVarInt(buf, overlay);
         buf.writeByte(flags);
-        break;
-      case REMOVE:
-        break;
-      case UPDATE_PERCENT:
-        buf.writeFloat(percent);
-        break;
-      case UPDATE_NAME:
+      }
+      case REMOVE -> {
+      }
+      case UPDATE_PERCENT -> buf.writeFloat(percent);
+      case UPDATE_NAME -> {
         if (name == null) {
           throw new IllegalStateException("No name specified!");
         }
         ProtocolUtils.writeString(buf, name);
-        break;
-      case UPDATE_STYLE:
+      }
+      case UPDATE_STYLE -> {
         ProtocolUtils.writeVarInt(buf, color);
         ProtocolUtils.writeVarInt(buf, overlay);
-        break;
-      case UPDATE_PROPERTIES:
-        buf.writeByte(flags);
-        break;
-      default:
-        throw new UnsupportedOperationException("Unknown action " + action);
+      }
+      case UPDATE_PROPERTIES -> buf.writeByte(flags);
+      default -> throw new UnsupportedOperationException("Unknown action " + action);
     }
   }
 

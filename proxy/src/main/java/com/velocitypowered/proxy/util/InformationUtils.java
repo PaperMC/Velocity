@@ -145,8 +145,7 @@ public enum InformationUtils {
    * @return {@link String} address with public parts redacted
    */
   public static String anonymizeInetAddress(InetAddress address) {
-    if (address instanceof Inet4Address) {
-      Inet4Address v4 = (Inet4Address) address;
+    if (address instanceof Inet4Address v4) {
       if (v4.isAnyLocalAddress() || v4.isLoopbackAddress()
           || v4.isLinkLocalAddress()
           || v4.isSiteLocalAddress()) {
@@ -155,8 +154,7 @@ public enum InformationUtils {
         byte[] addr = v4.getAddress();
         return (addr[0] & 0xff) + "." + (addr[1] & 0xff) + ".XXX.XXX";
       }
-    } else if (address instanceof Inet6Address) {
-      Inet6Address v6 = (Inet6Address) address;
+    } else if (address instanceof Inet6Address v6) {
       if (v6.isAnyLocalAddress() || v6.isLoopbackAddress()
           || v6.isSiteLocalAddress()
           || v6.isSiteLocalAddress()) {

@@ -61,14 +61,9 @@ public class SystemChat implements MinecraftPacket {
         ProtocolUtils.getJsonChatSerializer(protocolVersion).serialize(component));
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
       switch (type) {
-        case SYSTEM:
-          buf.writeBoolean(false);
-          break;
-        case GAME_INFO:
-          buf.writeBoolean(true);
-          break;
-        default:
-          throw new IllegalArgumentException("Invalid chat type");
+        case SYSTEM -> buf.writeBoolean(false);
+        case GAME_INFO -> buf.writeBoolean(true);
+        default -> throw new IllegalArgumentException("Invalid chat type");
       }
     } else {
       ProtocolUtils.writeVarInt(buf, type.getId());

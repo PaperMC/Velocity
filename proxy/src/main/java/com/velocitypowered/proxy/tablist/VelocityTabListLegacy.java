@@ -85,7 +85,7 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
     Item item = packet.getItems().get(0); // Only one item per packet in 1.7
 
     switch (packet.getAction()) {
-      case LegacyPlayerListItem.ADD_PLAYER:
+      case LegacyPlayerListItem.ADD_PLAYER -> {
         if (nameMapping.containsKey(item.getName())) { // ADD_PLAYER also used for updating ping
           KeyedVelocityTabListEntry entry = entries.get(nameMapping.get(item.getName()));
           if (entry != null) {
@@ -100,16 +100,16 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
               .latency(item.getLatency())
               .build());
         }
-        break;
-      case LegacyPlayerListItem.REMOVE_PLAYER:
+      }
+      case LegacyPlayerListItem.REMOVE_PLAYER -> {
         UUID removedUuid = nameMapping.remove(item.getName());
         if (removedUuid != null) {
           entries.remove(removedUuid);
         }
-        break;
-      default:
+      }
+      default -> {
         // For 1.7 there is only add and remove
-        break;
+      }
     }
   }
 
@@ -117,16 +117,15 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
   void updateEntry(int action, TabListEntry entry) {
     if (entries.containsKey(entry.getProfile().getId())) {
       switch (action) {
-        case LegacyPlayerListItem.UPDATE_LATENCY:
-        case LegacyPlayerListItem.UPDATE_DISPLAY_NAME: // Add here because we removed beforehand
+        case LegacyPlayerListItem.UPDATE_LATENCY, LegacyPlayerListItem.UPDATE_DISPLAY_NAME ->
+          // Add here because we removed beforehand
           connection
               .write(new LegacyPlayerListItem(LegacyPlayerListItem.ADD_PLAYER,
-                  // ADD_PLAYER also updates ping
-                  Collections.singletonList(LegacyPlayerListItem.Item.from(entry))));
-          break;
-        default:
+                // ADD_PLAYER also updates ping
+                Collections.singletonList(Item.from(entry))));
+        default -> {
           // Can't do anything else
-          break;
+        }
       }
     }
   }

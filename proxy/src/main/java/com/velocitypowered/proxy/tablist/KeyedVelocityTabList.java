@@ -172,7 +172,7 @@ public class KeyedVelocityTabList implements InternalTabList {
       }
 
       switch (packet.getAction()) {
-        case LegacyPlayerListItem.ADD_PLAYER: {
+        case LegacyPlayerListItem.ADD_PLAYER -> {
           // ensure that name and properties are available
           String name = item.getName();
           List<GameProfile.Property> properties = item.getProperties();
@@ -188,35 +188,29 @@ public class KeyedVelocityTabList implements InternalTabList {
               .chatSession(new RemoteChatSession(null, item.getPlayerKey()))
               .gameMode(item.getGameMode())
               .build());
-          break;
         }
-        case LegacyPlayerListItem.REMOVE_PLAYER:
-          entries.remove(uuid);
-          break;
-        case LegacyPlayerListItem.UPDATE_DISPLAY_NAME: {
+        case LegacyPlayerListItem.REMOVE_PLAYER -> entries.remove(uuid);
+        case LegacyPlayerListItem.UPDATE_DISPLAY_NAME -> {
           KeyedVelocityTabListEntry entry = entries.get(uuid);
           if (entry != null) {
             entry.setDisplayNameInternal(item.getDisplayName());
           }
-          break;
         }
-        case LegacyPlayerListItem.UPDATE_LATENCY: {
+        case LegacyPlayerListItem.UPDATE_LATENCY -> {
           KeyedVelocityTabListEntry entry = entries.get(uuid);
           if (entry != null) {
             entry.setLatencyInternal(item.getLatency());
           }
-          break;
         }
-        case LegacyPlayerListItem.UPDATE_GAMEMODE: {
+        case LegacyPlayerListItem.UPDATE_GAMEMODE -> {
           KeyedVelocityTabListEntry entry = entries.get(uuid);
           if (entry != null) {
             entry.setGameModeInternal(item.getGameMode());
           }
-          break;
         }
-        default:
+        default -> {
           // Nothing we can do here
-          break;
+        }
       }
     }
   }

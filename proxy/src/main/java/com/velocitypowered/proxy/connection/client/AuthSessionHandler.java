@@ -144,8 +144,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
     if (player.getIdentifiedKey() != null) {
       IdentifiedKey playerKey = player.getIdentifiedKey();
       if (playerKey.getSignatureHolder() == null) {
-        if (playerKey instanceof IdentifiedKeyImpl) {
-          IdentifiedKeyImpl unlinkedKey = (IdentifiedKeyImpl) playerKey;
+        if (playerKey instanceof IdentifiedKeyImpl unlinkedKey) {
           // Failsafe
           if (!unlinkedKey.internalAddHolder(player.getUniqueId())) {
             if (onlineMode) {
@@ -181,7 +180,8 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
 
       server.getEventManager().fire(new PostLoginEvent(connectedPlayer))
           .thenCompose((ignored) -> connectToInitialServer(connectedPlayer)).exceptionally((ex) -> {
-            logger.error("Exception while connecting {} to initial server", connectedPlayer, ex);
+            logger.error("Exception while connecting {} to initial server",
+                connectedPlayer, ex);
             return null;
           });
     }
@@ -240,7 +240,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
 
     return server.getEventManager().fire(event).thenRunAsync(() -> {
       Optional<RegisteredServer> toTry = event.getInitialServer();
-      if (!toTry.isPresent()) {
+      if (toTry.isEmpty()) {
         player.disconnect0(
             Component.translatable("velocity.error.no-available-servers", NamedTextColor.RED),
             true);

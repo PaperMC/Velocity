@@ -411,8 +411,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     MinecraftConnection smc = serverConnection.getConnection();
     if (smc != null && serverConnection.getPhase().consideredComplete()) {
-      if (packet instanceof PluginMessage) {
-        ((PluginMessage) packet).retain();
+      if (packet instanceof PluginMessage pluginMessage) {
+        pluginMessage.retain();
       }
       smc.write(packet);
     }
@@ -633,8 +633,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             String offer = suggestion.getText();
             Component tooltip = null;
             if (suggestion.getTooltip() != null
-                && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
-              tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
+                && suggestion.getTooltip() instanceof VelocityBrigadierMessage vbm) {
+              tooltip = vbm.asComponent();
             }
             offers.add(new Offer(offer, tooltip));
           }
@@ -698,8 +698,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
               }
               Component tooltip = null;
               if (suggestion.getTooltip() != null
-                  && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
-                tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
+                  && suggestion.getTooltip() instanceof VelocityBrigadierMessage vbm) {
+                tooltip = vbm.asComponent();
               }
               response.getOffers().add(new Offer(offer, tooltip));
             }

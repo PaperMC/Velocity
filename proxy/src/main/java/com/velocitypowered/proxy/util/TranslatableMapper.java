@@ -45,8 +45,8 @@ public enum TranslatableMapper implements BiConsumer<TranslatableComponent, Cons
           final Consumer<Component> componentConsumer
   ) {
     for (final Translator source : GlobalTranslator.translator().sources()) {
-      if (source instanceof TranslationRegistry
-              && ((TranslationRegistry) source).contains(translatableComponent.key())) {
+      if (source instanceof TranslationRegistry translationRegistry
+          && translationRegistry.contains(translatableComponent.key())) {
         componentConsumer.accept(GlobalTranslator.render(translatableComponent,
                 ClosestLocaleMatcher.INSTANCE.lookupClosest(Locale.getDefault())));
         return;
@@ -57,8 +57,8 @@ public enum TranslatableMapper implements BiConsumer<TranslatableComponent, Cons
       return;
     }
     for (final Translator source : GlobalTranslator.translator().sources()) {
-      if (source instanceof TranslationRegistry
-              && ((TranslationRegistry) source).contains(fallback)) {
+      if (source instanceof TranslationRegistry translationRegistry
+          && translationRegistry.contains(fallback)) {
         componentConsumer.accept(
                 GlobalTranslator.render(Component.translatable(fallback),
                         ClosestLocaleMatcher.INSTANCE.lookupClosest(Locale.getDefault())));

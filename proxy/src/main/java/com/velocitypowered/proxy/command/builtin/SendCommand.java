@@ -132,18 +132,17 @@ public class SendCommand {
 
     if (Objects.equals(player, "all")) {
       for (Player p : server.getAllPlayers()) {
-        p.createConnectionRequest(server.getServer(serverName).get()).fireAndForget();
+        p.createConnectionRequest(maybeServer.get()).fireAndForget();
       }
       return 1;
     }
 
     if (Objects.equals(player, "current")) {
-      if (!(context.getSource() instanceof Player)) {
+      if (!(context.getSource() instanceof Player source)) {
         context.getSource().sendMessage(CommandMessages.PLAYERS_ONLY);
         return 0;
       }
 
-      Player source = (Player) context.getSource();
       Optional<ServerConnection> connectedServer = source.getCurrentServer();
       if (connectedServer.isPresent()) {
         for (Player p : connectedServer.get().getServer().getPlayersConnected()) {

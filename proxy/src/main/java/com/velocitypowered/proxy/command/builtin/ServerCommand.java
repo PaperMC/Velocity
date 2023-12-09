@@ -55,12 +55,11 @@ public class ServerCommand implements SimpleCommand {
     final CommandSource source = invocation.source();
     final String[] args = invocation.arguments();
 
-    if (!(source instanceof Player)) {
+    if (!(source instanceof Player player)) {
       source.sendMessage(CommandMessages.PLAYERS_ONLY);
       return;
     }
 
-    Player player = (Player) source;
     if (args.length == 1) {
       // Trying to connect to a server.
       String serverName = args[0];

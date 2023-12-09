@@ -718,11 +718,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
         return;
       }
 
-      if (event.getResult() instanceof DisconnectPlayer) {
-        DisconnectPlayer res = (DisconnectPlayer) event.getResult();
+      if (event.getResult() instanceof DisconnectPlayer res) {
         disconnect(res.getReasonComponent());
-      } else if (event.getResult() instanceof RedirectPlayer) {
-        RedirectPlayer res = (RedirectPlayer) event.getResult();
+      } else if (event.getResult() instanceof RedirectPlayer res) {
         createConnectionRequest(res.getServer(), previousConnection).connect()
             .whenCompleteAsync((status, throwable) -> {
               if (throwable != null) {
@@ -734,26 +732,24 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
               switch (status.getStatus()) {
                 // Impossible/nonsensical cases
-                case ALREADY_CONNECTED:
-                  logger.error("{}: already connected to {}", this,
-                      status.getAttemptedConnection().getServerInfo().getName());
-                  break;
-                case CONNECTION_IN_PROGRESS:
-                  // Fatal case
-                case CONNECTION_CANCELLED:
+                case ALREADY_CONNECTED -> logger.error("{}: already connected to {}", this,
+                    status.getAttemptedConnection().getServerInfo().getName());
+
+                // Fatal case
+                case CONNECTION_IN_PROGRESS, CONNECTION_CANCELLED -> {
                   Component fallbackMsg = res.getMessageComponent();
                   if (fallbackMsg == null) {
                     fallbackMsg = friendlyReason;
                   }
                   disconnect(status.getReasonComponent().orElse(fallbackMsg));
-                  break;
-                case SERVER_DISCONNECTED:
+                }
+                case SERVER_DISCONNECTED -> {
                   Component reason = status.getReasonComponent()
                       .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
                   handleConnectionException(res.getServer(),
                       Disconnect.create(reason, getProtocolVersion()), ((Impl) status).isSafe());
-                  break;
-                case SUCCESS:
+                }
+                case SUCCESS -> {
                   Component requestedMessage = res.getMessageComponent();
                   if (requestedMessage == null) {
                     requestedMessage = friendlyReason;
@@ -761,14 +757,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
                   if (requestedMessage != Component.empty()) {
                     sendMessage(requestedMessage);
                   }
-                  break;
-                default:
+                }
+                default -> {
                   // The only remaining value is successful (no need to do anything!)
-                  break;
+                }
               }
             }, connection.eventLoop());
-      } else if (event.getResult() instanceof Notify) {
-        Notify res = (Notify) event.getResult();
+      } else if (event.getResult() instanceof Notify res) {
         if (event.kickedDuringServerConnect() && previousConnection != null) {
           sendMessage(Identity.nil(), res.getMessageComponent());
         } else {
@@ -879,10 +874,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
     DisconnectEvent.LoginStatus status;
     if (connectedPlayer.isPresent()) {
-      if (!connectedPlayer.get().getCurrentServer().isPresent()) {
+      Player player = connectedPlayer.get();
+      if (player.getCurrentServer().isEmpty()) {
         status = LoginStatus.PRE_SERVER_JOIN;
       } else {
-        status = connectedPlayer.get() == this ? LoginStatus.SUCCESSFUL_LOGIN
+        status = player == this ? LoginStatus.SUCCESSFUL_LOGIN
             : LoginStatus.CONFLICTING_LOGIN;
       }
     } else {
@@ -1246,24 +1242,22 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
         }
 
         switch (status.getStatus()) {
-          case ALREADY_CONNECTED:
-            sendMessage(Identity.nil(), ConnectionMessages.ALREADY_CONNECTED);
-            break;
-          case CONNECTION_IN_PROGRESS:
-            sendMessage(Identity.nil(), ConnectionMessages.IN_PROGRESS);
-            break;
-          case CONNECTION_CANCELLED:
+          case ALREADY_CONNECTED ->
+              sendMessage(Identity.nil(), ConnectionMessages.ALREADY_CONNECTED);
+          case CONNECTION_IN_PROGRESS ->
+              sendMessage(Identity.nil(), ConnectionMessages.IN_PROGRESS);
+          case CONNECTION_CANCELLED -> {
             // Ignored; the plugin probably already handled this.
-            break;
-          case SERVER_DISCONNECTED:
+          }
+          case SERVER_DISCONNECTED -> {
             Component reason = status.getReasonComponent()
                 .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
             handleConnectionException(toConnect, Disconnect.create(reason, getProtocolVersion()),
                 status.isSafe());
-            break;
-          default:
+          }
+          default -> {
             // The only remaining value is successful (no need to do anything!)
-            break;
+          }
         }
       }, connection.eventLoop()).thenApply(Result::isSuccessful);
     }

@@ -119,7 +119,7 @@ public class GameSpyQueryHandler extends SimpleChannelInboundHandler<DatagramPac
     int sessionId = queryMessage.readInt();
 
     switch (type) {
-      case QUERY_TYPE_HANDSHAKE: {
+      case QUERY_TYPE_HANDSHAKE -> {
         // Generate new challenge token and put it into the sessions cache
         int challengeToken = random.nextInt();
         sessions.put(senderAddress, challengeToken);
@@ -132,10 +132,8 @@ public class GameSpyQueryHandler extends SimpleChannelInboundHandler<DatagramPac
 
         DatagramPacket responsePacket = new DatagramPacket(queryResponse, msg.sender());
         ctx.writeAndFlush(responsePacket, ctx.voidPromise());
-        break;
       }
-
-      case QUERY_TYPE_STAT: {
+      case QUERY_TYPE_STAT -> {
         // Check if query was done with session previously generated using a handshake packet
         int challengeToken = queryMessage.readInt();
         Integer session = sessions.getIfPresent(senderAddress);
@@ -190,10 +188,10 @@ public class GameSpyQueryHandler extends SimpleChannelInboundHandler<DatagramPac
                   "Exception while writing GS4 response for query from {}", senderAddress, ex);
               return null;
             });
-        break;
       }
-      default:
+      default -> {
         // Invalid query type - just don't respond
+      }
     }
   }
 
@@ -212,12 +210,9 @@ public class GameSpyQueryHandler extends SimpleChannelInboundHandler<DatagramPac
     return result;
   }
 
-  private static class ResponseWriter {
+  private record ResponseWriter(ByteBuf buf, boolean isBasic) {
 
-    private final ByteBuf buf;
-    private final boolean isBasic;
-
-    ResponseWriter(ByteBuf buf, boolean isBasic) {
+    private ResponseWriter(ByteBuf buf, boolean isBasic) {
       this.buf = buf;
       this.isBasic = isBasic;
 

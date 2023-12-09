@@ -82,7 +82,7 @@ public class ServerListPingHandler {
     CompletableFuture<List<ServerPing>> pingResponses = CompletableFutures.successfulAsList(pings,
         (ex) -> fallback);
     switch (mode) {
-      case ALL:
+      case ALL -> {
         return pingResponses.thenApply(responses -> {
           // Find the first non-fallback
           for (ServerPing response : responses) {
@@ -93,7 +93,8 @@ public class ServerListPingHandler {
           }
           return fallback;
         });
-      case MODS:
+      }
+      case MODS -> {
         return pingResponses.thenApply(responses -> {
           // Find the first non-fallback that contains a mod list
           for (ServerPing response : responses) {
@@ -107,7 +108,8 @@ public class ServerListPingHandler {
           }
           return fallback;
         });
-      case DESCRIPTION:
+      }
+      case DESCRIPTION -> {
         return pingResponses.thenApply(responses -> {
           // Find the first non-fallback. If it includes a modlist, add it too.
           for (ServerPing response : responses) {
@@ -129,9 +131,11 @@ public class ServerListPingHandler {
           }
           return fallback;
         });
+      }
       // Not possible, but covered for completeness.
-      default:
+      default -> {
         return CompletableFuture.completedFuture(fallback);
+      }
     }
   }
 

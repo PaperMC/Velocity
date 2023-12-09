@@ -163,12 +163,11 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       if (player.getClientSettingsPacket() != null) {
         smc.write(player.getClientSettingsPacket());
       }
-      if (player.getConnection().getActiveSessionHandler() instanceof ClientPlaySessionHandler) {
+      if (player.getConnection().getActiveSessionHandler()
+          instanceof ClientPlaySessionHandler sessionHandler) {
         smc.setAutoReading(false);
-        ((ClientPlaySessionHandler) player.getConnection()
-            .getActiveSessionHandler()).doSwitch().thenAcceptAsync((unused) -> {
-              smc.setAutoReading(true);
-            }, smc.eventLoop());
+        sessionHandler.doSwitch().thenAcceptAsync((unused) ->
+            smc.setAutoReading(true), smc.eventLoop());
       }
     }
 
@@ -207,17 +206,13 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       }
       if (player.getIdentifiedKey() != null) {
         // No enhanced switch on java 11
-        switch (player.getIdentifiedKey().getKeyRevision()) {
-          case GENERIC_V1:
-            return VelocityConstants.MODERN_FORWARDING_WITH_KEY;
+        return switch (player.getIdentifiedKey().getKeyRevision()) {
+          case GENERIC_V1 -> VelocityConstants.MODERN_FORWARDING_WITH_KEY;
           // Since V2 is not backwards compatible we have to throw the key if v2 and requested is v1
-          case LINKED_V2:
-            return requested >= VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2
-                ? VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2
-                : VelocityConstants.MODERN_FORWARDING_DEFAULT;
-          default:
-            return VelocityConstants.MODERN_FORWARDING_DEFAULT;
-        }
+          case LINKED_V2 -> requested >= VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2
+              ? VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2
+              : VelocityConstants.MODERN_FORWARDING_DEFAULT;
+        };
       } else {
         return VelocityConstants.MODERN_FORWARDING_DEFAULT;
       }

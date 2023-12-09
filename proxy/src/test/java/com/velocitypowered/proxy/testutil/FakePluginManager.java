@@ -52,14 +52,11 @@ public class FakePluginManager implements PluginManager {
 
   @Override
   public @NonNull Optional<PluginContainer> getPlugin(@NonNull String id) {
-    switch (id) {
-      case "a":
-        return Optional.of(PC_A);
-      case "b":
-        return Optional.of(PC_B);
-      default:
-        return Optional.empty();
-    }
+    return switch (id) {
+      case "a" -> Optional.of(PC_A);
+      case "b" -> Optional.of(PC_B);
+      default -> Optional.empty();
+    };
   }
 
   @Override

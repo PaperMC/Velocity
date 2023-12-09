@@ -103,14 +103,12 @@ public class ArgumentPropertyRegistry {
    */
   public static void serialize(ByteBuf buf, ArgumentType<?> type,
       ProtocolVersion protocolVersion) {
-    if (type instanceof PassthroughProperty) {
-      PassthroughProperty property = (PassthroughProperty) type;
+    if (type instanceof PassthroughProperty property) {
       writeIdentifier(buf, property.getIdentifier(), protocolVersion);
       if (property.getResult() != null) {
         property.getSerializer().serialize(property.getResult(), buf, protocolVersion);
       }
-    } else if (type instanceof ModArgumentProperty) {
-      ModArgumentProperty property = (ModArgumentProperty) type;
+    } else if (type instanceof ModArgumentProperty property) {
       writeIdentifier(buf, property.getIdentifier(), protocolVersion);
       buf.writeBytes(property.getData());
     } else {

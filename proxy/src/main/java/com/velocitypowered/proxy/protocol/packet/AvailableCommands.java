@@ -199,25 +199,24 @@ public class AvailableCommands implements MinecraftPacket {
       redirectTo = ProtocolUtils.readVarInt(buf);
     }
 
-    switch (flags & FLAG_NODE_TYPE) {
-      case NODE_TYPE_ROOT:
-        return new WireNode(idx, flags, children, redirectTo, null);
-      case NODE_TYPE_LITERAL:
-        return new WireNode(idx, flags, children, redirectTo, LiteralArgumentBuilder
-            .literal(ProtocolUtils.readString(buf)));
-      case NODE_TYPE_ARGUMENT:
+    return switch (flags & FLAG_NODE_TYPE) {
+      case NODE_TYPE_ROOT -> new WireNode(idx, flags, children, redirectTo, null);
+      case NODE_TYPE_LITERAL ->
+          new WireNode(idx, flags, children, redirectTo, LiteralArgumentBuilder
+              .literal(ProtocolUtils.readString(buf)));
+      case NODE_TYPE_ARGUMENT -> {
         String name = ProtocolUtils.readString(buf);
         ArgumentType<?> argumentType = ArgumentPropertyRegistry.deserialize(buf, version);
-
         RequiredArgumentBuilder<CommandSource, ?> argumentBuilder = RequiredArgumentBuilder
             .argument(name, argumentType);
         if ((flags & FLAG_HAS_SUGGESTIONS) != 0) {
           argumentBuilder.suggests(new ProtocolSuggestionProvider(ProtocolUtils.readString(buf)));
         }
-        return new WireNode(idx, flags, children, redirectTo, argumentBuilder);
-      default:
-        throw new IllegalArgumentException("Unknown node type " + (flags & FLAG_NODE_TYPE));
-    }
+        yield new WireNode(idx, flags, children, redirectTo, argumentBuilder);
+      }
+      default ->
+          throw new IllegalArgumentException("Unknown node type " + (flags & FLAG_NODE_TYPE));
+    };
   }
 
   private static class WireNode {
@@ -320,12 +319,10 @@ public class AvailableCommands implements MinecraftPacket {
           .add("redirectTo", redirectTo);
 
       if (args != null) {
-        if (args instanceof LiteralArgumentBuilder) {
-          helper.add("argsLabel",
-              ((LiteralArgumentBuilder<CommandSource>) args).getLiteral());
-        } else if (args instanceof RequiredArgumentBuilder) {
-          helper.add("argsName",
-              ((RequiredArgumentBuilder<CommandSource, ?>) args).getName());
+        if (args instanceof LiteralArgumentBuilder literalArgumentBuilder) {
+          helper.add("argsLabel", literalArgumentBuilder.getLiteral());
+        } else if (args instanceof RequiredArgumentBuilder requiredArgumentBuilder) {
+          helper.add("argsName", requiredArgumentBuilder.getName());
         }
       }
 

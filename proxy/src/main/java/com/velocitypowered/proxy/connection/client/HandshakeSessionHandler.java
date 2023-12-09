@@ -94,14 +94,10 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
       connection.setAssociation(ic);
 
       switch (nextState) {
-        case STATUS:
-          connection.setActiveSessionHandler(StateRegistry.STATUS,
-              new StatusSessionHandler(server, ic));
-          break;
-        case LOGIN:
-          this.handleLogin(handshake, ic);
-          break;
-        default:
+        case STATUS -> connection.setActiveSessionHandler(StateRegistry.STATUS,
+            new StatusSessionHandler(server, ic));
+        case LOGIN -> this.handleLogin(handshake, ic);
+        default ->
           // If you get this, it's a bug in Velocity.
           throw new AssertionError("getStateForProtocol provided invalid state!");
       }
@@ -111,14 +107,11 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   }
 
   private static @Nullable StateRegistry getStateForProtocol(int status) {
-    switch (status) {
-      case StateRegistry.STATUS_ID:
-        return StateRegistry.STATUS;
-      case StateRegistry.LOGIN_ID:
-        return StateRegistry.LOGIN;
-      default:
-        return null;
-    }
+    return switch (status) {
+      case StateRegistry.STATUS_ID -> StateRegistry.STATUS;
+      case StateRegistry.LOGIN_ID -> StateRegistry.LOGIN;
+      default -> null;
+    };
   }
 
   private void handleLogin(Handshake handshake, InitialInboundConnection ic) {

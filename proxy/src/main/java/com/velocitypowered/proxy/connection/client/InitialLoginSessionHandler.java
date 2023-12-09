@@ -74,7 +74,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
   private @MonotonicNonNull ServerLogin login;
   private byte[] verify = EMPTY_BYTE_ARRAY;
   private LoginState currentState = LoginState.LOGIN_PACKET_EXPECTED;
-  private boolean forceKeyAuthentication;
+  private final boolean forceKeyAuthentication;
 
   InitialLoginSessionHandler(VelocityServer server, MinecraftConnection mcConnection,
       LoginInboundConnection inbound) {
@@ -100,8 +100,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
 
       boolean isKeyValid;
       if (playerKey.getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
-          && playerKey instanceof IdentifiedKeyImpl) {
-        IdentifiedKeyImpl keyImpl = (IdentifiedKeyImpl) playerKey;
+          && playerKey instanceof IdentifiedKeyImpl keyImpl) {
         isKeyValid = keyImpl.internalAddHolder(packet.getHolderUuid());
       } else {
         isKeyValid = playerKey.isSignatureValid();
@@ -237,8 +236,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
             // Not so fast, now we verify the public key for 1.19.1+
             if (inbound.getIdentifiedKey() != null
                 && inbound.getIdentifiedKey().getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
-                && inbound.getIdentifiedKey() instanceof IdentifiedKeyImpl) {
-              IdentifiedKeyImpl key = (IdentifiedKeyImpl) inbound.getIdentifiedKey();
+                && inbound.getIdentifiedKey() instanceof IdentifiedKeyImpl key) {
               if (!key.internalAddHolder(profile.getId())) {
                 inbound.disconnect(
                     Component.translatable("multiplayer.disconnect.invalid_public_key"));

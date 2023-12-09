@@ -73,9 +73,7 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.AccessController;
 import java.security.KeyPair;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
@@ -92,6 +90,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.audience.ForwardingAudience;
 import net.kyori.adventure.key.Key;
@@ -263,40 +262,45 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
         try {
           if (!Files.exists(langPath)) {
             Files.createDirectory(langPath);
-            Files.walk(path).forEach(file -> {
+
+            try (Stream<Path> files = Files.walk(path)) {
+              files.forEach(file -> {
+                if (!Files.isRegularFile(file)) {
+                  return;
+                }
+                try {
+                  Path langFile = langPath.resolve(file.getFileName().toString());
+                  if (!Files.exists(langFile)) {
+                    try (InputStream is = Files.newInputStream(file)) {
+                      Files.copy(is, langFile);
+                    }
+                  }
+                } catch (IOException e) {
+                  logger.error("Encountered an I/O error whilst loading translations", e);
+                }
+              });
+            }
+          }
+
+          try (Stream<Path> files = Files.walk(langPath)) {
+            files.forEach(file -> {
               if (!Files.isRegularFile(file)) {
                 return;
               }
-              try {
-                Path langFile = langPath.resolve(file.getFileName().toString());
-                if (!Files.exists(langFile)) {
-                  try (InputStream is = Files.newInputStream(file)) {
-                    Files.copy(is, langFile);
-                  }
-                }
-              } catch (IOException e) {
-                logger.error("Encountered an I/O error whilst loading translations", e);
-              }
+
+              String filename = com.google.common.io.Files
+                  .getNameWithoutExtension(file.getFileName().toString());
+              String localeName = filename.replace("messages_", "")
+                  .replace("messages", "")
+                  .replace('_', '-');
+              Locale locale = localeName.isBlank()
+                  ? Locale.US
+                  : Locale.forLanguageTag(localeName);
+
+              translationRegistry.registerAll(locale, file, false);
+              ClosestLocaleMatcher.INSTANCE.registerKnown(locale);
             });
           }
-
-          Files.walk(langPath).forEach(file -> {
-            if (!Files.isRegularFile(file)) {
-              return;
-            }
-
-            String filename = com.google.common.io.Files
-                .getNameWithoutExtension(file.getFileName().toString());
-            String localeName = filename.replace("messages_", "")
-                .replace("messages", "")
-                .replace('_', '-');
-            Locale locale = localeName.isBlank()
-                ? Locale.US
-                : Locale.forLanguageTag(localeName);
-
-            translationRegistry.registerAll(locale, file, false);
-            ClosestLocaleMatcher.INSTANCE.registerKnown(locale);
-          });
         } catch (IOException e) {
           logger.error("Encountered an I/O error whilst loading translations", e);
         }
@@ -403,15 +407,15 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       ServerInfo newInfo =
           new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue()));
       Optional<RegisteredServer> rs = servers.getServer(entry.getKey());
-      if (!rs.isPresent()) {
+      if (rs.isEmpty()) {
         servers.register(newInfo);
       } else if (!rs.get().getServerInfo().equals(newInfo)) {
         for (Player player : rs.get().getPlayersConnected()) {
-          if (!(player instanceof ConnectedPlayer)) {
+          if (!(player instanceof ConnectedPlayer connectedPlayer)) {
             throw new IllegalStateException("ConnectedPlayer not found for player " + player
                 + " in server " + rs.get().getServerInfo().getName());
           }
-          evacuate.add((ConnectedPlayer) player);
+          evacuate.add(connectedPlayer);
         }
         servers.unregister(rs.get().getServerInfo());
         servers.register(newInfo);
@@ -536,14 +540,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       shutdown = true;
 
       if (explicitExit) {
-        AccessController.doPrivileged(new PrivilegedAction<Void>() {
-          @Override
-          @SuppressFBWarnings("DM_EXIT")
-          public Void run() {
-            System.exit(0);
-            return null;
-          }
-        });
+        System.exit(0);
       }
     };
 

@@ -77,14 +77,15 @@ public class VelocityTabList implements InternalTabList {
   }
 
   @Override
-  public void addEntry(TabListEntry entry1) {
+  public void addEntry(TabListEntry tabListEntry) {
     VelocityTabListEntry entry;
-    if (entry1 instanceof VelocityTabListEntry) {
-      entry = (VelocityTabListEntry) entry1;
+    if (tabListEntry instanceof VelocityTabListEntry velocityTabListEntry) {
+      entry = velocityTabListEntry;
     } else {
-      entry = new VelocityTabListEntry(this, entry1.getProfile(),
-          entry1.getDisplayNameComponent().orElse(null),
-          entry1.getLatency(), entry1.getGameMode(), entry1.getChatSession(), entry1.isListed());
+      entry = new VelocityTabListEntry(this, tabListEntry.getProfile(),
+          tabListEntry.getDisplayNameComponent().orElse(null),
+          tabListEntry.getLatency(), tabListEntry.getGameMode(),
+          tabListEntry.getChatSession(), tabListEntry.isListed());
     }
 
     EnumSet<UpsertPlayerInfo.Action> actions = EnumSet.noneOf(UpsertPlayerInfo.Action.class);

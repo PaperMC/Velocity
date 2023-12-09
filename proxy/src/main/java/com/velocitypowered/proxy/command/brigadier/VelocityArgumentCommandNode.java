@@ -108,14 +108,13 @@ public class VelocityArgumentCommandNode<S, T> extends ArgumentCommandNode<S, St
     if (this == o) {
       return true;
     }
-    if (!(o instanceof VelocityArgumentCommandNode)) {
+    if (!(o instanceof VelocityArgumentCommandNode<?, ?> that)) {
       return false;
     }
     if (!super.equals(o)) {
       return false;
     }
 
-    final VelocityArgumentCommandNode<?, ?> that = (VelocityArgumentCommandNode<?, ?>) o;
     return this.type.equals(that.type);
   }
 

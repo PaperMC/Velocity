@@ -147,8 +147,8 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
     MinecraftConnection smc = serverConnection.getConnection();
     if (smc != null && serverConnection.getPhase().consideredComplete()) {
-      if (packet instanceof PluginMessage) {
-        ((PluginMessage) packet).retain();
+      if (packet instanceof PluginMessage pluginMessage) {
+        pluginMessage.retain();
       }
       smc.write(packet);
     }

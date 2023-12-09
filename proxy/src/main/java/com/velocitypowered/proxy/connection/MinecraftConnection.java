@@ -146,13 +146,11 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         return;
       }
 
-      if (msg instanceof MinecraftPacket) {
-        MinecraftPacket pkt = (MinecraftPacket) msg;
+      if (msg instanceof MinecraftPacket pkt) {
         if (!pkt.handle(activeSessionHandler)) {
           activeSessionHandler.handleGeneric((MinecraftPacket) msg);
         }
-      } else if (msg instanceof HAProxyMessage) {
-        HAProxyMessage proxyMessage = (HAProxyMessage) msg;
+      } else if (msg instanceof HAProxyMessage proxyMessage) {
         this.remoteAddress = new InetSocketAddress(proxyMessage.sourceAddress(),
             proxyMessage.sourcePort());
       } else if (msg instanceof ByteBuf) {
