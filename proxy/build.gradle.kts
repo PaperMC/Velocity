@@ -85,6 +85,11 @@ tasks {
         exclude("org/checkerframework/checker/**")
 
         relocate("org.bstats", "com.velocitypowered.proxy.bstats")
+
+        // Include Configurate 3
+        val configurateBuildTask = project(":deprecated-configurate3").tasks.named("shadowJar")
+        dependsOn(configurateBuildTask)
+        from(zipTree(configurateBuildTask.map { it.outputs.files.singleFile }))
     }
 }
 
