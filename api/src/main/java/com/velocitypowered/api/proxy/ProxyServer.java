@@ -42,6 +42,12 @@ public interface ProxyServer extends Audience {
   void shutdown();
 
   /**
+   * Closes all listening endpoints for this server.
+   * This includes the main minecraft listener and query channel.
+   */
+  void closeListeners();
+
+  /**
    * Retrieves the player currently connected to this proxy by their Minecraft username. The search
    * is case-insensitive.
    *

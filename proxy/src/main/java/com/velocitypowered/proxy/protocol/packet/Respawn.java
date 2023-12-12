@@ -186,12 +186,10 @@ public class Respawn implements MinecraftPacket {
       boolean isDebug = buf.readBoolean();
       boolean isFlat = buf.readBoolean();
       this.dimensionInfo = new DimensionInfo(dimensionIdentifier, levelName, isFlat, isDebug);
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
+        this.dataToKeep = (byte) (buf.readBoolean() ? 1 : 0);
+      } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0) {
         this.dataToKeep = buf.readByte();
-      } else if (buf.readBoolean()) {
-        this.dataToKeep = 1;
-      } else {
-        this.dataToKeep = 0;
       }
     } else {
       this.levelType = ProtocolUtils.readString(buf, 16);
@@ -201,6 +199,9 @@ public class Respawn implements MinecraftPacket {
     }
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_20) >= 0) {
       this.portalCooldown = ProtocolUtils.readVarInt(buf);
+    }
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_2) >= 0) {
+      this.dataToKeep = buf.readByte();
     }
   }
 
@@ -229,10 +230,10 @@ public class Respawn implements MinecraftPacket {
       buf.writeByte(previousGamemode);
       buf.writeBoolean(dimensionInfo.isDebugType());
       buf.writeBoolean(dimensionInfo.isFlat());
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
-        buf.writeByte(dataToKeep);
-      } else {
+      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
         buf.writeBoolean(dataToKeep != 0);
+      } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0) {
+        buf.writeByte(dataToKeep);
       }
     } else {
       ProtocolUtils.writeString(buf, levelType);
@@ -251,6 +252,10 @@ public class Respawn implements MinecraftPacket {
 
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_20) >= 0) {
       ProtocolUtils.writeVarInt(buf, portalCooldown);
+    }
+
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_2) >= 0) {
+      buf.writeByte(dataToKeep);
     }
   }
 
