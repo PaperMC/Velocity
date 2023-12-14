@@ -53,6 +53,9 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
+import com.velocitypowered.proxy.connection.player.LegacyResourcePackManager;
+import com.velocitypowered.proxy.connection.player.ModernResourcePackManager;
+import com.velocitypowered.proxy.connection.player.ResourcePackManager;
 import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
@@ -150,6 +153,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private ClientConnectionPhase connectionPhase;
   private final CompletableFuture<Void> teardownFuture = new CompletableFuture<>();
   private @MonotonicNonNull List<String> serversToTry = null;
+  private ResourcePackManager resourcePackManager;
   private @MonotonicNonNull Boolean previousResourceResponse;
   private final Queue<ResourcePackInfo> outstandingResourcePacks = new ArrayDeque<>();
   private @Nullable ResourcePackInfo pendingResourcePack;
@@ -186,6 +190,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     } else {
       this.tabList = new VelocityTabListLegacy(this, server);
     }
+
+    if (connection.getProtocolVersion().getProtocol() >= ProtocolVersion.MINECRAFT_1_20_2.getProtocol()) {
+      this.resourcePackManager = new ModernResourcePackManager(this);
+    } else {
+      this.resourcePackManager = new LegacyResourcePackManager(this);
+    }
+
     this.playerKey = playerKey;
     this.chatQueue = new ChatQueue(this);
     this.chatBuilderFactory = new ChatBuilderFactory(this.getProtocolVersion());

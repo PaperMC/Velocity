@@ -31,7 +31,7 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
 
   private final UUID id;
   private final String url;
-  private final @Nullable byte[] hash;
+  private final byte @Nullable [] hash;
   private final boolean shouldForce;
   private final @Nullable Component prompt; // 1.17+ only
   private final Origin origin;
@@ -89,19 +89,13 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
 
   @Override
   public Builder asBuilder() {
-    return new BuilderImpl(url)
-        .setId(id)
-        .setShouldForce(shouldForce)
-        .setHash(hash)
+    return new BuilderImpl(url).setId(id).setShouldForce(shouldForce).setHash(hash)
         .setPrompt(prompt);
   }
 
   @Override
   public Builder asBuilder(String newUrl) {
-    return new BuilderImpl(newUrl)
-        .setId(id)
-        .setShouldForce(shouldForce)
-        .setHash(hash)
+    return new BuilderImpl(newUrl).setId(id).setShouldForce(shouldForce).setHash(hash)
         .setPrompt(prompt);
   }
 
@@ -113,7 +107,7 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
     private UUID id;
     private final String url;
     private boolean shouldForce;
-    private @Nullable byte[] hash;
+    private byte @Nullable [] hash;
     private @Nullable Component prompt;
     private Origin origin = Origin.PLUGIN_ON_PROXY;
 
@@ -135,7 +129,7 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
     }
 
     @Override
-    public BuilderImpl setHash(@Nullable byte[] hash) {
+    public BuilderImpl setHash(byte @Nullable [] hash) {
       if (hash != null) {
         Preconditions.checkArgument(hash.length == 20, "Hash length is not 20");
         this.hash = hash.clone(); // Thanks spotbugs, very helpful.
