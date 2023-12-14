@@ -19,6 +19,7 @@ import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -236,6 +237,7 @@ public interface Player extends
    * @return the applied resource pack or null if none.
    */
   @Nullable
+  @Deprecated
   ResourcePackInfo getAppliedResourcePack();
 
   /**
@@ -246,7 +248,25 @@ public interface Player extends
    * @return the pending resource pack or null if none
    */
   @Nullable
+  @Deprecated
   ResourcePackInfo getPendingResourcePack();
+
+  /**
+   * Gets the {@link ResourcePackInfo} of the currently applied
+   * resource-packs.
+   *
+   * @return collection of the applied resource packs.
+   */
+  Collection<ResourcePackInfo> getAppliedResourcePacks();
+
+  /**
+   * Gets the {@link ResourcePackInfo} of the resource packs
+   * the user is currently downloading or is currently
+   * prompted to install.
+   *
+   * @return collection of the pending resource packs
+   */
+  Collection<ResourcePackInfo> getPendingResourcePacks();
 
   /**
    * <strong>Note that this method does not send a plugin message to the server the player

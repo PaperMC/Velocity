@@ -20,12 +20,13 @@ package com.velocitypowered.proxy.protocol.packet.title;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class LegacyTitlePacket extends GenericTitlePacket {
 
-  private @Nullable String component;
+  private @Nullable ComponentHolder component;
   private int fadeIn;
   private int stay;
   private int fadeOut;
@@ -43,7 +44,7 @@ public class LegacyTitlePacket extends GenericTitlePacket {
         if (component == null) {
           throw new IllegalStateException("No component found for " + getAction());
         }
-        ProtocolUtils.writeString(buf, component);
+        component.write(buf);
       }
       case SET_TIMES -> {
         buf.writeInt(fadeIn);
@@ -63,12 +64,12 @@ public class LegacyTitlePacket extends GenericTitlePacket {
   }
 
   @Override
-  public @Nullable String getComponent() {
+  public @Nullable ComponentHolder getComponent() {
     return component;
   }
 
   @Override
-  public void setComponent(@Nullable String component) {
+  public void setComponent(@Nullable ComponentHolder component) {
     this.component = component;
   }
 

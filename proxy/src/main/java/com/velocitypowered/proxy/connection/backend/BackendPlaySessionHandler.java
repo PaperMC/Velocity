@@ -28,7 +28,6 @@ import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.ServerResourcePackSendEvent;
 import com.velocitypowered.api.event.proxy.ProxyPingEvent;
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
@@ -49,11 +48,13 @@ import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfo;
+import com.velocitypowered.proxy.protocol.packet.RemoveResourcePack;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.ServerData;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdate;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
@@ -167,7 +168,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   public boolean handle(ResourcePackRequest packet) {
     ResourcePackInfo.Builder builder = new VelocityResourcePackInfo.BuilderImpl(
         Preconditions.checkNotNull(packet.getUrl()))
-        .setPrompt(packet.getPrompt())
+        .setId(packet.getId())
+        .setPrompt(packet.getPrompt() == null ? null : packet.getPrompt().getComponent())
         .setShouldForce(packet.isRequired())
         .setOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
 
@@ -195,6 +197,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         serverConn.getPlayer().queueResourcePack(toSend);
       } else if (serverConn.getConnection() != null) {
         serverConn.getConnection().write(new ResourcePackResponse(
+            packet.getId(),
             packet.getHash(),
             PlayerResourcePackStatusEvent.Status.DECLINED
         ));
@@ -202,6 +205,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     }, playerConnection.eventLoop()).exceptionally((ex) -> {
       if (serverConn.getConnection() != null) {
         serverConn.getConnection().write(new ResourcePackResponse(
+            packet.getId(),
             packet.getHash(),
             PlayerResourcePackStatusEvent.Status.DECLINED
         ));
@@ -211,6 +215,11 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     });
 
     return true;
+  }
+
+  @Override
+  public boolean handle(RemoveResourcePack packet) {
+    return false; //TODO
   }
 
   @Override
@@ -304,7 +313,9 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         ping -> server.getEventManager()
             .fire(new ProxyPingEvent(this.serverConn.getPlayer(), ping)),
         playerConnection.eventLoop()).thenAcceptAsync(pingEvent -> this.playerConnection.write(
-            new ServerData(pingEvent.getPing().getDescriptionComponent(),
+            new ServerData(new ComponentHolder(
+                this.serverConn.ensureConnected().getProtocolVersion(),
+                pingEvent.getPing().getDescriptionComponent()),
                 pingEvent.getPing().getFavicon().orElse(null), packet.isSecureChatEnforced())),
         playerConnection.eventLoop());
     return true;
@@ -355,7 +366,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       if (server.getConfiguration().isFailoverOnUnexpectedServerDisconnect()) {
         serverConn.getPlayer().handleConnectionException(serverConn.getServer(),
             Disconnect.create(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR,
-                ProtocolVersion.MINECRAFT_1_16), true);
+                serverConn.getPlayer().getProtocolVersion(), false), true);
       } else {
         serverConn.getPlayer().disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
       }

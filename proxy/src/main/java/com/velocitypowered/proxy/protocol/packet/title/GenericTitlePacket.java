@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.protocol.packet.title;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 
 public abstract class GenericTitlePacket implements MinecraftPacket {
@@ -55,11 +56,11 @@ public abstract class GenericTitlePacket implements MinecraftPacket {
     return action;
   }
 
-  public String getComponent() {
+  public ComponentHolder getComponent() {
     throw new UnsupportedOperationException("Invalid function for this TitlePacket ActionType");
   }
 
-  public void setComponent(String component) {
+  public void setComponent(ComponentHolder component) {
     throw new UnsupportedOperationException("Invalid function for this TitlePacket ActionType");
   }
 

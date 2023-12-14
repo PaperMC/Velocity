@@ -25,23 +25,32 @@ import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 public class ResourcePackRequest implements MinecraftPacket {
 
+  private @MonotonicNonNull UUID id; // 1.20.3+
   private @MonotonicNonNull String url;
   private @MonotonicNonNull String hash;
   private boolean isRequired; // 1.17+
-  private @Nullable Component prompt; // 1.17+
+  private @Nullable ComponentHolder prompt; // 1.17+
 
   private static final Pattern PLAUSIBLE_SHA1_HASH = Pattern.compile("^[a-z0-9]{40}$"); // 1.20.2+
+
+  public @Nullable UUID getId() {
+    return id;
+  }
+
+  public void setId(UUID id) {
+    this.id = id;
+  }
 
   public @Nullable String getUrl() {
     return url;
@@ -67,22 +76,25 @@ public class ResourcePackRequest implements MinecraftPacket {
     isRequired = required;
   }
 
-  public @Nullable Component getPrompt() {
+  public @Nullable ComponentHolder getPrompt() {
     return prompt;
   }
 
-  public void setPrompt(Component prompt) {
+  public void setPrompt(ComponentHolder prompt) {
     this.prompt = prompt;
   }
 
   @Override
   public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_20_3) >= 0) {
+      this.id = ProtocolUtils.readUuid(buf);
+    }
     this.url = ProtocolUtils.readString(buf);
     this.hash = ProtocolUtils.readString(buf);
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
       this.isRequired = buf.readBoolean();
       if (buf.readBoolean()) {
-        this.prompt = GsonComponentSerializer.gson().deserialize(ProtocolUtils.readString(buf));
+        this.prompt = ComponentHolder.read(buf, protocolVersion);
       } else {
         this.prompt = null;
       }
@@ -91,6 +103,12 @@ public class ResourcePackRequest implements MinecraftPacket {
 
   @Override
   public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_20_3) >= 0) {
+      if (id == null) {
+        throw new IllegalStateException("Resource pack id not set yet!");
+      }
+      ProtocolUtils.writeUuid(buf, id);
+    }
     if (url == null || hash == null) {
       throw new IllegalStateException("Packet not fully filled in yet!");
     }
@@ -100,7 +118,7 @@ public class ResourcePackRequest implements MinecraftPacket {
       buf.writeBoolean(isRequired);
       if (prompt != null) {
         buf.writeBoolean(true);
-        ProtocolUtils.writeString(buf, GsonComponentSerializer.gson().serialize(prompt));
+        prompt.write(buf);
       } else {
         buf.writeBoolean(false);
       }
@@ -109,7 +127,8 @@ public class ResourcePackRequest implements MinecraftPacket {
 
   public VelocityResourcePackInfo toServerPromptedPack() {
     ResourcePackInfo.Builder builder =
-        new VelocityResourcePackInfo.BuilderImpl(Preconditions.checkNotNull(url)).setPrompt(prompt)
+        new VelocityResourcePackInfo.BuilderImpl(Preconditions.checkNotNull(url))
+            .setId(id).setPrompt(prompt == null ? null : prompt.getComponent())
             .setShouldForce(isRequired).setOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
 
     if (hash != null && !hash.isEmpty()) {
