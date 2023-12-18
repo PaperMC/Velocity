@@ -45,7 +45,6 @@ import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.crypto.KeyIdentifiable;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
-import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
@@ -64,6 +63,7 @@ import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.packet.RemoveResourcePack;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatType;
@@ -83,6 +83,7 @@ import com.velocitypowered.proxy.util.TranslatableMapper;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Collections;
@@ -101,6 +102,7 @@ import net.kyori.adventure.permission.PermissionChecker;
 import net.kyori.adventure.platform.facet.FacetPointers;
 import net.kyori.adventure.platform.facet.FacetPointers.Type;
 import net.kyori.adventure.pointer.Pointers;
+import net.kyori.adventure.resource.ResourcePackInfo;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -151,7 +153,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private final CompletableFuture<Void> teardownFuture = new CompletableFuture<>();
   private @MonotonicNonNull List<String> serversToTry = null;
   private @MonotonicNonNull Boolean previousResourceResponse;
-  private final Queue<ResourcePackInfo> outstandingResourcePacks = new ArrayDeque<>();
+  private final Queue<net.kyori.adventure.resource.ResourcePackRequest> outstandingResourcePacks = new ArrayDeque<>();
   private @Nullable ResourcePackInfo pendingResourcePack;
   private @Nullable ResourcePackInfo appliedResourcePack;
   private final @NotNull Pointers pointers =
@@ -517,6 +519,31 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
       this.server.getBossBarManager().addBossBar(this, bar);
     }
+  }
+
+  @Override
+  public void sendResourcePacks(net.kyori.adventure.resource.@NotNull ResourcePackRequest request) {
+    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+      Preconditions.checkNotNull(request, "request");
+      for (final ResourcePackInfo pack : request.packs()) {
+        this.queueResourcePack(pack);
+      }
+    }
+  }
+
+  @Override
+  public void removeResourcePacks(@NotNull UUID id, @NotNull UUID @NotNull ... others) {
+    this.connection.write(new RemoveResourcePack(id));
+    for (final UUID other : others) {
+      this.connection.write(new RemoveResourcePack(other));
+    }
+    // TODO: change attributes
+  }
+
+  @Override
+  public void clearResourcePacks() {
+    this.connection.write(new RemoveResourcePack(null));
+    // TODO: change attributes
   }
 
   @Override
@@ -966,26 +993,24 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public void sendResourcePackOffer(ResourcePackInfo packInfo) {
-    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
-      Preconditions.checkNotNull(packInfo, "packInfo");
-      queueResourcePack(packInfo);
-    }
+  public void sendResourcePackOffer(com.velocitypowered.api.proxy.player.ResourcePackInfo packInfo) {
+    Preconditions.checkNotNull(packInfo, "packInfo");
+    this.sendResourcePacks(packInfo.asResourcePackRequest());
   }
 
   /**
    * Queues a resource-pack for sending to the player and sends it immediately if the queue is
    * empty.
    */
-  public void queueResourcePack(ResourcePackInfo info) {
-    outstandingResourcePacks.add(info);
+  public void queueResourcePack(net.kyori.adventure.resource.ResourcePackRequest request) {
+    outstandingResourcePacks.add(request);
     if (outstandingResourcePacks.size() == 1) {
       tickResourcePackQueue();
     }
   }
 
   private void tickResourcePackQueue() {
-    ResourcePackInfo queued = outstandingResourcePacks.peek();
+    net.kyori.adventure.resource.ResourcePackRequest queued = outstandingResourcePacks.peek();
 
     if (queued != null) {
       // Check if the player declined a resource pack once already
@@ -994,7 +1019,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
         // Unless its 1.17+ and forced it will come back denied anyway
         while (!outstandingResourcePacks.isEmpty()) {
           queued = outstandingResourcePacks.peek();
-          if (queued.getShouldForce() && getProtocolVersion()
+          if (queued.required() && getProtocolVersion()
               .compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
             break;
           }
@@ -1015,9 +1040,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       } else {
         request.setHash("");
       }
-      request.setRequired(queued.getShouldForce());
-      request.setPrompt(queued.getPrompt() == null ? null :
-          new ComponentHolder(getProtocolVersion(), queued.getPrompt()));
+      request.setRequired(queued.required());
+      request.setPrompt(queued.prompt() == null ? null :
+          new ComponentHolder(getProtocolVersion(), queued.prompt()));
 
       connection.write(request);
     }

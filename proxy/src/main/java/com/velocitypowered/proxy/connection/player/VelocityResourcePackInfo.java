@@ -19,10 +19,14 @@ package com.velocitypowered.proxy.connection.player;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.UUID;
+import net.kyori.adventure.resource.ResourcePackRequest;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Implements {@link ResourcePackInfo}.
@@ -103,6 +107,19 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
         .setShouldForce(shouldForce)
         .setHash(hash)
         .setPrompt(prompt);
+  }
+
+  @Override
+  public @NotNull ResourcePackRequest asResourcePackRequest() {
+    return ResourcePackRequest.resourcePackRequest()
+        .packs(net.kyori.adventure.resource.ResourcePackInfo.resourcePackInfo()
+            .id(this.id)
+            .uri(URI.create(this.url))
+            .hash(Arrays.toString(this.hash))
+            .build())
+        .required(this.shouldForce)
+        .prompt(this.prompt)
+        .build();
   }
 
   /**
