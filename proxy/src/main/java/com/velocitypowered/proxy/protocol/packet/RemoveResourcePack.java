@@ -15,42 +15,42 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.protocol.packet.title;
+package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
+import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 
-public class TitleSubtitlePacket extends GenericTitlePacket {
+import java.util.UUID;
 
-  private ComponentHolder component;
+public class RemoveResourcePack implements MinecraftPacket {
 
-  public TitleSubtitlePacket() {
-    setAction(ActionType.SET_SUBTITLE);
+  private UUID id;
+
+  public RemoveResourcePack() {
+  }
+
+  public RemoveResourcePack(UUID id) {
+    this.id = id;
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    component.write(buf);
+  public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
+    if (buf.readBoolean()) {
+      this.id = ProtocolUtils.readUuid(buf);
+    }
   }
 
   @Override
-  public ComponentHolder getComponent() {
-    return component;
-  }
+  public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
+    buf.writeBoolean(id != null);
 
-  @Override
-  public void setComponent(ComponentHolder component) {
-    this.component = component;
-  }
-
-  @Override
-  public String toString() {
-    return "TitleSubtitlePacket{"
-        + ", component='" + component + '\''
-        + '}';
+    if (id != null) {
+      ProtocolUtils.writeUuid(buf, id);
+    }
   }
 
   @Override

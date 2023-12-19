@@ -24,10 +24,10 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.List;
-import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TabCompleteResponse implements MinecraftPacket {
@@ -84,8 +84,7 @@ public class TabCompleteResponse implements MinecraftPacket {
       int offersAvailable = ProtocolUtils.readVarInt(buf);
       for (int i = 0; i < offersAvailable; i++) {
         String offer = ProtocolUtils.readString(buf);
-        Component tooltip = buf.readBoolean() ? ProtocolUtils.getJsonChatSerializer(version)
-            .deserialize(ProtocolUtils.readString(buf)) : null;
+        ComponentHolder tooltip = buf.readBoolean() ? ComponentHolder.read(buf, version) : null;
         offers.add(new Offer(offer, tooltip));
       }
     } else {
@@ -107,8 +106,7 @@ public class TabCompleteResponse implements MinecraftPacket {
         ProtocolUtils.writeString(buf, offer.text);
         buf.writeBoolean(offer.tooltip != null);
         if (offer.tooltip != null) {
-          ProtocolUtils.writeString(buf, ProtocolUtils.getJsonChatSerializer(version)
-              .serialize(offer.tooltip));
+          offer.tooltip.write(buf);
         }
       }
     } else {
@@ -127,14 +125,13 @@ public class TabCompleteResponse implements MinecraftPacket {
   public static class Offer implements Comparable<Offer> {
 
     private final String text;
-    private final @Nullable Component tooltip;
+    private final @Nullable ComponentHolder tooltip;
 
     public Offer(String text) {
       this(text, null);
     }
 
-    public Offer(String text,
-        @Nullable Component tooltip) {
+    public Offer(String text, @Nullable ComponentHolder tooltip) {
       this.text = text;
       this.tooltip = tooltip;
     }

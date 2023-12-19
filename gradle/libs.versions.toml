@@ -1,5 +1,6 @@
 [versions]
-configurate = "3.7.3"
+configurate3 = "3.7.3"
+configurate4 = "4.1.2"
 flare = "2.0.1"
 log4j = "2.20.0"
 netty = "4.1.100.Final"
@@ -10,7 +11,8 @@ shadow = "com.github.johnrengelman.shadow:8.1.0"
 spotless = "com.diffplug.spotless:6.12.0"
 
 [libraries]
-adventure-bom = "net.kyori:adventure-bom:4.14.0"
+# See JD links in velocity-apo when moving to non-snapshot versions
+adventure-bom = "net.kyori:adventure-bom:4.15.0-SNAPSHOT"
 adventure-facet = "net.kyori:adventure-platform-facet:4.3.0"
 asm = "org.ow2.asm:asm:9.5"
 asynchttpclient = "org.asynchttpclient:async-http-client:2.12.3"
@@ -20,9 +22,12 @@ caffeine = "com.github.ben-manes.caffeine:caffeine:3.1.5"
 checker-qual = "org.checkerframework:checker-qual:3.28.0"
 checkstyle = "com.puppycrawl.tools:checkstyle:10.9.3"
 completablefutures = "com.spotify:completable-futures:0.3.5"
-configurate-hocon = { module = "org.spongepowered:configurate-hocon", version.ref = "configurate" }
-configurate-yaml = { module = "org.spongepowered:configurate-yaml", version.ref = "configurate" }
-configurate-gson = { module = "org.spongepowered:configurate-gson", version.ref = "configurate" }
+configurate3-hocon = { module = "org.spongepowered:configurate-hocon", version.ref = "configurate3" }
+configurate3-yaml = { module = "org.spongepowered:configurate-yaml", version.ref = "configurate3" }
+configurate3-gson = { module = "org.spongepowered:configurate-gson", version.ref = "configurate3" }
+configurate4-hocon = { module = "org.spongepowered:configurate-hocon", version.ref = "configurate4" }
+configurate4-yaml = { module = "org.spongepowered:configurate-yaml", version.ref = "configurate4" }
+configurate4-gson = { module = "org.spongepowered:configurate-gson", version.ref = "configurate4" }
 disruptor = "com.lmax:disruptor:3.4.4"
 fastutil = "it.unimi.dsi:fastutil:8.5.12"
 flare-core = { module = "space.vectrix.flare:flare", version.ref = "flare" }
@@ -54,6 +59,7 @@ spotbugs-annotations = "com.github.spotbugs:spotbugs-annotations:4.7.3"
 terminalconsoleappender = "net.minecrell:terminalconsoleappender:1.3.0"
 
 [bundles]
-configurate = ["configurate-hocon", "configurate-yaml", "configurate-gson"]
+configurate3 = ["configurate3-hocon", "configurate3-yaml", "configurate3-gson"]
+configurate4 = ["configurate4-hocon", "configurate4-yaml", "configurate4-gson"]
 flare = ["flare-core", "flare-fastutil"]
 log4j = ["log4j-api", "log4j-core", "log4j-slf4j-impl", "log4j-iostreams", "log4j-jul"]

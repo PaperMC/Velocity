@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.tablist;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.player.ChatSession;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
@@ -27,6 +28,7 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.console.VelocityConsole;
 import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfo;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -62,6 +64,11 @@ public class VelocityTabList implements InternalTabList {
     this.player = player;
     this.connection = player.getConnection();
     this.entries = Maps.newHashMap();
+  }
+
+  @Override
+  public Player getPlayer() {
+    return player;
   }
 
   @Override
@@ -103,7 +110,8 @@ public class VelocityTabList implements InternalTabList {
       if (!Objects.equals(previousEntry.getDisplayNameComponent().orElse(null),
           entry.getDisplayNameComponent().orElse(null))) {
         actions.add(UpsertPlayerInfo.Action.UPDATE_DISPLAY_NAME);
-        playerInfoEntry.setDisplayName(entry.getDisplayNameComponent().get());
+        playerInfoEntry.setDisplayName(new ComponentHolder(player.getProtocolVersion(),
+              entry.getDisplayNameComponent().get()));
       }
       if (!Objects.equals(previousEntry.getLatency(), entry.getLatency())) {
         actions.add(UpsertPlayerInfo.Action.UPDATE_LATENCY);
@@ -132,7 +140,8 @@ public class VelocityTabList implements InternalTabList {
       playerInfoEntry.setProfile(entry.getProfile());
       if (entry.getDisplayNameComponent().isPresent()) {
         actions.add(UpsertPlayerInfo.Action.UPDATE_DISPLAY_NAME);
-        playerInfoEntry.setDisplayName(entry.getDisplayNameComponent().get());
+        playerInfoEntry.setDisplayName(new ComponentHolder(player.getProtocolVersion(),
+              entry.getDisplayNameComponent().get()));
       }
       if (entry.getChatSession() != null) {
         actions.add(UpsertPlayerInfo.Action.INITIALIZE_CHAT);
@@ -243,7 +252,8 @@ public class VelocityTabList implements InternalTabList {
       currentEntry.setLatencyWithoutUpdate(entry.getLatency());
     }
     if (actions.contains(UpsertPlayerInfo.Action.UPDATE_DISPLAY_NAME)) {
-      currentEntry.setDisplayNameWithoutUpdate(entry.getDisplayName());
+      currentEntry.setDisplayNameWithoutUpdate(entry.getDisplayName() != null
+          ? entry.getDisplayName().getComponent() : null);
     }
     if (actions.contains(UpsertPlayerInfo.Action.INITIALIZE_CHAT)) {
       currentEntry.setChatSession(entry.getChatSession());

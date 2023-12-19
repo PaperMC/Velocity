@@ -47,7 +47,7 @@ public final class InitialInboundConnection implements VelocityInboundConnection
   private final Handshake handshake;
 
   InitialInboundConnection(MinecraftConnection connection, String cleanedAddress,
-      Handshake handshake) {
+                           Handshake handshake) {
     this.connection = connection;
     this.cleanedAddress = cleanedAddress;
     this.handshake = handshake;
@@ -95,7 +95,7 @@ public final class InitialInboundConnection implements VelocityInboundConnection
       logger.info("{} has disconnected: {}", this,
           LegacyComponentSerializer.legacySection().serialize(translated));
     }
-    connection.closeWith(Disconnect.create(translated, getProtocolVersion()));
+    connection.closeWith(Disconnect.create(translated, getProtocolVersion(), true));
   }
 
   /**
@@ -106,6 +106,6 @@ public final class InitialInboundConnection implements VelocityInboundConnection
   public void disconnectQuietly(Component reason) {
     Component translated = GlobalTranslator.render(reason, ClosestLocaleMatcher.INSTANCE
         .lookupClosest(Locale.getDefault()));
-    connection.closeWith(Disconnect.create(translated, getProtocolVersion()));
+    connection.closeWith(Disconnect.create(translated, getProtocolVersion(), true));
   }
 }
