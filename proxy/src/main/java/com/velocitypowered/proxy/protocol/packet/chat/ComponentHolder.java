@@ -28,6 +28,7 @@ import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.nbt.BinaryTag;
 import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.BinaryTagType;
+import net.kyori.adventure.nbt.BinaryTagTypes;
 import net.kyori.adventure.nbt.ByteArrayBinaryTag;
 import net.kyori.adventure.nbt.ByteBinaryTag;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
@@ -153,8 +154,19 @@ public class ComponentHolder {
         return ListBinaryTag.empty();
       }
 
-      BinaryTag listTag;
-      BinaryTagType<? extends BinaryTag> listType = serialize(jsonArray.get(0)).type();
+      List<BinaryTag> tagItems = new ArrayList<>(jsonArray.size());
+      BinaryTagType<? extends BinaryTag> listType = null;
+
+      for (JsonElement jsonEl : jsonArray) {
+        BinaryTag tag = serialize(jsonEl);
+        tagItems.add(tag);
+
+        if (listType == null) {
+          listType = tag.type();
+        } else if (listType != tag.type()) {
+          listType = BinaryTagTypes.COMPOUND;
+        }
+      }
 
       switch (listType.id()) {
         case 1://BinaryTagTypes.BYTE:
@@ -163,42 +175,33 @@ public class ComponentHolder {
             bytes[i] = (Byte) jsonArray.get(i).getAsNumber();
           }
 
-          listTag = ByteArrayBinaryTag.byteArrayBinaryTag(bytes);
-          break;
+          return ByteArrayBinaryTag.byteArrayBinaryTag(bytes);
         case 3://BinaryTagTypes.INT:
           int[] ints = new int[jsonArray.size()];
           for (int i = 0; i < ints.length; i++) {
             ints[i] = (Integer) jsonArray.get(i).getAsNumber();
           }
 
-          listTag = IntArrayBinaryTag.intArrayBinaryTag(ints);
-          break;
+          return IntArrayBinaryTag.intArrayBinaryTag(ints);
         case 4://BinaryTagTypes.LONG:
           long[] longs = new long[jsonArray.size()];
           for (int i = 0; i < longs.length; i++) {
             longs[i] = (Long) jsonArray.get(i).getAsNumber();
           }
 
-          listTag = LongArrayBinaryTag.longArrayBinaryTag(longs);
-          break;
-        default:
-          List<BinaryTag> tagItems = new ArrayList<>(jsonArray.size());
-
-          for (JsonElement jsonEl : jsonArray) {
-            BinaryTag subTag = serialize(jsonEl);
-
-            if (subTag.type() != listType) {
-              throw new IllegalArgumentException("Cannot convert mixed JsonArray to Tag");
+          return LongArrayBinaryTag.longArrayBinaryTag(longs);
+        case 10://BinaryTagTypes.COMPOUND:
+          tagItems.replaceAll(tag -> {
+            if (tag.type() == BinaryTagTypes.COMPOUND) {
+              return tag;
+            } else {
+              return CompoundBinaryTag.builder().put("", tag).build();
             }
-
-            tagItems.add(subTag);
-          }
-
-          listTag = ListBinaryTag.listBinaryTag(listType, tagItems);
+          });
           break;
       }
 
-      return listTag;
+      return ListBinaryTag.listBinaryTag(listType, tagItems);
     }
 
     return EndBinaryTag.endBinaryTag();
