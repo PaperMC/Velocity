@@ -116,16 +116,28 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
       .registerTypeHierarchyAdapter(GameProfile.class, GameProfileSerializer.INSTANCE)
       .create();
-  private static final Gson PRE_1_16_PING_SERIALIZER = ProtocolUtils
-      .getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_15_2)
-      .serializer()
-      .newBuilder()
+  private static final Gson PRE_1_16_PING_SERIALIZER = new GsonBuilder()
+      .registerTypeHierarchyAdapter(
+          Component.class,
+          ProtocolUtils.getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_15_2)
+                  .serializer().getAdapter(Component.class)
+      )
       .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
       .create();
-  private static final Gson POST_1_16_PING_SERIALIZER = ProtocolUtils
-      .getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_16)
-      .serializer()
-      .newBuilder()
+  private static final Gson PRE_1_20_3_PING_SERIALIZER = new GsonBuilder()
+      .registerTypeHierarchyAdapter(
+          Component.class,
+          ProtocolUtils.getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_20_2)
+                  .serializer().getAdapter(Component.class)
+      )
+      .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
+      .create();
+  private static final Gson MODERN_PING_SERIALIZER = new GsonBuilder()
+      .registerTypeHierarchyAdapter(
+          Component.class,
+          ProtocolUtils.getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_20_3)
+                  .serializer().getAdapter(Component.class)
+      )
       .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
       .create();
 
@@ -762,8 +774,11 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
    */
   public static Gson getPingGsonInstance(ProtocolVersion version) {
     if (version == ProtocolVersion.UNKNOWN
-        || version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-      return POST_1_16_PING_SERIALIZER;
+        || version.compareTo(ProtocolVersion.MINECRAFT_1_20_3) >= 0) {
+      return MODERN_PING_SERIALIZER;
+    }
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      return PRE_1_20_3_PING_SERIALIZER;
     }
     return PRE_1_16_PING_SERIALIZER;
   }
