@@ -25,6 +25,7 @@ import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PingIdentify;
@@ -186,16 +187,21 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
    * @return a future that completes when the config stage is finished
    */
   public CompletableFuture<Void> handleBackendFinishUpdate(VelocityServerConnection serverConn) {
+    MinecraftConnection smc = serverConn.ensureConnected();
+
     String brand = serverConn.getPlayer().getClientBrand();
     if (brand != null && brandChannel != null) {
       ByteBuf buf = Unpooled.buffer();
       ProtocolUtils.writeString(buf, brand);
       PluginMessage brandPacket = new PluginMessage(brandChannel, buf);
-      serverConn.ensureConnected().write(brandPacket);
+      smc.write(brandPacket);
     }
 
     player.getConnection().write(new FinishedUpdate());
-    serverConn.ensureConnected().write(new FinishedUpdate());
+
+    smc.write(new FinishedUpdate());
+    smc.getChannel().pipeline().get(MinecraftEncoder.class).setState(StateRegistry.PLAY);
+
     return configSwitchFuture;
   }
 }
