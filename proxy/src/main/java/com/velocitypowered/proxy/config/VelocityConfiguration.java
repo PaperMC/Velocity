@@ -23,8 +23,11 @@ import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.gson.annotations.Expose;
+import com.velocitypowered.api.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
+import com.velocitypowered.api.proxy.config.ServerConnectionInfo;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -149,6 +152,11 @@ public class VelocityConfiguration implements ProxyConfig {
     }
 
     switch (playerInfoForwardingMode) {
+      case DEFAULT:
+        logger.error("DEFAULT forwarding mode is not a valid option as a default forwarding mode "
+            + "setting");
+        valid = false;
+        break;
       case NONE:
         logger.warn("Player info forwarding is disabled! All players will appear to be connecting "
             + "from the proxy and will have offline-mode UUIDs.");
@@ -168,9 +176,9 @@ public class VelocityConfiguration implements ProxyConfig {
       logger.warn("You don't have any servers configured.");
     }
 
-    for (Map.Entry<String, String> entry : servers.getServers().entrySet()) {
+    for (Map.Entry<String, ServerConnectionInfo> entry : servers.getServers().entrySet()) {
       try {
-        AddressUtil.parseAddress(entry.getValue());
+        AddressUtil.parseAddress(entry.getValue().getAddress());
       } catch (IllegalArgumentException e) {
         logger.error("Server {} does not have a valid IP address.", entry.getKey(), e);
         valid = false;
@@ -300,6 +308,11 @@ public class VelocityConfiguration implements ProxyConfig {
 
   @Override
   public Map<String, String> getServers() {
+    return Maps.transformValues(servers.getServers(), ServerConnectionInfo::getAddress);
+  }
+
+  @Override
+  public Map<String, ServerConnectionInfo> getServersDetailed() {
     return servers.getServers();
   }
 
@@ -610,10 +623,10 @@ public class VelocityConfiguration implements ProxyConfig {
 
   private static class Servers {
 
-    private Map<String, String> servers = ImmutableMap.of(
-        "lobby", "127.0.0.1:30066",
-        "factions", "127.0.0.1:30067",
-        "minigames", "127.0.0.1:30068"
+    private Map<String, ServerConnectionInfo> servers = ImmutableMap.of(
+        "lobby", ServerConnectionInfo.of("127.0.0.1:30066", PlayerInfoForwarding.DEFAULT),
+        "factions", ServerConnectionInfo.of("127.0.0.1:30067", PlayerInfoForwarding.DEFAULT),
+        "minigames", ServerConnectionInfo.of("127.0.0.1:30068", PlayerInfoForwarding.DEFAULT)
     );
     private List<String> attemptConnectionOrder = ImmutableList.of("lobby");
 
@@ -622,10 +635,22 @@ public class VelocityConfiguration implements ProxyConfig {
 
     private Servers(CommentedConfig config) {
       if (config != null) {
-        Map<String, String> servers = new HashMap<>();
+        Map<String, ServerConnectionInfo> servers = new HashMap<>();
         for (UnmodifiableConfig.Entry entry : config.entrySet()) {
           if (entry.getValue() instanceof String) {
-            servers.put(cleanServerName(entry.getKey()), entry.getValue());
+            ServerConnectionInfo info = ServerConnectionInfo.of(
+                (String) entry.getValue(), PlayerInfoForwarding.DEFAULT
+            );
+            servers.put(cleanServerName(entry.getKey()), info);
+          } else if (entry.getValue() instanceof CommentedConfig) {
+            CommentedConfig serverTable = entry.getValue();
+            ServerConnectionInfo info = ServerConnectionInfo.of(
+                serverTable.getOrElse("address", ""),
+                PlayerInfoForwarding
+                    .valueOf(serverTable.getOrElse("forwarding", "default")
+                    .toUpperCase(Locale.ROOT))
+            );
+            servers.put(cleanServerName(entry.getKey()), info);
           } else {
             if (!entry.getKey().equalsIgnoreCase("try")) {
               throw new IllegalArgumentException(
@@ -638,16 +663,17 @@ public class VelocityConfiguration implements ProxyConfig {
       }
     }
 
-    private Servers(Map<String, String> servers, List<String> attemptConnectionOrder) {
+    private Servers(Map<String, ServerConnectionInfo> servers,
+                    List<String> attemptConnectionOrder) {
       this.servers = servers;
       this.attemptConnectionOrder = attemptConnectionOrder;
     }
 
-    private Map<String, String> getServers() {
+    private Map<String, ServerConnectionInfo> getServers() {
       return servers;
     }
 
-    public void setServers(Map<String, String> servers) {
+    public void setServers(Map<String, ServerConnectionInfo> servers) {
       this.servers = servers;
     }
 

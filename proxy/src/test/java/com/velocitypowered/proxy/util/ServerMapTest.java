@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.util;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.velocitypowered.api.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.proxy.server.ServerMap;
@@ -36,7 +37,7 @@ class ServerMapTest {
   @Test
   void respectsCaseInsensitivity() {
     ServerMap map = new ServerMap(null);
-    ServerInfo info = new ServerInfo("TestServer", TEST_ADDRESS);
+    ServerInfo info = new ServerInfo("TestServer", TEST_ADDRESS, PlayerInfoForwarding.NONE);
     RegisteredServer connection = map.register(info);
 
     assertEquals(Optional.of(connection), map.getServer("TestServer"));
@@ -47,17 +48,17 @@ class ServerMapTest {
   @Test
   void rejectsRepeatedRegisterAttempts() {
     ServerMap map = new ServerMap(null);
-    ServerInfo info = new ServerInfo("TestServer", TEST_ADDRESS);
+    ServerInfo info = new ServerInfo("TestServer", TEST_ADDRESS, PlayerInfoForwarding.NONE);
     map.register(info);
 
-    ServerInfo willReject = new ServerInfo("TESTSERVER", TEST_ADDRESS);
+    ServerInfo willReject = new ServerInfo("TESTSERVER", TEST_ADDRESS, PlayerInfoForwarding.NONE);
     assertThrows(IllegalArgumentException.class, () -> map.register(willReject));
   }
 
   @Test
   void allowsSameServerLaxRegistrationCheck() {
     ServerMap map = new ServerMap(null);
-    ServerInfo info = new ServerInfo("TestServer", TEST_ADDRESS);
+    ServerInfo info = new ServerInfo("TestServer", TEST_ADDRESS, PlayerInfoForwarding.NONE);
     RegisteredServer connection = map.register(info);
     assertEquals(connection, map.register(info));
   }
