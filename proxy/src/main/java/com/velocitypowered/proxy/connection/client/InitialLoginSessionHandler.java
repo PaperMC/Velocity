@@ -256,11 +256,11 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
             logger.error(
                 "Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
                 profileResponse.getStatusCode(), login.getUsername(), playerIp);
-            inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
+            inbound.disconnect(Component.translatable("velocity.error.auth-servers-down"));
           }
         } catch (ExecutionException e) {
           logger.error("Unable to authenticate with Mojang", e);
-          inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
+          inbound.disconnect(Component.translatable("velocity.error.auth-servers-down"));
         } catch (InterruptedException e) {
           // not much we can do usefully
           Thread.currentThread().interrupt();
