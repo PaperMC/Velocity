@@ -248,13 +248,8 @@ public class UpsertPlayerInfo implements MinecraftPacket {
     }
 
     @Nullable
-    public ComponentHolder getDisplayNameHolder() {
+    public ComponentHolder getDisplayName() {
       return displayName;
-    }
-
-    @Nullable
-    public Component getDisplayName() {
-      return (this.displayName == null) ? null : this.displayName.getComponent();
     }
 
     @Nullable
