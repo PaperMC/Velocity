@@ -63,6 +63,7 @@ import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
 import com.velocitypowered.proxy.util.bossbar.AdventureBossBarManager;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
+import com.velocitypowered.proxy.util.translation.VelocityTranslationRegistry;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -263,8 +264,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   private void registerTranslations() {
-    final TranslationRegistry translationRegistry = TranslationRegistry
-        .create(Key.key("velocity", "translations"));
+    final TranslationRegistry translationRegistry = new VelocityTranslationRegistry(
+            TranslationRegistry.create(Key.key("velocity", "translations")));
     translationRegistry.defaultLocale(Locale.US);
     try {
       ResourceUtils.visitResources(VelocityServer.class, path -> {
