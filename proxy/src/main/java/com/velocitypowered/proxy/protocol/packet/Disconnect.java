@@ -74,6 +74,10 @@ public class Disconnect implements MinecraftPacket {
     return handler.handle(this);
   }
 
+  public static Disconnect create(Component component, ProtocolVersion version) {
+    return create(component, version, false);
+  }
+
   public static Disconnect create(Component component, ProtocolVersion version, boolean login) {
     Preconditions.checkNotNull(component, "component");
     return new Disconnect(login, new ComponentHolder(login ? ProtocolVersion.MINECRAFT_1_20_2 : version, component));

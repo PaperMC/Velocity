@@ -34,6 +34,7 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -744,6 +745,20 @@ public enum ProtocolUtils {
     IdentifiedKey.Revision revision = version.compareTo(ProtocolVersion.MINECRAFT_1_19) == 0
         ? IdentifiedKey.Revision.GENERIC_V1 : IdentifiedKey.Revision.LINKED_V2;
     return new IdentifiedKeyImpl(revision, key, expiry, signature);
+  }
+
+  /**
+   * Writes a CompoundTag to the {@code buf}.
+   *
+   * @param buf         the buffer to write to
+   * @param compoundTag the CompoundTag to write
+   */
+  public static void writeCompoundTag(ByteBuf buf, CompoundBinaryTag compoundTag) {
+    try {
+      BinaryTagIO.writer().write(compoundTag, (DataOutput) new ByteBufOutputStream(buf));
+    } catch (IOException e) {
+      throw new EncoderException("Unable to encode NBT CompoundTag");
+    }
   }
 
   /**
