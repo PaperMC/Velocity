@@ -32,6 +32,8 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
+
+import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.Nullable;
 
 public class UpsertPlayerInfo implements MinecraftPacket {
@@ -246,8 +248,13 @@ public class UpsertPlayerInfo implements MinecraftPacket {
     }
 
     @Nullable
-    public ComponentHolder getDisplayName() {
+    public ComponentHolder getDisplayNameHolder() {
       return displayName;
+    }
+
+    @Nullable
+    public Component getDisplayName() {
+      return (this.displayName == null) ? null : this.displayName.getComponent();
     }
 
     @Nullable
@@ -270,6 +277,8 @@ public class UpsertPlayerInfo implements MinecraftPacket {
     public void setGameMode(int gameMode) {
       this.gameMode = gameMode;
     }
+
+    public void setDisplayName(@Nullable Component displayName) {}
 
     public void setDisplayName(@Nullable ComponentHolder displayName) {
       this.displayName = displayName;
