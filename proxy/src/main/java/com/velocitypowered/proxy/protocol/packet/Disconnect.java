@@ -32,6 +32,10 @@ public class Disconnect implements MinecraftPacket {
   private @Nullable ComponentHolder reason;
   private final boolean login;
 
+  public Disconnect() {
+    this.login = false;
+  }
+
   public Disconnect(boolean login) {
     this.login = login;
   }
