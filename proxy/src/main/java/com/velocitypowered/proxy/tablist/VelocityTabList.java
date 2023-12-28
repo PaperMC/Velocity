@@ -110,7 +110,8 @@ public class VelocityTabList implements InternalTabList {
       if (!Objects.equals(previousEntry.getDisplayNameComponent().orElse(null),
           entry.getDisplayNameComponent().orElse(null))) {
         actions.add(UpsertPlayerInfo.Action.UPDATE_DISPLAY_NAME);
-        playerInfoEntry.setDisplayName(entry.getDisplayNameComponent().isEmpty() ?
+        playerInfoEntry.setDisplayName(entry.getDisplayNameComponent().isEmpty()
+                ?
                 null :
                 new ComponentHolder(player.getProtocolVersion(),
                         entry.getDisplayNameComponent().get())
@@ -143,7 +144,8 @@ public class VelocityTabList implements InternalTabList {
       playerInfoEntry.setProfile(entry.getProfile());
       if (entry.getDisplayNameComponent().isPresent()) {
         actions.add(UpsertPlayerInfo.Action.UPDATE_DISPLAY_NAME);
-        playerInfoEntry.setDisplayName(entry.getDisplayNameComponent().isEmpty() ?
+        playerInfoEntry.setDisplayName(entry.getDisplayNameComponent().isEmpty()
+                ?
                 null :
                 new ComponentHolder(player.getProtocolVersion(),
                         entry.getDisplayNameComponent().get())
