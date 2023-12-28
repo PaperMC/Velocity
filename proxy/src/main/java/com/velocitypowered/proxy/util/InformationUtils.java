@@ -209,7 +209,7 @@ public enum InformationUtils {
     } else {
       DomainSocketAddress address = (DomainSocketAddress) iaddr;
       info.addProperty("host", address.toString());
-      info.addProperty("port", -1);
+      info.addProperty("port", 0);
     }
     return info;
   }
