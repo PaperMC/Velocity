@@ -45,6 +45,9 @@ import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
+
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -52,6 +55,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
+
+import io.netty.channel.unix.DomainSocketAddress;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -101,7 +106,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     // switches.
     server.createBootstrap(proxyPlayer.getConnection().eventLoop())
         .handler(server.getBackendChannelInitializer())
-        .connect(registeredServer.getServerInfo().getAddress())
+        .connect(registeredServer.getServerInfo().getSocketAddress())
         .addListener((ChannelFutureListener) future -> {
           if (future.isSuccess()) {
             connection = new MinecraftConnection(future.channel(), server);
@@ -140,13 +145,26 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     }
   }
 
+  private String getRemoteAddress() {
+    var op = proxyPlayer.getVirtualHost();
+    if (op.isPresent()) {
+      return op.get().getHostString();
+    }
+    SocketAddress address = registeredServer.getServerInfo().getSocketAddress();
+    if (address instanceof InetSocketAddress) {
+      InetSocketAddress address1 = (InetSocketAddress) address;
+      return address1.getHostString();
+    } else {
+      DomainSocketAddress address1 = (DomainSocketAddress) address;
+      return address1.toString();
+    }
+  }
+
   private String createLegacyForwardingAddress(UnaryOperator<List<Property>> propertiesTransform) {
     // BungeeCord IP forwarding is simply a special injection after the "address" in the handshake,
     // separated by \0 (the null byte). In order, you send the original host, the player's IP, their
     // UUID (undashed), and if you are in online-mode, their login properties (from Mojang).
-    StringBuilder data = new StringBuilder().append(proxyPlayer.getVirtualHost().orElseGet(() ->
-                    registeredServer.getServerInfo().getAddress()).getHostString())
-        .append('\0')
+    StringBuilder data = new StringBuilder().append(getRemoteAddress())
         .append(getPlayerRemoteAddressAsString())
         .append('\0')
         .append(proxyPlayer.getGameProfile().getUndashedId())
@@ -174,9 +192,10 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
     // Initiate the handshake.
     ProtocolVersion protocolVersion = proxyPlayer.getConnection().getProtocolVersion();
-    String playerVhost =
-        proxyPlayer.getVirtualHost().orElseGet(() -> registeredServer.getServerInfo().getAddress())
-            .getHostString();
+//    String playerVhost =
+//        proxyPlayer.getVirtualHost().orElseGet(() -> registeredServer.getServerInfo().getAddress())
+//            .getHostString();
+    String playerVhost = getRemoteAddress();
 
     Handshake handshake = new Handshake();
     handshake.setNextStatus(StateRegistry.LOGIN_ID);
@@ -192,13 +211,19 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
       handshake.setServerAddress(playerVhost);
     }
 
-    handshake.setPort(registeredServer.getServerInfo().getAddress().getPort());
+    SocketAddress address = registeredServer.getServerInfo().getSocketAddress();
+    if (address instanceof InetSocketAddress) {
+      InetSocketAddress address1 = (InetSocketAddress) address;
+      handshake.setPort(address1.getPort());
+    } else {
+      handshake.setPort(-1);
+    }
     mc.delayedWrite(handshake);
 
     mc.setProtocolVersion(protocolVersion);
     mc.setActiveSessionHandler(StateRegistry.LOGIN);
     if (proxyPlayer.getIdentifiedKey() == null
-        && proxyPlayer.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
+            && proxyPlayer.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
       mc.delayedWrite(new ServerLogin(proxyPlayer.getUsername(), proxyPlayer.getUniqueId()));
     } else {
       mc.delayedWrite(new ServerLogin(proxyPlayer.getUsername(), proxyPlayer.getIdentifiedKey()));

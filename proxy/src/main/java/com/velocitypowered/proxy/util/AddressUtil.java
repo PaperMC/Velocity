@@ -19,8 +19,12 @@ package com.velocitypowered.proxy.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.net.InetAddresses;
+import io.netty.channel.epoll.Epoll;
+import io.netty.channel.unix.DomainSocketAddress;
+
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.URI;
 
 /**
@@ -36,12 +40,21 @@ public final class AddressUtil {
 
   /**
    * Attempts to parse an IP address of the form {@code 127.0.0.1:25565}. The returned
-   * {@link InetSocketAddress} is not resolved.
+   * {@link SocketAddress} is not resolved.
    *
    * @param ip the IP to parse
    * @return the parsed address
    */
-  public static InetSocketAddress parseAddress(String ip) {
+  public static SocketAddress parseAddress(String ip) {
+    if (ip.startsWith("unix://")) {
+      if(Epoll.isAvailable()) {
+        return new DomainSocketAddress(ip.substring("unix://".length()));
+      }
+      else {
+        throw new UnsupportedOperationException("unix DomainSocket is unsupported");
+      }
+    }
+
     Preconditions.checkNotNull(ip, "ip");
     URI uri = URI.create("tcp://" + ip);
     if (uri.getHost() == null) {
