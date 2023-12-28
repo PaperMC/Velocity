@@ -25,6 +25,8 @@ import io.netty.channel.epoll.EpollDatagramChannel;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.epoll.EpollSocketChannel;
+import io.netty.channel.epoll.EpollDomainSocketChannel;
+import io.netty.channel.epoll.EpollServerDomainSocketChannel;
 import io.netty.channel.kqueue.KQueue;
 import io.netty.channel.kqueue.KQueueDatagramChannel;
 import io.netty.channel.kqueue.KQueueEventLoopGroup;
@@ -37,6 +39,9 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.channel.unix.DomainSocketChannel;
+import io.netty.channel.unix.ServerDomainSocketChannel;
+
 import java.util.concurrent.ThreadFactory;
 import java.util.function.BiFunction;
 
@@ -47,14 +52,20 @@ public enum TransportType {
   NIO("NIO", NioServerSocketChannel::new,
       NioSocketChannel::new,
       NioDatagramChannel::new,
+      EpollServerDomainSocketChannel::new,
+      EpollDomainSocketChannel::new,
       (name, type) -> new NioEventLoopGroup(0, createThreadFactory(name, type))),
   EPOLL("epoll", EpollServerSocketChannel::new,
       EpollSocketChannel::new,
       EpollDatagramChannel::new,
+      EpollServerDomainSocketChannel::new,
+      EpollDomainSocketChannel::new,
       (name, type) -> new EpollEventLoopGroup(0, createThreadFactory(name, type))),
   KQUEUE("kqueue", KQueueServerSocketChannel::new,
       KQueueSocketChannel::new,
       KQueueDatagramChannel::new,
+      EpollServerDomainSocketChannel::new,
+      EpollDomainSocketChannel::new,
       (name, type) -> new KQueueEventLoopGroup(0, createThreadFactory(name, type)));
 
   final String name;
@@ -62,16 +73,22 @@ public enum TransportType {
   final ChannelFactory<? extends SocketChannel> socketChannelFactory;
   final ChannelFactory<? extends DatagramChannel> datagramChannelFactory;
   final BiFunction<String, Type, EventLoopGroup> eventLoopGroupFactory;
+  final ChannelFactory<? extends ServerDomainSocketChannel> domainServerSocketChannelFactory;
+  final ChannelFactory<? extends DomainSocketChannel> domainSocketChannelFactory;
 
   TransportType(final String name,
       final ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory,
       final ChannelFactory<? extends SocketChannel> socketChannelFactory,
       final ChannelFactory<? extends DatagramChannel> datagramChannelFactory,
+      final ChannelFactory<? extends ServerDomainSocketChannel> domainServerSocketChannelFactory,
+      final ChannelFactory<? extends DomainSocketChannel> domainSocketChannelFactory,
       final BiFunction<String, Type, EventLoopGroup> eventLoopGroupFactory) {
     this.name = name;
     this.serverSocketChannelFactory = serverSocketChannelFactory;
     this.socketChannelFactory = socketChannelFactory;
     this.datagramChannelFactory = datagramChannelFactory;
+    this.domainServerSocketChannelFactory = domainServerSocketChannelFactory;
+    this.domainSocketChannelFactory = domainSocketChannelFactory;
     this.eventLoopGroupFactory = eventLoopGroupFactory;
   }
 

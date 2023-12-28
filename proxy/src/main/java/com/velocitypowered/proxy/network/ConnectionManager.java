@@ -192,6 +192,26 @@ public final class ConnectionManager {
   }
 
   /**
+   * Creates a TCP {@link Bootstrap} using Velocity's event loops.
+   *
+   * @param group the event loop group to use. Use {@code null} for the default worker group.
+   * @return a new {@link Bootstrap}
+   */
+  public Bootstrap createDomainWorker(@Nullable EventLoopGroup group) {
+    Bootstrap bootstrap = new Bootstrap()
+            .channelFactory(this.transportType.domainSocketChannelFactory)
+            .option(ChannelOption.TCP_NODELAY, true)
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
+                    this.server.getConfiguration().getConnectTimeout())
+            .group(group == null ? this.workerGroup : group)
+            .resolver(this.resolver.asGroup());
+    if (server.getConfiguration().useTcpFastOpen()) {
+      bootstrap.option(ChannelOption.TCP_FASTOPEN_CONNECT, true);
+    }
+    return bootstrap;
+  }
+
+  /**
    * Closes the specified {@code oldBind} endpoint.
    *
    * @param oldBind the endpoint to close

@@ -46,9 +46,9 @@ public final class AddressUtil {
    * @return the parsed address
    */
   public static SocketAddress parseAddress(String ip) {
-    if (ip.startsWith("unix://")) {
+    if (ip.startsWith("unix:")) {
       if(Epoll.isAvailable()) {
-        return new DomainSocketAddress(ip.substring("unix://".length()));
+        return new DomainSocketAddress(ip.substring("unix:".length()));
       }
       else {
         throw new UnsupportedOperationException("unix DomainSocket is unsupported");

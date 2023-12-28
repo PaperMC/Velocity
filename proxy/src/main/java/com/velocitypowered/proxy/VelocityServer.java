@@ -382,6 +382,10 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     return this.cm.createWorker(group);
   }
 
+  public Bootstrap createDomainBootstrap(@Nullable EventLoopGroup group) {
+    return this.cm.createDomainWorker(group);
+  }
+
   public ChannelInitializer<Channel> getBackendChannelInitializer() {
     return this.cm.backendChannelInitializer.get();
   }

@@ -42,6 +42,7 @@ import com.velocitypowered.proxy.protocol.packet.Handshake;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ServerLogin;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
+import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
@@ -104,34 +105,40 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     CompletableFuture<Impl> result = new CompletableFuture<>();
     // Note: we use the event loop for the connection the player is on. This reduces context
     // switches.
-    server.createBootstrap(proxyPlayer.getConnection().eventLoop())
-        .handler(server.getBackendChannelInitializer())
-        .connect(registeredServer.getServerInfo().getSocketAddress())
-        .addListener((ChannelFutureListener) future -> {
-          if (future.isSuccess()) {
-            connection = new MinecraftConnection(future.channel(), server);
-            connection.setAssociation(VelocityServerConnection.this);
-            future.channel().pipeline().addLast(HANDLER, connection);
+    SocketAddress address = registeredServer.getServerInfo().getSocketAddress();
+    Bootstrap bootstrap;
+    if (address instanceof DomainSocketAddress) {
+      bootstrap = server.createDomainBootstrap(proxyPlayer.getConnection().eventLoop());
+    } else {
+      bootstrap = server.createBootstrap(proxyPlayer.getConnection().eventLoop());
+    }
+    bootstrap.handler(server.getBackendChannelInitializer())
+            .connect(address)
+            .addListener((ChannelFutureListener) future -> {
+              if (future.isSuccess()) {
+                connection = new MinecraftConnection(future.channel(), server);
+                connection.setAssociation(VelocityServerConnection.this);
+                future.channel().pipeline().addLast(HANDLER, connection);
 
-            // Kick off the connection process
-            if (!connection.setActiveSessionHandler(StateRegistry.HANDSHAKE)) {
-              MinecraftSessionHandler handler =
-                  new LoginSessionHandler(server, VelocityServerConnection.this, result);
-              connection.setActiveSessionHandler(StateRegistry.HANDSHAKE, handler);
-              connection.addSessionHandler(StateRegistry.LOGIN, handler);
-            }
+                // Kick off the connection process
+                if (!connection.setActiveSessionHandler(StateRegistry.HANDSHAKE)) {
+                  MinecraftSessionHandler handler =
+                          new LoginSessionHandler(server, VelocityServerConnection.this, result);
+                  connection.setActiveSessionHandler(StateRegistry.HANDSHAKE, handler);
+                  connection.addSessionHandler(StateRegistry.LOGIN, handler);
+                }
 
-            // Set the connection phase, which may, for future forge (or whatever), be
-            // determined
-            // at this point already
-            connectionPhase = connection.getType().getInitialBackendPhase();
-            startHandshake();
-          } else {
-            // Complete the result immediately. ConnectedPlayer will reset the in-flight
-            // connection.
-            result.completeExceptionally(future.cause());
-          }
-        });
+                // Set the connection phase, which may, for future forge (or whatever), be
+                // determined
+                // at this point already
+                connectionPhase = connection.getType().getInitialBackendPhase();
+                startHandshake();
+              } else {
+                // Complete the result immediately. ConnectedPlayer will reset the in-flight
+                // connection.
+                result.completeExceptionally(future.cause());
+              }
+            });
     return result;
   }
 
