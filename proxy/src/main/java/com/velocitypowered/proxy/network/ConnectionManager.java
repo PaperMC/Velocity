@@ -192,7 +192,7 @@ public final class ConnectionManager {
   }
 
   /**
-   * Creates a TCP {@link Bootstrap} using Velocity's event loops.
+   * Creates a Unix domain {@link Bootstrap} using Velocity's event loops.
    *
    * @param group the event loop group to use. Use {@code null} for the default worker group.
    * @return a new {@link Bootstrap}

@@ -53,6 +53,10 @@ public final class ServerInfo implements Comparable<ServerInfo> {
     }
   }
 
+  /**
+   * use getSocketAddress() to get address
+   * @return address the address of the server to connect to
+   */
   public final SocketAddress getSocketAddress() {
     return address;
   }
