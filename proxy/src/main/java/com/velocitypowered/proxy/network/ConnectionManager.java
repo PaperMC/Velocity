@@ -198,17 +198,12 @@ public final class ConnectionManager {
    * @return a new {@link Bootstrap}
    */
   public Bootstrap createDomainWorker(@Nullable EventLoopGroup group) {
-    Bootstrap bootstrap = new Bootstrap()
+      return new Bootstrap()
             .channelFactory(this.transportType.domainSocketChannelFactory)
-            .option(ChannelOption.TCP_NODELAY, true)
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
                     this.server.getConfiguration().getConnectTimeout())
             .group(group == null ? this.workerGroup : group)
             .resolver(this.resolver.asGroup());
-    if (server.getConfiguration().useTcpFastOpen()) {
-      bootstrap.option(ChannelOption.TCP_FASTOPEN_CONNECT, true);
-    }
-    return bootstrap;
   }
 
   /**
