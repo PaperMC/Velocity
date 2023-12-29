@@ -45,11 +45,11 @@ public final class ServerInfo implements Comparable<ServerInfo> {
    * @return address the address of the server to connect to
    */
   @Deprecated
-  public final InetSocketAddress getAddress() throws UnknownHostException {
+  public final InetSocketAddress getAddress() {
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;
     } else {
-      throw new UnknownHostException("BackendServer is use Unix domain socket");
+      throw new UnsupportedOperationException("BackendServer is use Unix domain socket");
     }
   }
 
