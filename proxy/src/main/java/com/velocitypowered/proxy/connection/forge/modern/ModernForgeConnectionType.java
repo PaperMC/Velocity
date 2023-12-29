@@ -29,18 +29,21 @@ import com.velocitypowered.proxy.connection.util.ConnectionTypeImpl;
  */
 public class ModernForgeConnectionType extends ConnectionTypeImpl {
 
-    private static final GameProfile.Property IS_FORGE_CLIENT_PROPERTY =
-            new GameProfile.Property("forgeClient", "true", "");
+  private static final GameProfile.Property IS_FORGE_CLIENT_PROPERTY =
+      new GameProfile.Property("forgeClient", "true", "");
 
-    public ModernForgeConnectionType() {
-        super(ClientConnectionPhases.VANILLA, BackendConnectionPhases.VANILLA);
+  public ModernForgeConnectionType() {
+    super(ClientConnectionPhases.VANILLA,
+        BackendConnectionPhases.VANILLA);
+  }
+
+  @Override
+  public GameProfile addGameProfileTokensIfRequired(GameProfile original,
+      PlayerInfoForwarding forwardingType) {
+    if (forwardingType == PlayerInfoForwarding.MODERN) {
+      return original.addProperty(IS_FORGE_CLIENT_PROPERTY);
     }
 
-    @Override
-    public GameProfile addGameProfileTokensIfRequired(GameProfile original,PlayerInfoForwarding forwardingType) {
-        if (forwardingType == PlayerInfoForwarding.MODERN) {
-            original.addProperty(IS_FORGE_CLIENT_PROPERTY);
-        }
-        return original;
-    }
+    return original;
+  }
 }

@@ -19,7 +19,7 @@ package com.velocitypowered.proxy.connection.backend;
 
 import static com.velocitypowered.proxy.VelocityServer.GENERAL_GSON;
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN;
-import com.velocitypowered.proxy.connection.forge.modern.ModernForgeConstants;
+import static com.velocitypowered.proxy.connection.forge.modern.ModernForgeConstants.MARKER;
 import static com.velocitypowered.proxy.network.Connections.HANDLER;
 
 import com.google.common.base.Preconditions;
@@ -190,7 +190,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
       handshake.setServerAddress(playerVhost + HANDSHAKE_HOSTNAME_TOKEN);
     } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.MODERN_FORGE) {
-      handshake.setServerAddress(playerVhost + ModernForgeConstants.MARKER);
+      handshake.setServerAddress(playerVhost + MARKER);
     } else {
       handshake.setServerAddress(playerVhost);
     }
