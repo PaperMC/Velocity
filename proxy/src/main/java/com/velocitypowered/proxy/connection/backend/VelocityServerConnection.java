@@ -19,7 +19,6 @@ package com.velocitypowered.proxy.connection.backend;
 
 import static com.velocitypowered.proxy.VelocityServer.GENERAL_GSON;
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN;
-import static com.velocitypowered.proxy.connection.forge.modern.ModernForgeConstants.MODERN_HANDSHAKE_HOSTNAME_TOKEN;
 import static com.velocitypowered.proxy.network.Connections.HANDLER;
 
 import com.google.common.base.Preconditions;
@@ -37,6 +36,7 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import com.velocitypowered.proxy.connection.forge.modern.ModernForgeConstants;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.Handshake;
@@ -190,7 +190,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
       handshake.setServerAddress(playerVhost + HANDSHAKE_HOSTNAME_TOKEN);
     } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.MODERN_FORGE) {
-      handshake.setServerAddress(playerVhost + MODERN_HANDSHAKE_HOSTNAME_TOKEN);
+      handshake.setServerAddress(playerVhost + ModernForgeConstants.getModernForgeHostnameToken());
     } else {
       handshake.setServerAddress(playerVhost);
     }

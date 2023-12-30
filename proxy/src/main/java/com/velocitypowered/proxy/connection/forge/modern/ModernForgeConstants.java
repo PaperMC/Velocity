@@ -21,5 +21,10 @@ package com.velocitypowered.proxy.connection.forge.modern;
  * Constants for use with Modern Forge systems.
  */
 public class ModernForgeConstants {
-  public static final String MODERN_HANDSHAKE_HOSTNAME_TOKEN = "\0FORGE";
+  public static final String MODERN_FORGE_TOKEN = "\0FORGE";
+  public static String MODERN_FORGE_HOSTNAME_TOKEN = "";
+
+  public static String getModernForgeHostnameToken() {
+    return MODERN_FORGE_HOSTNAME_TOKEN.isEmpty() ? MODERN_FORGE_TOKEN : MODERN_FORGE_HOSTNAME_TOKEN;
+  }
 }
