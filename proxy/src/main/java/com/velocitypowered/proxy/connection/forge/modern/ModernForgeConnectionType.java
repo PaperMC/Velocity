@@ -17,33 +17,49 @@
 
 package com.velocitypowered.proxy.connection.forge.modern;
 
-import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.proxy.config.PlayerInfoForwarding;
-import com.velocitypowered.proxy.connection.ConnectionTypes;
+import static com.velocitypowered.proxy.connection.forge.modern.ModernForgeConstants.MODERN_FORGE_TOKEN;
+
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.client.ClientConnectionPhases;
 import com.velocitypowered.proxy.connection.util.ConnectionTypeImpl;
 
 /**
- * Contains extra logic for {@link ConnectionTypes#MODERN_FORGE}.
+ * Contains extra logic.
  */
 public class ModernForgeConnectionType extends ConnectionTypeImpl {
 
-  private static final GameProfile.Property IS_FORGE_CLIENT_PROPERTY =
-      new GameProfile.Property("forgeClient", "true", "");
+  public final String hostName;
 
-  public ModernForgeConnectionType() {
+  /**
+   * initialize the host name into an internal variable.
+   *
+   * @param hostName address from the client
+   */
+  public ModernForgeConnectionType(String hostName) {
     super(ClientConnectionPhases.VANILLA,
         BackendConnectionPhases.VANILLA);
+    this.hostName = hostName;
   }
 
-  @Override
-  public GameProfile addGameProfileTokensIfRequired(GameProfile original,
-      PlayerInfoForwarding forwardingType) {
-    if (forwardingType == PlayerInfoForwarding.MODERN) {
-      return original.addProperty(IS_FORGE_CLIENT_PROPERTY);
+  /**
+   * Align the acquisition logic with the internal code of Forge.
+   *
+   * @return returns the final correct hostname
+   */
+  public String getModernToken() {
+    int natVersion = 0;
+    int idx = hostName.indexOf('\0');
+    if (idx != -1) {
+      for (var pt : hostName.split("\0")) {
+        if (pt.startsWith(MODERN_FORGE_TOKEN)) {
+          if (pt.length() > MODERN_FORGE_TOKEN.length()) {
+            natVersion = Integer.parseInt(
+                    pt.substring(MODERN_FORGE_TOKEN.length()));
+          }
+        }
+      }
     }
-
-    return original;
+    return natVersion == 0 ? "\0" + MODERN_FORGE_TOKEN : "\0"
+            + MODERN_FORGE_TOKEN + natVersion;
   }
 }

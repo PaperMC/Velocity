@@ -21,7 +21,6 @@ import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.client.ClientConnectionPhases;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConnectionType;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeClientPhase;
-import com.velocitypowered.proxy.connection.forge.modern.ModernForgeConnectionType;
 import com.velocitypowered.proxy.connection.util.ConnectionTypeImpl;
 
 /**
@@ -49,11 +48,6 @@ public final class ConnectionTypes {
    * Indicates that the connection is a 1.8-1.12 Forge connection.
    */
   public static final ConnectionType LEGACY_FORGE = new LegacyForgeConnectionType();
-
-  /**
-   * Indicates that the connection is a 1.20.2+ Forge connection.
-   */
-  public static final ConnectionType MODERN_FORGE = new ModernForgeConnectionType();
 
   private ConnectionTypes() {
     throw new AssertionError();
