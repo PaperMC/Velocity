@@ -21,10 +21,29 @@ package com.velocitypowered.proxy.connection.forge.modern;
  * Constants for use with Modern Forge systems.
  */
 public class ModernForgeConstants {
-  public static final String MODERN_FORGE_TOKEN = "\0FORGE";
-  public static String MODERN_FORGE_HOSTNAME_TOKEN = "";
+  public static final String MODERN_FORGE_TOKEN = "FORGE";
+  public static int MODERN_FORGE_NAT_VERSION = 0;
 
   public static String getModernForgeHostnameToken() {
-    return MODERN_FORGE_HOSTNAME_TOKEN.isEmpty() ? MODERN_FORGE_TOKEN : MODERN_FORGE_HOSTNAME_TOKEN;
+    return MODERN_FORGE_NAT_VERSION == 0 ? MODERN_FORGE_TOKEN : "\0"
+            + MODERN_FORGE_TOKEN + MODERN_FORGE_NAT_VERSION;
+  }
+
+  /**
+   * Align the acquisition logic with the internal code of Forge.
+   *
+   * @param hostName address from the client
+   */
+  public static void initNatVersion(String hostName) {
+    int idx = hostName.indexOf('\0');
+    if (idx != -1) {
+      for (var pt : hostName.split("\0")) {
+        if (pt.startsWith(MODERN_FORGE_TOKEN)) {
+          if (pt.length() > MODERN_FORGE_TOKEN.length()) {
+            MODERN_FORGE_NAT_VERSION = Integer.parseInt(pt.substring(MODERN_FORGE_TOKEN.length()));
+          }
+        }
+      }
+    }
   }
 }
