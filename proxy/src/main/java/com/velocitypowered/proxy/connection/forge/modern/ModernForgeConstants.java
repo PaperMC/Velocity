@@ -25,7 +25,7 @@ public class ModernForgeConstants {
   public static int MODERN_FORGE_NAT_VERSION = 0;
 
   public static String getModernForgeHostnameToken() {
-    return MODERN_FORGE_NAT_VERSION == 0 ? MODERN_FORGE_TOKEN : "\0"
+    return MODERN_FORGE_NAT_VERSION == 0 ? "\0" + MODERN_FORGE_TOKEN : "\0"
             + MODERN_FORGE_TOKEN + MODERN_FORGE_NAT_VERSION;
   }
 
