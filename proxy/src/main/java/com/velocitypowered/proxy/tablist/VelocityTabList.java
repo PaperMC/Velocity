@@ -110,8 +110,12 @@ public class VelocityTabList implements InternalTabList {
       if (!Objects.equals(previousEntry.getDisplayNameComponent().orElse(null),
           entry.getDisplayNameComponent().orElse(null))) {
         actions.add(UpsertPlayerInfo.Action.UPDATE_DISPLAY_NAME);
-        playerInfoEntry.setDisplayName(new ComponentHolder(player.getProtocolVersion(),
-              entry.getDisplayNameComponent().get()));
+        playerInfoEntry.setDisplayName(entry.getDisplayNameComponent().isEmpty()
+                ?
+                null :
+                new ComponentHolder(player.getProtocolVersion(),
+                        entry.getDisplayNameComponent().get())
+        );
       }
       if (!Objects.equals(previousEntry.getLatency(), entry.getLatency())) {
         actions.add(UpsertPlayerInfo.Action.UPDATE_LATENCY);
@@ -140,8 +144,12 @@ public class VelocityTabList implements InternalTabList {
       playerInfoEntry.setProfile(entry.getProfile());
       if (entry.getDisplayNameComponent().isPresent()) {
         actions.add(UpsertPlayerInfo.Action.UPDATE_DISPLAY_NAME);
-        playerInfoEntry.setDisplayName(new ComponentHolder(player.getProtocolVersion(),
-              entry.getDisplayNameComponent().get()));
+        playerInfoEntry.setDisplayName(entry.getDisplayNameComponent().isEmpty()
+                ?
+                null :
+                new ComponentHolder(player.getProtocolVersion(),
+                        entry.getDisplayNameComponent().get())
+        );
       }
       if (entry.getChatSession() != null) {
         actions.add(UpsertPlayerInfo.Action.INITIALIZE_CHAT);
