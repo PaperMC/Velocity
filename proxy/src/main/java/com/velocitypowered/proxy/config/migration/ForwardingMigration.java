@@ -36,11 +36,11 @@ public final class ForwardingMigration implements ConfigurationMigration {
 
   @Override
   public void migrate(final CommentedFileConfig config, final Logger logger) throws IOException {
-    logger.warn(
-            "You are currently using a deprecated configuration version."
-                    + "\nThe \"forwarding-secret\""
-                    + " parameter is a security hazard and was removed in config version 2.0."
-                    + " We will migrate your secret to the \"forwarding.secret\" file");
+    logger.warn("""
+            You are currently using a deprecated configuration version.
+            The "forwarding-secret"  parameter is a security hazard and was removed in \
+            config version 2.0.
+            We will migrate your secret to the "forwarding.secret" file.""");
     final String actualSecret = config.get("forwarding-secret");
     final Path path = Path.of(config.getOrElse("forwarding-secret-file", "forwarding.secret"));
     if (Files.exists(path)) {
@@ -56,10 +56,10 @@ public final class ForwardingMigration implements ConfigurationMigration {
       config.remove("forwarding-secret");
     }
     config.set("forwarding-secret-file", "forwarding.secret");
-    config.setComment("forwarding-secret-file",
-        "If you are using modern or BungeeGuard IP forwarding, "
-                + "configure a file that contains a unique secret here."
-                + "\nThe file is expected to be UTF-8 encoded and not empty.");
+    config.setComment("forwarding-secret-file", """
+                If you are using modern or BungeeGuard IP forwarding, \
+                configure a file that contains a unique secret here.
+                The file is expected to be UTF-8 encoded and not empty.""");
     config.set("config-version", "2.0");
   }
 }

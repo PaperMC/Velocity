@@ -28,12 +28,12 @@ import org.apache.logging.log4j.Logger;
  */
 public final class MotdMigration implements ConfigurationMigration {
   @Override
-  public boolean shouldMigrate(CommentedFileConfig config) {
+  public boolean shouldMigrate(final CommentedFileConfig config) {
     return configVersion(config) < 2.6;
   }
 
   @Override
-  public void migrate(CommentedFileConfig config, Logger logger) {
+  public void migrate(final CommentedFileConfig config, final Logger logger) {
     final String oldMotd = config.getOrElse("motd", "<#09add3>A Velocity Server");
     final String migratedMotd;
     // JSON Format Migration

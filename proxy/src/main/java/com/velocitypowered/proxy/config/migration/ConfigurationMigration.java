@@ -24,7 +24,8 @@ import org.apache.logging.log4j.Logger;
 /**
  * Configuration Migration interface.
  */
-public /*sealed*/ interface ConfigurationMigration {
+public sealed interface ConfigurationMigration
+        permits ForwardingMigration, KeyAuthenticationMigration, MotdMigration {
   boolean shouldMigrate(CommentedFileConfig config);
 
   void migrate(CommentedFileConfig config, Logger logger) throws IOException;
