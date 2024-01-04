@@ -36,6 +36,7 @@ import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
@@ -81,7 +82,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
       if (sentTime != null) {
         MinecraftConnection smc = serverConnection.getConnection();
         if (smc != null) {
-          player.setPing(System.currentTimeMillis() - sentTime);
+          player.setPing(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - sentTime));
           smc.write(packet);
         }
       }
