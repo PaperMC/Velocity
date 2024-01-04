@@ -15,29 +15,25 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.tablist;
+package com.velocitypowered.proxy.component;
 
-import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.player.TabList;
-import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
-import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfo;
-import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
+import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.junit.jupiter.api.Test;
 
 /**
- * Tab list interface with methods for handling player info packets.
+ * ComponentHolder tests.
  */
-public interface InternalTabList extends TabList {
+public class ComponentHolderTest {
 
-  Player getPlayer();
-
-  default void processLegacy(LegacyPlayerListItem packet) {
+  @Test
+  void testJsonToBinary() {
+    Component component = MiniMessage.miniMessage().deserialize(
+        "<#09add3>A <reset><reset>Velocity <#09add3>Server");
+    ComponentHolder holder = new ComponentHolder(ProtocolVersion.MINECRAFT_1_20_3, component);
+    holder.getJson();
+    holder.getBinaryTag();
   }
-
-  default void processUpdate(UpsertPlayerInfo infoPacket) {
-  }
-
-  default void processRemove(RemovePlayerInfo infoPacket) {
-  }
-
-  void clearAllSilent();
 }

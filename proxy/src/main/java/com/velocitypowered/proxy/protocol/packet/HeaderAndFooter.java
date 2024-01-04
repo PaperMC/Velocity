@@ -17,39 +17,34 @@
 
 package com.velocitypowered.proxy.protocol.packet;
 
-import static com.velocitypowered.proxy.protocol.ProtocolUtils.writeString;
-
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 
 public class HeaderAndFooter implements MinecraftPacket {
 
-  private static final String EMPTY_COMPONENT = "{\"translate\":\"\"}";
-  private static final HeaderAndFooter RESET = new HeaderAndFooter();
-
-  private final String header;
-  private final String footer;
+  private final ComponentHolder header;
+  private final ComponentHolder footer;
 
   public HeaderAndFooter() {
-    this(EMPTY_COMPONENT, EMPTY_COMPONENT);
+    throw new UnsupportedOperationException("Decode is not implemented");
   }
 
-  public HeaderAndFooter(String header, String footer) {
+  public HeaderAndFooter(ComponentHolder header, ComponentHolder footer) {
     this.header = Preconditions.checkNotNull(header, "header");
     this.footer = Preconditions.checkNotNull(footer, "footer");
   }
 
-  public String getHeader() {
+  public ComponentHolder getHeader() {
     return header;
   }
 
-  public String getFooter() {
+  public ComponentHolder getFooter() {
     return footer;
   }
 
@@ -60,8 +55,8 @@ public class HeaderAndFooter implements MinecraftPacket {
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    writeString(buf, header);
-    writeString(buf, footer);
+    header.write(buf);
+    footer.write(buf);
   }
 
   @Override
@@ -71,11 +66,12 @@ public class HeaderAndFooter implements MinecraftPacket {
 
   public static HeaderAndFooter create(Component header,
       Component footer, ProtocolVersion protocolVersion) {
-    GsonComponentSerializer serializer = ProtocolUtils.getJsonChatSerializer(protocolVersion);
-    return new HeaderAndFooter(serializer.serialize(header), serializer.serialize(footer));
+    return new HeaderAndFooter(new ComponentHolder(protocolVersion, header),
+      new ComponentHolder(protocolVersion, footer));
   }
 
-  public static HeaderAndFooter reset() {
-    return RESET;
+  public static HeaderAndFooter reset(ProtocolVersion version) {
+    ComponentHolder empty = new ComponentHolder(version, Component.empty());
+    return new HeaderAndFooter(empty, empty);
   }
 }
