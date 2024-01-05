@@ -7,6 +7,7 @@
 
 package com.velocitypowered.api.proxy.player;
 
+import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -14,6 +15,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * Represents the information for a resource pack to apply that can be sent to the client.
  */
 public interface ResourcePackInfo {
+
+  /**
+   * Gets the id of this resource-pack.
+   *
+   * @return the id of the resource-pack
+   */
+  UUID getId();
 
   /**
    * Gets the link the resource-pack can be found at.
@@ -95,6 +103,13 @@ public interface ResourcePackInfo {
    * Builder for {@link ResourcePackInfo} instances.
    */
   interface Builder {
+
+    /**
+     * Sets the id of the resource pack.
+     *
+     * @param id the id the resource-pack
+     */
+    Builder setId(UUID id);
 
     /**
      * Sets the resource-pack as required to play on the network.

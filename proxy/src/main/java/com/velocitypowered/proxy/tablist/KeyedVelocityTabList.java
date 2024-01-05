@@ -26,7 +26,6 @@ import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
 import java.util.ArrayList;
@@ -60,6 +59,11 @@ public class KeyedVelocityTabList implements InternalTabList {
     this.connection = player.getConnection();
   }
 
+  @Override
+  public Player getPlayer() {
+    return player;
+  }
+
   @Deprecated
   @Override
   public void setHeaderAndFooter(Component header, Component footer) {
@@ -70,7 +74,7 @@ public class KeyedVelocityTabList implements InternalTabList {
 
   @Override
   public void clearHeaderAndFooter() {
-    connection.write(HeaderAndFooter.reset());
+    this.player.clearPlayerListHeaderAndFooter();
   }
 
   @Override
@@ -131,8 +135,13 @@ public class KeyedVelocityTabList implements InternalTabList {
     for (TabListEntry value : listEntries) {
       items.add(LegacyPlayerListItem.Item.from(value));
     }
-    entries.clear();
+    clearAllSilent();
     connection.delayedWrite(new LegacyPlayerListItem(LegacyPlayerListItem.REMOVE_PLAYER, items));
+  }
+
+  @Override
+  public void clearAllSilent() {
+    entries.clear();
   }
 
   @Override

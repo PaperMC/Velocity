@@ -71,4 +71,8 @@ public class VelocityPluginContainer implements PluginContainer {
 
     return this.service;
   }
+
+  public boolean hasExecutorService() {
+    return this.service != null;
+  }
 }

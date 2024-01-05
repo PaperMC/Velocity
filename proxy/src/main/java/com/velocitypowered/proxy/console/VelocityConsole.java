@@ -35,8 +35,7 @@ import net.kyori.adventure.platform.facet.FacetPointers.Type;
 import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.kyori.adventure.translation.GlobalTranslator;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.minecrell.terminalconsole.SimpleTerminalConsole;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -55,6 +54,8 @@ import org.jline.reader.LineReaderBuilder;
 public final class VelocityConsole extends SimpleTerminalConsole implements ConsoleCommandSource {
 
   private static final Logger logger = LogManager.getLogger(VelocityConsole.class);
+  private static final ComponentLogger componentLogger = ComponentLogger
+          .logger(VelocityConsole.class);
 
   private final VelocityServer server;
   private PermissionFunction permissionFunction = ALWAYS_TRUE;
@@ -72,9 +73,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   @Override
   public void sendMessage(@NonNull Identity identity, @NonNull Component message,
       @NonNull MessageType messageType) {
-    Component translated = GlobalTranslator.render(message, ClosestLocaleMatcher.INSTANCE
-        .lookupClosest(Locale.getDefault()));
-    logger.info(LegacyComponentSerializer.legacySection().serialize(translated));
+    componentLogger.info(message);
   }
 
   @Override

@@ -1,6 +1,7 @@
 plugins {
     `java-library`
     `maven-publish`
+    id("velocity-publish")
 }
 
 java {
@@ -29,12 +30,16 @@ dependencies {
     api("net.kyori:adventure-text-serializer-legacy")
     api("net.kyori:adventure-text-serializer-plain")
     api("net.kyori:adventure-text-minimessage")
+    api("net.kyori:adventure-text-logger-slf4j")
+    api("net.kyori:adventure-text-serializer-ansi")
+
+    api(libs.snakeyaml)
 
     api(libs.slf4j)
     api(libs.guice)
     api(libs.checker.qual)
     api(libs.brigadier)
-    api(libs.bundles.configurate)
+    api(libs.bundles.configurate4)
     api(libs.caffeine)
 }
 
@@ -55,17 +60,13 @@ tasks {
             "https://www.slf4j.org/apidocs/",
             "https://guava.dev/releases/${libs.guava.get().version}/api/docs/",
             "https://google.github.io/guice/api-docs/${libs.guice.get().version}/javadoc/",
-            "https://docs.oracle.com/en/java/javase/11/docs/api/",
-            "https://jd.advntr.dev/api/${libs.adventure.bom.get().version}/",
+            "https://docs.oracle.com/en/java/javase/17/docs/api/",
+            //"https://jd.advntr.dev/api/${libs.adventure.bom.get().version}/",
+            "https://jd.advntr.dev/api/4.14.0/",
             "https://javadoc.io/doc/com.github.ben-manes.caffeine/caffeine"
         )
 
         // Disable the crazy super-strict doclint tool in Java 8
         o.addStringOption("Xdoclint:none", "-quiet")
-
-        // Remove "undefined" from search paths when generating javadoc for a non-modular project (JDK-8215291)
-        if (JavaVersion.current() >= JavaVersion.VERSION_1_9 && JavaVersion.current() < JavaVersion.VERSION_12) {
-            o.addBooleanOption("-no-module-directories", true)
-        }
     }
 }

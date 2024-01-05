@@ -22,6 +22,7 @@ import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
@@ -31,7 +32,6 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
-import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.Nullable;
 
 public class UpsertPlayerInfo implements MinecraftPacket {
@@ -179,16 +179,14 @@ public class UpsertPlayerInfo implements MinecraftPacket {
     }),
     UPDATE_DISPLAY_NAME((version, buf, info) -> { // read
       if (buf.readBoolean()) {
-        info.displayName = ProtocolUtils.getJsonChatSerializer(version)
-            .deserialize(ProtocolUtils.readString(buf));
+        info.displayName = ComponentHolder.read(buf, version);
       } else {
         info.displayName = null;
       }
     }, (version, buf, info) -> { // write
       buf.writeBoolean(info.displayName != null);
       if (info.displayName != null) {
-        ProtocolUtils.writeString(buf, ProtocolUtils.getJsonChatSerializer(version)
-            .serialize(info.displayName));
+        info.displayName.write(buf);
       }
     });
 
@@ -219,7 +217,7 @@ public class UpsertPlayerInfo implements MinecraftPacket {
     private int latency;
     private int gameMode;
     @Nullable
-    private Component displayName;
+    private ComponentHolder displayName;
     @Nullable
     private RemoteChatSession chatSession;
 
@@ -248,7 +246,7 @@ public class UpsertPlayerInfo implements MinecraftPacket {
     }
 
     @Nullable
-    public Component getDisplayName() {
+    public ComponentHolder getDisplayName() {
       return displayName;
     }
 
@@ -273,7 +271,7 @@ public class UpsertPlayerInfo implements MinecraftPacket {
       this.gameMode = gameMode;
     }
 
-    public void setDisplayName(@Nullable Component displayName) {
+    public void setDisplayName(@Nullable ComponentHolder displayName) {
       this.displayName = displayName;
     }
 

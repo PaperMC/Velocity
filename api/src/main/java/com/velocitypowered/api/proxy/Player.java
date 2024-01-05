@@ -19,6 +19,7 @@ import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -30,7 +31,6 @@ import net.kyori.adventure.key.Keyed;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.event.HoverEventSource;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 
@@ -148,10 +148,17 @@ public interface Player extends
   /**
    * Clears the tab list header and footer for the player.
    *
-   * @deprecated Use {@link TabList#clearHeaderAndFooter()}.
+   * @deprecated Use {@link Player#clearPlayerListHeaderAndFooter()}.
    */
   @Deprecated
-  void clearHeaderAndFooter();
+  default void clearHeaderAndFooter() {
+    clearPlayerListHeaderAndFooter();
+  }
+
+  /**
+   * Clears the player list header and footer.
+   */
+  void clearPlayerListHeaderAndFooter();
 
   /**
    * Returns the player's player list header.
@@ -230,6 +237,7 @@ public interface Player extends
    * @return the applied resource pack or null if none.
    */
   @Nullable
+  @Deprecated
   ResourcePackInfo getAppliedResourcePack();
 
   /**
@@ -240,7 +248,25 @@ public interface Player extends
    * @return the pending resource pack or null if none
    */
   @Nullable
+  @Deprecated
   ResourcePackInfo getPendingResourcePack();
+
+  /**
+   * Gets the {@link ResourcePackInfo} of the currently applied
+   * resource-packs.
+   *
+   * @return collection of the applied resource packs.
+   */
+  Collection<ResourcePackInfo> getAppliedResourcePacks();
+
+  /**
+   * Gets the {@link ResourcePackInfo} of the resource packs
+   * the user is currently downloading or is currently
+   * prompted to install.
+   *
+   * @return collection of the pending resource packs
+   */
+  Collection<ResourcePackInfo> getPendingResourcePacks();
 
   /**
    * <strong>Note that this method does not send a plugin message to the server the player
