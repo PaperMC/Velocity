@@ -172,6 +172,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     // separated by \0 (the null byte). In order, you send the original host, the player's IP, their
     // UUID (undashed), and if you are in online-mode, their login properties (from Mojang).
     StringBuilder data = new StringBuilder().append(getRemoteAddress())
+        .append('\0')
         .append(getPlayerRemoteAddressAsString())
         .append('\0')
         .append(proxyPlayer.getGameProfile().getUndashedId())
