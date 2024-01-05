@@ -81,6 +81,7 @@ import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
@@ -177,7 +178,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       if (sentTime != null) {
         MinecraftConnection smc = serverConnection.getConnection();
         if (smc != null) {
-          player.setPing(System.currentTimeMillis() - sentTime);
+          player.setPing(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - sentTime));
           smc.write(packet);
         }
       }
