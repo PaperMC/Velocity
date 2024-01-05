@@ -102,6 +102,12 @@ compression-threshold = 256
 # default level of 6.
 compression-level = -1
 
+# Packets with an uncompressed length below this value will always be decompressed and
+# re-compressed depending on the compression threshold of the backend server and proxy.
+# For larger packets, only the first 5 bytes will be decompressed to check whether the packet
+# needs to be fully decompressed or it can be passed to the backend server/client as is.
+decompression-threshold = 2048
+
 # How fast (in milliseconds) are clients allowed to connect after the last connection? By
 # default, this is three seconds. Disable this by setting this to 0.
 login-ratelimit = 3000

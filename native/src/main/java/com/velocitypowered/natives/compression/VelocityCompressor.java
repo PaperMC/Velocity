@@ -30,5 +30,10 @@ public interface VelocityCompressor extends Disposable, Native {
   void inflate(ByteBuf source, ByteBuf destination, int uncompressedSize)
       throws DataFormatException;
 
+  default void inflatePartial(ByteBuf source, ByteBuf destination, int size)
+      throws DataFormatException {
+    throw new UnsupportedOperationException();
+  }
+
   void deflate(ByteBuf source, ByteBuf destination) throws DataFormatException;
 }

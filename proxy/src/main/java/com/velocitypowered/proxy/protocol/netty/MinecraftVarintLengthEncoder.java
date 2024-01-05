@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.protocol.netty;
 import com.velocitypowered.natives.encryption.JavaVelocityCipher;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.netty.data.UncompressedPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -29,7 +30,7 @@ import io.netty.handler.codec.MessageToByteEncoder;
  * Handler for appending a length for Minecraft packets.
  */
 @ChannelHandler.Sharable
-public class MinecraftVarintLengthEncoder extends MessageToByteEncoder<ByteBuf> {
+public class MinecraftVarintLengthEncoder extends MessageToByteEncoder<UncompressedPacket> {
 
   public static final MinecraftVarintLengthEncoder INSTANCE = new MinecraftVarintLengthEncoder();
   public static final boolean IS_JAVA_CIPHER = Natives.cipher.get() == JavaVelocityCipher.FACTORY;
@@ -38,16 +39,18 @@ public class MinecraftVarintLengthEncoder extends MessageToByteEncoder<ByteBuf> 
   }
 
   @Override
-  protected void encode(ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out) throws Exception {
-    ProtocolUtils.writeVarInt(out, msg.readableBytes());
-    out.writeBytes(msg);
+  protected void encode(ChannelHandlerContext ctx, UncompressedPacket msg, ByteBuf out)
+      throws Exception {
+    ProtocolUtils.writeVarInt(out, msg.getPacketBuf().readableBytes());
+    out.writeBytes(msg.getPacketBuf());
+    msg.getPacketBuf().release();
   }
 
   @Override
-  protected ByteBuf allocateBuffer(ChannelHandlerContext ctx, ByteBuf msg, boolean preferDirect)
-      throws Exception {
-    int anticipatedRequiredCapacity = ProtocolUtils.varIntBytes(msg.readableBytes())
-        + msg.readableBytes();
+  protected ByteBuf allocateBuffer(ChannelHandlerContext ctx, UncompressedPacket msg,
+                                   boolean preferDirect) throws Exception {
+    int anticipatedRequiredCapacity = ProtocolUtils.varIntBytes(msg.getPacketBuf().readableBytes())
+        + msg.getPacketBuf().readableBytes();
     return IS_JAVA_CIPHER
         ? ctx.alloc().heapBuffer(anticipatedRequiredCapacity)
         : ctx.alloc().directBuffer(anticipatedRequiredCapacity);

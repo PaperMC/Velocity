@@ -157,7 +157,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public void handleUnknown(ByteBuf buf) {
+  public void handleUnknown(Object obj) {
     VelocityServerConnection serverConnection = player.getConnectedServer();
     if (serverConnection == null) {
       // No server connection yet, probably transitioning.
@@ -166,7 +166,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
     MinecraftConnection smc = serverConnection.getConnection();
     if (smc != null && !smc.isClosed() && serverConnection.getPhase().consideredComplete()) {
-      smc.write(buf.retain());
+      smc.write(obj);
     }
   }
 

@@ -22,14 +22,16 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.netty.data.UncompressedPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.MessageToByteEncoder;
+import io.netty.handler.codec.MessageToMessageEncoder;
+import java.util.List;
 
 /**
  * Encodes {@link MinecraftPacket} instances.
  */
-public class MinecraftEncoder extends MessageToByteEncoder<MinecraftPacket> {
+public class MinecraftPreEncoder extends MessageToMessageEncoder<MinecraftPacket> {
 
   private final ProtocolUtils.Direction direction;
   private StateRegistry state;
@@ -40,7 +42,7 @@ public class MinecraftEncoder extends MessageToByteEncoder<MinecraftPacket> {
    *
    * @param direction the direction to encode to
    */
-  public MinecraftEncoder(ProtocolUtils.Direction direction) {
+  public MinecraftPreEncoder(ProtocolUtils.Direction direction) {
     this.direction = Preconditions.checkNotNull(direction, "direction");
     this.registry = StateRegistry.HANDSHAKE.getProtocolRegistry(
         direction, ProtocolVersion.MINIMUM_VERSION);
@@ -48,10 +50,12 @@ public class MinecraftEncoder extends MessageToByteEncoder<MinecraftPacket> {
   }
 
   @Override
-  protected void encode(ChannelHandlerContext ctx, MinecraftPacket msg, ByteBuf out) {
+  protected void encode(ChannelHandlerContext ctx, MinecraftPacket msg, List<Object> out) {
     int packetId = this.registry.getPacketId(msg);
-    ProtocolUtils.writeVarInt(out, packetId);
-    msg.encode(out, direction, registry.version);
+    ByteBuf buf = ctx.alloc().buffer();
+    ProtocolUtils.writeVarInt(buf, packetId);
+    msg.encode(buf, direction, registry.version);
+    out.add(new UncompressedPacket(packetId, buf));
   }
 
   public void setProtocolVersion(final ProtocolVersion protocolVersion) {

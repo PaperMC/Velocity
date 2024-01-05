@@ -324,6 +324,11 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   @Override
+  public int getDecompressionThreshold() {
+    return advanced.getDecompressionThreshold();
+  }
+
+  @Override
   public int getLoginRatelimit() {
     return advanced.getLoginRatelimit();
   }
@@ -737,6 +742,8 @@ public class VelocityConfiguration implements ProxyConfig {
     @Expose
     private int compressionLevel = -1;
     @Expose
+    private int decompressionThreshold = 2048;
+    @Expose
     private int loginRatelimit = 3000;
     @Expose
     private int connectionTimeout = 5000;
@@ -766,6 +773,7 @@ public class VelocityConfiguration implements ProxyConfig {
       if (config != null) {
         this.compressionThreshold = config.getIntOrElse("compression-threshold", 256);
         this.compressionLevel = config.getIntOrElse("compression-level", -1);
+        this.decompressionThreshold = config.getIntOrElse("decompression-threshold", 2048);
         this.loginRatelimit = config.getIntOrElse("login-ratelimit", 3000);
         this.connectionTimeout = config.getIntOrElse("connection-timeout", 5000);
         this.readTimeout = config.getIntOrElse("read-timeout", 30000);
@@ -791,6 +799,10 @@ public class VelocityConfiguration implements ProxyConfig {
 
     public int getCompressionLevel() {
       return compressionLevel;
+    }
+
+    public int getDecompressionThreshold() {
+      return decompressionThreshold;
     }
 
     public int getLoginRatelimit() {
@@ -842,6 +854,7 @@ public class VelocityConfiguration implements ProxyConfig {
       return "Advanced{"
           + "compressionThreshold=" + compressionThreshold
           + ", compressionLevel=" + compressionLevel
+          + ", decompressionThreshold=" + decompressionThreshold
           + ", loginRatelimit=" + loginRatelimit
           + ", connectionTimeout=" + connectionTimeout
           + ", readTimeout=" + readTimeout
