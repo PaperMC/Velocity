@@ -362,8 +362,17 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     ensureInEventLoop();
 
     this.state = state;
-    this.channel.pipeline().get(MinecraftEncoder.class).setState(state);
-    this.channel.pipeline().get(MinecraftDecoder.class).setState(state);
+    // If the connection is LEGACY (<1.6), the decoder and encoder are not set.
+    final MinecraftEncoder minecraftEncoder = this.channel.pipeline()
+            .get(MinecraftEncoder.class);
+    if (minecraftEncoder != null) {
+      minecraftEncoder.setState(state);
+    }
+    final MinecraftDecoder minecraftDecoder = this.channel.pipeline()
+            .get(MinecraftDecoder.class);
+    if (minecraftDecoder != null) {
+      minecraftDecoder.setState(state);
+    }
 
     if (state == StateRegistry.CONFIG) {
       // Activate the play packet queue
