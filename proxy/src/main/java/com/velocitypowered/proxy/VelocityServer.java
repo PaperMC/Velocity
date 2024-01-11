@@ -218,8 +218,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     logger.info("Booting up {} {}...", getVersion().getName(), getVersion().getVersion());
     console.setupStreams();
 
-    registerTranslations();
-
     serverKeyPair = EncryptionUtils.createRsaKeyPair(1024);
 
     cm.logChannelInformation();
@@ -233,6 +231,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     new SendCommand(this).register();
 
     this.doStartupConfigLoad();
+
+    registerTranslations();
 
     for (Map.Entry<String, String> entry : configuration.getServers().entrySet()) {
       servers.register(new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue())));
