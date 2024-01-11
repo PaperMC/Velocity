@@ -26,6 +26,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.annotations.Expose;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
+import com.velocitypowered.proxy.config.migration.ConfigurationMigration;
+import com.velocitypowered.proxy.config.migration.ForwardingMigration;
+import com.velocitypowered.proxy.config.migration.KeyAuthenticationMigration;
+import com.velocitypowered.proxy.config.migration.MotdMigration;
 import com.velocitypowered.proxy.util.AddressUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
@@ -42,8 +46,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -59,7 +61,7 @@ public class VelocityConfiguration implements ProxyConfig {
   @Expose
   private String bind = "0.0.0.0:25577";
   @Expose
-  private String motd = "&3A Velocity Server";
+  private String motd = "<aqua>A Velocity Server";
   @Expose
   private int showMaxPlayers = 500;
   @Expose
@@ -353,7 +355,7 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   public boolean useTcpFastOpen() {
-    return advanced.tcpFastOpen;
+    return advanced.isTcpFastOpen();
   }
 
   public Metrics getMetrics() {
@@ -433,171 +435,115 @@ public class VelocityConfiguration implements ProxyConfig {
     }
 
     // Create the forwarding-secret file on first-time startup if it doesn't exist
-    Path defaultForwardingSecretPath = Path.of("forwarding.secret");
+    final Path defaultForwardingSecretPath = Path.of("forwarding.secret");
     if (Files.notExists(path) && Files.notExists(defaultForwardingSecretPath)) {
       Files.writeString(defaultForwardingSecretPath, generateRandomString(12));
     }
 
-    boolean mustResave = false;
-    CommentedFileConfig config = CommentedFileConfig.builder(path)
-        .defaultData(defaultConfigLocation)
-        .autosave()
-        .preserveInsertionOrder()
-        .sync()
-        .build();
-    config.load();
+    try (final CommentedFileConfig config = CommentedFileConfig.builder(path)
+            .defaultData(defaultConfigLocation)
+            .autosave()
+            .preserveInsertionOrder()
+            .sync()
+            .build()
+    ) {
+      config.load();
 
-    // TODO: migrate this on Velocity Polymer
-    double configVersion;
-    try {
-      configVersion = Double.parseDouble(config.getOrElse("config-version", "1.0"));
-    } catch (NumberFormatException e) {
-      configVersion = 1.0;
-    }
+      final ConfigurationMigration[] migrations = {
+          new ForwardingMigration(),
+          new KeyAuthenticationMigration(),
+          new MotdMigration()
+      };
 
-    // Whether or not this config version is older than 2.0 which uses the deprecated
-    // "forwarding-secret" parameter
-    boolean legacyConfig = configVersion < 2.0;
-
-    String forwardingSecretString;
-    byte[] forwardingSecret;
-
-    // Handle the previous (version 1.0) config
-    // There is duplicate/old code here in effort to make the future commit which abandons legacy
-    // config handling easier to implement. All that would be required is removing the if statement
-    // here and keeping the contents of the else block (with slight tidying).
-    if (legacyConfig) {
-      logger.warn(
-          "You are currently using a deprecated configuration version. The \"forwarding-secret\""
-              + " parameter is a security hazard and was removed in config version 2.0."
-              + " You should rename your current \"velocity.toml\" to something else to allow"
-              + " Velocity to generate a config file for the new version. You may then configure "
-              + " that file as you normally would. The only differences are the config-version "
-              + "and \"forwarding-secret\" has been replaced by \"forwarding-secret-file\".");
-
-      // Default legacy handling
-      forwardingSecretString = System.getenv()
-          .getOrDefault("VELOCITY_FORWARDING_SECRET", config.get("forwarding-secret"));
-      if (forwardingSecretString == null || forwardingSecretString.isEmpty()) {
-        forwardingSecretString = generateRandomString(12);
-        config.set("forwarding-secret", forwardingSecretString);
-        mustResave = true;
+      for (final ConfigurationMigration migration : migrations) {
+        if (migration.shouldMigrate(config)) {
+          migration.migrate(config, logger);
+        }
       }
-    } else {
-      // New handling
-      forwardingSecretString = System.getenv().getOrDefault("VELOCITY_FORWARDING_SECRET", "");
+
+      String forwardingSecretString = System.getenv().getOrDefault(
+              "VELOCITY_FORWARDING_SECRET", "");
       if (forwardingSecretString.isEmpty()) {
-        String forwardSecretFile = config.get("forwarding-secret-file");
-        Path secretPath = forwardSecretFile == null
-            ? defaultForwardingSecretPath
-            : Path.of(forwardSecretFile);
+        final String forwardSecretFile = config.get("forwarding-secret-file");
+        final Path secretPath = forwardSecretFile == null
+                ? defaultForwardingSecretPath
+                : Path.of(forwardSecretFile);
         if (Files.exists(secretPath)) {
           if (Files.isRegularFile(secretPath)) {
             forwardingSecretString = String.join("", Files.readAllLines(secretPath));
           } else {
             throw new RuntimeException(
-                "The file " + forwardSecretFile + " is not a valid file or it is a directory.");
+                    "The file " + forwardSecretFile + " is not a valid file or it is a directory.");
           }
         } else {
           throw new RuntimeException("The forwarding-secret-file does not exist.");
         }
       }
-    }
-    forwardingSecret = forwardingSecretString.getBytes(StandardCharsets.UTF_8);
+      final byte[] forwardingSecret = forwardingSecretString.getBytes(StandardCharsets.UTF_8);
+      final String motd = config.getOrElse("motd", "<#09add3>A Velocity Server");
 
-    if (configVersion == 1.0 || configVersion == 2.0) {
-      config.set("force-key-authentication", config.getOrElse("force-key-authentication", true));
-      config.setComment("force-key-authentication",
-          "Should the proxy enforce the new public key security standard? By default, this is on.");
-      config.set("config-version", configVersion == 2.0 ? "2.5" : "1.5");
-      mustResave = true;
-    }
+      // Read the rest of the config
+      final CommentedConfig serversConfig = config.get("servers");
+      final CommentedConfig forcedHostsConfig = config.get("forced-hosts");
+      final CommentedConfig advancedConfig = config.get("advanced");
+      final CommentedConfig queryConfig = config.get("query");
+      final CommentedConfig metricsConfig = config.get("metrics");
+      final PlayerInfoForwarding forwardingMode = config.getEnumOrElse(
+              "player-info-forwarding-mode", PlayerInfoForwarding.NONE);
+      final PingPassthroughMode pingPassthroughMode = config.getEnumOrElse("ping-passthrough",
+              PingPassthroughMode.DISABLED);
 
-    String motd = config.getOrElse("motd", "<#09add3>A Velocity Server");
+      final String bind = config.getOrElse("bind", "0.0.0.0:25577");
+      final int maxPlayers = config.getIntOrElse("show-max-players", 500);
+      final boolean onlineMode = config.getOrElse("online-mode", true);
+      final boolean forceKeyAuthentication = config.getOrElse("force-key-authentication", true);
+      final boolean announceForge = config.getOrElse("announce-forge", true);
+      final boolean preventClientProxyConnections = config.getOrElse(
+              "prevent-client-proxy-connections", true);
+      final boolean kickExisting = config.getOrElse("kick-existing-players", false);
+      final boolean enablePlayerAddressLogging = config.getOrElse(
+              "enable-player-address-logging", true);
 
-    // Old MOTD Migration
-    if (configVersion < 2.6) {
-      final String migratedMotd;
-      // JSON Format Migration
-      if (motd.strip().startsWith("{")) {
-        migratedMotd = MiniMessage.miniMessage().serialize(
-                GsonComponentSerializer.gson().deserialize(motd))
-                .replace("\\", "");
-      } else {
-        // Legacy '&' Format Migration
-        migratedMotd = MiniMessage.miniMessage().serialize(
-                LegacyComponentSerializer.legacyAmpersand().deserialize(motd));
+      // Throw an exception if the forwarding-secret file is empty and the proxy is using a
+      // forwarding mode that requires it.
+      if (forwardingSecret.length == 0
+              && (forwardingMode == PlayerInfoForwarding.MODERN
+              || forwardingMode == PlayerInfoForwarding.BUNGEEGUARD)) {
+        throw new RuntimeException("The forwarding-secret file must not be empty.");
       }
 
-      config.set("motd", migratedMotd);
-      motd = migratedMotd;
-
-      config.setComment("motd",
-              " What should be the MOTD? This gets displayed when the player adds your server to\n"
-                      + " their server list. Only MiniMessage format is accepted.");
-      config.set("config-version", "2.6");
-      mustResave = true;
+      return new VelocityConfiguration(
+              bind,
+              motd,
+              maxPlayers,
+              onlineMode,
+              preventClientProxyConnections,
+              announceForge,
+              forwardingMode,
+              forwardingSecret,
+              kickExisting,
+              pingPassthroughMode,
+              enablePlayerAddressLogging,
+              new Servers(serversConfig),
+              new ForcedHosts(forcedHostsConfig),
+              new Advanced(advancedConfig),
+              new Query(queryConfig),
+              new Metrics(metricsConfig),
+              forceKeyAuthentication
+      );
     }
-
-    // Handle any cases where the config needs to be saved again
-    if (mustResave) {
-      config.save();
-    }
-
-    // Read the rest of the config
-    CommentedConfig serversConfig = config.get("servers");
-    CommentedConfig forcedHostsConfig = config.get("forced-hosts");
-    CommentedConfig advancedConfig = config.get("advanced");
-    CommentedConfig queryConfig = config.get("query");
-    CommentedConfig metricsConfig = config.get("metrics");
-    PlayerInfoForwarding forwardingMode = config.getEnumOrElse("player-info-forwarding-mode",
-        PlayerInfoForwarding.NONE);
-    PingPassthroughMode pingPassthroughMode = config.getEnumOrElse("ping-passthrough",
-        PingPassthroughMode.DISABLED);
-
-    String bind = config.getOrElse("bind", "0.0.0.0:25577");
-    int maxPlayers = config.getIntOrElse("show-max-players", 500);
-    Boolean onlineMode = config.getOrElse("online-mode", true);
-    Boolean forceKeyAuthentication = config.getOrElse("force-key-authentication", true);
-    Boolean announceForge = config.getOrElse("announce-forge", true);
-    Boolean preventClientProxyConnections = config.getOrElse("prevent-client-proxy-connections",
-        true);
-    Boolean kickExisting = config.getOrElse("kick-existing-players", false);
-    Boolean enablePlayerAddressLogging = config.getOrElse("enable-player-address-logging", true);
-
-    // Throw an exception if the forwarding-secret file is empty and the proxy is using a
-    // forwarding mode that requires it.
-    if (forwardingSecret.length == 0
-        && (forwardingMode == PlayerInfoForwarding.MODERN
-        || forwardingMode == PlayerInfoForwarding.BUNGEEGUARD)) {
-      throw new RuntimeException("The forwarding-secret file must not be empty.");
-    }
-
-    return new VelocityConfiguration(
-        bind,
-        motd,
-        maxPlayers,
-        onlineMode,
-        preventClientProxyConnections,
-        announceForge,
-        forwardingMode,
-        forwardingSecret,
-        kickExisting,
-        pingPassthroughMode,
-        enablePlayerAddressLogging,
-        new Servers(serversConfig),
-        new ForcedHosts(forcedHostsConfig),
-        new Advanced(advancedConfig),
-        new Query(queryConfig),
-        new Metrics(metricsConfig),
-        forceKeyAuthentication
-    );
   }
 
-  private static String generateRandomString(int length) {
-    String chars = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890";
-    StringBuilder builder = new StringBuilder();
-    Random rnd = new SecureRandom();
+  /**
+   * Generates a Random String.
+   *
+   * @param length the required string size.
+   * @return a new random string.
+   */
+  public static String generateRandomString(int length) {
+    final String chars = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890";
+    final StringBuilder builder = new StringBuilder();
+    final Random rnd = new SecureRandom();
     for (int i = 0; i < length; i++) {
       builder.append(chars.charAt(rnd.nextInt(chars.length())));
     }

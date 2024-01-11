@@ -53,6 +53,7 @@ import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse.Offer;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatTimeKeeper;
 import com.velocitypowered.proxy.protocol.packet.chat.CommandHandler;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedChatHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedCommandHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerChat;
@@ -80,6 +81,7 @@ import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
@@ -176,7 +178,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       if (sentTime != null) {
         MinecraftConnection smc = serverConnection.getConnection();
         if (smc != null) {
-          player.setPing(System.currentTimeMillis() - sentTime);
+          player.setPing(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - sentTime));
           smc.write(packet);
         }
       }
@@ -318,9 +320,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         String brand = PluginMessageUtil.readBrandMessage(packet.content());
         server.getEventManager().fireAndForget(new PlayerClientBrandEvent(player, brand));
         player.setClientBrand(brand);
-        backendConn.write(
-            PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion(),
-                player.getProtocolVersion()));
+        backendConn.write(packet.retain());
       } else if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
         return true;
       } else {
@@ -633,10 +633,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           List<Offer> offers = new ArrayList<>();
           for (Suggestion suggestion : suggestions.getList()) {
             String offer = suggestion.getText();
-            Component tooltip = null;
+            ComponentHolder tooltip = null;
             if (suggestion.getTooltip() != null
                 && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
-              tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
+              tooltip = new ComponentHolder(player.getProtocolVersion(),
+                  ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent());
             }
             offers.add(new Offer(offer, tooltip));
           }
@@ -698,10 +699,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
               if (legacy && offer.startsWith(command)) {
                 offer = offer.substring(command.length());
               }
-              Component tooltip = null;
+              ComponentHolder tooltip = null;
               if (suggestion.getTooltip() != null
                   && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
-                tooltip = ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent();
+                tooltip = new ComponentHolder(player.getProtocolVersion(),
+                        ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent());
               }
               response.getOffers().add(new Offer(offer, tooltip));
             }

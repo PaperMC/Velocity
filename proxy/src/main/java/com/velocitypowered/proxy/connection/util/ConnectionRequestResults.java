@@ -24,7 +24,6 @@ import com.velocitypowered.proxy.protocol.packet.Disconnect;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 
 /**
  * Common connection request results.
@@ -64,13 +63,12 @@ public class ConnectionRequestResults {
   }
 
   public static Impl forDisconnect(Disconnect disconnect, RegisteredServer server) {
-    Component deserialized = GsonComponentSerializer.gson().deserialize(disconnect.getReason());
-    return forDisconnect(deserialized, server);
+    return forDisconnect(disconnect.getReason().getComponent(), server);
   }
 
   public static Impl forUnsafeDisconnect(Disconnect disconnect, RegisteredServer server) {
-    Component deserialized = GsonComponentSerializer.gson().deserialize(disconnect.getReason());
-    return new Impl(Status.SERVER_DISCONNECTED, deserialized, server, false);
+    return new Impl(Status.SERVER_DISCONNECTED, disconnect.getReason().getComponent(), server,
+        false);
   }
 
   /**

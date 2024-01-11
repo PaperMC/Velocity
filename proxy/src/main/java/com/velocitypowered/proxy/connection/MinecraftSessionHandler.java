@@ -37,6 +37,7 @@ import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
 import com.velocitypowered.proxy.protocol.packet.PingIdentify;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfo;
+import com.velocitypowered.proxy.protocol.packet.RemoveResourcePack;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.Respawn;
@@ -245,6 +246,10 @@ public interface MinecraftSessionHandler {
   }
 
   default boolean handle(ResourcePackRequest packet) {
+    return false;
+  }
+
+  default boolean handle(RemoveResourcePack packet) {
     return false;
   }
 
