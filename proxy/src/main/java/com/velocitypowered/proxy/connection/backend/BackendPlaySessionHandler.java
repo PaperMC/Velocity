@@ -137,7 +137,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(KeepAlive packet) {
-    serverConn.getPendingPings().put(packet.getRandomId(), System.currentTimeMillis());
+    serverConn.getPendingPings().put(packet.getRandomId(), System.nanoTime());
     return false; // forwards on
   }
 

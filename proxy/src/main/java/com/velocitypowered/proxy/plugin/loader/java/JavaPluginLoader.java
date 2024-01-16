@@ -79,7 +79,9 @@ public class JavaPluginLoader implements PluginLoader {
       throw new IllegalArgumentException("Description provided isn't of the Java plugin loader");
     }
 
-    URL pluginJarUrl = candidate.getSource().get().toUri().toURL();
+    URL pluginJarUrl = candidate.getSource().orElseThrow(
+        () -> new InvalidPluginException("Description provided does not have a source path")
+    ).toUri().toURL();
     PluginClassLoader loader = new PluginClassLoader(new URL[]{pluginJarUrl});
     loader.addToClassloaders();
 
@@ -88,7 +90,7 @@ public class JavaPluginLoader implements PluginLoader {
   }
 
   @Override
-  public Module createModule(PluginContainer container) throws Exception {
+  public Module createModule(PluginContainer container) {
     PluginDescription description = container.getDescription();
     if (!(description instanceof JavaVelocityPluginDescription javaDescription)) {
       throw new IllegalArgumentException("Description provided isn't of the Java plugin loader");
@@ -100,7 +102,7 @@ public class JavaPluginLoader implements PluginLoader {
       throw new IllegalArgumentException("No path in plugin description");
     }
 
-    return new VelocityPluginModule(server, javaDescription, container, baseDirectory);
+    return new VelocityPluginModule(javaDescription, container, baseDirectory);
   }
 
   @Override

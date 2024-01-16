@@ -80,7 +80,11 @@ public class VelocityTabListEntry implements TabListEntry {
     this.displayName = displayName;
     UpsertPlayerInfo.Entry upsertEntry = this.tabList.createRawEntry(this);
     upsertEntry.setDisplayName(
-        new ComponentHolder(this.tabList.getPlayer().getProtocolVersion(), displayName));
+            displayName == null
+                    ?
+                    null :
+                    new ComponentHolder(this.tabList.getPlayer().getProtocolVersion(), displayName)
+    );
     this.tabList.emitActionRaw(UpsertPlayerInfo.Action.UPDATE_DISPLAY_NAME, upsertEntry);
     return this;
   }
