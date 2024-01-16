@@ -418,7 +418,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     this.playerListHeader = translatedHeader;
     this.playerListFooter = translatedFooter;
     if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
-      this.connection.write(HeaderAndFooter.create(header, footer, this.getProtocolVersion()));
+      this.connection.write(HeaderAndFooter.create(
+          translatedHeader, translatedFooter, this.getProtocolVersion()));
     }
   }
 
