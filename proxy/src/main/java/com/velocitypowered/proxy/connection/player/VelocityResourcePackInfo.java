@@ -19,6 +19,8 @@ package com.velocitypowered.proxy.connection.player;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -27,6 +29,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public final class VelocityResourcePackInfo implements ResourcePackInfo {
 
+  private final UUID id;
   private final String url;
   private final @Nullable byte[] hash;
   private final boolean shouldForce;
@@ -34,14 +37,20 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
   private final Origin origin;
   private Origin originalOrigin;
 
-  private VelocityResourcePackInfo(String url, @Nullable byte[] hash, boolean shouldForce,
-      @Nullable Component prompt, Origin origin) {
+  private VelocityResourcePackInfo(UUID id, String url, @Nullable byte[] hash, boolean shouldForce,
+                                   @Nullable Component prompt, Origin origin) {
+    this.id = id;
     this.url = url;
     this.hash = hash;
     this.shouldForce = shouldForce;
     this.prompt = prompt;
     this.origin = origin;
     this.originalOrigin = origin;
+  }
+
+  @Override
+  public UUID getId() {
+    return id;
   }
 
   @Override
@@ -81,6 +90,7 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
   @Override
   public Builder asBuilder() {
     return new BuilderImpl(url)
+        .setId(id)
         .setShouldForce(shouldForce)
         .setHash(hash)
         .setPrompt(prompt);
@@ -89,6 +99,7 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
   @Override
   public Builder asBuilder(String newUrl) {
     return new BuilderImpl(newUrl)
+        .setId(id)
         .setShouldForce(shouldForce)
         .setHash(hash)
         .setPrompt(prompt);
@@ -99,6 +110,7 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
    */
   public static final class BuilderImpl implements ResourcePackInfo.Builder {
 
+    private UUID id;
     private final String url;
     private boolean shouldForce;
     private @Nullable byte[] hash;
@@ -107,6 +119,13 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
 
     public BuilderImpl(String url) {
       this.url = Preconditions.checkNotNull(url, "url");
+      this.id = UUID.nameUUIDFromBytes(url.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public BuilderImpl setId(UUID id) {
+      this.id = id;
+      return this;
     }
 
     @Override
@@ -134,7 +153,7 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
 
     @Override
     public ResourcePackInfo build() {
-      return new VelocityResourcePackInfo(url, hash, shouldForce, prompt, origin);
+      return new VelocityResourcePackInfo(id, url, hash, shouldForce, prompt, origin);
     }
 
     public BuilderImpl setOrigin(Origin origin) {

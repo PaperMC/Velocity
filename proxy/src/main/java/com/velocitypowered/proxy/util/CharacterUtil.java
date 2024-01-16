@@ -30,7 +30,7 @@ public final class CharacterUtil {
    */
   public static boolean isAllowedCharacter(char c) {
     // 167 = §, 127 = DEL
-    // https://minecraft.fandom.com/wiki/Multiplayer#Chat
+    // https://minecraft.wiki/w/Chat
     return c != 167 && c >= ' ' && c != 127;
   }
 

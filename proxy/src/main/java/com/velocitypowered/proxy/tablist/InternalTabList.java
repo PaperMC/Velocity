@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.tablist;
 
+import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
 import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfo;
@@ -26,6 +27,8 @@ import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
  * Tab list interface with methods for handling player info packets.
  */
 public interface InternalTabList extends TabList {
+
+  Player getPlayer();
 
   default void processLegacy(LegacyPlayerListItem packet) {
   }

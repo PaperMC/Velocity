@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.ServerResourcePackSendEvent;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -45,7 +46,6 @@ import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
-import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -82,8 +82,11 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void activated() {
-    resourcePackToApply = serverConn.getPlayer().getAppliedResourcePack();
-    serverConn.getPlayer().clearAppliedResourcePack();
+    ConnectedPlayer player = serverConn.getPlayer();
+    if (player.getProtocolVersion() == ProtocolVersion.MINECRAFT_1_20_2) {
+      resourcePackToApply = player.getAppliedResourcePack();
+      player.clearAppliedResourcePack();
+    }
   }
 
   @Override
@@ -135,12 +138,12 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
         resourcePackToApply = null;
         serverConn.getPlayer().queueResourcePack(toSend);
       } else if (serverConn.getConnection() != null) {
-        serverConn.getConnection().write(new ResourcePackResponse(packet.getHash(),
+        serverConn.getConnection().write(new ResourcePackResponse(packet.getId(), packet.getHash(),
             PlayerResourcePackStatusEvent.Status.DECLINED));
       }
     }, playerConnection.eventLoop()).exceptionally((ex) -> {
       if (serverConn.getConnection() != null) {
-        serverConn.getConnection().write(new ResourcePackResponse(packet.getHash(),
+        serverConn.getConnection().write(new ResourcePackResponse(packet.getId(), packet.getHash(),
             PlayerResourcePackStatusEvent.Status.DECLINED));
       }
       logger.error("Exception while handling resource pack send for {}", playerConnection, ex);
@@ -193,10 +196,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
           PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion(),
               serverConn.getPlayer().getProtocolVersion()));
     } else {
-      // TODO: Change this so its usable for mod loaders
-      serverConn.disconnect();
-      resultFuture.complete(ConnectionRequestResults.forDisconnect(
-          Component.translatable("multiplayer.disconnect.missing_tags"), serverConn.getServer()));
+      serverConn.getPlayer().getConnection().write(packet.retain());
     }
     return true;
   }

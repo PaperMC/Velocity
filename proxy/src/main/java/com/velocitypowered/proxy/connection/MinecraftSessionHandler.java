@@ -37,6 +37,7 @@ import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
 import com.velocitypowered.proxy.protocol.packet.PingIdentify;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfo;
+import com.velocitypowered.proxy.protocol.packet.RemoveResourcePack;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.Respawn;
@@ -50,6 +51,7 @@ import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
+import com.velocitypowered.proxy.protocol.packet.chat.ChatAcknowledgement;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatCompletion;
 import com.velocitypowered.proxy.protocol.packet.chat.SystemChat;
 import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerChat;
@@ -247,6 +249,10 @@ public interface MinecraftSessionHandler {
     return false;
   }
 
+  default boolean handle(RemoveResourcePack packet) {
+    return false;
+  }
+
   default boolean handle(ResourcePackResponse packet) {
     return false;
   }
@@ -312,6 +318,10 @@ public interface MinecraftSessionHandler {
   }
 
   default boolean handle(PingIdentify pingIdentify) {
+    return false;
+  }
+
+  default boolean handle(ChatAcknowledgement chatAcknowledgement) {
     return false;
   }
 }

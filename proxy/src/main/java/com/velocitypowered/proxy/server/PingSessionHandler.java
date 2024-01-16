@@ -33,7 +33,7 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * Session handler used to implement {@link VelocityRegisteredServer#ping(EventLoop,
- * ProtocolVersion)}.
+ * com.velocitypowered.api.proxy.server.PingOptions)}.
  */
 public class PingSessionHandler implements MinecraftSessionHandler {
 

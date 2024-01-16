@@ -59,6 +59,11 @@ public class KeyedVelocityTabList implements InternalTabList {
     this.connection = player.getConnection();
   }
 
+  @Override
+  public Player getPlayer() {
+    return player;
+  }
+
   @Deprecated
   @Override
   public void setHeaderAndFooter(Component header, Component footer) {

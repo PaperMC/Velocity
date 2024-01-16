@@ -17,19 +17,26 @@
 
 package com.velocitypowered.proxy.connection.client;
 
+import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
+import com.velocitypowered.proxy.protocol.packet.PingIdentify;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdate;
+import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
@@ -43,6 +50,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   private static final Logger logger = LogManager.getLogger(ClientConfigSessionHandler.class);
   private final VelocityServer server;
   private final ConnectedPlayer player;
+  private String brandChannel = null;
 
   private CompletableFuture<Void> configSwitchFuture;
 
@@ -74,7 +82,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
       if (sentTime != null) {
         MinecraftConnection smc = serverConnection.getConnection();
         if (smc != null) {
-          player.setPing(System.currentTimeMillis() - sentTime);
+          player.setPing(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - sentTime));
           smc.write(packet);
         }
       }
@@ -84,7 +92,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ClientSettings packet) {
-    player.setClientSettingsPacket(packet);
+    player.setClientSettings(packet);
     return true;
   }
 
@@ -102,6 +110,32 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
         .setActiveSessionHandler(StateRegistry.PLAY, new ClientPlaySessionHandler(server, player));
 
     configSwitchFuture.complete(null);
+    return true;
+  }
+
+  @Override
+  public boolean handle(PluginMessage packet) {
+    VelocityServerConnection serverConn = player.getConnectionInFlight();
+    if (serverConn != null) {
+      if (PluginMessageUtil.isMcBrand(packet)) {
+        String brand = PluginMessageUtil.readBrandMessage(packet.content());
+        server.getEventManager().fireAndForget(new PlayerClientBrandEvent(player, brand));
+        player.setClientBrand(brand);
+        brandChannel = packet.getChannel();
+        // Client sends `minecraft:brand` packet immediately after Login,
+        // but at this time the backend server may not be ready
+      } else {
+        serverConn.ensureConnected().write(packet.retain());
+      }
+    }
+    return true;
+  }
+
+  @Override
+  public boolean handle(PingIdentify packet) {
+    if (player.getConnectionInFlight() != null) {
+      player.getConnectionInFlight().ensureConnected().write(packet);
+    }
     return true;
   }
 
@@ -154,8 +188,21 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
    * @return a future that completes when the config stage is finished
    */
   public CompletableFuture<Void> handleBackendFinishUpdate(VelocityServerConnection serverConn) {
+    MinecraftConnection smc = serverConn.ensureConnected();
+
+    String brand = serverConn.getPlayer().getClientBrand();
+    if (brand != null && brandChannel != null) {
+      ByteBuf buf = Unpooled.buffer();
+      ProtocolUtils.writeString(buf, brand);
+      PluginMessage brandPacket = new PluginMessage(brandChannel, buf);
+      smc.write(brandPacket);
+    }
+
     player.getConnection().write(new FinishedUpdate());
-    serverConn.ensureConnected().write(new FinishedUpdate());
+
+    smc.write(new FinishedUpdate());
+    smc.getChannel().pipeline().get(MinecraftEncoder.class).setState(StateRegistry.PLAY);
+
     return configSwitchFuture;
   }
 }

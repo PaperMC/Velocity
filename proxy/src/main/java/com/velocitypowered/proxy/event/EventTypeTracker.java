@@ -17,24 +17,24 @@
 
 package com.velocitypowered.proxy.event;
 
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimap;
 import com.google.common.reflect.TypeToken;
 import java.util.Collection;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 class EventTypeTracker {
 
-  private final Multimap<Class<?>, Class<?>> friends;
+  private final ConcurrentMap<Class<?>, ImmutableSet<Class<?>>> friends;
 
   public EventTypeTracker() {
-    this.friends = HashMultimap.create();
+    this.friends = new ConcurrentHashMap<>();
   }
 
   public Collection<Class<?>> getFriendsOf(final Class<?> eventType) {
     if (friends.containsKey(eventType)) {
-      return ImmutableSet.copyOf(friends.get(eventType));
+      return friends.get(eventType);
     }
 
     final Collection<Class<?>> types = getEventTypes(eventType);
@@ -43,7 +43,14 @@ class EventTypeTracker {
         continue;
       }
 
-      friends.put(type, eventType);
+      this.friends.merge(
+          type,
+          ImmutableSet.of(eventType),
+          (oldVal, newSingleton) -> ImmutableSet.<Class<?>>builder()
+              .addAll(oldVal)
+              .addAll(newSingleton)
+              .build()
+      );
     }
     return types;
   }
