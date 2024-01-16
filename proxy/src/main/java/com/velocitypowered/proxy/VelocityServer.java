@@ -595,7 +595,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   public HttpClient getHttpClient() {
-    return null;
+    return httpClient;
   }
 
   public AsyncHttpClient getAsyncHttpClient() {
