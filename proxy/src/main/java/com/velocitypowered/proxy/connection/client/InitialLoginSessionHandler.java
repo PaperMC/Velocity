@@ -43,7 +43,6 @@ import com.velocitypowered.proxy.protocol.packet.ServerLogin;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.security.GeneralSecurityException;
@@ -211,7 +210,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
       }
 
       HttpRequest httpRequest = HttpRequest.newBuilder().uri(URI.create(url)).build();
-      HttpClient.newHttpClient().sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
+      server.getHttpClient().sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
           .whenCompleteAsync((response, throwable) -> {
             if (mcConnection.isClosed()) {
               // The player disconnected after we authenticated them.
