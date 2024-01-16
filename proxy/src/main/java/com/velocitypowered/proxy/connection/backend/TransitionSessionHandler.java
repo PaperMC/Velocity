@@ -91,10 +91,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(JoinGame packet) {
     MinecraftConnection smc = serverConn.ensureConnected();
-    RegisteredServer previousServer = serverConn.getPreviousServer().orElse(null);
-    VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
-
+    final RegisteredServer previousServer = serverConn.getPreviousServer().orElse(null);
     final ConnectedPlayer player = serverConn.getPlayer();
+    final VelocityServerConnection existingConnection = player.getConnectedServer();
 
     if (existingConnection != null) {
       // Shut down the existing server connection.
