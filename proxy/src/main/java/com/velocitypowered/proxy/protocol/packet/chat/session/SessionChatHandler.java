@@ -22,10 +22,16 @@ import static com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedChatHand
 
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -46,6 +52,14 @@ public class SessionChatHandler implements ChatHandler<SessionPlayerChat> {
     return SessionPlayerChat.class;
   }
 
+  private MinecraftPacket tellBackend(SessionPlayerChat packet) {
+    ByteBuf buf = Unpooled.buffer();
+    packet.encode(buf, ProtocolUtils.Direction.SERVERBOUND, player.getProtocolVersion());
+    PluginMessage copied = new PluginMessage("velocity:chat_cancelled", buf);
+    logger.debug("Forwarding cancelled chat to backend server: " + packet.getMessage());
+    return copied;
+  }
+
   @Override
   public void handlePlayerChatInternal(SessionPlayerChat packet) {
     ChatQueue chatQueue = this.player.getChatQueue();
@@ -56,7 +70,9 @@ public class SessionChatHandler implements ChatHandler<SessionPlayerChat> {
             .thenApply(pme -> {
               PlayerChatEvent.ChatResult chatResult = pme.getResult();
               if (!chatResult.isAllowed()) {
-                if (packet.isSigned()) {
+                if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_2) >= 0) {
+                  return tellBackend(packet);
+                } else if (packet.isSigned()) {
                   invalidCancel(logger, player);
                 }
                 return null;

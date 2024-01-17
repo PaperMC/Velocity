@@ -21,9 +21,15 @@ import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatAcknowledgement;
 import com.velocitypowered.proxy.protocol.packet.chat.CommandHandler;
 import java.util.concurrent.CompletableFuture;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import net.kyori.adventure.text.Component;
 
 public class SessionCommandHandler implements CommandHandler<SessionPlayerCommand> {
@@ -41,12 +47,22 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
     return SessionPlayerCommand.class;
   }
 
+  private MinecraftPacket tellBackend(CommandExecuteEvent event, SessionPlayerCommand packet) {
+    ByteBuf buf = Unpooled.buffer();
+    packet.encode(buf, ProtocolUtils.Direction.SERVERBOUND, player.getProtocolVersion());
+    PluginMessage copied = new PluginMessage("velocity:command_cancelled", buf);
+    logger.debug("Forwarding cancelled command to backend server: " + event.getCommand());
+    return copied;
+  }
+
   @Override
   public void handlePlayerCommandInternal(SessionPlayerCommand packet) {
     queueCommandResult(this.server, this.player, event -> {
       CommandExecuteEvent.CommandResult result = event.getResult();
       if (result == CommandExecuteEvent.CommandResult.denied()) {
-        if (packet.isSigned()) {
+        if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_2) >= 0) {
+          return CompletableFuture.completedFuture(tellBackend(event, packet));
+        } else if (packet.isSigned()) {
           logger.fatal("A plugin tried to deny a command with signable component(s). "
               + "This is not supported. "
               + "Disconnecting player " + player.getUsername() + ". Command packet: " + packet);
@@ -55,10 +71,7 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
                   + "Contact your network administrator."));
         }
         // We seemingly can't actually do this if signed args exist, if not, we can probs keep stuff happy
-        if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
-          return CompletableFuture.completedFuture(new ChatAcknowledgement(packet.lastSeenMessages.getOffset()));
-        }
-        return CompletableFuture.completedFuture(null);
+        return CompletableFuture.completedFuture(new ChatAcknowledgement(packet.lastSeenMessages.getOffset()));
       }
 
       String commandToRun = result.getCommand().orElse(packet.command);
@@ -108,10 +121,7 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
                 .toServer();
           }
         }
-        if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
-          return new ChatAcknowledgement(packet.lastSeenMessages.getOffset());
-        }
-        return null;
+        return new ChatAcknowledgement(packet.lastSeenMessages.getOffset());
       });
     }, packet.command, packet.timeStamp);
   }
