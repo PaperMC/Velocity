@@ -209,7 +209,11 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
         url += "&ip=" + urlFormParameterEscaper().escape(playerIp);
       }
 
-      HttpRequest httpRequest = HttpRequest.newBuilder().uri(URI.create(url)).build();
+      final HttpRequest httpRequest = HttpRequest.newBuilder()
+              .setHeader("User-Agent",
+                      server.getVersion().getName() + "/" + server.getVersion().getVersion())
+              .uri(URI.create(url))
+              .build();
       server.getHttpClient().sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
           .whenCompleteAsync((response, throwable) -> {
             if (mcConnection.isClosed()) {
@@ -218,9 +222,10 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
             }
 
             if (throwable != null) {
-                logger.error("Unable to authenticate player", throwable);
-                inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
-                return;
+              logger.error("Unable to authenticate player", throwable);
+              inbound.disconnect(
+                      Component.translatable("multiplayer.disconnect.authservers_down"));
+              return;
             }
 
             // Go ahead and enable encryption. Once the client sends EncryptionResponse, encryption
