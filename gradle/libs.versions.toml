@@ -11,7 +11,8 @@ shadow = "com.github.johnrengelman.shadow:8.1.0"
 spotless = "com.diffplug.spotless:6.12.0"
 
 [libraries]
-adventure-bom = "net.kyori:adventure-bom:4.14.0"
+# See JD links in velocity-apo when moving to non-snapshot versions
+adventure-bom = "net.kyori:adventure-bom:4.15.0-SNAPSHOT"
 adventure-facet = "net.kyori:adventure-platform-facet:4.3.0"
 asm = "org.ow2.asm:asm:9.5"
 asynchttpclient = "org.asynchttpclient:async-http-client:2.12.3"
@@ -51,7 +52,7 @@ netty-codec-http = { module = "io.netty:netty-codec-http", version.ref = "netty"
 netty-handler = { module = "io.netty:netty-handler", version.ref = "netty" }
 netty-transport-native-epoll = { module = "io.netty:netty-transport-native-epoll", version.ref = "netty" }
 netty-transport-native-kqueue = { module = "io.netty:netty-transport-native-kqueue", version.ref = "netty" }
-nightconfig = "com.electronwill.night-config:toml:3.6.6"
+nightconfig = "com.electronwill.night-config:toml:3.6.7"
 slf4j = "org.slf4j:slf4j-api:2.0.7"
 snakeyaml = "org.yaml:snakeyaml:1.33"
 spotbugs-annotations = "com.github.spotbugs:spotbugs-annotations:4.7.3"

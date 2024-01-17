@@ -46,6 +46,8 @@ import net.kyori.adventure.nbt.BinaryTagType;
 import net.kyori.adventure.nbt.BinaryTagTypes;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.serializer.json.JSONOptions;
+import net.kyori.option.OptionState;
 
 /**
  * Utilities for writing and reading data in the Minecraft protocol.
@@ -58,10 +60,47 @@ public enum ProtocolUtils {
           .downsampleColors()
           .emitLegacyHoverEvent()
           .legacyHoverEventSerializer(VelocityLegacyHoverEventSerializer.INSTANCE)
+          .options(
+              OptionState.optionState()
+              // before 1.16
+              .value(JSONOptions.EMIT_RGB, Boolean.FALSE)
+              .value(JSONOptions.EMIT_HOVER_EVENT_TYPE, JSONOptions.HoverEventValueMode.LEGACY_ONLY)
+              // before 1.20.3
+              .value(JSONOptions.EMIT_COMPACT_TEXT_COMPONENT, Boolean.FALSE)
+              .value(JSONOptions.EMIT_HOVER_SHOW_ENTITY_ID_AS_INT_ARRAY, Boolean.FALSE)
+              .value(JSONOptions.VALIDATE_STRICT_EVENTS, Boolean.FALSE)
+              .build()
+          )
+          .build();
+  private static final GsonComponentSerializer PRE_1_20_3_SERIALIZER =
+          GsonComponentSerializer.builder()
+          .legacyHoverEventSerializer(VelocityLegacyHoverEventSerializer.INSTANCE)
+          .options(
+              OptionState.optionState()
+              // after 1.16
+              .value(JSONOptions.EMIT_RGB, Boolean.TRUE)
+              .value(JSONOptions.EMIT_HOVER_EVENT_TYPE, JSONOptions.HoverEventValueMode.MODERN_ONLY)
+              // before 1.20.3
+              .value(JSONOptions.EMIT_COMPACT_TEXT_COMPONENT, Boolean.FALSE)
+              .value(JSONOptions.EMIT_HOVER_SHOW_ENTITY_ID_AS_INT_ARRAY, Boolean.FALSE)
+              .value(JSONOptions.VALIDATE_STRICT_EVENTS, Boolean.FALSE)
+              .build()
+          )
           .build();
   private static final GsonComponentSerializer MODERN_SERIALIZER =
       GsonComponentSerializer.builder()
           .legacyHoverEventSerializer(VelocityLegacyHoverEventSerializer.INSTANCE)
+          .options(
+              OptionState.optionState()
+              // after 1.16
+              .value(JSONOptions.EMIT_RGB, Boolean.TRUE)
+              .value(JSONOptions.EMIT_HOVER_EVENT_TYPE, JSONOptions.HoverEventValueMode.MODERN_ONLY)
+              // after 1.20.3
+              .value(JSONOptions.EMIT_COMPACT_TEXT_COMPONENT, Boolean.TRUE)
+              .value(JSONOptions.EMIT_HOVER_SHOW_ENTITY_ID_AS_INT_ARRAY, Boolean.TRUE)
+              .value(JSONOptions.VALIDATE_STRICT_EVENTS, Boolean.TRUE)
+              .build()
+          )
           .build();
 
   public static final int DEFAULT_MAX_STRING_SIZE = 65536; // 64KiB
@@ -671,8 +710,11 @@ public enum ProtocolUtils {
    * @return the appropriate {@link GsonComponentSerializer}
    */
   public static GsonComponentSerializer getJsonChatSerializer(ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_3) >= 0) {
       return MODERN_SERIALIZER;
+    }
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      return PRE_1_20_3_SERIALIZER;
     }
     return PRE_1_16_SERIALIZER;
   }

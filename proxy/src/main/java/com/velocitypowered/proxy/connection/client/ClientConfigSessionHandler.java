@@ -25,6 +25,7 @@ import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.packet.ClientSettings;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PingIdentify;
@@ -35,6 +36,7 @@ import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
@@ -80,7 +82,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
       if (sentTime != null) {
         MinecraftConnection smc = serverConnection.getConnection();
         if (smc != null) {
-          player.setPing(System.currentTimeMillis() - sentTime);
+          player.setPing(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - sentTime));
           smc.write(packet);
         }
       }
@@ -186,16 +188,21 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
    * @return a future that completes when the config stage is finished
    */
   public CompletableFuture<Void> handleBackendFinishUpdate(VelocityServerConnection serverConn) {
+    MinecraftConnection smc = serverConn.ensureConnected();
+
     String brand = serverConn.getPlayer().getClientBrand();
     if (brand != null && brandChannel != null) {
       ByteBuf buf = Unpooled.buffer();
       ProtocolUtils.writeString(buf, brand);
       PluginMessage brandPacket = new PluginMessage(brandChannel, buf);
-      serverConn.ensureConnected().write(brandPacket);
+      smc.write(brandPacket);
     }
 
     player.getConnection().write(new FinishedUpdate());
-    serverConn.ensureConnected().write(new FinishedUpdate());
+
+    smc.write(new FinishedUpdate());
+    smc.getChannel().pipeline().get(MinecraftEncoder.class).setState(StateRegistry.PLAY);
+
     return configSwitchFuture;
   }
 }

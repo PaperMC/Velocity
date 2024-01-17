@@ -61,7 +61,8 @@ tasks {
             "https://guava.dev/releases/${libs.guava.get().version}/api/docs/",
             "https://google.github.io/guice/api-docs/${libs.guice.get().version}/javadoc/",
             "https://docs.oracle.com/en/java/javase/17/docs/api/",
-            "https://jd.advntr.dev/api/${libs.adventure.bom.get().version}/",
+            //"https://jd.advntr.dev/api/${libs.adventure.bom.get().version}/",
+            "https://jd.advntr.dev/api/4.14.0/",
             "https://javadoc.io/doc/com.github.ben-manes.caffeine/caffeine"
         )
 
