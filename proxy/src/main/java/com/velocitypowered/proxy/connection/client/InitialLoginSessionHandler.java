@@ -263,7 +263,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
               // Something else went wrong
               logger.error(
                   "Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
-                  response.sslSession(), login.getUsername(), playerIp);
+                  response.statusCode(), login.getUsername(), playerIp);
               inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
             }
           }, mcConnection.eventLoop());
