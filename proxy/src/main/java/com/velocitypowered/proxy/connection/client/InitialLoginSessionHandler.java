@@ -209,7 +209,11 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
         url += "&ip=" + urlFormParameterEscaper().escape(playerIp);
       }
 
-      HttpRequest httpRequest = HttpRequest.newBuilder().uri(URI.create(url)).build();
+      final HttpRequest httpRequest = HttpRequest.newBuilder()
+              .setHeader("User-Agent",
+                      server.getVersion().getName() + "/" + server.getVersion().getVersion())
+              .uri(URI.create(url))
+              .build();
       server.getHttpClient().sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
           .whenCompleteAsync((response, throwable) -> {
             if (mcConnection.isClosed()) {
