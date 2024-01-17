@@ -218,9 +218,9 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
             }
 
             if (throwable != null) {
-                logger.error("Unable to authenticate player", throwable);
-                inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
-                return;
+              logger.error("Unable to authenticate player", throwable);
+              inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
+              return;
             }
 
             // Go ahead and enable encryption. Once the client sends EncryptionResponse, encryption
