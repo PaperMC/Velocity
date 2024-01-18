@@ -71,6 +71,7 @@ import io.netty.channel.EventLoopGroup;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.net.http.HttpClient;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.AccessController;
@@ -100,7 +101,6 @@ import net.kyori.adventure.translation.GlobalTranslator;
 import net.kyori.adventure.translation.TranslationRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.asynchttpclient.AsyncHttpClient;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -143,6 +143,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
   private final ConnectionManager cm;
   private final ProxyOptions options;
+  private final HttpClient httpClient;
   private @MonotonicNonNull VelocityConfiguration configuration;
   private @MonotonicNonNull KeyPair serverKeyPair;
   private final ServerMap servers;
@@ -168,6 +169,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     scheduler = new VelocityScheduler(pluginManager);
     console = new VelocityConsole(this);
     cm = new ConnectionManager(this);
+    httpClient = HttpClient.newHttpClient();
     servers = new ServerMap(this);
     serverListPingHandler = new ServerListPingHandler(this);
     this.options = options;
@@ -591,7 +593,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     this.cm.closeEndpoints(false);
   }
 
-  public AsyncHttpClient getAsyncHttpClient() {
+  public HttpClient getHttpClient() {
     return cm.getHttpClient();
   }
 
