@@ -22,44 +22,39 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
-import net.kyori.adventure.text.Component;
 
 public class SystemChat implements MinecraftPacket {
 
   public SystemChat() {
   }
 
-  public SystemChat(Component component, ChatType type) {
+  public SystemChat(ComponentHolder component, ChatType type) {
     this.component = component;
     this.type = type;
   }
 
-  private Component component;
+  private ComponentHolder component;
   private ChatType type;
 
   public ChatType getType() {
     return type;
   }
 
-  public Component getComponent() {
+  public ComponentHolder getComponent() {
     return component;
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
-      ProtocolVersion protocolVersion) {
-    component = ProtocolUtils.getJsonChatSerializer(protocolVersion)
-        .deserialize(ProtocolUtils.readString(buf));
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+    component = ComponentHolder.read(buf, version);
     // System chat is never decoded so this doesn't matter for now
     type = ChatType.values()[ProtocolUtils.readVarInt(buf)];
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction,
-      ProtocolVersion protocolVersion) {
-    ProtocolUtils.writeString(buf,
-        ProtocolUtils.getJsonChatSerializer(protocolVersion).serialize(component));
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+    component.write(buf);
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
       switch (type) {
         case SYSTEM:
           buf.writeBoolean(false);

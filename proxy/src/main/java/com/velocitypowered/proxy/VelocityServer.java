@@ -71,6 +71,7 @@ import io.netty.channel.EventLoopGroup;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.net.http.HttpClient;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.AccessController;
@@ -100,7 +101,6 @@ import net.kyori.adventure.translation.GlobalTranslator;
 import net.kyori.adventure.translation.TranslationRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.asynchttpclient.AsyncHttpClient;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -116,21 +116,34 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
       .registerTypeHierarchyAdapter(GameProfile.class, GameProfileSerializer.INSTANCE)
       .create();
-  private static final Gson PRE_1_16_PING_SERIALIZER = ProtocolUtils
-      .getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_15_2)
-      .serializer()
-      .newBuilder()
+  private static final Gson PRE_1_16_PING_SERIALIZER = new GsonBuilder()
+      .registerTypeHierarchyAdapter(
+          Component.class,
+          ProtocolUtils.getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_15_2)
+                  .serializer().getAdapter(Component.class)
+      )
       .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
       .create();
-  private static final Gson POST_1_16_PING_SERIALIZER = ProtocolUtils
-      .getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_16)
-      .serializer()
-      .newBuilder()
+  private static final Gson PRE_1_20_3_PING_SERIALIZER = new GsonBuilder()
+      .registerTypeHierarchyAdapter(
+          Component.class,
+          ProtocolUtils.getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_20_2)
+                  .serializer().getAdapter(Component.class)
+      )
+      .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
+      .create();
+  private static final Gson MODERN_PING_SERIALIZER = new GsonBuilder()
+      .registerTypeHierarchyAdapter(
+          Component.class,
+          ProtocolUtils.getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_20_3)
+                  .serializer().getAdapter(Component.class)
+      )
       .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
       .create();
 
   private final ConnectionManager cm;
   private final ProxyOptions options;
+  private final HttpClient httpClient;
   private @MonotonicNonNull VelocityConfiguration configuration;
   private @MonotonicNonNull KeyPair serverKeyPair;
   private final ServerMap servers;
@@ -156,6 +169,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     scheduler = new VelocityScheduler(pluginManager);
     console = new VelocityConsole(this);
     cm = new ConnectionManager(this);
+    httpClient = HttpClient.newHttpClient();
     servers = new ServerMap(this);
     serverListPingHandler = new ServerListPingHandler(this);
     this.options = options;
@@ -585,7 +599,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     this.cm.closeEndpoints(false);
   }
 
-  public AsyncHttpClient getAsyncHttpClient() {
+  public HttpClient getHttpClient() {
     return cm.getHttpClient();
   }
 
@@ -768,8 +782,11 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
    */
   public static Gson getPingGsonInstance(ProtocolVersion version) {
     if (version == ProtocolVersion.UNKNOWN
-        || version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-      return POST_1_16_PING_SERIALIZER;
+        || version.compareTo(ProtocolVersion.MINECRAFT_1_20_3) >= 0) {
+      return MODERN_PING_SERIALIZER;
+    }
+    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      return PRE_1_20_3_PING_SERIALIZER;
     }
     return PRE_1_16_PING_SERIALIZER;
   }

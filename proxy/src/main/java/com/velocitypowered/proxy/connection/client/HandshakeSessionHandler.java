@@ -28,6 +28,8 @@ import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
+import com.velocitypowered.proxy.connection.forge.modern.ModernForgeConnectionType;
+import com.velocitypowered.proxy.connection.forge.modern.ModernForgeConstants;
 import com.velocitypowered.proxy.connection.util.VelocityInboundConnection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -152,6 +154,10 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   }
 
   private ConnectionType getHandshakeConnectionType(Handshake handshake) {
+    if (handshake.getServerAddress().contains(ModernForgeConstants.MODERN_FORGE_TOKEN)
+            && handshake.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_2) >= 0) {
+      return new ModernForgeConnectionType(handshake.getServerAddress());
+    }
     // Determine if we're using Forge (1.8 to 1.12, may not be the case in 1.13).
     if (handshake.getServerAddress().endsWith(LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN)
         && handshake.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
@@ -236,7 +242,12 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public String toString() {
-      return "[legacy connection] " + this.getRemoteAddress().toString();
+      boolean isPlayerAddressLoggingEnabled = connection.server.getConfiguration()
+          .isPlayerAddressLoggingEnabled();
+      String playerIp =
+          isPlayerAddressLoggingEnabled
+              ? this.getRemoteAddress().toString() : "<ip address withheld>";
+      return "[legacy connection] " + playerIp;
     }
 
     @Override

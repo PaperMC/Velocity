@@ -26,15 +26,19 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
+import java.util.UUID;
+
 public class ResourcePackResponse implements MinecraftPacket {
 
+  private UUID id;
   private String hash = "";
   private @MonotonicNonNull Status status;
 
   public ResourcePackResponse() {
   }
 
-  public ResourcePackResponse(String hash, @MonotonicNonNull Status status) {
+  public ResourcePackResponse(UUID id, String hash, @MonotonicNonNull Status status) {
+    this.id = id;
     this.hash = hash;
     this.status = status;
   }
@@ -52,6 +56,9 @@ public class ResourcePackResponse implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_20_3) >= 0) {
+      this.id = ProtocolUtils.readUuid(buf);
+    }
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_9_4) <= 0) {
       this.hash = ProtocolUtils.readString(buf);
     }
@@ -60,6 +67,9 @@ public class ResourcePackResponse implements MinecraftPacket {
 
   @Override
   public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
+    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_20_3) >= 0) {
+      ProtocolUtils.writeUuid(buf, id);
+    }
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_9_4) <= 0) {
       ProtocolUtils.writeString(buf, hash);
     }

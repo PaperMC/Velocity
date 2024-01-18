@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.protocol.packet.chat.session;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatType;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import com.velocitypowered.proxy.protocol.packet.chat.LastSeenMessages;
 import com.velocitypowered.proxy.protocol.packet.chat.SystemChat;
 import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderV2;
@@ -35,7 +36,7 @@ public class SessionChatBuilder extends ChatBuilderV2 {
   public MinecraftPacket toClient() {
     // This is temporary
     Component msg = component == null ? Component.text(message) : component;
-    return new SystemChat(msg, type == ChatType.CHAT ? ChatType.SYSTEM : type);
+    return new SystemChat(new ComponentHolder(version, msg), type == ChatType.CHAT ? ChatType.SYSTEM : type);
   }
 
   @Override

@@ -22,23 +22,23 @@ import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
-import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.Nullable;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 public class ServerData implements MinecraftPacket {
 
-  private @Nullable Component description;
+  private @Nullable ComponentHolder description;
   private @Nullable Favicon favicon;
   private boolean secureChatEnforced; // Added in 1.19.1
 
   public ServerData() {
   }
 
-  public ServerData(@Nullable Component description, @Nullable Favicon favicon,
-      boolean secureChatEnforced) {
+  public ServerData(@Nullable ComponentHolder description, @Nullable Favicon favicon,
+                    boolean secureChatEnforced) {
     this.description = description;
     this.favicon = favicon;
     this.secureChatEnforced = secureChatEnforced;
@@ -48,8 +48,7 @@ public class ServerData implements MinecraftPacket {
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
       ProtocolVersion protocolVersion) {
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_4) >= 0 || buf.readBoolean()) {
-      this.description = ProtocolUtils.getJsonChatSerializer(protocolVersion)
-          .deserialize(ProtocolUtils.readString(buf));
+      this.description = ComponentHolder.read(buf, protocolVersion);
     }
     if (buf.readBoolean()) {
       String iconBase64;
@@ -77,10 +76,7 @@ public class ServerData implements MinecraftPacket {
       buf.writeBoolean(hasDescription);
     }
     if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_4) >= 0 || hasDescription) {
-      ProtocolUtils.writeString(
-          buf,
-          ProtocolUtils.getJsonChatSerializer(protocolVersion).serialize(this.description)
-      );
+      this.description.write(buf);
     }
 
     boolean hasFavicon = this.favicon != null;
@@ -108,7 +104,7 @@ public class ServerData implements MinecraftPacket {
     return handler.handle(this);
   }
 
-  public @Nullable Component getDescription() {
+  public @Nullable ComponentHolder getDescription() {
     return description;
   }
 

@@ -21,6 +21,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -35,7 +36,7 @@ public class BossBar implements MinecraftPacket {
   public static final int UPDATE_PROPERTIES = 5;
   private @Nullable UUID uuid;
   private int action;
-  private @Nullable String name;
+  private @Nullable ComponentHolder name;
   private float percent;
   private int color;
   private int overlay;
@@ -60,11 +61,11 @@ public class BossBar implements MinecraftPacket {
     this.action = action;
   }
 
-  public @Nullable String getName() {
+  public @Nullable ComponentHolder getName() {
     return name;
   }
 
-  public void setName(String name) {
+  public void setName(ComponentHolder name) {
     this.name = name;
   }
 
@@ -119,7 +120,7 @@ public class BossBar implements MinecraftPacket {
     this.action = ProtocolUtils.readVarInt(buf);
     switch (action) {
       case ADD:
-        this.name = ProtocolUtils.readString(buf);
+        this.name = ComponentHolder.read(buf, version);
         this.percent = buf.readFloat();
         this.color = ProtocolUtils.readVarInt(buf);
         this.overlay = ProtocolUtils.readVarInt(buf);
@@ -131,7 +132,7 @@ public class BossBar implements MinecraftPacket {
         this.percent = buf.readFloat();
         break;
       case UPDATE_NAME:
-        this.name = ProtocolUtils.readString(buf);
+        this.name = ComponentHolder.read(buf, version);
         break;
       case UPDATE_STYLE:
         this.color = ProtocolUtils.readVarInt(buf);
@@ -157,7 +158,7 @@ public class BossBar implements MinecraftPacket {
         if (name == null) {
           throw new IllegalStateException("No name specified!");
         }
-        ProtocolUtils.writeString(buf, name);
+        name.write(buf);
         buf.writeFloat(percent);
         ProtocolUtils.writeVarInt(buf, color);
         ProtocolUtils.writeVarInt(buf, overlay);
@@ -172,7 +173,7 @@ public class BossBar implements MinecraftPacket {
         if (name == null) {
           throw new IllegalStateException("No name specified!");
         }
-        ProtocolUtils.writeString(buf, name);
+        name.write(buf);
         break;
       case UPDATE_STYLE:
         ProtocolUtils.writeVarInt(buf, color);
