@@ -31,7 +31,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class KeyedChatHandler implements
-    com.velocitypowered.proxy.protocol.packet.chat.ChatHandler<KeyedPlayerChat> {
+    com.velocitypowered.proxy.protocol.packet.chat.ChatHandler<KeyedPlayerChatPacket> {
 
   private static final Logger logger = LogManager.getLogger(KeyedChatHandler.class);
 
@@ -44,8 +44,8 @@ public class KeyedChatHandler implements
   }
 
   @Override
-  public Class<KeyedPlayerChat> packetClass() {
-    return KeyedPlayerChat.class;
+  public Class<KeyedPlayerChatPacket> packetClass() {
+    return KeyedPlayerChatPacket.class;
   }
 
   public static void invalidCancel(Logger logger, ConnectedPlayer player) {
@@ -65,7 +65,7 @@ public class KeyedChatHandler implements
   }
 
   @Override
-  public void handlePlayerChatInternal(KeyedPlayerChat packet) {
+  public void handlePlayerChatInternal(KeyedPlayerChatPacket packet) {
     ChatQueue chatQueue = this.player.getChatQueue();
     EventManager eventManager = this.server.getEventManager();
     PlayerChatEvent toSend = new PlayerChatEvent(player, packet.getMessage());
@@ -99,7 +99,7 @@ public class KeyedChatHandler implements
     );
   }
 
-  private Function<PlayerChatEvent, MinecraftPacket> handleOldSignedChat(KeyedPlayerChat packet) {
+  private Function<PlayerChatEvent, MinecraftPacket> handleOldSignedChat(KeyedPlayerChatPacket packet) {
     IdentifiedKey playerKey = this.player.getIdentifiedKey();
     assert playerKey != null;
     return pme -> {
