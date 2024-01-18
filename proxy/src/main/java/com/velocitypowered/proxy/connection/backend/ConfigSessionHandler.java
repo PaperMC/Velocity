@@ -38,6 +38,7 @@ import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
+import com.velocitypowered.proxy.protocol.packet.Transfer;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdate;
 import com.velocitypowered.proxy.protocol.packet.config.RegistrySync;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdate;
@@ -204,6 +205,13 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(RegistrySync packet) {
     serverConn.getPlayer().getConnection().write(packet.retain());
+    return true;
+  }
+
+  @Override
+  public boolean handle(Transfer packet) {
+    // TODO: Transfer Event?
+    serverConn.getPlayer().getConnection().write(packet);
     return true;
   }
 

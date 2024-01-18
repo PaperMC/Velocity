@@ -65,6 +65,7 @@ import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
 import com.velocitypowered.proxy.protocol.packet.KeepAlive;
 import com.velocitypowered.proxy.protocol.packet.PluginMessage;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
+import com.velocitypowered.proxy.protocol.packet.Transfer;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatType;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
@@ -931,6 +932,15 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   @Override
   public String getClientBrand() {
     return clientBrand;
+  }
+
+  @Override
+  public void transferToHost(final InetSocketAddress address) {
+    Preconditions.checkArgument(
+            this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_5) >= 0,
+            "Player version must be 1.20.5 to be able to transfer to another host");
+
+    connection.write(new Transfer(address.getHostName(), address.getPort()));
   }
 
   void setClientBrand(String clientBrand) {

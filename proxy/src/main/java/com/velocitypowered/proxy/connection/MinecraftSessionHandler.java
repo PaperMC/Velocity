@@ -50,6 +50,7 @@ import com.velocitypowered.proxy.protocol.packet.StatusRequest;
 import com.velocitypowered.proxy.protocol.packet.StatusResponse;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
+import com.velocitypowered.proxy.protocol.packet.Transfer;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatAcknowledgement;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatCompletion;
@@ -322,6 +323,10 @@ public interface MinecraftSessionHandler {
   }
 
   default boolean handle(ChatAcknowledgement chatAcknowledgement) {
+    return false;
+  }
+
+  default boolean handle(Transfer transfer) {
     return false;
   }
 }
