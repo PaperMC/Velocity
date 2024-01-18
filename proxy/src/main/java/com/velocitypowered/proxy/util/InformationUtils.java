@@ -34,10 +34,9 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.network.TransportType;
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
+import io.netty.channel.unix.DomainSocketAddress;
+
+import java.net.*;
 import java.util.List;
 import java.util.Map;
 
@@ -196,14 +195,22 @@ public enum InformationUtils {
   public static JsonObject collectServerInfo(RegisteredServer server) {
     JsonObject info = new JsonObject();
     info.addProperty("currentPlayers", server.getPlayersConnected().size());
-    InetSocketAddress iaddr = server.getServerInfo().getAddress();
-    if (iaddr.isUnresolved()) {
-      // Greetings form Netty 4aa10db9
-      info.addProperty("host", iaddr.getHostString());
+
+    SocketAddress iaddr = server.getServerInfo().getSocketAddress();
+    if (iaddr instanceof InetSocketAddress) {
+      InetSocketAddress address = (InetSocketAddress) iaddr;
+      if (address.isUnresolved()) {
+        // Greetings form Netty 4aa10db9
+        info.addProperty("host", address.getHostString());
+      } else {
+        info.addProperty("host", anonymizeInetAddress(address.getAddress()));
+      }
+      info.addProperty("port", address.getPort());
     } else {
-      info.addProperty("host", anonymizeInetAddress(iaddr.getAddress()));
+      DomainSocketAddress address = (DomainSocketAddress) iaddr;
+      info.addProperty("host", address.toString());
+      info.addProperty("port", 0);
     }
-    info.addProperty("port", iaddr.getPort());
     return info;
   }
 

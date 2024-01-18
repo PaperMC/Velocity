@@ -174,6 +174,21 @@ public final class ConnectionManager {
   }
 
   /**
+   * Creates a Unix domain {@link Bootstrap} using Velocity's event loops.
+   *
+   * @param group the event loop group to use. Use {@code null} for the default worker group.
+   * @return a new {@link Bootstrap}
+   */
+  public Bootstrap createDomainWorker(@Nullable EventLoopGroup group) {
+      return new Bootstrap()
+            .channelFactory(this.transportType.domainSocketChannelFactory)
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
+                    this.server.getConfiguration().getConnectTimeout())
+            .group(group == null ? this.workerGroup : group)
+            .resolver(this.resolver.asGroup());
+  }
+
+  /**
    * Closes the specified {@code oldBind} endpoint.
    *
    * @param oldBind the endpoint to close

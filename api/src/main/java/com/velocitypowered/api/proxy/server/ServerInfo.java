@@ -8,7 +8,11 @@
 package com.velocitypowered.api.proxy.server;
 
 import com.google.common.base.Preconditions;
+
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.net.UnknownHostException;
 import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -19,7 +23,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public final class ServerInfo implements Comparable<ServerInfo> {
 
   private final String name;
-  private final InetSocketAddress address;
+  private final SocketAddress address;
 
   /**
    * Creates a new ServerInfo object.
@@ -27,7 +31,7 @@ public final class ServerInfo implements Comparable<ServerInfo> {
    * @param name the name for the server
    * @param address the address of the server to connect to
    */
-  public ServerInfo(String name, InetSocketAddress address) {
+  public ServerInfo(String name, SocketAddress address) {
     this.name = Preconditions.checkNotNull(name, "name");
     this.address = Preconditions.checkNotNull(address, "address");
   }
@@ -36,7 +40,24 @@ public final class ServerInfo implements Comparable<ServerInfo> {
     return name;
   }
 
+  /**
+   * use getSocketAddress() to get address
+   * @return address the address of the server to connect to
+   */
+  @Deprecated
   public final InetSocketAddress getAddress() {
+    if (address instanceof InetSocketAddress) {
+      return (InetSocketAddress) address;
+    } else {
+      throw new UnsupportedOperationException("BackendServer is use Unix domain socket");
+    }
+  }
+
+  /**
+   * use getSocketAddress() to get address
+   * @return address the address of the server to connect to
+   */
+  public final SocketAddress getSocketAddress() {
     return address;
   }
 
