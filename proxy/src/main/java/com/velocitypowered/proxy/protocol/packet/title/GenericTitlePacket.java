@@ -40,7 +40,7 @@ public abstract class GenericTitlePacket implements MinecraftPacket {
     }
 
     public int getAction(ProtocolVersion version) {
-      return version.compareTo(ProtocolVersion.MINECRAFT_1_11) < 0
+      return version.lessThan(ProtocolVersion.MINECRAFT_1_11)
           ? action > 2 ? action - 1 : action : action;
     }
   }
@@ -104,7 +104,7 @@ public abstract class GenericTitlePacket implements MinecraftPacket {
    */
   public static GenericTitlePacket constructTitlePacket(ActionType type, ProtocolVersion version) {
     GenericTitlePacket packet = null;
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
       switch (type) {
         case SET_ACTION_BAR:
           packet = new TitleActionbarPacket();

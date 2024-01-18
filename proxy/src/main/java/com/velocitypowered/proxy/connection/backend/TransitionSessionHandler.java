@@ -144,7 +144,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           serverConn.getPlayer().setConnectedServer(serverConn);
 
           // Send client settings. In 1.20.2+ this is done in the config state.
-          if (smc.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0
+          if (smc.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_2)
               && player.getClientSettingsPacket() != null) {
             serverConn.ensureConnected().write(player.getClientSettingsPacket());
           }

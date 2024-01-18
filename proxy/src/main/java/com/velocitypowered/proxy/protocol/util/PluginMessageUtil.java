@@ -115,7 +115,7 @@ public final class PluginMessageUtil {
                                                             Collection<String> channels) {
     checkNotNull(channels, "channels");
     checkArgument(!channels.isEmpty(), "no channels specified");
-    String channelName = protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0
+    String channelName = protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_13)
         ? REGISTER_CHANNEL : REGISTER_CHANNEL_LEGACY;
     ByteBuf contents = Unpooled.buffer();
     contents.writeCharSequence(String.join("\0", channels), StandardCharsets.UTF_8);
@@ -140,7 +140,7 @@ public final class PluginMessageUtil {
     String rewrittenBrand = String.format("%s (%s)", currentBrand, version.getName());
 
     ByteBuf rewrittenBuf = Unpooled.buffer();
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       ProtocolUtils.writeString(rewrittenBuf, rewrittenBrand);
     } else {
       rewrittenBuf.writeCharSequence(rewrittenBrand, StandardCharsets.UTF_8);

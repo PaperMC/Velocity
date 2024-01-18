@@ -64,17 +64,17 @@ public class EncryptionResponsePacket implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       this.sharedSecret = ProtocolUtils.readByteArray(buf, 128);
 
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0
-          && version.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)
+          && version.lessThan(ProtocolVersion.MINECRAFT_1_19_3)
           && !buf.readBoolean()) {
         salt = buf.readLong();
       }
 
       this.verifyToken = ProtocolUtils.readByteArray(buf,
-          version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0 ? 256 : 128);
+          version.noLessThan(ProtocolVersion.MINECRAFT_1_19) ? 256 : 128);
     } else {
       this.sharedSecret = ProtocolUtils.readByteArray17(buf);
       this.verifyToken = ProtocolUtils.readByteArray17(buf);
@@ -83,10 +83,10 @@ public class EncryptionResponsePacket implements MinecraftPacket {
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       ProtocolUtils.writeByteArray(buf, sharedSecret);
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0
-          && version.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)
+          && version.lessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
         if (salt != null) {
           buf.writeBoolean(false);
           buf.writeLong(salt);
@@ -111,10 +111,10 @@ public class EncryptionResponsePacket implements MinecraftPacket {
     // It turns out these come out to the same length, whether we're talking >=1.8 or not.
     // The length prefix always winds up being 2 bytes.
     int base = 256 + 2 + 2;
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
       return base + 128;
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
       // Verify token is twice as long on 1.19+
       // Additional 1 byte for left <> right and 8 bytes for salt
       base += 128 + 8 + 1;
@@ -125,7 +125,7 @@ public class EncryptionResponsePacket implements MinecraftPacket {
   @Override
   public int expectedMinLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
     int base = expectedMaxLength(buf, direction, version);
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
       // These are "optional"
       base -= 128 + 8;
     }

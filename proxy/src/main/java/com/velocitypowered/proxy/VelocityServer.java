@@ -776,10 +776,10 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
    */
   public static Gson getPingGsonInstance(ProtocolVersion version) {
     if (version == ProtocolVersion.UNKNOWN
-        || version.compareTo(ProtocolVersion.MINECRAFT_1_20_3) >= 0) {
+        || version.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
       return MODERN_PING_SERIALIZER;
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16)) {
       return PRE_1_20_3_PING_SERIALIZER;
     }
     return PRE_1_16_PING_SERIALIZER;

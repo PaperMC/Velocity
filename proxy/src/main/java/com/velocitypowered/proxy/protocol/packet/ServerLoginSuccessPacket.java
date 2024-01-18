@@ -76,18 +76,18 @@ public class ServerLoginSuccessPacket implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
       uuid = ProtocolUtils.readUuid(buf);
-    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+    } else if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16)) {
       uuid = ProtocolUtils.readUuidIntArray(buf);
-    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_7_6) >= 0) {
+    } else if (version.noLessThan(ProtocolVersion.MINECRAFT_1_7_6)) {
       uuid = UUID.fromString(ProtocolUtils.readString(buf, 36));
     } else {
       uuid = UuidUtils.fromUndashed(ProtocolUtils.readString(buf, 32));
     }
     username = ProtocolUtils.readString(buf, 16);
 
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
       properties = ProtocolUtils.readProperties(buf);
     }
   }
@@ -97,11 +97,11 @@ public class ServerLoginSuccessPacket implements MinecraftPacket {
     if (uuid == null) {
       throw new IllegalStateException("No UUID specified!");
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
       ProtocolUtils.writeUuid(buf, uuid);
-    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+    } else if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16)) {
       ProtocolUtils.writeUuidIntArray(buf, uuid);
-    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_7_6) >= 0) {
+    } else if (version.noLessThan(ProtocolVersion.MINECRAFT_1_7_6)) {
       ProtocolUtils.writeString(buf, uuid.toString());
     } else {
       ProtocolUtils.writeString(buf, UuidUtils.toUndashed(uuid));
@@ -111,7 +111,7 @@ public class ServerLoginSuccessPacket implements MinecraftPacket {
     }
     ProtocolUtils.writeString(buf, username);
 
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
       if (properties == null) {
         ProtocolUtils.writeVarInt(buf, 0);
       } else {

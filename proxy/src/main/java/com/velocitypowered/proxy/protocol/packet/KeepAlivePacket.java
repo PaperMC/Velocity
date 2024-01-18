@@ -44,9 +44,9 @@ public class KeepAlivePacket implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_12_2) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_12_2)) {
       randomId = buf.readLong();
-    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    } else if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       randomId = ProtocolUtils.readVarInt(buf);
     } else {
       randomId = buf.readInt();
@@ -55,9 +55,9 @@ public class KeepAlivePacket implements MinecraftPacket {
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_12_2) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_12_2)) {
       buf.writeLong(randomId);
-    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    } else if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       ProtocolUtils.writeVarInt(buf, (int) randomId);
     } else {
       buf.writeInt((int) randomId);
