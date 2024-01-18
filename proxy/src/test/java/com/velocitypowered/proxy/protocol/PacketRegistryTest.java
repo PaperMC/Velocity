@@ -88,7 +88,8 @@ class PacketRegistryTest {
     assertThrows(IllegalArgumentException.class,
         () -> registry.register(HandshakePacket.class, HandshakePacket::new));
     assertThrows(IllegalArgumentException.class,
-        () -> registry.getProtocolRegistry(ProtocolVersion.UNKNOWN).getPacketId(new HandshakePacket()));
+        () -> registry.getProtocolRegistry(ProtocolVersion.UNKNOWN)
+                .getPacketId(new HandshakePacket()));
   }
 
   @Test
