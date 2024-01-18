@@ -48,6 +48,7 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
 import com.velocitypowered.proxy.protocol.netty.PlayPacketQueueHandler;
+import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
@@ -501,7 +502,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   /**
    * Sets the compression threshold on the connection. You are responsible for sending {@link
-   * com.velocitypowered.proxy.protocol.packet.SetCompression} beforehand.
+   * SetCompressionPacket} beforehand.
    *
    * @param threshold the compression threshold to use
    */

@@ -26,7 +26,7 @@ import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderV2;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 
-public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
+public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommandPacket> {
 
   private final ConnectedPlayer player;
   private final VelocityServer server;
@@ -37,12 +37,12 @@ public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
   }
 
   @Override
-  public Class<KeyedPlayerCommand> packetClass() {
-    return KeyedPlayerCommand.class;
+  public Class<KeyedPlayerCommandPacket> packetClass() {
+    return KeyedPlayerCommandPacket.class;
   }
 
   @Override
-  public void handlePlayerCommandInternal(KeyedPlayerCommand packet) {
+  public void handlePlayerCommandInternal(KeyedPlayerCommandPacket packet) {
     queueCommandResult(this.server, this.player, event -> {
       CommandExecuteEvent.CommandResult result = event.getResult();
       IdentifiedKey playerKey = player.getIdentifiedKey();
