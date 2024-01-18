@@ -141,6 +141,10 @@ log-command-executions = false
 # and disconnecting from the proxy.
 log-player-connections = true
 
+# Allows players transferred from other hosts via the
+# Transfer packet (Minecraft 1.20.5) to be received.
+accepts-transfers = false
+
 [query]
 # Whether to enable responding to GameSpy 4 query responses or not.
 enabled = false

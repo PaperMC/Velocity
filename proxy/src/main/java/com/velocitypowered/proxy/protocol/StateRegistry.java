@@ -640,6 +640,7 @@ public enum StateRegistry {
 
   public static final int STATUS_ID = 1;
   public static final int LOGIN_ID = 2;
+  public static final int TRANSFER_ID = 3;
   protected final PacketRegistry clientbound = new PacketRegistry(CLIENTBOUND, this);
   protected final PacketRegistry serverbound = new PacketRegistry(SERVERBOUND, this);
 

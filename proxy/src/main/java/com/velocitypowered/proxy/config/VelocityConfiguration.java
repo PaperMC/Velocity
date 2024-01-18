@@ -394,6 +394,10 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isLogPlayerConnections();
   }
 
+  public boolean isAcceptTransfers() {
+    return this.advanced.isAcceptTransfers();
+  }
+
   public boolean isForceKeyAuthentication() {
     return forceKeyAuthentication;
   }
@@ -704,6 +708,8 @@ public class VelocityConfiguration implements ProxyConfig {
     private boolean logCommandExecutions = false;
     @Expose
     private boolean logPlayerConnections = true;
+    @Expose
+    private boolean acceptTransfers = false;
 
     private Advanced() {
     }
@@ -728,6 +734,7 @@ public class VelocityConfiguration implements ProxyConfig {
         this.announceProxyCommands = config.getOrElse("announce-proxy-commands", true);
         this.logCommandExecutions = config.getOrElse("log-command-executions", false);
         this.logPlayerConnections = config.getOrElse("log-player-connections", true);
+        this.acceptTransfers = config.getOrElse("accept-transfers", false);
       }
     }
 
@@ -783,6 +790,10 @@ public class VelocityConfiguration implements ProxyConfig {
       return logPlayerConnections;
     }
 
+    public boolean isAcceptTransfers() {
+      return this.acceptTransfers;
+    }
+
     @Override
     public String toString() {
       return "Advanced{"
@@ -799,6 +810,7 @@ public class VelocityConfiguration implements ProxyConfig {
           + ", announceProxyCommands=" + announceProxyCommands
           + ", logCommandExecutions=" + logCommandExecutions
           + ", logPlayerConnections=" + logPlayerConnections
+          + ", acceptTransfers=" + acceptTransfers
           + '}';
     }
   }
