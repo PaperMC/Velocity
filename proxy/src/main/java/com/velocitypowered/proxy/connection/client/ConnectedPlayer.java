@@ -103,13 +103,12 @@ import net.kyori.adventure.platform.facet.FacetPointers.Type;
 import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.title.Title.Times;
 import net.kyori.adventure.title.TitlePart;
 import net.kyori.adventure.translation.GlobalTranslator;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -126,7 +125,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       PlainTextComponentSerializer.builder().flattener(TranslatableMapper.FLATTENER).build();
   static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
 
-  private static final Logger logger = LogManager.getLogger(ConnectedPlayer.class);
+  private static final ComponentLogger logger = ComponentLogger.logger(ConnectedPlayer.class);
 
   private final Identity identity = new IdentityImpl();
   /**
@@ -577,8 +576,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     Component translated = this.translateMessage(reason);
 
     if (server.getConfiguration().isLogPlayerConnections()) {
-      logger.info("{} has disconnected: {}", this,
-          LegacyComponentSerializer.legacySection().serialize(translated));
+      logger.info(Component.text(this + " has disconnected: ").append(translated));
     }
     connection.closeWith(Disconnect.create(translated, this.getProtocolVersion(), duringLogin));
   }

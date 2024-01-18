@@ -29,10 +29,8 @@ import java.net.InetSocketAddress;
 import java.util.Locale;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.kyori.adventure.translation.GlobalTranslator;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * Implements {@link InboundConnection} for a newly-established connection.
@@ -40,7 +38,8 @@ import org.apache.logging.log4j.Logger;
 public final class InitialInboundConnection implements VelocityInboundConnection,
     MinecraftConnectionAssociation {
 
-  private static final Logger logger = LogManager.getLogger(InitialInboundConnection.class);
+  private static final ComponentLogger logger = ComponentLogger
+      .logger(InitialInboundConnection.class);
 
   private final MinecraftConnection connection;
   private final String cleanedAddress;
@@ -97,8 +96,7 @@ public final class InitialInboundConnection implements VelocityInboundConnection
     Component translated = GlobalTranslator.render(reason, ClosestLocaleMatcher.INSTANCE
         .lookupClosest(Locale.getDefault()));
     if (connection.server.getConfiguration().isLogPlayerConnections()) {
-      logger.info("{} has disconnected: {}", this,
-          LegacyComponentSerializer.legacySection().serialize(translated));
+      logger.info(Component.text(this + " has disconnected: ").append(translated));
     }
     connection.closeWith(Disconnect.create(translated, getProtocolVersion(), true));
   }
