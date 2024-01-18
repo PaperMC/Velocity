@@ -29,7 +29,7 @@ import org.jspecify.annotations.NullMarked;
  * Something that is ordered.
  *
  * @param <T> the type
- * @since 1.0.0
+ * @since 3.3.0
  */
 @NullMarked
 @SuppressWarnings("ComparableType") // allows us to be more flexible
@@ -39,7 +39,7 @@ public interface Ordered<T> extends Comparable<T> {
    *
    * @param that the other object
    * @return {@code true} if {@code this} is greater than {@code that}, {@code false} otherwise
-   * @since 1.0.0
+   * @since 3.3.0
    */
   default boolean greaterThan(final T that) {
     return this.compareTo(that) > 0;
@@ -51,7 +51,7 @@ public interface Ordered<T> extends Comparable<T> {
    * @param that the other object
    * @return {@code true} if {@code this} is greater than or
    *     equal to {@code that}, {@code false} otherwise
-   * @since 1.0.0
+   * @since 3.3.0
    */
   default boolean noLessThan(final T that) {
     return this.compareTo(that) >= 0;
@@ -62,7 +62,7 @@ public interface Ordered<T> extends Comparable<T> {
    *
    * @param that the other object
    * @return {@code true} if {@code this} is less than {@code that}, {@code false} otherwise
-   * @since 1.0.0
+   * @since 3.3.0
    */
   default boolean lessThan(final T that) {
     return this.compareTo(that) < 0;
@@ -74,7 +74,7 @@ public interface Ordered<T> extends Comparable<T> {
    * @param that the other object
    * @return {@code true} if {@code this} is less than or
    *     equal to {@code that}, {@code false} otherwise
-   * @since 1.0.0
+   * @since 3.3.0
    */
   default boolean noGreaterThan(final T that) {
     return this.compareTo(that) <= 0;
@@ -85,7 +85,7 @@ public interface Ordered<T> extends Comparable<T> {
    *
    * @param that the other object
    * @return {@code true} if {@code this} is equal to {@code that}, {@code false} otherwise
-   * @since 1.0.0
+   * @since 3.3.0
    */
   default boolean noGreaterOrLessThan(final T that) {
     return this.compareTo(that) == 0;
