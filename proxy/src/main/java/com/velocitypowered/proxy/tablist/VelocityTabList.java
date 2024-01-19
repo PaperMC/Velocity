@@ -38,7 +38,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -186,7 +185,7 @@ public class VelocityTabList implements InternalTabList {
 
   @Override
   public Collection<TabListEntry> getEntries() {
-    return this.entries.values().stream().map(e -> (TabListEntry) e).collect(Collectors.toList());
+    return List.copyOf(this.entries.values());
   }
 
   @Override
