@@ -18,12 +18,17 @@
 package com.velocitypowered.proxy.command.builtin;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.builder.ArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.tree.CommandNode;
+import com.mojang.brigadier.tree.LiteralCommandNode;
+import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
@@ -43,14 +48,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
+import java.util.function.Predicate;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
@@ -61,118 +63,46 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Implements the {@code /velocity} command and friends.
  */
-public class VelocityCommand implements SimpleCommand {
+public class VelocityCommand {
+  public static BrigadierCommand create(final VelocityServer server) {
+    final LiteralCommandNode<CommandSource> dump = BrigadierCommand.literalArgumentBuilder("dump")
+      .requires(source -> source.getPermissionValue("velocity.command.plugins") == Tristate.TRUE)
+      .executes(new Dump(server))
+      .build();
+    final LiteralCommandNode<CommandSource> heap = BrigadierCommand.literalArgumentBuilder("heap")
+      .requires(source -> source.getPermissionValue("velocity.command.heap") == Tristate.TRUE)
+      .executes(new Heap())
+      .build();
+    final LiteralCommandNode<CommandSource> info = BrigadierCommand.literalArgumentBuilder("info")
+      .requires(source -> source.getPermissionValue("velocity.command.info") != Tristate.FALSE)
+      .executes(new Info(server))
+      .build();
+    final LiteralCommandNode<CommandSource> plugins = BrigadierCommand.literalArgumentBuilder("plugins")
+      .requires(source -> source.getPermissionValue("velocity.command.plugins") == Tristate.TRUE)
+      .executes(new Plugins(server))
+      .build();
+    final LiteralCommandNode<CommandSource> reload = BrigadierCommand.literalArgumentBuilder("reload")
+      .requires(source -> source.getPermissionValue("velocity.command.reload") == Tristate.TRUE)
+      .executes(new Reload(server))
+      .build();
 
-  private interface SubCommand {
-
-    void execute(final CommandSource source, final String @NonNull [] args);
-
-    default List<String> suggest(final CommandSource source, final String @NonNull [] currentArgs) {
-      return ImmutableList.of();
-    }
-
-    boolean hasPermission(final CommandSource source, final String @NonNull [] args);
+    final List<LiteralCommandNode<CommandSource>> commands = List.of(dump, heap, info, plugins, reload);
+    return new BrigadierCommand(
+      commands.stream()
+        .reduce(
+          BrigadierCommand.literalArgumentBuilder("velocity")
+            .requires(commands.stream().map(CommandNode::getRequirement).reduce(Predicate::or).orElseThrow()),
+          ArgumentBuilder::then,
+          ArgumentBuilder::then
+        )
+    );
   }
 
-  private final Map<String, SubCommand> commands;
-
-  /**
-   * Initializes the command object for /velocity.
-   *
-   * @param server the Velocity server
-   */
-  public VelocityCommand(VelocityServer server) {
-    this.commands = ImmutableMap.<String, SubCommand>builder()
-        .put("version", new Info(server))
-        .put("plugins", new Plugins(server))
-        .put("reload", new Reload(server))
-        .put("dump", new Dump(server))
-        .put("heap", new Heap())
-        .build();
-  }
-
-  private void usage(CommandSource source) {
-    String availableCommands = commands.entrySet().stream()
-        .filter(e -> e.getValue().hasPermission(source, new String[0]))
-        .map(Map.Entry::getKey)
-        .collect(Collectors.joining("|"));
-    String commandText = "/velocity <" + availableCommands + ">";
-    source.sendMessage(Component.text(commandText, NamedTextColor.RED));
-  }
-
-  @Override
-  public void execute(final SimpleCommand.Invocation invocation) {
-    final CommandSource source = invocation.source();
-    final String[] args = invocation.arguments();
-
-    if (args.length == 0) {
-      usage(source);
-      return;
-    }
-
-    SubCommand command = commands.get(args[0].toLowerCase(Locale.US));
-    if (command == null) {
-      usage(source);
-      return;
-    }
-    @SuppressWarnings("nullness")
-    String[] actualArgs = Arrays.copyOfRange(args, 1, args.length);
-    command.execute(source, actualArgs);
-  }
-
-  @Override
-  public List<String> suggest(final SimpleCommand.Invocation invocation) {
-    final CommandSource source = invocation.source();
-    final String[] currentArgs = invocation.arguments();
-
-    if (currentArgs.length == 0) {
-      return commands.entrySet().stream()
-          .filter(e -> e.getValue().hasPermission(source, new String[0]))
-          .map(Map.Entry::getKey)
-          .collect(ImmutableList.toImmutableList());
-    }
-
-    if (currentArgs.length == 1) {
-      return commands.entrySet().stream()
-          .filter(e -> e.getKey().regionMatches(true, 0, currentArgs[0], 0,
-              currentArgs[0].length()))
-          .filter(e -> e.getValue().hasPermission(source, new String[0]))
-          .map(Map.Entry::getKey)
-          .collect(ImmutableList.toImmutableList());
-    }
-
-    SubCommand command = commands.get(currentArgs[0].toLowerCase(Locale.US));
-    if (command == null) {
-      return ImmutableList.of();
-    }
-    @SuppressWarnings("nullness")
-    String[] actualArgs = Arrays.copyOfRange(currentArgs, 1, currentArgs.length);
-    return command.suggest(source, actualArgs);
-  }
-
-  @Override
-  public boolean hasPermission(final SimpleCommand.Invocation invocation) {
-    final CommandSource source = invocation.source();
-    final String[] args = invocation.arguments();
-
-    if (args.length == 0) {
-      return commands.values().stream().anyMatch(e -> e.hasPermission(source, args));
-    }
-    SubCommand command = commands.get(args[0].toLowerCase(Locale.US));
-    if (command == null) {
-      return true;
-    }
-    @SuppressWarnings("nullness")
-    String[] actualArgs = Arrays.copyOfRange(args, 1, args.length);
-    return command.hasPermission(source, actualArgs);
-  }
-
-  private static class Reload implements SubCommand {
+  private static class Reload implements Command<CommandSource> {
 
     private static final Logger logger = LogManager.getLogger(Reload.class);
     private final VelocityServer server;
@@ -182,7 +112,8 @@ public class VelocityCommand implements SimpleCommand {
     }
 
     @Override
-    public void execute(CommandSource source, String @NonNull [] args) {
+    public int run(final CommandContext<CommandSource> context) {
+      final CommandSource source = context.getSource();
       try {
         if (server.reloadConfiguration()) {
           source.sendMessage(Component.translatable("velocity.command.reload-success",
@@ -196,15 +127,11 @@ public class VelocityCommand implements SimpleCommand {
         source.sendMessage(Component.translatable("velocity.command.reload-failure",
             NamedTextColor.RED));
       }
-    }
-
-    @Override
-    public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
-      return source.getPermissionValue("velocity.command.reload") == Tristate.TRUE;
+      return Command.SINGLE_SUCCESS;
     }
   }
 
-  private static class Info implements SubCommand {
+  private static class Info implements Command<CommandSource> {
 
     private static final TextColor VELOCITY_COLOR = TextColor.fromHexString("#09add3");
     private final ProxyServer server;
@@ -214,12 +141,8 @@ public class VelocityCommand implements SimpleCommand {
     }
 
     @Override
-    public void execute(CommandSource source, String @NonNull [] args) {
-      if (args.length != 0) {
-        source.sendMessage(Component.text("/velocity version", NamedTextColor.RED));
-        return;
-      }
-
+    public int run(final CommandContext<CommandSource> context) {
+      final CommandSource source = context.getSource();
       ProxyVersion version = server.getVersion();
 
       Component velocity = Component.text().content(version.getName() + " ")
@@ -251,15 +174,11 @@ public class VelocityCommand implements SimpleCommand {
             .build();
         source.sendMessage(embellishment);
       }
-    }
-
-    @Override
-    public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
-      return source.getPermissionValue("velocity.command.info") != Tristate.FALSE;
+      return Command.SINGLE_SUCCESS;
     }
   }
 
-  private static class Plugins implements SubCommand {
+  private static class Plugins implements Command<CommandSource> {
 
     private final ProxyServer server;
 
@@ -268,11 +187,8 @@ public class VelocityCommand implements SimpleCommand {
     }
 
     @Override
-    public void execute(CommandSource source, String @NonNull [] args) {
-      if (args.length != 0) {
-        source.sendMessage(Component.text("/velocity plugins", NamedTextColor.RED));
-        return;
-      }
+    public int run(final CommandContext<CommandSource> context) {
+      final CommandSource source = context.getSource();
 
       List<PluginContainer> plugins = ImmutableList.copyOf(server.getPluginManager().getPlugins());
       int pluginCount = plugins.size();
@@ -280,7 +196,7 @@ public class VelocityCommand implements SimpleCommand {
       if (pluginCount == 0) {
         source.sendMessage(Component.translatable("velocity.command.no-plugins",
             NamedTextColor.YELLOW));
-        return;
+        return Command.SINGLE_SUCCESS;
       }
 
       TextComponent.Builder listBuilder = Component.text();
@@ -297,6 +213,7 @@ public class VelocityCommand implements SimpleCommand {
           .color(NamedTextColor.YELLOW)
           .args(listBuilder.build());
       source.sendMessage(output);
+      return Command.SINGLE_SUCCESS;
     }
 
     private TextComponent componentForPlugin(PluginDescription description) {
@@ -333,14 +250,9 @@ public class VelocityCommand implements SimpleCommand {
       return Component.text(description.getId(), NamedTextColor.GRAY)
           .hoverEvent(HoverEvent.showText(hoverText.build()));
     }
-
-    @Override
-    public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
-      return source.getPermissionValue("velocity.command.plugins") == Tristate.TRUE;
-    }
   }
 
-  private static class Dump implements SubCommand {
+  private static class Dump implements Command<CommandSource> {
 
     private static final Logger logger = LogManager.getLogger(Dump.class);
     private final ProxyServer server;
@@ -350,11 +262,8 @@ public class VelocityCommand implements SimpleCommand {
     }
 
     @Override
-    public void execute(CommandSource source, String @NonNull [] args) {
-      if (args.length != 0) {
-        source.sendMessage(Component.text("/velocity dump", NamedTextColor.RED));
-        return;
-      }
+    public int run(final CommandContext<CommandSource> context) {
+      final CommandSource source = context.getSource();
 
       Collection<RegisteredServer> allServers = ImmutableSet.copyOf(server.getAllServers());
       JsonObject servers = new JsonObject();
@@ -401,25 +310,23 @@ public class VelocityCommand implements SimpleCommand {
             NamedTextColor.RED)
         );
       }
-    }
-
-    @Override
-    public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
-      return source.getPermissionValue("velocity.command.plugins") == Tristate.TRUE;
+      return Command.SINGLE_SUCCESS;
     }
   }
 
   /**
    * Heap SubCommand.
    */
-  public static class Heap implements SubCommand {
+  public static class Heap implements Command<CommandSource> {
     private static final Logger logger = LogManager.getLogger(Heap.class);
     private MethodHandle heapGenerator;
     private Consumer<CommandSource> heapConsumer;
     private final Path dir = Path.of("./dumps");
 
     @Override
-    public void execute(CommandSource source, String @NonNull [] args) {
+    public int run(final CommandContext<CommandSource> context) throws CommandSyntaxException {
+      final CommandSource source = context.getSource();
+
       try {
         if (Files.notExists(dir)) {
           Files.createDirectories(dir);
@@ -477,12 +384,7 @@ public class VelocityCommand implements SimpleCommand {
             NamedTextColor.RED));
         logger.error("Could not write heap", t);
       }
+      return Command.SINGLE_SUCCESS;
     }
-
-    @Override
-    public boolean hasPermission(CommandSource source, String @NonNull [] args) {
-      return source.getPermissionValue("velocity.command.heap") == Tristate.TRUE;
-    }
-
   }
 }
