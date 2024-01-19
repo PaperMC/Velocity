@@ -22,8 +22,8 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
-import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem.Item;
+import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItemPacket;
+import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItemPacket.Item;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -68,8 +68,9 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
   @Override
   public void clearAll() {
     for (TabListEntry value : entries.values()) {
-      connection.delayedWrite(new LegacyPlayerListItem(LegacyPlayerListItem.REMOVE_PLAYER,
-          Collections.singletonList(LegacyPlayerListItem.Item.from(value))));
+      connection.delayedWrite(new LegacyPlayerListItemPacket(
+          LegacyPlayerListItemPacket.REMOVE_PLAYER,
+          Collections.singletonList(LegacyPlayerListItemPacket.Item.from(value))));
     }
     clearAllSilent();
   }
@@ -81,11 +82,11 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
   }
 
   @Override
-  public void processLegacy(LegacyPlayerListItem packet) {
+  public void processLegacy(LegacyPlayerListItemPacket packet) {
     Item item = packet.getItems().get(0); // Only one item per packet in 1.7
 
     switch (packet.getAction()) {
-      case LegacyPlayerListItem.ADD_PLAYER:
+      case LegacyPlayerListItemPacket.ADD_PLAYER:
         if (nameMapping.containsKey(item.getName())) { // ADD_PLAYER also used for updating ping
           KeyedVelocityTabListEntry entry = entries.get(nameMapping.get(item.getName()));
           if (entry != null) {
@@ -101,7 +102,7 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
               .build());
         }
         break;
-      case LegacyPlayerListItem.REMOVE_PLAYER:
+      case LegacyPlayerListItemPacket.REMOVE_PLAYER:
         UUID removedUuid = nameMapping.remove(item.getName());
         if (removedUuid != null) {
           entries.remove(removedUuid);
@@ -117,12 +118,13 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
   void updateEntry(int action, TabListEntry entry) {
     if (entries.containsKey(entry.getProfile().getId())) {
       switch (action) {
-        case LegacyPlayerListItem.UPDATE_LATENCY:
-        case LegacyPlayerListItem.UPDATE_DISPLAY_NAME: // Add here because we removed beforehand
+        case LegacyPlayerListItemPacket.UPDATE_LATENCY:
+        // Add here because we removed beforehand
+        case LegacyPlayerListItemPacket.UPDATE_DISPLAY_NAME:
           connection
-              .write(new LegacyPlayerListItem(LegacyPlayerListItem.ADD_PLAYER,
+              .write(new LegacyPlayerListItemPacket(LegacyPlayerListItemPacket.ADD_PLAYER,
                   // ADD_PLAYER also updates ping
-                  Collections.singletonList(LegacyPlayerListItem.Item.from(entry))));
+                  Collections.singletonList(LegacyPlayerListItemPacket.Item.from(entry))));
           break;
         default:
           // Can't do anything else

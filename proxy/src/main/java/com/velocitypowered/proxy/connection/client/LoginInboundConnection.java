@@ -23,8 +23,8 @@ import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.crypto.KeyIdentifiable;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
-import com.velocitypowered.proxy.protocol.packet.LoginPluginMessage;
-import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
+import com.velocitypowered.proxy.protocol.packet.LoginPluginMessagePacket;
+import com.velocitypowered.proxy.protocol.packet.LoginPluginResponsePacket;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -48,7 +48,7 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
   private final InitialInboundConnection delegate;
   private final Int2ObjectMap<MessageConsumer> outstandingResponses;
   private volatile int sequenceCounter;
-  private final Queue<LoginPluginMessage> loginMessagesToSend;
+  private final Queue<LoginPluginMessagePacket> loginMessagesToSend;
   private volatile Runnable onAllMessagesHandled;
   private volatile boolean loginEventFired;
   private @MonotonicNonNull IdentifiedKey playerKey;
@@ -92,7 +92,7 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
     if (consumer == null) {
       throw new NullPointerException("consumer");
     }
-    if (delegate.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
+    if (delegate.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_13)) {
       throw new IllegalStateException("Login plugin messages can only be sent to clients running "
           + "Minecraft 1.13 and above");
     }
@@ -100,7 +100,7 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
     final int id = SEQUENCE_UPDATER.incrementAndGet(this);
     this.outstandingResponses.put(id, consumer);
 
-    final LoginPluginMessage message = new LoginPluginMessage(id, identifier.getId(),
+    final LoginPluginMessagePacket message = new LoginPluginMessagePacket(id, identifier.getId(),
         Unpooled.wrappedBuffer(contents));
     if (!this.loginEventFired) {
       this.loginMessagesToSend.add(message);
@@ -125,7 +125,7 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
     this.onAllMessagesHandled = null;
   }
 
-  void handleLoginPluginResponse(final LoginPluginResponse response) {
+  void handleLoginPluginResponse(final LoginPluginResponsePacket response) {
     final MessageConsumer consumer = this.outstandingResponses.remove(response.getId());
     if (consumer != null) {
       try {
@@ -144,7 +144,7 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
     this.loginEventFired = true;
     this.onAllMessagesHandled = onAllMessagesHandled;
     if (!this.loginMessagesToSend.isEmpty()) {
-      LoginPluginMessage message;
+      LoginPluginMessagePacket message;
       while ((message = this.loginMessagesToSend.poll()) != null) {
         this.delegate.getConnection().delayedWrite(message);
       }

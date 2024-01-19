@@ -36,10 +36,10 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
-import com.velocitypowered.proxy.protocol.packet.EncryptionRequest;
-import com.velocitypowered.proxy.protocol.packet.EncryptionResponse;
-import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
-import com.velocitypowered.proxy.protocol.packet.ServerLogin;
+import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.EncryptionResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.LoginPluginResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -71,7 +71,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
   private final VelocityServer server;
   private final MinecraftConnection mcConnection;
   private final LoginInboundConnection inbound;
-  private @MonotonicNonNull ServerLogin login;
+  private @MonotonicNonNull ServerLoginPacket login;
   private byte[] verify = EMPTY_BYTE_ARRAY;
   private LoginState currentState = LoginState.LOGIN_PACKET_EXPECTED;
   private boolean forceKeyAuthentication;
@@ -87,7 +87,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(ServerLogin packet) {
+  public boolean handle(ServerLoginPacket packet) {
     assertState(LoginState.LOGIN_PACKET_EXPECTED);
     this.currentState = LoginState.LOGIN_PACKET_RECEIVED;
     IdentifiedKey playerKey = packet.getPlayerKey();
@@ -111,9 +111,9 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
         inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_public_key"));
         return true;
       }
-    } else if (mcConnection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0
+    } else if (mcConnection.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19)
         && forceKeyAuthentication
-        && mcConnection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
+        && mcConnection.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
       inbound.disconnect(Component.translatable("multiplayer.disconnect.missing_public_key"));
       return true;
     }
@@ -145,7 +145,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
           if (!result.isForceOfflineMode()
               && (server.getConfiguration().isOnlineMode() || result.isOnlineModeAllowed())) {
             // Request encryption.
-            EncryptionRequest request = generateEncryptionRequest();
+            EncryptionRequestPacket request = generateEncryptionRequest();
             this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
             mcConnection.write(request);
             this.currentState = LoginState.ENCRYPTION_REQUEST_SENT;
@@ -165,16 +165,16 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(LoginPluginResponse packet) {
+  public boolean handle(LoginPluginResponsePacket packet) {
     this.inbound.handleLoginPluginResponse(packet);
     return true;
   }
 
   @Override
-  public boolean handle(EncryptionResponse packet) {
+  public boolean handle(EncryptionResponsePacket packet) {
     assertState(LoginState.ENCRYPTION_REQUEST_SENT);
     this.currentState = LoginState.ENCRYPTION_RESPONSE_RECEIVED;
-    ServerLogin login = this.login;
+    ServerLoginPacket login = this.login;
     if (login == null) {
       throw new IllegalStateException("No ServerLogin packet received yet.");
     }
@@ -274,11 +274,11 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
     return true;
   }
 
-  private EncryptionRequest generateEncryptionRequest() {
+  private EncryptionRequestPacket generateEncryptionRequest() {
     byte[] verify = new byte[4];
     ThreadLocalRandom.current().nextBytes(verify);
 
-    EncryptionRequest request = new EncryptionRequest();
+    EncryptionRequestPacket request = new EncryptionRequestPacket();
     request.setPublicKey(server.getServerKeyPair().getPublic().getEncoded());
     request.setVerifyToken(verify);
     return request;

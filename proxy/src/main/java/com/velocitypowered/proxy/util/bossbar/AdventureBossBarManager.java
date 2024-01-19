@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.util.bossbar;
 import com.google.common.collect.MapMaker;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import com.velocitypowered.proxy.util.collect.Enum2IntMap;
 import com.velocitypowered.proxy.util.concurrent.Once;
@@ -128,7 +129,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
     }
     for (ConnectedPlayer player : holder.subscribers) {
       Component translated = player.translateMessage(newName);
-      com.velocitypowered.proxy.protocol.packet.BossBar packet = holder.createTitleUpdate(
+      BossBarPacket packet = holder.createTitleUpdate(
           translated, player.getProtocolVersion());
       player.getConnection().write(packet);
     }
@@ -140,7 +141,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
     if (holder == null) {
       return;
     }
-    com.velocitypowered.proxy.protocol.packet.BossBar packet = holder
+    BossBarPacket packet = holder
         .createPercentUpdate(newPercent);
     for (ConnectedPlayer player : holder.subscribers) {
       player.getConnection().write(packet);
@@ -154,7 +155,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
     if (holder == null) {
       return;
     }
-    com.velocitypowered.proxy.protocol.packet.BossBar packet = holder.createColorUpdate(newColor);
+    BossBarPacket packet = holder.createColorUpdate(newColor);
     for (ConnectedPlayer player : holder.subscribers) {
       player.getConnection().write(packet);
     }
@@ -167,7 +168,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
     if (holder == null) {
       return;
     }
-    com.velocitypowered.proxy.protocol.packet.BossBar packet = holder
+    BossBarPacket packet = holder
         .createOverlayUpdate(newOverlay);
     for (ConnectedPlayer player : holder.subscribers) {
       player.getConnection().write(packet);
@@ -181,7 +182,7 @@ public class AdventureBossBarManager implements BossBar.Listener {
     if (holder == null) {
       return;
     }
-    com.velocitypowered.proxy.protocol.packet.BossBar packet = holder.createFlagsUpdate();
+    BossBarPacket packet = holder.createFlagsUpdate();
     for (ConnectedPlayer player : holder.subscribers) {
       player.getConnection().write(packet);
     }
@@ -203,15 +204,14 @@ public class AdventureBossBarManager implements BossBar.Listener {
       registrationOnce.run(() -> this.bar.addListener(AdventureBossBarManager.this));
     }
 
-    com.velocitypowered.proxy.protocol.packet.BossBar createRemovePacket() {
-      return com.velocitypowered.proxy.protocol.packet.BossBar.createRemovePacket(this.id);
+    BossBarPacket createRemovePacket() {
+      return BossBarPacket.createRemovePacket(this.id);
     }
 
-    com.velocitypowered.proxy.protocol.packet.BossBar createAddPacket(ConnectedPlayer player) {
-      com.velocitypowered.proxy.protocol.packet.BossBar packet = new com.velocitypowered
-          .proxy.protocol.packet.BossBar();
+    BossBarPacket createAddPacket(ConnectedPlayer player) {
+      BossBarPacket packet = new BossBarPacket();
       packet.setUuid(this.id);
-      packet.setAction(com.velocitypowered.proxy.protocol.packet.BossBar.ADD);
+      packet.setAction(BossBarPacket.ADD);
       packet.setName(
           new ComponentHolder(player.getProtocolVersion(), player.translateMessage(bar.name())));
       packet.setColor(COLORS_TO_PROTOCOL.get(bar.color()));
@@ -221,55 +221,50 @@ public class AdventureBossBarManager implements BossBar.Listener {
       return packet;
     }
 
-    com.velocitypowered.proxy.protocol.packet.BossBar createPercentUpdate(float newPercent) {
-      com.velocitypowered.proxy.protocol.packet.BossBar packet = new com.velocitypowered
-          .proxy.protocol.packet.BossBar();
+    BossBarPacket createPercentUpdate(float newPercent) {
+      BossBarPacket packet = new BossBarPacket();
       packet.setUuid(this.id);
-      packet.setAction(com.velocitypowered.proxy.protocol.packet.BossBar.UPDATE_PERCENT);
+      packet.setAction(BossBarPacket.UPDATE_PERCENT);
       packet.setPercent(newPercent);
       return packet;
     }
 
-    com.velocitypowered.proxy.protocol.packet.BossBar createColorUpdate(Color color) {
-      com.velocitypowered.proxy.protocol.packet.BossBar packet = new com.velocitypowered
-          .proxy.protocol.packet.BossBar();
+    BossBarPacket createColorUpdate(Color color) {
+      BossBarPacket packet = new BossBarPacket();
       packet.setUuid(this.id);
-      packet.setAction(com.velocitypowered.proxy.protocol.packet.BossBar.UPDATE_STYLE);
+      packet.setAction(BossBarPacket.UPDATE_STYLE);
       packet.setColor(COLORS_TO_PROTOCOL.get(color));
       packet.setOverlay(OVERLAY_TO_PROTOCOL.get(bar.overlay()));
       packet.setFlags(serializeFlags(bar.flags()));
       return packet;
     }
 
-    com.velocitypowered.proxy.protocol.packet.BossBar createTitleUpdate(Component name,
-                                                                        ProtocolVersion version) {
-      com.velocitypowered.proxy.protocol.packet.BossBar packet = new com.velocitypowered
-          .proxy.protocol.packet.BossBar();
+    BossBarPacket createTitleUpdate(Component name,
+                                    ProtocolVersion version) {
+      BossBarPacket packet = new BossBarPacket();
       packet.setUuid(this.id);
-      packet.setAction(com.velocitypowered.proxy.protocol.packet.BossBar.UPDATE_NAME);
+      packet.setAction(BossBarPacket.UPDATE_NAME);
       packet.setName(new ComponentHolder(version, name));
       return packet;
     }
 
-    com.velocitypowered.proxy.protocol.packet.BossBar createFlagsUpdate() {
+    BossBarPacket createFlagsUpdate() {
       return createFlagsUpdate(bar.flags());
     }
 
-    com.velocitypowered.proxy.protocol.packet.BossBar createFlagsUpdate(Set<Flag> newFlags) {
-      com.velocitypowered.proxy.protocol.packet.BossBar packet = new com.velocitypowered
-          .proxy.protocol.packet.BossBar();
+    BossBarPacket createFlagsUpdate(Set<Flag> newFlags) {
+      BossBarPacket packet = new BossBarPacket();
       packet.setUuid(this.id);
-      packet.setAction(com.velocitypowered.proxy.protocol.packet.BossBar.UPDATE_PROPERTIES);
+      packet.setAction(BossBarPacket.UPDATE_PROPERTIES);
       packet.setColor(COLORS_TO_PROTOCOL.get(this.bar.color()));
       packet.setFlags(this.serializeFlags(newFlags));
       return packet;
     }
 
-    com.velocitypowered.proxy.protocol.packet.BossBar createOverlayUpdate(Overlay overlay) {
-      com.velocitypowered.proxy.protocol.packet.BossBar packet = new com.velocitypowered
-          .proxy.protocol.packet.BossBar();
+    BossBarPacket createOverlayUpdate(Overlay overlay) {
+      BossBarPacket packet = new BossBarPacket();
       packet.setUuid(this.id);
-      packet.setAction(com.velocitypowered.proxy.protocol.packet.BossBar.UPDATE_STYLE);
+      packet.setAction(BossBarPacket.UPDATE_STYLE);
       packet.setColor(COLORS_TO_PROTOCOL.get(bar.color()));
       packet.setOverlay(OVERLAY_TO_PROTOCOL.get(overlay));
       return packet;
