@@ -22,17 +22,28 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import org.jetbrains.annotations.Nullable;
 
-public class Transfer implements MinecraftPacket {
+import java.net.InetSocketAddress;
+
+public class TransferPacket implements MinecraftPacket {
   private String host;
   private int port;
 
-  public Transfer() {
+  public TransferPacket() {
   }
 
-  public Transfer(final String host, final int port) {
+  public TransferPacket(final String host, final int port) {
     this.host = host;
     this.port = port;
+  }
+
+  @Nullable
+  public InetSocketAddress address() {
+    if (host == null) {
+      return null;
+    }
+    return new InetSocketAddress(host, port);
   }
 
   @Override

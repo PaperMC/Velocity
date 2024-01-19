@@ -77,7 +77,7 @@ import com.velocitypowered.proxy.protocol.packet.StatusRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponsePacket;
-import com.velocitypowered.proxy.protocol.packet.Transfer;
+import com.velocitypowered.proxy.protocol.packet.TransferPacket;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfoPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatAcknowledgementPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatCompletionPacket;
@@ -194,7 +194,7 @@ public enum StateRegistry {
           map(0x06, MINECRAFT_1_20_2, false),
           map(0x07, MINECRAFT_1_20_3, false),
           map(0x08, MINECRAFT_1_20_5, false));
-      clientbound.register(Transfer.class, Transfer::new,
+      clientbound.register(TransferPacket.class, TransferPacket::new,
           map(0x0A, MINECRAFT_1_20_5, false));
       clientbound.register(ActiveFeaturesPacket.class, ActiveFeaturesPacket::new,
           map(0x07, MINECRAFT_1_20_2, false),
@@ -613,8 +613,8 @@ public enum StateRegistry {
           map(0x67, MINECRAFT_1_20_3, false),
           map(0x68, MINECRAFT_1_20_5, false));
       clientbound.register(
-          Transfer.class,
-          Transfer::new,
+          TransferPacket.class,
+          TransferPacket::new,
           map(0x72, MINECRAFT_1_20_5, false)
       );
     }

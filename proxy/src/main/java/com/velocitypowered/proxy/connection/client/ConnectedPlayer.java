@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus;
+import com.velocitypowered.api.event.connection.PreTransferEvent;
 import com.velocitypowered.api.event.player.KickedFromServerEvent;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.DisconnectPlayer;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.Notify;
@@ -65,7 +66,7 @@ import com.velocitypowered.proxy.protocol.packet.HeaderAndFooterPacket;
 import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
 import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
-import com.velocitypowered.proxy.protocol.packet.Transfer;
+import com.velocitypowered.proxy.protocol.packet.TransferPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatType;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
@@ -936,11 +937,21 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   @Override
   public void transferToHost(final InetSocketAddress address) {
+    Preconditions.checkNotNull(address);
     Preconditions.checkArgument(
             this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_5) >= 0,
             "Player version must be 1.20.5 to be able to transfer to another host");
 
-    connection.write(new Transfer(address.getHostName(), address.getPort()));
+    server.getEventManager().fire(new PreTransferEvent(this, address)).thenAccept((event) -> {
+      if (event.getResult().isAllowed()) {
+        InetSocketAddress resultedAddress = event.getResult().address();
+        if (resultedAddress == null) {
+          resultedAddress = address;
+        }
+        connection.write(new TransferPacket(
+                resultedAddress.getHostName(), resultedAddress.getPort()));
+      }
+    });
   }
 
   void setClientBrand(String clientBrand) {
