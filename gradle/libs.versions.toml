@@ -11,8 +11,7 @@ shadow = "com.github.johnrengelman.shadow:8.1.0"
 spotless = "com.diffplug.spotless:6.12.0"
 
 [libraries]
-# See JD links in velocity-apo when moving to non-snapshot versions
-adventure-bom = "net.kyori:adventure-bom:4.15.0-SNAPSHOT"
+adventure-bom = "net.kyori:adventure-bom:4.15.0"
 adventure-facet = "net.kyori:adventure-platform-facet:4.3.0"
 asm = "org.ow2.asm:asm:9.5"
 brigadier = "com.velocitypowered:velocity-brigadier:1.0.0-SNAPSHOT"
