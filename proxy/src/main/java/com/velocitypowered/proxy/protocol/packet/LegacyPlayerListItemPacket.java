@@ -61,7 +61,7 @@ public class LegacyPlayerListItemPacket implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       action = ProtocolUtils.readVarInt(buf);
       int length = ProtocolUtils.readVarInt(buf);
 
@@ -76,7 +76,7 @@ public class LegacyPlayerListItemPacket implements MinecraftPacket {
             item.setLatency(ProtocolUtils.readVarInt(buf));
             item.setDisplayName(readOptionalComponent(buf, version));
 
-            if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+            if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
               if (buf.readBoolean()) {
                 item.setPlayerKey(ProtocolUtils.readPlayerKey(version, buf));
               }
@@ -110,7 +110,7 @@ public class LegacyPlayerListItemPacket implements MinecraftPacket {
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       ProtocolUtils.writeVarInt(buf, action);
       ProtocolUtils.writeVarInt(buf, items.size());
       for (Item item : items) {
@@ -125,7 +125,7 @@ public class LegacyPlayerListItemPacket implements MinecraftPacket {
             ProtocolUtils.writeVarInt(buf, item.getGameMode());
             ProtocolUtils.writeVarInt(buf, item.getLatency());
             writeDisplayName(buf, item.getDisplayName(), version);
-            if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+            if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
               if (item.getPlayerKey() != null) {
                 buf.writeBoolean(true);
                 ProtocolUtils.writePlayerKey(buf, item.getPlayerKey());

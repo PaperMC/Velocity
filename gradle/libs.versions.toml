@@ -34,6 +34,7 @@ flare-fastutil = { module = "space.vectrix.flare:flare-fastutil", version.ref = 
 jline = "org.jline:jline-terminal-jansi:3.23.0"
 jopt = "net.sf.jopt-simple:jopt-simple:5.0.4"
 junit = "org.junit.jupiter:junit-jupiter:5.9.0"
+jspecify = "org.jspecify:jspecify:0.3.0"
 kyori-ansi = "net.kyori:ansi:1.0.3"
 guava = "com.google.guava:guava:25.1-jre"
 gson = "com.google.code.gson:gson:2.10.1"

@@ -133,7 +133,7 @@ public class ArgumentPropertyRegistry {
    */
   public static void writeIdentifier(ByteBuf buf, ArgumentIdentifier identifier,
       ProtocolVersion protocolVersion) {
-    if (protocolVersion.compareTo(MINECRAFT_1_19) >= 0) {
+    if (protocolVersion.noLessThan(MINECRAFT_1_19)) {
       Integer id = identifier.getIdByProtocolVersion(protocolVersion);
       Preconditions.checkNotNull(id, "Don't know how to serialize type " + identifier);
 
@@ -152,7 +152,7 @@ public class ArgumentPropertyRegistry {
    * @return the identifier read from the buffer
    */
   public static ArgumentIdentifier readIdentifier(ByteBuf buf, ProtocolVersion protocolVersion) {
-    if (protocolVersion.compareTo(MINECRAFT_1_19) >= 0) {
+    if (protocolVersion.noLessThan(MINECRAFT_1_19)) {
       int id = ProtocolUtils.readVarInt(buf);
       for (ArgumentIdentifier i : byIdentifier.keySet()) {
         Integer v = i.getIdByProtocolVersion(protocolVersion);

@@ -18,6 +18,8 @@ java {
 }
 
 dependencies {
+    compileOnlyApi(libs.jspecify)
+
     api(libs.gson)
     api(libs.guava)
 

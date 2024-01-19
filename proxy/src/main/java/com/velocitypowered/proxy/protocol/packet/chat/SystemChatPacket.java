@@ -54,7 +54,7 @@ public class SystemChatPacket implements MinecraftPacket {
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     component.write(buf);
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19_1)) {
       switch (type) {
         case SYSTEM -> buf.writeBoolean(false);
         case GAME_INFO -> buf.writeBoolean(true);

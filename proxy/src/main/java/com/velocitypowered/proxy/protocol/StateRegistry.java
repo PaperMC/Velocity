@@ -669,7 +669,7 @@ public enum StateRegistry {
           if (next != current) {
             throw new IllegalArgumentException("Cannot add a mapping after last valid mapping");
           }
-          if (from.compareTo(lastValid) > 0) {
+          if (from.greaterThan(lastValid)) {
             throw new IllegalArgumentException(
                 "Last mapping version cannot be higher than highest mapping version");
           }
@@ -679,7 +679,7 @@ public enum StateRegistry {
 
         ProtocolVersion lastInList = lastValid != null ? lastValid : getLast(SUPPORTED_VERSIONS);
 
-        if (from.compareTo(to) >= 0 && from != lastInList) {
+        if (from.noLessThan(to) && from != lastInList) {
           throw new IllegalArgumentException(String.format(
               "Next mapping version (%s) should be lower then current (%s)", to, from));
         }

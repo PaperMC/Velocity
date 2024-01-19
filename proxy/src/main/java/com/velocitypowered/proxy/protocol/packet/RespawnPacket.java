@@ -162,9 +162,9 @@ public class RespawnPacket implements MinecraftPacket {
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     String dimensionIdentifier = null;
     String levelName = null;
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0
-          && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16)) {
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16_2)
+          && version.lessThan(ProtocolVersion.MINECRAFT_1_19)) {
         this.currentDimensionData = ProtocolUtils.readCompoundTag(buf, version, BinaryTagIO.reader());
         dimensionIdentifier = ProtocolUtils.readString(buf);
       } else {
@@ -174,42 +174,42 @@ public class RespawnPacket implements MinecraftPacket {
     } else {
       this.dimension = buf.readInt();
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_13_2) <= 0) {
+    if (version.noGreaterThan(ProtocolVersion.MINECRAFT_1_13_2)) {
       this.difficulty = buf.readUnsignedByte();
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_15)) {
       this.partialHashedSeed = buf.readLong();
     }
     this.gamemode = buf.readByte();
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16)) {
       this.previousGamemode = buf.readByte();
       boolean isDebug = buf.readBoolean();
       boolean isFlat = buf.readBoolean();
       this.dimensionInfo = new DimensionInfo(dimensionIdentifier, levelName, isFlat, isDebug);
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
+      if (version.lessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
         this.dataToKeep = (byte) (buf.readBoolean() ? 1 : 0);
-      } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0) {
+      } else if (version.lessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
         this.dataToKeep = buf.readByte();
       }
     } else {
       this.levelType = ProtocolUtils.readString(buf, 16);
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0 && buf.readBoolean()) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19) && buf.readBoolean()) {
       this.lastDeathPosition = Pair.of(ProtocolUtils.readString(buf), buf.readLong());
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20)) {
       this.portalCooldown = ProtocolUtils.readVarInt(buf);
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_2) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
       this.dataToKeep = buf.readByte();
     }
   }
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0
-          && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16)) {
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16_2)
+          && version.lessThan(ProtocolVersion.MINECRAFT_1_19)) {
         ProtocolUtils.writeBinaryTag(buf, version, currentDimensionData);
         ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
       } else {
@@ -219,20 +219,20 @@ public class RespawnPacket implements MinecraftPacket {
     } else {
       buf.writeInt(dimension);
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_13_2) <= 0) {
+    if (version.noGreaterThan(ProtocolVersion.MINECRAFT_1_13_2)) {
       buf.writeByte(difficulty);
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_15)) {
       buf.writeLong(partialHashedSeed);
     }
     buf.writeByte(gamemode);
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16)) {
       buf.writeByte(previousGamemode);
       buf.writeBoolean(dimensionInfo.isDebugType());
       buf.writeBoolean(dimensionInfo.isFlat());
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
+      if (version.lessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
         buf.writeBoolean(dataToKeep != 0);
-      } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0) {
+      } else if (version.lessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
         buf.writeByte(dataToKeep);
       }
     } else {
@@ -240,7 +240,7 @@ public class RespawnPacket implements MinecraftPacket {
     }
 
     // optional death location
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
       if (lastDeathPosition != null) {
         buf.writeBoolean(true);
         ProtocolUtils.writeString(buf, lastDeathPosition.key());
@@ -250,11 +250,11 @@ public class RespawnPacket implements MinecraftPacket {
       }
     }
 
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20)) {
       ProtocolUtils.writeVarInt(buf, portalCooldown);
     }
 
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_2) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
       buf.writeByte(dataToKeep);
     }
   }

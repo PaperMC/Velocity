@@ -92,7 +92,7 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
     if (consumer == null) {
       throw new NullPointerException("consumer");
     }
-    if (delegate.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_13) < 0) {
+    if (delegate.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_13)) {
       throw new IllegalStateException("Login plugin messages can only be sent to clients running "
           + "Minecraft 1.13 and above");
     }
