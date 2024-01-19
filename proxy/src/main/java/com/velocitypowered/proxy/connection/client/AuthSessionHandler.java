@@ -39,9 +39,9 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.LoginAcknowledged;
-import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
-import com.velocitypowered.proxy.protocol.packet.SetCompression;
+import com.velocitypowered.proxy.protocol.packet.LoginAcknowledgedPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
+import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
 import io.netty.buffer.ByteBuf;
 import java.util.Objects;
 import java.util.Optional;
@@ -132,7 +132,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
   private void startLoginCompletion(ConnectedPlayer player) {
     int threshold = server.getConfiguration().getCompressionThreshold();
     if (threshold >= 0 && mcConnection.getProtocolVersion().compareTo(MINECRAFT_1_8) >= 0) {
-      mcConnection.write(new SetCompression(threshold));
+      mcConnection.write(new SetCompressionPacket(threshold));
       mcConnection.setCompressionThreshold(threshold);
     }
     VelocityConfiguration configuration = server.getConfiguration();
@@ -170,7 +170,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(LoginAcknowledged packet) {
+  public boolean handle(LoginAcknowledgedPacket packet) {
     if (loginState != State.SUCCESS_SENT) {
       inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_player_data"));
     } else {
@@ -209,7 +209,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
           return;
         }
 
-        ServerLoginSuccess success = new ServerLoginSuccess();
+        ServerLoginSuccessPacket success = new ServerLoginSuccessPacket();
         success.setUsername(player.getUsername());
         success.setProperties(player.getGameProfileProperties());
         success.setUuid(player.getUniqueId());

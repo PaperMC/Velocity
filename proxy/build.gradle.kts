@@ -119,7 +119,6 @@ dependencies {
     implementation(platform(libs.adventure.bom))
     implementation("net.kyori:adventure-nbt")
     implementation(libs.adventure.facet)
-    implementation(libs.asynchttpclient)
     implementation(libs.completablefutures)
     implementation(libs.nightconfig)
     implementation(libs.bstats)

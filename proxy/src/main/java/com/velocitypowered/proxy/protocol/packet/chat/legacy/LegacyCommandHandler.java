@@ -24,7 +24,7 @@ import com.velocitypowered.proxy.protocol.packet.chat.CommandHandler;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
-public class LegacyCommandHandler implements CommandHandler<LegacyChat> {
+public class LegacyCommandHandler implements CommandHandler<LegacyChatPacket> {
 
   private final ConnectedPlayer player;
   private final VelocityServer server;
@@ -35,12 +35,12 @@ public class LegacyCommandHandler implements CommandHandler<LegacyChat> {
   }
 
   @Override
-  public Class<LegacyChat> packetClass() {
-    return LegacyChat.class;
+  public Class<LegacyChatPacket> packetClass() {
+    return LegacyChatPacket.class;
   }
 
   @Override
-  public void handlePlayerCommandInternal(LegacyChat packet) {
+  public void handlePlayerCommandInternal(LegacyChatPacket packet) {
     String command = packet.getMessage().substring(1);
     queueCommandResult(this.server, this.player, event -> {
       CommandExecuteEvent.CommandResult result = event.getResult();
