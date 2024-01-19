@@ -200,10 +200,10 @@ public class JoinGamePacket implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_2) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
       // haha funny, they made 1.20.2 more complicated
       this.decode1202Up(buf, version);
-    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+    } else if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16)) {
       // Minecraft 1.16 and above have significantly more complicated logic for reading this packet,
       // so separate it out.
       this.decode116Up(buf, version);
@@ -218,33 +218,33 @@ public class JoinGamePacket implements MinecraftPacket {
     this.isHardcore = (this.gamemode & 0x08) != 0;
     this.gamemode &= ~0x08;
 
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_9_1)) {
       this.dimension = buf.readInt();
     } else {
       this.dimension = buf.readByte();
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_13_2) <= 0) {
+    if (version.noGreaterThan(ProtocolVersion.MINECRAFT_1_13_2)) {
       this.difficulty = buf.readUnsignedByte();
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_15)) {
       this.partialHashedSeed = buf.readLong();
     }
     this.maxPlayers = buf.readUnsignedByte();
     this.levelType = ProtocolUtils.readString(buf, 16);
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_14) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_14)) {
       this.viewDistance = ProtocolUtils.readVarInt(buf);
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       this.reducedDebugInfo = buf.readBoolean();
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_15)) {
       this.showRespawnScreen = buf.readBoolean();
     }
   }
 
   private void decode116Up(ByteBuf buf, ProtocolVersion version) {
     this.entityId = buf.readInt();
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16_2)) {
       this.isHardcore = buf.readBoolean();
       this.gamemode = buf.readByte();
     } else {
@@ -258,8 +258,8 @@ public class JoinGamePacket implements MinecraftPacket {
     this.registry = ProtocolUtils.readCompoundTag(buf, version, JOINGAME_READER);
     String dimensionIdentifier;
     String levelName = null;
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0
-        && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16_2)
+        && version.lessThan(ProtocolVersion.MINECRAFT_1_19)) {
       this.currentDimensionData = ProtocolUtils.readCompoundTag(buf, version, JOINGAME_READER);
       dimensionIdentifier = ProtocolUtils.readString(buf);
     } else {
@@ -268,14 +268,14 @@ public class JoinGamePacket implements MinecraftPacket {
     }
 
     this.partialHashedSeed = buf.readLong();
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16_2)) {
       this.maxPlayers = ProtocolUtils.readVarInt(buf);
     } else {
       this.maxPlayers = buf.readUnsignedByte();
     }
 
     this.viewDistance = ProtocolUtils.readVarInt(buf);
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_18) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_18)) {
       this.simulationDistance = ProtocolUtils.readVarInt(buf);
     }
 
@@ -287,11 +287,11 @@ public class JoinGamePacket implements MinecraftPacket {
     this.dimensionInfo = new DimensionInfo(dimensionIdentifier, levelName, isFlat, isDebug);
 
     // optional death location
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0 && buf.readBoolean()) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19) && buf.readBoolean()) {
       this.lastDeathPosition = Pair.of(ProtocolUtils.readString(buf), buf.readLong());
     }
 
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20)) {
       this.portalCooldown = ProtocolUtils.readVarInt(buf);
     }
   }
@@ -332,10 +332,10 @@ public class JoinGamePacket implements MinecraftPacket {
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_2) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
       // haha funny, they made 1.20.2 more complicated
       this.encode1202Up(buf, version);
-    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+    } else if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16)) {
       // Minecraft 1.16 and above have significantly more complicated logic for reading this packet,
       // so separate it out.
       this.encode116Up(buf, version);
@@ -346,21 +346,21 @@ public class JoinGamePacket implements MinecraftPacket {
 
   private void encodeLegacy(ByteBuf buf, ProtocolVersion version) {
     buf.writeInt(entityId);
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16_2)) {
       buf.writeBoolean(isHardcore);
       buf.writeByte(gamemode);
     } else {
       buf.writeByte(isHardcore ? gamemode | 0x8 : gamemode);
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_9_1) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_9_1)) {
       buf.writeInt(dimension);
     } else {
       buf.writeByte(dimension);
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_13_2) <= 0) {
+    if (version.noGreaterThan(ProtocolVersion.MINECRAFT_1_13_2)) {
       buf.writeByte(difficulty);
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_15)) {
       buf.writeLong(partialHashedSeed);
     }
     buf.writeByte(maxPlayers);
@@ -368,20 +368,20 @@ public class JoinGamePacket implements MinecraftPacket {
       throw new IllegalStateException("No level type specified.");
     }
     ProtocolUtils.writeString(buf, levelType);
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_14) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_14)) {
       ProtocolUtils.writeVarInt(buf, viewDistance);
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       buf.writeBoolean(reducedDebugInfo);
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_15) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_15)) {
       buf.writeBoolean(showRespawnScreen);
     }
   }
 
   private void encode116Up(ByteBuf buf, ProtocolVersion version) {
     buf.writeInt(entityId);
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16_2)) {
       buf.writeBoolean(isHardcore);
       buf.writeByte(gamemode);
     } else {
@@ -391,8 +391,8 @@ public class JoinGamePacket implements MinecraftPacket {
 
     ProtocolUtils.writeStringArray(buf, levelNames.toArray(String[]::new));
     ProtocolUtils.writeBinaryTag(buf, version, this.registry);
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0
-        && version.compareTo(ProtocolVersion.MINECRAFT_1_19) < 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16_2)
+        && version.lessThan(ProtocolVersion.MINECRAFT_1_19)) {
       ProtocolUtils.writeBinaryTag(buf, version, currentDimensionData);
       ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
     } else {
@@ -401,14 +401,14 @@ public class JoinGamePacket implements MinecraftPacket {
     }
 
     buf.writeLong(partialHashedSeed);
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16_2) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16_2)) {
       ProtocolUtils.writeVarInt(buf, maxPlayers);
     } else {
       buf.writeByte(maxPlayers);
     }
 
     ProtocolUtils.writeVarInt(buf, viewDistance);
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_18) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_18)) {
       ProtocolUtils.writeVarInt(buf, simulationDistance);
     }
 
@@ -419,7 +419,7 @@ public class JoinGamePacket implements MinecraftPacket {
     buf.writeBoolean(dimensionInfo.isFlat());
 
     // optional death location
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
       if (lastDeathPosition != null) {
         buf.writeBoolean(true);
         ProtocolUtils.writeString(buf, lastDeathPosition.key());
@@ -429,7 +429,7 @@ public class JoinGamePacket implements MinecraftPacket {
       }
     }
 
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20)) {
       ProtocolUtils.writeVarInt(buf, portalCooldown);
     }
   }

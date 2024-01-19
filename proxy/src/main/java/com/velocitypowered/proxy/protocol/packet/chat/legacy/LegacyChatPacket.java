@@ -93,9 +93,9 @@ public class LegacyChatPacket implements MinecraftPacket {
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     message = ProtocolUtils.readString(buf);
     if (direction == ProtocolUtils.Direction.CLIENTBOUND
-        && version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+        && version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       type = buf.readByte();
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16)) {
         sender = ProtocolUtils.readUuid(buf);
       }
     }
@@ -108,9 +108,9 @@ public class LegacyChatPacket implements MinecraftPacket {
     }
     ProtocolUtils.writeString(buf, message);
     if (direction == ProtocolUtils.Direction.CLIENTBOUND
-        && version.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+        && version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       buf.writeByte(type);
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16)) {
         ProtocolUtils.writeUuid(buf, sender == null ? EMPTY_SENDER : sender);
       }
     }

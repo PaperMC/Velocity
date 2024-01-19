@@ -279,7 +279,7 @@ public class ComponentHolder {
   }
 
   public static ComponentHolder read(ByteBuf buf, ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_3) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
       return new ComponentHolder(version,
           ProtocolUtils.readBinaryTag(buf, version, BinaryTagIO.reader()));
     } else {
@@ -288,7 +288,7 @@ public class ComponentHolder {
   }
 
   public void write(ByteBuf buf) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_3) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
       ProtocolUtils.writeBinaryTag(buf, version, getBinaryTag());
     } else {
       ProtocolUtils.writeString(buf, getJson());

@@ -56,10 +56,10 @@ public class ResourcePackResponsePacket implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_20_3) >= 0) {
+    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
       this.id = ProtocolUtils.readUuid(buf);
     }
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_9_4) <= 0) {
+    if (protocolVersion.noGreaterThan(ProtocolVersion.MINECRAFT_1_9_4)) {
       this.hash = ProtocolUtils.readString(buf);
     }
     this.status = Status.values()[ProtocolUtils.readVarInt(buf)];
@@ -67,10 +67,10 @@ public class ResourcePackResponsePacket implements MinecraftPacket {
 
   @Override
   public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_20_3) >= 0) {
+    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
       ProtocolUtils.writeUuid(buf, id);
     }
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_9_4) <= 0) {
+    if (protocolVersion.noGreaterThan(ProtocolVersion.MINECRAFT_1_9_4)) {
       ProtocolUtils.writeString(buf, hash);
     }
     ProtocolUtils.writeVarInt(buf, status.ordinal());

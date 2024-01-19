@@ -86,7 +86,7 @@ public class KeyedPlayerChatPacket implements MinecraftPacket {
       salt = Longs.toByteArray(saltLong);
       signature = signatureBytes;
       expiry = Instant.ofEpochMilli(expiresAt);
-    } else if ((protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0
+    } else if ((protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_19_1)
         || saltLong == 0L) && signatureBytes.length == 0) {
       unsigned = true;
     } else {
@@ -98,7 +98,7 @@ public class KeyedPlayerChatPacket implements MinecraftPacket {
       throw EncryptionUtils.PREVIEW_SIGNATURE_MISSING;
     }
 
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
+    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_19_1)) {
       int size = ProtocolUtils.readVarInt(buf);
       if (size < 0 || size > MAXIMUM_PREVIOUS_MESSAGE_COUNT) {
         throw INVALID_PREVIOUS_MESSAGES;
@@ -130,7 +130,7 @@ public class KeyedPlayerChatPacket implements MinecraftPacket {
 
     buf.writeBoolean(signedPreview);
 
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
+    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_19_1)) {
       ProtocolUtils.writeVarInt(buf, previousMessages.length);
       for (SignaturePair previousMessage : previousMessages) {
         ProtocolUtils.writeUuid(buf, previousMessage.getSigner());

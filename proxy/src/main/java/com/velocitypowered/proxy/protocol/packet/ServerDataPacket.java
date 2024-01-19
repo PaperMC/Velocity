@@ -47,12 +47,12 @@ public class ServerDataPacket implements MinecraftPacket {
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
       ProtocolVersion protocolVersion) {
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_4) >= 0 || buf.readBoolean()) {
+    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_19_4) || buf.readBoolean()) {
       this.description = ComponentHolder.read(buf, protocolVersion);
     }
     if (buf.readBoolean()) {
       String iconBase64;
-      if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_4) >= 0) {
+      if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_19_4)) {
         byte[] iconBytes = ProtocolUtils.readByteArray(buf);
         iconBase64 = "data:image/png;base64," + new String(Base64.getEncoder().encode(iconBytes), StandardCharsets.UTF_8);
       } else {
@@ -60,10 +60,10 @@ public class ServerDataPacket implements MinecraftPacket {
       }
       this.favicon = new Favicon(iconBase64);
     }
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
+    if (protocolVersion.lessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
       buf.readBoolean();
     }
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
+    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_19_1)) {
       this.secureChatEnforced = buf.readBoolean();
     }
   }
@@ -72,17 +72,17 @@ public class ServerDataPacket implements MinecraftPacket {
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction,
       ProtocolVersion protocolVersion) {
     boolean hasDescription = this.description != null;
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_4) < 0) {
+    if (protocolVersion.lessThan(ProtocolVersion.MINECRAFT_1_19_4)) {
       buf.writeBoolean(hasDescription);
     }
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_4) >= 0 || hasDescription) {
+    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_19_4) || hasDescription) {
       this.description.write(buf);
     }
 
     boolean hasFavicon = this.favicon != null;
     buf.writeBoolean(hasFavicon);
     if (hasFavicon) {
-      if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_4) >= 0) {
+      if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_19_4)) {
         String cutIconBase64 = favicon.getBase64Url().substring("data:image/png;base64,".length());
         byte[] iconBytes = Base64.getDecoder().decode(cutIconBase64.getBytes(StandardCharsets.UTF_8));
         ProtocolUtils.writeByteArray(buf, iconBytes);
@@ -91,10 +91,10 @@ public class ServerDataPacket implements MinecraftPacket {
       }
     }
 
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
+    if (protocolVersion.lessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
       buf.writeBoolean(false);
     }
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
+    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_19_1)) {
       buf.writeBoolean(this.secureChatEnforced);
     }
   }

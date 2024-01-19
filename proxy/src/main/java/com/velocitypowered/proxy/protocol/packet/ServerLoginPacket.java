@@ -84,8 +84,8 @@ public class ServerLoginPacket implements MinecraftPacket {
       throw EMPTY_USERNAME;
     }
 
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
         playerKey = null;
       } else {
         if (buf.readBoolean()) {
@@ -95,12 +95,12 @@ public class ServerLoginPacket implements MinecraftPacket {
         }
       }
 
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_2) >= 0) {
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
         this.holderUuid = ProtocolUtils.readUuid(buf);
         return;
       }
 
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19_1)) {
         if (buf.readBoolean()) {
           holderUuid = ProtocolUtils.readUuid(buf);
         }
@@ -117,8 +117,8 @@ public class ServerLoginPacket implements MinecraftPacket {
     }
     ProtocolUtils.writeString(buf, username);
 
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
+      if (version.lessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
         if (playerKey != null) {
           buf.writeBoolean(true);
           ProtocolUtils.writePlayerKey(buf, playerKey);
@@ -127,12 +127,12 @@ public class ServerLoginPacket implements MinecraftPacket {
         }
       }
 
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_2) >= 0) {
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
         ProtocolUtils.writeUuid(buf, this.holderUuid);
         return;
       }
 
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19_1)) {
         if (playerKey != null && playerKey.getSignatureHolder() != null) {
           buf.writeBoolean(true);
           ProtocolUtils.writeUuid(buf, playerKey.getSignatureHolder());
@@ -152,8 +152,8 @@ public class ServerLoginPacket implements MinecraftPacket {
     // legal on the protocol level.
     int base = 1 + (16 * 3);
     // Adjustments for Key-authentication
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_3) < 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
+      if (version.lessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
         // + 1 for the boolean present/ not present
         // + 8 for the long expiry
         // + 2 len for varint key size
@@ -162,7 +162,7 @@ public class ServerLoginPacket implements MinecraftPacket {
         // + 512 for signature
         base += 1 + 8 + 2 + 294 + 2 + 512;
       }
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_1) >= 0) {
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19_1)) {
         // +1 boolean uuid optional
         // + 2 * 8 for the long msb/lsb
         base += 1 + 8 + 8;

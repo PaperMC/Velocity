@@ -105,7 +105,7 @@ public class KeyedChatHandler implements
     return pme -> {
       PlayerChatEvent.ChatResult chatResult = pme.getResult();
       if (!chatResult.isAllowed()) {
-        if (playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+        if (playerKey.getKeyRevision().noLessThan(IdentifiedKey.Revision.LINKED_V2)) {
           // Bad, very bad.
           invalidCancel(logger, player);
         }
@@ -113,7 +113,7 @@ public class KeyedChatHandler implements
       }
 
       if (chatResult.getMessage().map(str -> !str.equals(packet.getMessage())).orElse(false)) {
-        if (playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+        if (playerKey.getKeyRevision().noLessThan(IdentifiedKey.Revision.LINKED_V2)) {
           // Bad, very bad.
           invalidChange(logger, player);
         } else {

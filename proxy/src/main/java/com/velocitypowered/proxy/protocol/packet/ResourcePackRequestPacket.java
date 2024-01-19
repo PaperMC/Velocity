@@ -86,12 +86,12 @@ public class ResourcePackRequestPacket implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_20_3) >= 0) {
+    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
       this.id = ProtocolUtils.readUuid(buf);
     }
     this.url = ProtocolUtils.readString(buf);
     this.hash = ProtocolUtils.readString(buf);
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
+    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
       this.isRequired = buf.readBoolean();
       if (buf.readBoolean()) {
         this.prompt = ComponentHolder.read(buf, protocolVersion);
@@ -103,7 +103,7 @@ public class ResourcePackRequestPacket implements MinecraftPacket {
 
   @Override
   public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_20_3) >= 0) {
+    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
       if (id == null) {
         throw new IllegalStateException("Resource pack id not set yet!");
       }
@@ -114,7 +114,7 @@ public class ResourcePackRequestPacket implements MinecraftPacket {
     }
     ProtocolUtils.writeString(buf, url);
     ProtocolUtils.writeString(buf, hash);
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
+    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
       buf.writeBoolean(isRequired);
       if (prompt != null) {
         buf.writeBoolean(true);

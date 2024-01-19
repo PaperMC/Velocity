@@ -95,15 +95,15 @@ public class TabCompleteRequestPacket implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.compareTo(MINECRAFT_1_13) >= 0) {
+    if (version.noLessThan(MINECRAFT_1_13)) {
       this.transactionId = ProtocolUtils.readVarInt(buf);
       this.command = ProtocolUtils.readString(buf, VANILLA_MAX_TAB_COMPLETE_LEN);
     } else {
       this.command = ProtocolUtils.readString(buf, VANILLA_MAX_TAB_COMPLETE_LEN);
-      if (version.compareTo(MINECRAFT_1_9) >= 0) {
+      if (version.noLessThan(MINECRAFT_1_9)) {
         this.assumeCommand = buf.readBoolean();
       }
-      if (version.compareTo(MINECRAFT_1_8) >= 0) {
+      if (version.noLessThan(MINECRAFT_1_8)) {
         this.hasPosition = buf.readBoolean();
         if (hasPosition) {
           this.position = buf.readLong();
@@ -118,15 +118,15 @@ public class TabCompleteRequestPacket implements MinecraftPacket {
       throw new IllegalStateException("Command is not specified");
     }
 
-    if (version.compareTo(MINECRAFT_1_13) >= 0) {
+    if (version.noLessThan(MINECRAFT_1_13)) {
       ProtocolUtils.writeVarInt(buf, transactionId);
       ProtocolUtils.writeString(buf, command);
     } else {
       ProtocolUtils.writeString(buf, command);
-      if (version.compareTo(MINECRAFT_1_9) >= 0) {
+      if (version.noLessThan(MINECRAFT_1_9)) {
         buf.writeBoolean(assumeCommand);
       }
-      if (version.compareTo(MINECRAFT_1_8) >= 0) {
+      if (version.noLessThan(MINECRAFT_1_8)) {
         buf.writeBoolean(hasPosition);
         if (hasPosition) {
           buf.writeLong(position);

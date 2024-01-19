@@ -133,19 +133,19 @@ public class ClientSettingsPacket implements MinecraftPacket {
     this.chatVisibility = ProtocolUtils.readVarInt(buf);
     this.chatColors = buf.readBoolean();
 
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_7_6) <= 0) {
+    if (version.noGreaterThan(ProtocolVersion.MINECRAFT_1_7_6)) {
       this.difficulty = buf.readByte();
     }
 
     this.skinParts = buf.readUnsignedByte();
 
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_9)) {
       this.mainHand = ProtocolUtils.readVarInt(buf);
 
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
         this.chatFilteringEnabled = buf.readBoolean();
 
-        if (version.compareTo(ProtocolVersion.MINECRAFT_1_18) >= 0) {
+        if (version.noLessThan(ProtocolVersion.MINECRAFT_1_18)) {
           this.clientListingAllowed = buf.readBoolean();
         }
       }
@@ -162,19 +162,19 @@ public class ClientSettingsPacket implements MinecraftPacket {
     ProtocolUtils.writeVarInt(buf, chatVisibility);
     buf.writeBoolean(chatColors);
 
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_7_6) <= 0) {
+    if (version.noGreaterThan(ProtocolVersion.MINECRAFT_1_7_6)) {
       buf.writeByte(difficulty);
     }
 
     buf.writeByte(skinParts);
 
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_9)) {
       ProtocolUtils.writeVarInt(buf, mainHand);
 
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
         buf.writeBoolean(chatFilteringEnabled);
 
-        if (version.compareTo(ProtocolVersion.MINECRAFT_1_18) >= 0) {
+        if (version.noLessThan(ProtocolVersion.MINECRAFT_1_18)) {
           buf.writeBoolean(clientListingAllowed);
         }
       }

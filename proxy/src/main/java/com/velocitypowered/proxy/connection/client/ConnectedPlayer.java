@@ -178,9 +178,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     this.connectionPhase = connection.getType().getInitialClientPhase();
     this.onlineMode = onlineMode;
 
-    if (connection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
+    if (connection.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
       this.tabList = new VelocityTabList(this);
-    } else if (connection.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    } else if (connection.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       this.tabList = new KeyedVelocityTabList(this, server);
     } else {
       this.tabList = new VelocityTabListLegacy(this, server);
@@ -371,7 +371,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     Component translated = translateMessage(message);
 
     ProtocolVersion playerVersion = getProtocolVersion();
-    if (playerVersion.compareTo(ProtocolVersion.MINECRAFT_1_11) >= 0) {
+    if (playerVersion.noLessThan(ProtocolVersion.MINECRAFT_1_11)) {
       // Use the title packet instead.
       GenericTitlePacket pkt = GenericTitlePacket.constructTitlePacket(
           GenericTitlePacket.ActionType.SET_ACTION_BAR, playerVersion);
@@ -416,7 +416,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     Component translatedFooter = translateMessage(footer);
     this.playerListHeader = translatedHeader;
     this.playerListFooter = translatedFooter;
-    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       this.connection.write(HeaderAndFooterPacket.create(
           translatedHeader, translatedFooter, this.getProtocolVersion()));
     }
@@ -424,7 +424,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   @Override
   public void showTitle(net.kyori.adventure.title.@NonNull Title title) {
-    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       GenericTitlePacket timesPkt = GenericTitlePacket.constructTitlePacket(
           GenericTitlePacket.ActionType.SET_TIMES, this.getProtocolVersion());
       net.kyori.adventure.title.Title.Times times = title.times();
@@ -460,7 +460,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       throw new NullPointerException("value");
     }
 
-    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) < 0) {
+    if (this.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_8)) {
       return;
     }
 
@@ -491,7 +491,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   @Override
   public void clearTitle() {
-    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       connection.write(GenericTitlePacket.constructTitlePacket(
           GenericTitlePacket.ActionType.HIDE, this.getProtocolVersion()));
     }
@@ -499,7 +499,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   @Override
   public void resetTitle() {
-    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       connection.write(GenericTitlePacket.constructTitlePacket(
           GenericTitlePacket.ActionType.RESET, this.getProtocolVersion()));
     }
@@ -507,14 +507,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   @Override
   public void hideBossBar(@NonNull BossBar bar) {
-    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
+    if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_9)) {
       this.server.getBossBarManager().removeBossBar(this, bar);
     }
   }
 
   @Override
   public void showBossBar(@NonNull BossBar bar) {
-    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
+    if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_9)) {
       this.server.getBossBarManager().addBossBar(this, bar);
     }
   }
@@ -542,7 +542,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   @Override
   public void clearPlayerListHeaderAndFooter() {
     clearPlayerListHeaderAndFooterSilent();
-    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       this.connection.write(HeaderAndFooterPacket.reset(this.getProtocolVersion()));
     }
   }
@@ -942,7 +942,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     Preconditions.checkArgument(input.length() <= LegacyChatPacket.MAX_SERVERBOUND_MESSAGE_LENGTH,
         "input cannot be greater than " + LegacyChatPacket.MAX_SERVERBOUND_MESSAGE_LENGTH
             + " characters in length");
-    if (getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+    if (getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
       this.chatQueue.hijack(getChatBuilderFactory().builder().asPlayer(this).message(input),
           (instant, item) -> {
             item.setTimestamp(instant);
@@ -968,7 +968,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   @Override
   public void sendResourcePackOffer(ResourcePackInfo packInfo) {
-    if (this.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       Preconditions.checkNotNull(packInfo, "packInfo");
       queueResourcePack(packInfo);
     }
@@ -996,7 +996,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
         while (!outstandingResourcePacks.isEmpty()) {
           queued = outstandingResourcePacks.peek();
           if (queued.getShouldForce() && getProtocolVersion()
-              .compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
+              .noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
             break;
           }
           onResourcePackResponse(PlayerResourcePackStatusEvent.Status.DECLINED);
@@ -1068,7 +1068,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
           if (event.getStatus() == PlayerResourcePackStatusEvent.Status.DECLINED
               && event.getPackInfo() != null && event.getPackInfo().getShouldForce()
               && (!event.isOverwriteKick() || event.getPlayer()
-              .getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0)
+              .getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_17))
           ) {
             event.getPlayer().disconnect(Component
                 .translatable("multiplayer.requiredTexturePrompt.disconnect"));
