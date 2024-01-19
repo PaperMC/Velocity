@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2024 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.event.connection;
 
 import static java.util.Objects.requireNonNull;
@@ -68,6 +75,12 @@ public final class PreTransferEvent implements ResultedEvent<PreTransferEvent.Tr
       return DENIED;
     }
 
+    /**
+     * Sets the result of transfer to a specific host.
+     *
+     * @param address the address specified
+     * @return a new TransferResult
+     */
     public static TransferResult transferTo(final InetSocketAddress address) {
       requireNonNull(address);
 
