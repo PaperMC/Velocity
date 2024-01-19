@@ -190,7 +190,7 @@ public enum StateRegistry {
           RemoveResourcePackPacket.class, RemoveResourcePackPacket::new,
           map(0x06, MINECRAFT_1_20_3, false),
           map(0x07, MINECRAFT_1_20_5, false));
-      clientbound.register(ResourcePackRequest.class, ResourcePackRequest::new,
+      clientbound.register(ResourcePackRequestPacket.class, ResourcePackRequestPacket::new,
           map(0x06, MINECRAFT_1_20_2, false),
           map(0x07, MINECRAFT_1_20_3, false),
           map(0x08, MINECRAFT_1_20_5, false));
