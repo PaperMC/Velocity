@@ -34,7 +34,7 @@ public final class ProxyOptions {
   private static final Logger logger = LogManager.getLogger(ProxyOptions.class);
   private final boolean help;
   private final @Nullable Integer port;
-  private final boolean haproxy;
+  private final @Nullable Boolean haproxy;
 
   ProxyOptions(final String[] args) {
     final OptionParser parser = new OptionParser();
@@ -48,7 +48,7 @@ public final class ProxyOptions {
             Arrays.asList("haproxy", "haproxy-protocol"),
             "Choose whether to enable haproxy protocol. " +
                     "The configuration haproxy protocol will be ignored.")
-        .withRequiredArg().ofType(Boolean.class);
+        .withRequiredArg().ofType(Boolean.class).defaultsTo(null);
     final OptionSet set = parser.parse(args);
 
     this.help = set.has(help);
@@ -72,7 +72,7 @@ public final class ProxyOptions {
     return this.port;
   }
 
-  public boolean isHaproxy() {
+  public @Nullable Boolean isHaproxy() {
     return this.haproxy;
   }
 }
