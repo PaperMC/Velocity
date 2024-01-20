@@ -64,6 +64,7 @@ import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.HeaderAndFooterPacket;
 import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
 import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
+import com.velocitypowered.proxy.protocol.packet.RemoveResourcePackPacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatType;
@@ -84,6 +85,8 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -153,6 +156,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private final Queue<ResourcePackInfo> outstandingResourcePacks = new ArrayDeque<>();
   private @Nullable ResourcePackInfo pendingResourcePack;
   private @Nullable ResourcePackInfo appliedResourcePack;
+  private @NotNull List<ResourcePackInfo> pendingResourcePacks = new ArrayList<>();
+  private @NotNull List<ResourcePackInfo> appliedResourcePacks = new ArrayList<>();
   private final @NotNull Pointers pointers =
       Player.super.pointers().toBuilder().withDynamic(Identity.UUID, this::getUniqueId)
           .withDynamic(Identity.NAME, this::getUsername)
@@ -974,6 +979,22 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     }
   }
 
+  @Override
+  public void requestResourcePackRemoval() {
+    if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
+      connection.write(new RemoveResourcePackPacket());
+    }
+  }
+
+  @Override
+  public void requestResourcePackRemoval(ResourcePackInfo packInfo) {
+    if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
+      Preconditions.checkNotNull(packInfo, "packInfo");
+      Preconditions.checkNotNull(packInfo.getId(), "packInfo to remove must have an id");
+      connection.write(new RemoveResourcePackPacket(packInfo.getId()));
+    }
+  }
+
   /**
    * Queues a resource-pack for sending to the player and sends it immediately if the queue is
    * empty.
@@ -1027,25 +1048,23 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   @Override
   @Deprecated
   public @Nullable ResourcePackInfo getAppliedResourcePack() {
-    //TODO which resource pack should be returned here?
     return appliedResourcePack;
   }
 
   @Override
   @Deprecated
   public @Nullable ResourcePackInfo getPendingResourcePack() {
-    //TODO which resource pack should be returned here?
     return pendingResourcePack;
   }
 
   @Override
   public Collection<ResourcePackInfo> getAppliedResourcePacks() {
-    return Collections.EMPTY_LIST; //TODO
+    return new ArrayList<>(appliedResourcePacks);
   }
 
   @Override
   public Collection<ResourcePackInfo> getPendingResourcePacks() {
-    return Collections.EMPTY_LIST; //TODO
+    return new ArrayList<>(pendingResourcePacks);
   }
 
   /**
@@ -1079,6 +1098,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       case ACCEPTED:
         previousResourceResponse = true;
         pendingResourcePack = queued;
+        if (this.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
+          pendingResourcePacks.clear();
+        }
+        pendingResourcePacks.add(queued);
         break;
       case DECLINED:
         previousResourceResponse = false;
@@ -1086,9 +1109,41 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       case SUCCESSFUL:
         appliedResourcePack = queued;
         pendingResourcePack = null;
+        appliedResourcePacks.add(queued);
+        if (this.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
+          pendingResourcePacks.clear();
+        }
+        if (queued != null) {
+          pendingResourcePacks.removeIf(resourcePackInfo -> {
+            if (resourcePackInfo.getId() == null) {
+              return resourcePackInfo.getUrl().equals(queued.getUrl())
+                      && Arrays.equals(resourcePackInfo.getHash(), queued.getHash());
+            }
+            return resourcePackInfo.getId().equals(queued.getId());
+          });
+        }
         break;
       case FAILED_DOWNLOAD:
         pendingResourcePack = null;
+        if (this.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
+          pendingResourcePacks.clear();
+        }
+        if (queued != null) {
+          pendingResourcePacks.removeIf(resourcePackInfo -> {
+            if (resourcePackInfo.getId() == null) {
+              return resourcePackInfo.getUrl().equals(queued.getUrl())
+                      && Arrays.equals(resourcePackInfo.getHash(), queued.getHash());
+            }
+            return resourcePackInfo.getId().equals(queued.getId());
+          });
+        }
+        break;
+      case DISCARDED:
+        if (queued != null && queued.getId() != null) {
+          appliedResourcePacks.removeIf(resourcePackInfo -> {
+            return queued.getId().equals(resourcePackInfo.getId());
+          });
+        }
         break;
       default:
         break;

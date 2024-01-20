@@ -231,8 +231,29 @@ public interface Player extends
   void sendResourcePackOffer(ResourcePackInfo packInfo);
 
   /**
+   * Requests that the player remove all applied resource packs. To
+   * monitor the status of any removed resource packs, subscribe to
+   * {@link PlayerResourcePackStatusEvent}.
+   */
+  void requestResourcePackRemoval();
+
+  /**
+   * Requests that the player remove a resource pack. To monitor
+   * the status of the removed resource pack, subscribe to
+   * {@link PlayerResourcePackStatusEvent}.
+   *
+   * @param packInfo the resource-pack in question
+   */
+  void requestResourcePackRemoval(ResourcePackInfo packInfo);
+
+  /**
    * Gets the {@link ResourcePackInfo} of the currently applied
    * resource-pack or null if none.
+   *
+   * <p> Note that since 1.20.3 it is no longer recommended to use
+   * this method as it will only return the last applied
+   * resource pack. To get all applied resource packs, use
+   * {@link #getAppliedResourcePacks()} instead. </p>
    *
    * @return the applied resource pack or null if none.
    */
@@ -244,6 +265,11 @@ public interface Player extends
    * Gets the {@link ResourcePackInfo} of the resource pack
    * the user is currently downloading or is currently
    * prompted to install or null if none.
+   *
+   * <p> Note that since 1.20.3 it is no longer recommended to use
+   * this method as it will only return the last pending
+   * resource pack. To get all pending resource packs, use
+   * {@link #getPendingResourcePacks()} instead. </p>
    *
    * @return the pending resource pack or null if none
    */
