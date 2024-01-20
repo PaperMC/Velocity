@@ -31,6 +31,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.adventure.ClickCallbackManager;
 import com.velocitypowered.proxy.util.InformationUtils;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -49,6 +50,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
@@ -93,6 +95,7 @@ public class VelocityCommand implements SimpleCommand {
         .put("reload", new Reload(server))
         .put("dump", new Dump(server))
         .put("heap", new Heap())
+        .put("callback", new Callback())
         .build();
   }
 
@@ -484,5 +487,32 @@ public class VelocityCommand implements SimpleCommand {
       return source.getPermissionValue("velocity.command.heap") == Tristate.TRUE;
     }
 
+  }
+
+  /**
+   * Callback SubCommand.
+   */
+  public static class Callback implements SubCommand {
+
+    @Override
+    public void execute(final CommandSource source, final String @NonNull [] args) {
+      if (args.length != 1) {
+        return;
+      }
+
+      final UUID id;
+      try {
+        id = UUID.fromString(args[0]);
+      } catch (final IllegalArgumentException ignored) {
+        return;
+      }
+
+      ClickCallbackManager.INSTANCE.runCallback(source, id);
+    }
+
+    @Override
+    public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
+      return true;
+    }
   }
 }

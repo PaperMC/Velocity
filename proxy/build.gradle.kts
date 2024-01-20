@@ -126,5 +126,8 @@ dependencies {
     implementation(libs.asm)
     implementation(libs.bundles.flare)
     compileOnly(libs.spotbugs.annotations)
+    compileOnly(libs.auto.service.annotations)
     testImplementation(libs.mockito)
+
+    annotationProcessor(libs.auto.service)
 }
