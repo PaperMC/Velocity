@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.util.bossbar;
+package com.velocitypowered.proxy.adventure;
 
 import com.google.common.collect.MapMaker;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
