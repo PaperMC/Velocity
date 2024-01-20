@@ -46,8 +46,8 @@ public final class ProxyOptions {
         .withRequiredArg().ofType(Integer.class);
     final OptionSpec<Boolean> haproxy = parser.acceptsAll(
             Arrays.asList("haproxy", "haproxy-protocol"),
-            "Choose whether to enable haproxy protocol. " +
-                    "The configuration haproxy protocol will be ignored.")
+            "Choose whether to enable haproxy protocol. "
+                    + "The configuration haproxy protocol will be ignored.")
         .withRequiredArg().ofType(Boolean.class).defaultsTo(null);
     final OptionSet set = parser.parse(args);
 
