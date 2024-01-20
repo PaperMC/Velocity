@@ -10,9 +10,7 @@ package com.velocitypowered.api.plugin.ap;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.velocitypowered.api.plugin.Plugin;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -20,11 +18,20 @@ import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Serialized version of {@link com.velocitypowered.api.plugin.PluginDescription}.
+ * Serialized version of {@code com.velocitypowered.api.plugin.PluginDescription}.
  */
 public final class SerializedPluginDescription {
-
   public static final Pattern ID_PATTERN = Pattern.compile("[a-z][a-z0-9-_]{0,63}");
+
+  static final String PLUGIN_ID = "id";
+  static final String PLUGIN_NAME = "name";
+  static final String PLUGIN_VERSION = "version";
+  static final String PLUGIN_DESCRIPTION = "description";
+  static final String PLUGIN_URL = "url";
+  static final String PLUGIN_AUTHORS = "authors";
+  static final String PLUGIN_DEPENDENCIES = "dependencies";
+  static final String DEPENDENCY_ID = "id";
+  static final String DEPENDENCY_OPTIONAL = "optional";
 
   // @Nullable is used here to make GSON skip these in the serialized file
   private final String id;
@@ -52,14 +59,25 @@ public final class SerializedPluginDescription {
     this.main = Preconditions.checkNotNull(main, "main");
   }
 
-  static SerializedPluginDescription from(Plugin plugin, String qualifiedName) {
+  static SerializedPluginDescription from(
+      PluginProcessingEnvironment.AnnotationWrapper plugin,
+      String qualifiedName
+  ) {
     List<Dependency> dependencies = new ArrayList<>();
-    for (com.velocitypowered.api.plugin.Dependency dependency : plugin.dependencies()) {
-      dependencies.add(new Dependency(dependency.id(), dependency.optional()));
+    for (final PluginProcessingEnvironment.AnnotationWrapper dependency :
+        plugin.getList(PLUGIN_DEPENDENCIES, PluginProcessingEnvironment.AnnotationWrapper.class)) {
+      dependencies.add(new Dependency(
+          dependency.get(DEPENDENCY_ID, String.class),
+          dependency.get(DEPENDENCY_OPTIONAL, Boolean.class)
+      ));
     }
-    return new SerializedPluginDescription(plugin.id(), plugin.name(), plugin.version(),
-        plugin.description(), plugin.url(),
-        Arrays.stream(plugin.authors()).filter(author -> !author.isEmpty())
+    return new SerializedPluginDescription(
+        plugin.get(PLUGIN_ID, String.class),
+        plugin.get(PLUGIN_NAME, String.class),
+        plugin.get(PLUGIN_VERSION, String.class),
+        plugin.get(PLUGIN_DESCRIPTION, String.class),
+        plugin.get(PLUGIN_URL, String.class),
+        plugin.getList(PLUGIN_AUTHORS, String.class).stream().filter(author -> !author.isEmpty())
             .collect(Collectors.toList()), dependencies, qualifiedName);
   }
 
