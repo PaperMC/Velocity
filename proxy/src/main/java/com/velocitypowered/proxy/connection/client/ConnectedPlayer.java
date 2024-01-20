@@ -104,6 +104,9 @@ import net.kyori.adventure.permission.PermissionChecker;
 import net.kyori.adventure.platform.facet.FacetPointers;
 import net.kyori.adventure.platform.facet.FacetPointers.Type;
 import net.kyori.adventure.pointer.Pointers;
+import net.kyori.adventure.resource.ResourcePackInfoLike;
+import net.kyori.adventure.resource.ResourcePackRequest;
+import net.kyori.adventure.resource.ResourcePackRequestLike;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
@@ -980,18 +983,40 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public void requestResourcePackRemoval() {
+  public void clearResourcePacks() {
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
       connection.write(new RemoveResourcePackPacket());
     }
   }
 
   @Override
-  public void requestResourcePackRemoval(ResourcePackInfo packInfo) {
+  public void removeResourcePacks(@NotNull UUID id, @NotNull UUID @NotNull ... others) {
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
-      Preconditions.checkNotNull(packInfo, "packInfo");
-      Preconditions.checkNotNull(packInfo.getId(), "packInfo to remove must have an id");
-      connection.write(new RemoveResourcePackPacket(packInfo.getId()));
+      connection.write(new RemoveResourcePackPacket(id));
+      for (final UUID other : others) {
+        connection.write(new RemoveResourcePackPacket(other));
+      }
+    }
+  }
+
+  @Override
+  public void removeResourcePacks(@NotNull ResourcePackRequest request) {
+    for (final net.kyori.adventure.resource.ResourcePackInfo resourcePackInfo : request.packs()) {
+      removeResourcePacks(resourcePackInfo.id());
+    }
+  }
+
+  @Override
+  public void removeResourcePacks(@NotNull ResourcePackRequestLike request) {
+    removeResourcePacks(request.asResourcePackRequest());
+  }
+
+  @Override
+  @SuppressWarnings("checkstyle:linelength")
+  public void removeResourcePacks(@NotNull ResourcePackInfoLike request, @NotNull ResourcePackInfoLike @NotNull ... others) {
+    removeResourcePacks(request.asResourcePackInfo().id());
+    for (final ResourcePackInfoLike other : others) {
+      removeResourcePacks(other.asResourcePackInfo().id());
     }
   }
 

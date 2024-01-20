@@ -231,22 +231,6 @@ public interface Player extends
   void sendResourcePackOffer(ResourcePackInfo packInfo);
 
   /**
-   * Requests that the player remove all applied resource packs. To
-   * monitor the status of any removed resource packs, subscribe to
-   * {@link PlayerResourcePackStatusEvent}.
-   */
-  void requestResourcePackRemoval();
-
-  /**
-   * Requests that the player remove a resource pack. To monitor
-   * the status of the removed resource pack, subscribe to
-   * {@link PlayerResourcePackStatusEvent}.
-   *
-   * @param packInfo the resource-pack in question
-   */
-  void requestResourcePackRemoval(ResourcePackInfo packInfo);
-
-  /**
    * Gets the {@link ResourcePackInfo} of the currently applied
    * resource-pack or null if none.
    *
