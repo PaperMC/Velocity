@@ -23,7 +23,7 @@ import com.velocitypowered.proxy.connection.backend.BackendConnectionPhase;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import javax.annotation.Nullable;
 
 /**
@@ -123,7 +123,7 @@ public enum LegacyForgeHandshakeBackendPhase implements BackendConnectionPhase {
   @Override
   public final boolean handle(VelocityServerConnection serverConnection,
       ConnectedPlayer player,
-      PluginMessage message) {
+      PluginMessagePacket message) {
     if (message.getChannel().equals(LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL)) {
       // Get the phase and check if we need to start the next phase.
       LegacyForgeHandshakeBackendPhase newPhase = getNewPhase(serverConnection, message);
@@ -177,7 +177,7 @@ public enum LegacyForgeHandshakeBackendPhase implements BackendConnectionPhase {
    * @return The phase to transition to, which may be the same as before.
    */
   private LegacyForgeHandshakeBackendPhase getNewPhase(VelocityServerConnection serverConnection,
-      PluginMessage packet) {
+      PluginMessagePacket packet) {
     if (packetToAdvanceOn != null
         && LegacyForgeUtil.getHandshakePacketDiscriminator(packet) == packetToAdvanceOn) {
       LegacyForgeHandshakeBackendPhase phaseToTransitionTo = nextPhase();

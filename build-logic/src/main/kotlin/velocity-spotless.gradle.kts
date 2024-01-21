@@ -7,6 +7,7 @@ extensions.configure<SpotlessExtension> {
     java {
         if (project.name == "velocity-api") {
             licenseHeaderFile(file("HEADER.txt"))
+            targetExclude("**/java/com/velocitypowered/api/util/Ordered.java")
         } else {
             licenseHeaderFile(rootProject.file("HEADER.txt"))
         }

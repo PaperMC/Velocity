@@ -435,7 +435,7 @@ public enum ProtocolUtils {
   public static BinaryTag readBinaryTag(ByteBuf buf, ProtocolVersion version,
                                         BinaryTagIO.Reader reader) {
     BinaryTagType<?> type = BINARY_TAG_TYPES[buf.readByte()];
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0) {
+    if (version.lessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
       buf.skipBytes(buf.readUnsignedShort());
     }
     try {
@@ -456,7 +456,7 @@ public enum ProtocolUtils {
     BinaryTagType<T> type = (BinaryTagType<T>) tag.type();
     buf.writeByte(type.id());
     try {
-      if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0) {
+      if (version.lessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
         // Empty name
         buf.writeShort(0);
       }
@@ -710,10 +710,10 @@ public enum ProtocolUtils {
    * @return the appropriate {@link GsonComponentSerializer}
    */
   public static GsonComponentSerializer getJsonChatSerializer(ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_20_3) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
       return MODERN_SERIALIZER;
     }
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16)) {
       return PRE_1_20_3_SERIALIZER;
     }
     return PRE_1_16_SERIALIZER;
@@ -741,7 +741,7 @@ public enum ProtocolUtils {
     long expiry = buf.readLong();
     byte[] key = ProtocolUtils.readByteArray(buf);
     byte[] signature = ProtocolUtils.readByteArray(buf, 4096);
-    IdentifiedKey.Revision revision = version.compareTo(ProtocolVersion.MINECRAFT_1_19) == 0
+    IdentifiedKey.Revision revision = version.noGreaterOrLessThan(ProtocolVersion.MINECRAFT_1_19)
         ? IdentifiedKey.Revision.GENERIC_V1 : IdentifiedKey.Revision.LINKED_V2;
     return new IdentifiedKeyImpl(revision, key, expiry, signature);
   }

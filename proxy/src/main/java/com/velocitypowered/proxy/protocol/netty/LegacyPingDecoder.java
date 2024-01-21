@@ -19,8 +19,8 @@ package com.velocitypowered.proxy.protocol.netty;
 
 import static com.velocitypowered.proxy.protocol.util.NettyPreconditions.checkFrame;
 
-import com.velocitypowered.proxy.protocol.packet.LegacyHandshake;
-import com.velocitypowered.proxy.protocol.packet.LegacyPing;
+import com.velocitypowered.proxy.protocol.packet.LegacyHandshakePacket;
+import com.velocitypowered.proxy.protocol.packet.LegacyPingPacket;
 import com.velocitypowered.proxy.protocol.packet.legacyping.LegacyMinecraftPingVersion;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -52,13 +52,13 @@ public class LegacyPingDecoder extends ByteToMessageDecoder {
     if (first == 0xfe) {
       // possibly a ping
       if (!in.isReadable()) {
-        out.add(new LegacyPing(LegacyMinecraftPingVersion.MINECRAFT_1_3));
+        out.add(new LegacyPingPacket(LegacyMinecraftPingVersion.MINECRAFT_1_3));
         return;
       }
 
       short next = in.readUnsignedByte();
       if (next == 1 && !in.isReadable()) {
-        out.add(new LegacyPing(LegacyMinecraftPingVersion.MINECRAFT_1_4));
+        out.add(new LegacyPingPacket(LegacyMinecraftPingVersion.MINECRAFT_1_4));
         return;
       }
 
@@ -66,14 +66,14 @@ public class LegacyPingDecoder extends ByteToMessageDecoder {
       out.add(readExtended16Data(in));
     } else if (first == 0x02 && in.isReadable()) {
       in.skipBytes(in.readableBytes());
-      out.add(new LegacyHandshake());
+      out.add(new LegacyHandshakePacket());
     } else {
       in.readerIndex(originalReaderIndex);
       ctx.pipeline().remove(this);
     }
   }
 
-  private static LegacyPing readExtended16Data(ByteBuf in) {
+  private static LegacyPingPacket readExtended16Data(ByteBuf in) {
     in.skipBytes(1);
     String channelName = readLegacyString(in);
     if (!channelName.equals(MC_1_6_CHANNEL)) {
@@ -83,7 +83,7 @@ public class LegacyPingDecoder extends ByteToMessageDecoder {
     String hostname = readLegacyString(in);
     int port = in.readInt();
 
-    return new LegacyPing(LegacyMinecraftPingVersion.MINECRAFT_1_6, InetSocketAddress
+    return new LegacyPingPacket(LegacyMinecraftPingVersion.MINECRAFT_1_6, InetSocketAddress
         .createUnresolved(hostname, port));
   }
 

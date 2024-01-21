@@ -33,7 +33,7 @@ public class LegacyTitlePacket extends GenericTitlePacket {
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_11) < 0
+    if (version.lessThan(ProtocolVersion.MINECRAFT_1_11)
         && getAction() == ActionType.SET_ACTION_BAR) {
       throw new IllegalStateException("Action bars are only supported on 1.11 and newer");
     }

@@ -11,10 +11,11 @@ shadow = "com.github.johnrengelman.shadow:8.1.0"
 spotless = "com.diffplug.spotless:6.12.0"
 
 [libraries]
-# See JD links in velocity-apo when moving to non-snapshot versions
-adventure-bom = "net.kyori:adventure-bom:4.15.0-SNAPSHOT"
+adventure-bom = "net.kyori:adventure-bom:4.15.0"
 adventure-facet = "net.kyori:adventure-platform-facet:4.3.0"
 asm = "org.ow2.asm:asm:9.5"
+auto-service = "com.google.auto.service:auto-service:1.0.1"
+auto-service-annotations = "com.google.auto.service:auto-service-annotations:1.0.1"
 brigadier = "com.velocitypowered:velocity-brigadier:1.0.0-SNAPSHOT"
 bstats = "org.bstats:bstats-base:3.0.1"
 caffeine = "com.github.ben-manes.caffeine:caffeine:3.1.5"
@@ -34,6 +35,7 @@ flare-fastutil = { module = "space.vectrix.flare:flare-fastutil", version.ref = 
 jline = "org.jline:jline-terminal-jansi:3.23.0"
 jopt = "net.sf.jopt-simple:jopt-simple:5.0.4"
 junit = "org.junit.jupiter:junit-jupiter:5.9.0"
+jspecify = "org.jspecify:jspecify:0.3.0"
 kyori-ansi = "net.kyori:ansi:1.0.3"
 guava = "com.google.guava:guava:25.1-jre"
 gson = "com.google.code.gson:gson:2.10.1"

@@ -100,7 +100,7 @@ public class PlayerResourcePackStatusEvent {
    */
   public void setOverwriteKick(boolean overwriteKick) {
     Preconditions.checkArgument(player.getProtocolVersion()
-            .compareTo(ProtocolVersion.MINECRAFT_1_17) < 0,
+            .lessThan(ProtocolVersion.MINECRAFT_1_17),
             "overwriteKick is not supported on 1.17 or newer");
     this.overwriteKick = overwriteKick;
   }

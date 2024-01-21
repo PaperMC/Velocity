@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import java.nio.charset.StandardCharsets;
@@ -55,7 +55,7 @@ public final class PluginMessageUtil {
    * @param message the plugin message
    * @return whether or not this is a brand plugin message
    */
-  public static boolean isMcBrand(PluginMessage message) {
+  public static boolean isMcBrand(PluginMessagePacket message) {
     checkNotNull(message, "message");
     return message.getChannel().equals(BRAND_CHANNEL_LEGACY) || message.getChannel()
         .equals(BRAND_CHANNEL);
@@ -67,7 +67,7 @@ public final class PluginMessageUtil {
    * @param message the plugin message
    * @return whether we are registering plugin channels or not
    */
-  public static boolean isRegister(PluginMessage message) {
+  public static boolean isRegister(PluginMessagePacket message) {
     checkNotNull(message, "message");
     return message.getChannel().equals(REGISTER_CHANNEL_LEGACY) || message.getChannel()
         .equals(REGISTER_CHANNEL);
@@ -79,7 +79,7 @@ public final class PluginMessageUtil {
    * @param message the plugin message
    * @return whether we are unregistering plugin channels or not
    */
-  public static boolean isUnregister(PluginMessage message) {
+  public static boolean isUnregister(PluginMessagePacket message) {
     checkNotNull(message, "message");
     return message.getChannel().equals(UNREGISTER_CHANNEL_LEGACY) || message.getChannel()
         .equals(UNREGISTER_CHANNEL);
@@ -91,7 +91,7 @@ public final class PluginMessageUtil {
    * @param message the message to get the channels from
    * @return the channels, as an immutable list
    */
-  public static List<String> getChannels(PluginMessage message) {
+  public static List<String> getChannels(PluginMessagePacket message) {
     checkNotNull(message, "message");
     checkArgument(isRegister(message) || isUnregister(message), "Unknown channel type %s",
         message.getChannel());
@@ -111,15 +111,15 @@ public final class PluginMessageUtil {
    * @param channels        the channels to register
    * @return the plugin message to send
    */
-  public static PluginMessage constructChannelsPacket(ProtocolVersion protocolVersion,
-      Collection<String> channels) {
+  public static PluginMessagePacket constructChannelsPacket(ProtocolVersion protocolVersion,
+                                                            Collection<String> channels) {
     checkNotNull(channels, "channels");
     checkArgument(!channels.isEmpty(), "no channels specified");
-    String channelName = protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0
+    String channelName = protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_13)
         ? REGISTER_CHANNEL : REGISTER_CHANNEL_LEGACY;
     ByteBuf contents = Unpooled.buffer();
     contents.writeCharSequence(String.join("\0", channels), StandardCharsets.UTF_8);
-    return new PluginMessage(channelName, contents);
+    return new PluginMessagePacket(channelName, contents);
   }
 
   /**
@@ -129,8 +129,9 @@ public final class PluginMessageUtil {
    * @param version the proxy version
    * @return the rewritten plugin message
    */
-  public static PluginMessage rewriteMinecraftBrand(PluginMessage message, ProxyVersion version,
-      ProtocolVersion protocolVersion) {
+  public static PluginMessagePacket rewriteMinecraftBrand(PluginMessagePacket message,
+                                                          ProxyVersion version,
+                                                          ProtocolVersion protocolVersion) {
     checkNotNull(message, "message");
     checkNotNull(version, "version");
     checkArgument(isMcBrand(message), "message is not a brand plugin message");
@@ -139,13 +140,13 @@ public final class PluginMessageUtil {
     String rewrittenBrand = String.format("%s (%s)", currentBrand, version.getName());
 
     ByteBuf rewrittenBuf = Unpooled.buffer();
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_8) >= 0) {
+    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       ProtocolUtils.writeString(rewrittenBuf, rewrittenBrand);
     } else {
       rewrittenBuf.writeCharSequence(rewrittenBrand, StandardCharsets.UTF_8);
     }
 
-    return new PluginMessage(message.getChannel(), rewrittenBuf);
+    return new PluginMessagePacket(message.getChannel(), rewrittenBuf);
   }
 
   /**
