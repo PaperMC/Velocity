@@ -38,7 +38,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -62,7 +61,7 @@ public class VelocityTabList implements InternalTabList {
   public VelocityTabList(ConnectedPlayer player) {
     this.player = player;
     this.connection = player.getConnection();
-    this.entries = Maps.newHashMap();
+    this.entries = Maps.newConcurrentMap();
   }
 
   @Override
@@ -101,70 +100,72 @@ public class VelocityTabList implements InternalTabList {
     Preconditions.checkNotNull(entry.getProfile(), "Profile cannot be null");
     Preconditions.checkNotNull(entry.getProfile().getId(), "Profile ID cannot be null");
 
-    TabListEntry previousEntry = this.entries.put(entry.getProfile().getId(), entry);
-
-    if (previousEntry != null) {
-      // we should merge entries here
-      if (previousEntry.equals(entry)) {
-        return; // nothing else to do, this entry is perfect
-      }
-      if (!Objects.equals(previousEntry.getDisplayNameComponent().orElse(null),
-          entry.getDisplayNameComponent().orElse(null))) {
-        actions.add(UpsertPlayerInfoPacket.Action.UPDATE_DISPLAY_NAME);
-        playerInfoEntry.setDisplayName(entry.getDisplayNameComponent().isEmpty()
-                ?
-                null :
-                new ComponentHolder(player.getProtocolVersion(),
-                        entry.getDisplayNameComponent().get())
-        );
-      }
-      if (!Objects.equals(previousEntry.getLatency(), entry.getLatency())) {
-        actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LATENCY);
+    this.entries.compute(entry.getProfile().getId(), (uuid, previousEntry) -> {
+      if (previousEntry != null) {
+        // we should merge entries here
+        if (previousEntry.equals(entry)) {
+          return previousEntry; // nothing else to do, this entry is perfect
+        }
+        if (!Objects.equals(previousEntry.getDisplayNameComponent().orElse(null),
+                entry.getDisplayNameComponent().orElse(null))) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_DISPLAY_NAME);
+          playerInfoEntry.setDisplayName(entry.getDisplayNameComponent().isEmpty()
+                  ?
+                  null :
+                  new ComponentHolder(player.getProtocolVersion(),
+                          entry.getDisplayNameComponent().get())
+          );
+        }
+        if (!Objects.equals(previousEntry.getLatency(), entry.getLatency())) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LATENCY);
+          playerInfoEntry.setLatency(entry.getLatency());
+        }
+        if (!Objects.equals(previousEntry.getGameMode(), entry.getGameMode())) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_GAME_MODE);
+          playerInfoEntry.setGameMode(entry.getGameMode());
+        }
+        if (!Objects.equals(previousEntry.isListed(), entry.isListed())) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LISTED);
+          playerInfoEntry.setListed(entry.isListed());
+        }
+        if (!Objects.equals(previousEntry.getChatSession(), entry.getChatSession())) {
+          ChatSession from = entry.getChatSession();
+          if (from != null) {
+            actions.add(UpsertPlayerInfoPacket.Action.INITIALIZE_CHAT);
+            playerInfoEntry.setChatSession(
+                    new RemoteChatSession(from.getSessionId(), from.getIdentifiedKey()));
+          }
+        }
+      } else {
+        actions.addAll(EnumSet.of(UpsertPlayerInfoPacket.Action.ADD_PLAYER,
+                UpsertPlayerInfoPacket.Action.UPDATE_LATENCY,
+                UpsertPlayerInfoPacket.Action.UPDATE_LISTED));
+        playerInfoEntry.setProfile(entry.getProfile());
+        if (entry.getDisplayNameComponent().isPresent()) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_DISPLAY_NAME);
+          playerInfoEntry.setDisplayName(entry.getDisplayNameComponent().isEmpty()
+                  ?
+                  null :
+                  new ComponentHolder(player.getProtocolVersion(),
+                          entry.getDisplayNameComponent().get())
+          );
+        }
+        if (entry.getChatSession() != null) {
+          actions.add(UpsertPlayerInfoPacket.Action.INITIALIZE_CHAT);
+          ChatSession from = entry.getChatSession();
+          playerInfoEntry.setChatSession(
+                  new RemoteChatSession(from.getSessionId(), from.getIdentifiedKey()));
+        }
+        if (entry.getGameMode() != -1 && entry.getGameMode() != 256) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_GAME_MODE);
+          playerInfoEntry.setGameMode(entry.getGameMode());
+        }
         playerInfoEntry.setLatency(entry.getLatency());
-      }
-      if (!Objects.equals(previousEntry.getGameMode(), entry.getGameMode())) {
-        actions.add(UpsertPlayerInfoPacket.Action.UPDATE_GAME_MODE);
-        playerInfoEntry.setGameMode(entry.getGameMode());
-      }
-      if (!Objects.equals(previousEntry.isListed(), entry.isListed())) {
-        actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LISTED);
         playerInfoEntry.setListed(entry.isListed());
       }
-      if (!Objects.equals(previousEntry.getChatSession(), entry.getChatSession())) {
-        ChatSession from = entry.getChatSession();
-        if (from != null) {
-          actions.add(UpsertPlayerInfoPacket.Action.INITIALIZE_CHAT);
-          playerInfoEntry.setChatSession(
-              new RemoteChatSession(from.getSessionId(), from.getIdentifiedKey()));
-        }
-      }
-    } else {
-      actions.addAll(EnumSet.of(UpsertPlayerInfoPacket.Action.ADD_PLAYER,
-          UpsertPlayerInfoPacket.Action.UPDATE_LATENCY,
-          UpsertPlayerInfoPacket.Action.UPDATE_LISTED));
-      playerInfoEntry.setProfile(entry.getProfile());
-      if (entry.getDisplayNameComponent().isPresent()) {
-        actions.add(UpsertPlayerInfoPacket.Action.UPDATE_DISPLAY_NAME);
-        playerInfoEntry.setDisplayName(entry.getDisplayNameComponent().isEmpty()
-                ?
-                null :
-                new ComponentHolder(player.getProtocolVersion(),
-                        entry.getDisplayNameComponent().get())
-        );
-      }
-      if (entry.getChatSession() != null) {
-        actions.add(UpsertPlayerInfoPacket.Action.INITIALIZE_CHAT);
-        ChatSession from = entry.getChatSession();
-        playerInfoEntry.setChatSession(
-            new RemoteChatSession(from.getSessionId(), from.getIdentifiedKey()));
-      }
-      if (entry.getGameMode() != -1 && entry.getGameMode() != 256) {
-        actions.add(UpsertPlayerInfoPacket.Action.UPDATE_GAME_MODE);
-        playerInfoEntry.setGameMode(entry.getGameMode());
-      }
-      playerInfoEntry.setLatency(entry.getLatency());
-      playerInfoEntry.setListed(entry.isListed());
-    }
+      return entry;
+    });
+
     this.connection.write(new UpsertPlayerInfoPacket(actions, List.of(playerInfoEntry)));
   }
 
@@ -186,7 +187,7 @@ public class VelocityTabList implements InternalTabList {
 
   @Override
   public Collection<TabListEntry> getEntries() {
-    return this.entries.values().stream().map(e -> (TabListEntry) e).collect(Collectors.toList());
+    return List.copyOf(this.entries.values());
   }
 
   @Override

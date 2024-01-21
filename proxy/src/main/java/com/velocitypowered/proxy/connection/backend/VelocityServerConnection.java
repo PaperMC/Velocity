@@ -176,9 +176,9 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
     // Initiate the handshake.
     ProtocolVersion protocolVersion = proxyPlayer.getConnection().getProtocolVersion();
-    String playerVhost =
-        proxyPlayer.getVirtualHost().orElseGet(() -> registeredServer.getServerInfo().getAddress())
-            .getHostString();
+    String playerVhost = proxyPlayer.getVirtualHost()
+                .orElseGet(() -> registeredServer.getServerInfo().getAddress())
+                .getHostString();
 
     HandshakePacket handshake = new HandshakePacket();
     handshake.setNextStatus(StateRegistry.LOGIN_ID);
@@ -197,7 +197,9 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
       handshake.setServerAddress(playerVhost);
     }
 
-    handshake.setPort(registeredServer.getServerInfo().getAddress().getPort());
+    handshake.setPort(proxyPlayer.getVirtualHost()
+            .orElseGet(() -> registeredServer.getServerInfo().getAddress())
+            .getPort());
     mc.delayedWrite(handshake);
 
     mc.setProtocolVersion(protocolVersion);
