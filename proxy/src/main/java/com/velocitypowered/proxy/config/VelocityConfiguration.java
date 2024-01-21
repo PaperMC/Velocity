@@ -354,10 +354,6 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isProxyProtocol();
   }
 
-  public void setProxyProtocol(boolean proxyProtocol) {
-    advanced.setProxyProtocol(proxyProtocol);
-  }
-
   public boolean useTcpFastOpen() {
     return advanced.isTcpFastOpen();
   }
@@ -757,10 +753,6 @@ public class VelocityConfiguration implements ProxyConfig {
 
     public boolean isProxyProtocol() {
       return proxyProtocol;
-    }
-
-    public void setProxyProtocol(boolean proxyProtocol) {
-      this.proxyProtocol = proxyProtocol;
     }
 
     public boolean isTcpFastOpen() {
