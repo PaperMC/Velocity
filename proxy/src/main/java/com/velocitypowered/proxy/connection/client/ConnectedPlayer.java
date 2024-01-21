@@ -50,6 +50,7 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.adventure.VelocityBossBarImplementation;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
@@ -89,10 +90,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -148,6 +151,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private @Nullable VelocityServerConnection connectionInFlight;
   private @Nullable PlayerSettings settings;
   private @Nullable ModInfo modInfo;
+  private final Set<VelocityBossBarImplementation> bossBars = new HashSet<>();
   private Component playerListHeader = Component.empty();
   private Component playerListFooter = Component.empty();
   private final InternalTabList tabList;
@@ -196,6 +200,15 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     this.playerKey = playerKey;
     this.chatQueue = new ChatQueue(this);
     this.chatBuilderFactory = new ChatBuilderFactory(this.getProtocolVersion());
+  }
+
+  /**
+   * Used for cleaning up resources during a disconnection.
+   */
+  public void disconnected() {
+    for (final VelocityBossBarImplementation bar : this.bossBars) {
+      bar.viewerDisconnected(this);
+    }
   }
 
   public ChatBuilderFactory getChatBuilderFactory() {
@@ -516,14 +529,20 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   @Override
   public void hideBossBar(@NonNull BossBar bar) {
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_9)) {
-      this.server.getBossBarManager().removeBossBar(this, bar);
+      final VelocityBossBarImplementation impl = VelocityBossBarImplementation.get(bar);
+      if (impl.viewerRemove(this)) {
+        this.bossBars.remove(impl);
+      }
     }
   }
 
   @Override
   public void showBossBar(@NonNull BossBar bar) {
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_9)) {
-      this.server.getBossBarManager().addBossBar(this, bar);
+      final VelocityBossBarImplementation impl = VelocityBossBarImplementation.get(bar);
+      if (impl.viewerAdd(this)) {
+        this.bossBars.add(impl);
+      }
     }
   }
 

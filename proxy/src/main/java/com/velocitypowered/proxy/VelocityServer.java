@@ -60,7 +60,6 @@ import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import com.velocitypowered.proxy.util.ResourceUtils;
 import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
-import com.velocitypowered.proxy.util.bossbar.AdventureBossBarManager;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -151,7 +150,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   private final AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
   private boolean shutdown = false;
   private final VelocityPluginManager pluginManager;
-  private final AdventureBossBarManager bossBarManager;
 
   private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
   private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
@@ -173,7 +171,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     servers = new ServerMap(this);
     serverListPingHandler = new ServerListPingHandler(this);
     this.options = options;
-    this.bossBarManager = new AdventureBossBarManager();
   }
 
   public KeyPair getServerKeyPair() {
@@ -660,7 +657,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   public void unregisterConnection(ConnectedPlayer connection) {
     connectionsByName.remove(connection.getUsername().toLowerCase(Locale.US), connection);
     connectionsByUuid.remove(connection.getUniqueId(), connection);
-    bossBarManager.onDisconnect(connection);
+    connection.disconnected();
   }
 
   @Override
@@ -768,10 +765,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     audiences.add(this.console);
     audiences.addAll(this.getAllPlayers());
     return audiences;
-  }
-
-  public AdventureBossBarManager getBossBarManager() {
-    return bossBarManager;
   }
 
   /**
