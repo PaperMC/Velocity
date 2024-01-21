@@ -17,9 +17,11 @@
 
 package com.velocitypowered.proxy.adventure;
 
+import com.google.auto.service.AutoService;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.bossbar.BossBarImplementation;
 
+@AutoService(BossBarImplementation.Provider.class)
 @SuppressWarnings("MissingJavadocType")
 public class BossBarImplementationProvider implements BossBarImplementation.Provider {
   @Override
