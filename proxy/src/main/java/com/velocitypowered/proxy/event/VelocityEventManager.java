@@ -37,6 +37,7 @@ import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.proxy.event.UntargetedEventHandler.EventTaskHandler;
 import com.velocitypowered.proxy.event.UntargetedEventHandler.VoidHandler;
 import com.velocitypowered.proxy.event.UntargetedEventHandler.WithContinuationHandler;
+import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
@@ -341,7 +342,13 @@ public class VelocityEventManager implements EventManager {
     requireNonNull(listener, "listener");
     final PluginContainer pluginContainer = pluginManager.ensurePluginContainer(plugin);
     if (plugin == listener) {
-      throw new IllegalArgumentException("The plugin main instance is automatically registered.");
+      // Allow to register main class as listener after unregistering it
+      VelocityPluginContainer velocityPluginContainer = (VelocityPluginContainer) pluginContainer;
+      if (velocityPluginContainer.unregisteredMainClassListener()) {
+        velocityPluginContainer.unregisteredMainClassListener(false);
+      } else {
+        throw new IllegalArgumentException("The plugin main instance is automatically registered.");
+      }
     }
     registerInternally(pluginContainer, listener);
   }
@@ -418,6 +425,13 @@ public class VelocityEventManager implements EventManager {
       while (it.hasNext()) {
         final HandlerRegistration registration = it.next();
         if (predicate.test(registration)) {
+          // If the main class is unregistered, it is marked as such,
+          // to allow it to be re-registered
+          if (registration.instance == registration.plugin) {
+            VelocityPluginContainer container = (VelocityPluginContainer) pluginManager
+                    .ensurePluginContainer(registration.plugin);
+            container.unregisteredMainClassListener(true);
+          }
           it.remove();
           removed.add(registration);
         }
