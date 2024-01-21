@@ -257,6 +257,12 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       this.cm.bind(configuration.getBind());
     }
 
+    final Boolean haproxy = this.options.isHaproxy();
+    if (haproxy != null) {
+      logger.debug("Overriding HAProxy protocol to {} from command line option", haproxy);
+      configuration.setProxyProtocol(haproxy);
+    }
+
     if (configuration.isQueryEnabled()) {
       this.cm.queryBind(configuration.getBind().getHostString(), configuration.getQueryPort());
     }
