@@ -116,7 +116,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(PluginMessagePacket packet) {
     VelocityServerConnection serverConn = player.getConnectionInFlight();
-    if (serverConn != null) {
+    if (serverConn != null) {L
       if (PluginMessageUtil.isMcBrand(packet)) {
         String brand = PluginMessageUtil.readBrandMessage(packet.content());
         server.getEventManager().fireAndForget(new PlayerClientBrandEvent(player, brand));

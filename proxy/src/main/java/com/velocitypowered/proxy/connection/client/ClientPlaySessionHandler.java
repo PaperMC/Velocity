@@ -200,7 +200,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(SessionPlayerCommandPacket packet) {
-    player.ensureAndGetCurrentServer();
+    if (player.getCurrentServer().isEmpty()) {
+      return true;
+    }
+
 
     if (!updateTimeKeeper(packet.getTimeStamp())) {
       return true;
@@ -215,7 +218,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(SessionPlayerChatPacket packet) {
-    player.ensureAndGetCurrentServer();
+    if (player.getCurrentServer().isEmpty()) {
+      return true;
+    }
 
     if (!updateTimeKeeper(packet.getTimestamp())) {
       return true;
@@ -230,7 +235,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(KeyedPlayerCommandPacket packet) {
-    player.ensureAndGetCurrentServer();
+    if (player.getCurrentServer().isEmpty()) {
+      return true;
+    }
 
     if (!updateTimeKeeper(packet.getTimestamp())) {
       return true;
@@ -245,7 +252,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(KeyedPlayerChatPacket packet) {
-    player.ensureAndGetCurrentServer();
+    if (player.getCurrentServer().isEmpty()) {
+      return true;
+    }
 
     if (!updateTimeKeeper(packet.getExpiry())) {
       return true;
@@ -260,7 +269,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(LegacyChatPacket packet) {
-    player.ensureAndGetCurrentServer();
+    if (player.getCurrentServer().isEmpty()) {
+      return true;
+    }
+
     String msg = packet.getMessage();
     if (!validateChat(msg)) {
       return true;
