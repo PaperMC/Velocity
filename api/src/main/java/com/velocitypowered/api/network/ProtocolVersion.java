@@ -10,6 +10,7 @@ package com.velocitypowered.api.network;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+import com.velocitypowered.api.util.Ordered;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +20,7 @@ import java.util.Set;
 /**
  * Represents each Minecraft protocol version.
  */
-public enum ProtocolVersion {
+public enum ProtocolVersion implements Ordered<ProtocolVersion> {
   UNKNOWN(-1, "Unknown"),
   LEGACY(-2, "Legacy"),
   MINECRAFT_1_7_2(4,
@@ -63,7 +64,8 @@ public enum ProtocolVersion {
   MINECRAFT_1_19_3(761, "1.19.3"),
   MINECRAFT_1_19_4(762, "1.19.4"),
   MINECRAFT_1_20(763, "1.20", "1.20.1"),
-  MINECRAFT_1_20_2(764, "1.20.2");
+  MINECRAFT_1_20_2(764, "1.20.2"),
+  MINECRAFT_1_20_3(765, "1.20.3", "1.20.4");
 
   private static final int SNAPSHOT_BIT = 30;
 

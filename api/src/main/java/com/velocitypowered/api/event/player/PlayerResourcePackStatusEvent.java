@@ -100,7 +100,7 @@ public class PlayerResourcePackStatusEvent {
    */
   public void setOverwriteKick(boolean overwriteKick) {
     Preconditions.checkArgument(player.getProtocolVersion()
-            .compareTo(ProtocolVersion.MINECRAFT_1_17) < 0,
+            .lessThan(ProtocolVersion.MINECRAFT_1_17),
             "overwriteKick is not supported on 1.17 or newer");
     this.overwriteKick = overwriteKick;
   }
@@ -133,6 +133,33 @@ public class PlayerResourcePackStatusEvent {
     /**
      * The player has accepted the resource pack and is now downloading it.
      */
-    ACCEPTED
+    ACCEPTED,
+    /**
+     * The player has downloaded the resource pack.
+     */
+    DOWNLOADED,
+    /**
+     * The URL of the resource pack failed to load.
+     */
+    INVALID_URL,
+    /**
+     * The player failed to reload the resource pack.
+     */
+    FAILED_RELOAD,
+    /**
+     * The resource pack was discarded.
+     */
+    DISCARDED;
+
+    /**
+     * Returns true if the resource pack status is intermediate, indicating that the player has
+     * either accepted the resource pack and is currently downloading it or has successfully
+     * downloaded it.
+     *
+     * @return true if the status is intermediate (ACCEPTED or DOWNLOADED), false otherwise
+     */
+    public boolean isIntermediate() {
+      return this == ACCEPTED || this == DOWNLOADED;
+    }
   }
 }

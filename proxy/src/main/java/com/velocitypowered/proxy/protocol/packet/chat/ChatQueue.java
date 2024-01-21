@@ -20,9 +20,11 @@ package com.velocitypowered.proxy.protocol.packet.chat;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import io.netty.channel.ChannelFuture;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * A precisely ordered queue which allows for outside entries into the ordered queue through
@@ -58,9 +60,8 @@ public class ChatQueue {
       MinecraftConnection smc = player.ensureAndGetCurrentServer().ensureConnected();
 
       CompletableFuture<WrappedPacket> nextInLine = WrappedPacket.wrap(timestamp, nextPacket);
-      awaitChat(smc, this.packetFuture,
+      this.packetFuture = awaitChat(smc, this.packetFuture,
           nextInLine); // we await chat, binding `this.packetFuture` -> `nextInLine`
-      this.packetFuture = nextInLine;
     }
   }
 
@@ -84,21 +85,26 @@ public class ChatQueue {
     }
   }
 
-  private static BiConsumer<WrappedPacket, Throwable> writePacket(MinecraftConnection connection) {
-    return (wrappedPacket, throwable) -> {
-      if (wrappedPacket != null && !connection.isClosed()) {
-        wrappedPacket.write(connection);
+  private static Function<WrappedPacket, WrappedPacket> writePacket(MinecraftConnection connection) {
+    return wrappedPacket -> {
+      if (!connection.isClosed()) {
+        ChannelFuture future = wrappedPacket.write(connection);
+        if (future != null) {
+          future.awaitUninterruptibly();
+        }
       }
+
+      return wrappedPacket;
     };
   }
 
-  private static <T extends MinecraftPacket> void awaitChat(
+  private static <T extends MinecraftPacket> CompletableFuture<WrappedPacket> awaitChat(
       MinecraftConnection connection,
       CompletableFuture<WrappedPacket> binder,
       CompletableFuture<WrappedPacket> future
   ) {
     // the binder will run -> then the future will get the `write packet` caller
-    binder.whenComplete((ignored1, ignored2) -> future.whenComplete(writePacket(connection)));
+    return binder.thenCompose(ignored -> future.thenApply(writePacket(connection)));
   }
 
   private static <K, V extends MinecraftPacket> CompletableFuture<WrappedPacket> hijackCurrentPacket(
@@ -113,7 +119,7 @@ public class ChatQueue {
       // map the new packet into a better "designed" packet with the hijacked packet's timestamp
       WrappedPacket.wrap(previous.timestamp,
               future.thenApply(item -> packetMapper.map(previous.timestamp, item)))
-          .whenCompleteAsync(writePacket(connection), connection.eventLoop())
+          .thenApplyAsync(writePacket(connection), connection.eventLoop())
           .whenComplete(
               (packet, throwable) -> awaitedFuture.complete(throwable != null ? null : packet));
     });
@@ -148,10 +154,12 @@ public class ChatQueue {
       this.packet = packet;
     }
 
-    public void write(MinecraftConnection connection) {
+    @Nullable
+    public ChannelFuture write(MinecraftConnection connection) {
       if (packet != null) {
-        connection.write(packet);
+        return connection.write(packet);
       }
+      return null;
     }
 
     private static CompletableFuture<WrappedPacket> wrap(Instant timestamp,

@@ -85,12 +85,18 @@ tasks {
         exclude("org/checkerframework/checker/**")
 
         relocate("org.bstats", "com.velocitypowered.proxy.bstats")
+
+        // Include Configurate 3
+        val configurateBuildTask = project(":deprecated-configurate3").tasks.named("shadowJar")
+        dependsOn(configurateBuildTask)
+        from(zipTree(configurateBuildTask.map { it.outputs.files.singleFile }))
     }
 }
 
 dependencies {
     implementation(project(":velocity-api"))
     implementation(project(":velocity-native"))
+    implementation(project(":velocity-proxy-log4j2-plugin"))
 
     implementation(libs.bundles.log4j)
     implementation(libs.kyori.ansi)
@@ -113,7 +119,6 @@ dependencies {
     implementation(platform(libs.adventure.bom))
     implementation("net.kyori:adventure-nbt")
     implementation(libs.adventure.facet)
-    implementation(libs.asynchttpclient)
     implementation(libs.completablefutures)
     implementation(libs.nightconfig)
     implementation(libs.bstats)
@@ -121,5 +126,8 @@ dependencies {
     implementation(libs.asm)
     implementation(libs.bundles.flare)
     compileOnly(libs.spotbugs.annotations)
+    compileOnly(libs.auto.service.annotations)
     testImplementation(libs.mockito)
+
+    annotationProcessor(libs.auto.service)
 }

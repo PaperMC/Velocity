@@ -22,10 +22,10 @@
     <TerminalConsole name="TerminalConsole">
       <PatternLayout>
         <LoggerNamePatternSelector
-          defaultPattern="%highlightError{[%d{HH:mm:ss} %level] [%logger]: %minecraftFormatting{%msg}%n%xEx}">
+          defaultPattern="%highlightError{[%d{HH:mm:ss} %level] [%logger]: %msg%n%xEx}">
           <!-- Velocity doesn't need a prefix -->
           <PatternMatch key="com.velocitypowered."
-            pattern="%highlightError{[%d{HH:mm:ss} %level]: %minecraftFormatting{%msg}%n%xEx}"/>
+            pattern="%highlightError{[%d{HH:mm:ss} %level]: %msg%n%xEx}"/>
         </LoggerNamePatternSelector>
       </PatternLayout>
     </TerminalConsole>
@@ -33,7 +33,7 @@
       filePattern="logs/%d{yyyy-MM-dd}-%i.log.gz"
       immediateFlush="false">
       <PatternLayout
-        pattern="[%d{HH:mm:ss}] [%t/%level] [%logger]: %minecraftFormatting{%msg}{strip}%n"/>
+        pattern="[%d{HH:mm:ss}] [%t/%level] [%logger]:  %stripAnsi{%msg}%n"/>
       <Policies>
         <TimeBasedTriggeringPolicy/>
         <OnStartupTriggeringPolicy/>

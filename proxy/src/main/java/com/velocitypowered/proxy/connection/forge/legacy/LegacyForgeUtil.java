@@ -25,7 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import java.util.List;
@@ -42,7 +42,7 @@ class LegacyForgeUtil {
    * @param message The message to analyse
    * @return The discriminator
    */
-  static byte getHandshakePacketDiscriminator(PluginMessage message) {
+  static byte getHandshakePacketDiscriminator(PluginMessagePacket message) {
     Preconditions.checkArgument(message.getChannel().equals(FORGE_LEGACY_HANDSHAKE_CHANNEL));
     Preconditions.checkArgument(message.content().isReadable());
     return message.content().getByte(0);
@@ -54,7 +54,7 @@ class LegacyForgeUtil {
    * @param message The message
    * @return The list of mods. May be empty.
    */
-  static List<ModInfo.Mod> readModList(PluginMessage message) {
+  static List<ModInfo.Mod> readModList(PluginMessagePacket message) {
     Preconditions.checkNotNull(message, "message");
     Preconditions.checkArgument(message.getChannel().equals(FORGE_LEGACY_HANDSHAKE_CHANNEL),
         "message is not a FML HS plugin message");
@@ -82,8 +82,8 @@ class LegacyForgeUtil {
    *
    * @return A copy of the reset packet
    */
-  static PluginMessage resetPacket() {
-    PluginMessage msg = new PluginMessage();
+  static PluginMessagePacket resetPacket() {
+    PluginMessagePacket msg = new PluginMessagePacket();
     msg.setChannel(FORGE_LEGACY_HANDSHAKE_CHANNEL);
     msg.replace(Unpooled.wrappedBuffer(FORGE_LEGACY_HANDSHAKE_RESET_DATA.clone()));
     return msg;
