@@ -34,7 +34,6 @@ public final class ProxyOptions {
   private static final Logger logger = LogManager.getLogger(ProxyOptions.class);
   private final boolean help;
   private final @Nullable Integer port;
-  private final @Nullable Boolean haproxy;
 
   ProxyOptions(final String[] args) {
     final OptionParser parser = new OptionParser();
@@ -53,7 +52,6 @@ public final class ProxyOptions {
 
     this.help = set.has(help);
     this.port = port.value(set);
-    this.haproxy = haproxy.value(set);
 
     if (this.help) {
       try {
@@ -70,9 +68,5 @@ public final class ProxyOptions {
 
   public @Nullable Integer getPort() {
     return this.port;
-  }
-
-  public @Nullable Boolean isHaproxy() {
-    return this.haproxy;
   }
 }
