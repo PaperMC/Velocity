@@ -20,12 +20,11 @@ package com.velocitypowered.proxy.command.builtin;
 import static com.mojang.brigadier.arguments.StringArgumentType.getString;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.ArgumentCommandNode;
-import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.permission.Tristate;
@@ -34,7 +33,6 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.List;
 import java.util.Optional;
-import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
@@ -57,20 +55,19 @@ public class GlistCommand {
    * Registers this command.
    */
   public void register() {
-    LiteralCommandNode<CommandSource> totalNode = LiteralArgumentBuilder
-        .<CommandSource>literal("glist")
+    final LiteralArgumentBuilder<CommandSource> rootNode = BrigadierCommand
+        .literalArgumentBuilder("glist")
         .requires(source ->
             source.getPermissionValue("velocity.command.glist") == Tristate.TRUE)
-        .executes(this::totalCount)
-        .build();
-    ArgumentCommandNode<CommandSource, String> serverNode = RequiredArgumentBuilder
-        .<CommandSource, String>argument(SERVER_ARG, StringArgumentType.string())
+        .executes(this::totalCount);
+    final ArgumentCommandNode<CommandSource, String> serverNode = BrigadierCommand
+        .requiredArgumentBuilder(SERVER_ARG, StringArgumentType.string())
         .suggests((context, builder) -> {
-          String argument = context.getArguments().containsKey(SERVER_ARG)
+          final String argument = context.getArguments().containsKey(SERVER_ARG)
               ? context.getArgument(SERVER_ARG, String.class)
               : "";
           for (RegisteredServer server : server.getAllServers()) {
-            String serverName = server.getServerInfo().getName();
+            final String serverName = server.getServerInfo().getName();
             if (serverName.regionMatches(true, 0, argument, 0, argument.length())) {
               builder.suggest(serverName);
             }
@@ -82,14 +79,14 @@ public class GlistCommand {
         })
         .executes(this::serverCount)
         .build();
-    totalNode.addChild(serverNode);
-    server.getCommandManager().register(new BrigadierCommand(totalNode));
+    rootNode.then(serverNode);
+    server.getCommandManager().register(new BrigadierCommand(rootNode));
   }
 
   private int totalCount(final CommandContext<CommandSource> context) {
     final CommandSource source = context.getSource();
     sendTotalProxyCount(source);
-    source.sendMessage(Identity.nil(),
+    source.sendMessage(
         Component.translatable("velocity.command.glist-view-all", NamedTextColor.YELLOW));
     return 1;
   }
@@ -98,38 +95,42 @@ public class GlistCommand {
     final CommandSource source = context.getSource();
     final String serverName = getString(context, SERVER_ARG);
     if (serverName.equalsIgnoreCase("all")) {
-      for (RegisteredServer server : BuiltinCommandUtil.sortedServerList(server)) {
+      for (final RegisteredServer server : BuiltinCommandUtil.sortedServerList(server)) {
         sendServerPlayers(source, server, true);
       }
       sendTotalProxyCount(source);
     } else {
-      Optional<RegisteredServer> registeredServer = server.getServer(serverName);
-      if (!registeredServer.isPresent()) {
-        source.sendMessage(Identity.nil(),
-            CommandMessages.SERVER_DOES_NOT_EXIST.args(Component.text(serverName)));
+      final Optional<RegisteredServer> registeredServer = server.getServer(serverName);
+      if (registeredServer.isEmpty()) {
+        source.sendMessage(
+            CommandMessages.SERVER_DOES_NOT_EXIST
+                    .arguments(Component.text(serverName)));
         return -1;
       }
       sendServerPlayers(source, registeredServer.get(), false);
     }
-    return 1;
+    return Command.SINGLE_SUCCESS;
   }
 
   private void sendTotalProxyCount(CommandSource target) {
-    int online = server.getPlayerCount();
-    TranslatableComponent msg = online == 1
-        ? Component.translatable("velocity.command.glist-player-singular")
-        : Component.translatable("velocity.command.glist-player-plural");
-    target.sendMessage(msg.color(NamedTextColor.YELLOW)
-        .args(Component.text(Integer.toString(online), NamedTextColor.GREEN)));
+    final int online = server.getPlayerCount();
+    final TranslatableComponent.Builder msg = Component.translatable()
+            .key(online == 1
+                  ? "velocity.command.glist-player-singular"
+                  : "velocity.command.glist-player-plural"
+            ).color(NamedTextColor.YELLOW)
+            .arguments(Component.text(Integer.toString(online), NamedTextColor.GREEN));
+    target.sendMessage(msg.build());
   }
 
-  private void sendServerPlayers(CommandSource target, RegisteredServer server, boolean fromAll) {
-    List<Player> onServer = ImmutableList.copyOf(server.getPlayersConnected());
+  private void sendServerPlayers(final CommandSource target,
+                                 final RegisteredServer server, final boolean fromAll) {
+    final List<Player> onServer = ImmutableList.copyOf(server.getPlayersConnected());
     if (onServer.isEmpty() && fromAll) {
       return;
     }
 
-    TextComponent.Builder builder = Component.text()
+    final TextComponent.Builder builder = Component.text()
         .append(Component.text("[" + server.getServerInfo().getName() + "] ",
             NamedTextColor.DARK_AQUA))
         .append(Component.text("(" + onServer.size() + ")", NamedTextColor.GRAY))
@@ -137,7 +138,7 @@ public class GlistCommand {
         .resetStyle();
 
     for (int i = 0; i < onServer.size(); i++) {
-      Player player = onServer.get(i);
+      final Player player = onServer.get(i);
       builder.append(Component.text(player.getUsername()));
 
       if (i + 1 < onServer.size()) {
@@ -145,6 +146,6 @@ public class GlistCommand {
       }
     }
 
-    target.sendMessage(Identity.nil(), builder.build());
+    target.sendMessage(builder.build());
   }
 }

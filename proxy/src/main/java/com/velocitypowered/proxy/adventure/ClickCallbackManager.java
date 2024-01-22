@@ -33,7 +33,7 @@ import org.checkerframework.checker.index.qual.NonNegative;
 public class ClickCallbackManager {
   public static final ClickCallbackManager INSTANCE = new ClickCallbackManager();
 
-  static final String COMMAND = "/velocity callback ";
+  static final String COMMAND = "/velocity:callback ";
 
   private final Cache<UUID, RegisteredCallback> registrations = Caffeine.newBuilder()
       .expireAfter(new Expiry<UUID, RegisteredCallback>() {

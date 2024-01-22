@@ -297,6 +297,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       // Inject commands from the proxy.
       final CommandGraphInjector<CommandSource> injector = server.getCommandManager().getInjector();
       injector.inject(rootNode, serverConn.getPlayer());
+      rootNode.removeChildByName("velocity:callback");
     }
 
     server.getEventManager().fire(

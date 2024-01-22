@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.provider;
 
+import com.google.auto.service.AutoService;
 import com.velocitypowered.proxy.util.TranslatableMapper;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.kyori.adventure.text.logger.slf4j.ComponentLoggerProvider;
@@ -27,6 +28,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Velocity ComponentLogger Provider.
  */
+@AutoService(ComponentLoggerProvider.class)
 @SuppressWarnings("UnstableApiUsage")
 public final class ComponentLoggerProviderImpl implements ComponentLoggerProvider {
   private static final ANSIComponentSerializer SERIALIZER = ANSIComponentSerializer.builder()
