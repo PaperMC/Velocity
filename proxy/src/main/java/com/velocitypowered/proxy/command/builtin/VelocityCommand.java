@@ -24,7 +24,6 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
@@ -54,7 +53,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -118,12 +116,7 @@ public final class VelocityCommand {
               final String commandText = USAGE.formatted(availableCommands);
               source.sendMessage(Component.text(commandText, NamedTextColor.RED));
               return Command.SINGLE_SUCCESS;
-            })
-            .requires(commands.stream()
-                    .takeWhile(node -> !node.getName().equals("callback"))
-                    .map(CommandNode::getRequirement)
-                    .reduce(Predicate::or)
-                    .orElseThrow()),
+            }),
           ArgumentBuilder::then,
           ArgumentBuilder::then
         )
