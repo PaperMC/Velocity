@@ -20,10 +20,10 @@ package com.velocitypowered.proxy.command.builtin;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.mojang.brigadier.Command;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
@@ -34,7 +34,6 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.adventure.ClickCallbackManager;
 import com.velocitypowered.proxy.util.InformationUtils;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -51,8 +50,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -95,14 +94,9 @@ public final class VelocityCommand {
         .requires(source -> source.getPermissionValue("velocity.command.reload") == Tristate.TRUE)
         .executes(new Reload(server))
         .build();
-    final LiteralCommandNode<CommandSource> clickCallback = BrigadierCommand
-        .literalArgumentBuilder("callback")
-        .then(BrigadierCommand.requiredArgumentBuilder("id", StringArgumentType.word())
-                .executes(new Callback()))
-        .build();
 
     final List<LiteralCommandNode<CommandSource>> commands = List
-            .of(dump, heap, info, plugins, reload, clickCallback);
+            .of(dump, heap, info, plugins, reload);
     return new BrigadierCommand(
       commands.stream()
         .reduce(
@@ -116,7 +110,11 @@ public final class VelocityCommand {
               final String commandText = USAGE.formatted(availableCommands);
               source.sendMessage(Component.text(commandText, NamedTextColor.RED));
               return Command.SINGLE_SUCCESS;
-            }),
+            })
+            .requires(commands.stream()
+                    .map(CommandNode::getRequirement)
+                    .reduce(Predicate::or)
+                    .orElseThrow()),
           ArgumentBuilder::then,
           ArgumentBuilder::then
         )
@@ -392,25 +390,6 @@ public final class VelocityCommand {
             NamedTextColor.RED));
         logger.error("Could not write heap", t);
       }
-      return Command.SINGLE_SUCCESS;
-    }
-  }
-
-  /**
-   * Callback SubCommand.
-   */
-  private static final class Callback implements Command<CommandSource> {
-    @Override
-    public int run(final CommandContext<CommandSource> context) {
-      final String providedId = StringArgumentType.getString(context, "id");
-      final UUID id;
-      try {
-        id = UUID.fromString(providedId);
-      } catch (final IllegalArgumentException ignored) {
-        return Command.SINGLE_SUCCESS;
-      }
-
-      ClickCallbackManager.INSTANCE.runCallback(context.getSource(), id);
       return Command.SINGLE_SUCCESS;
     }
   }
