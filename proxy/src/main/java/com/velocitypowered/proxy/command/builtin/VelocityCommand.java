@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.command.builtin;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -51,6 +52,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -95,9 +97,14 @@ public final class VelocityCommand {
         .requires(source -> source.getPermissionValue("velocity.command.reload") == Tristate.TRUE)
         .executes(new Reload(server))
         .build();
+    final LiteralCommandNode<CommandSource> clickCallback = BrigadierCommand
+        .literalArgumentBuilder("callback")
+        .then(BrigadierCommand.requiredArgumentBuilder("id", StringArgumentType.word())
+                .executes(new Callback()))
+        .build();
 
     final List<LiteralCommandNode<CommandSource>> commands = List
-            .of(dump, heap, info, plugins, reload);
+            .of(dump, heap, info, plugins, reload, clickCallback);
     return new BrigadierCommand(
       commands.stream()
         .reduce(
@@ -113,6 +120,7 @@ public final class VelocityCommand {
               return Command.SINGLE_SUCCESS;
             })
             .requires(commands.stream()
+                    .takeWhile(node -> !node.getName().equals("callback"))
                     .map(CommandNode::getRequirement)
                     .reduce(Predicate::or)
                     .orElseThrow()),
@@ -324,7 +332,7 @@ public final class VelocityCommand {
   /**
    * Heap SubCommand.
    */
-  public static class Heap implements Command<CommandSource> {
+  public static final class Heap implements Command<CommandSource> {
     private static final Logger logger = LogManager.getLogger(Heap.class);
     private MethodHandle heapGenerator;
     private Consumer<CommandSource> heapConsumer;
@@ -398,27 +406,19 @@ public final class VelocityCommand {
   /**
    * Callback SubCommand.
    */
-  /*public static final class Callback implements Command<CommandSource> {
-
+  private static final class Callback implements Command<CommandSource> {
     @Override
-    public int run(final CommandContext<CommandSource> context) throws CommandSyntaxException {
-      if (args.length != 1) {
-        return;
-      }
-
+    public int run(final CommandContext<CommandSource> context) {
+      final String providedId = StringArgumentType.getString(context, "id");
       final UUID id;
       try {
-        id = UUID.fromString(args[0]);
+        id = UUID.fromString(providedId);
       } catch (final IllegalArgumentException ignored) {
-        return;
+        return Command.SINGLE_SUCCESS;
       }
 
-      ClickCallbackManager.INSTANCE.runCallback(source, id);
+      ClickCallbackManager.INSTANCE.runCallback(context.getSource(), id);
+      return Command.SINGLE_SUCCESS;
     }
-
-    @Override
-    public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
-      return true;
-    }
-  }*/
+  }
 }
