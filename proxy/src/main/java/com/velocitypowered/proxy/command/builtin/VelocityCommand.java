@@ -34,6 +34,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.adventure.ClickCallbackManager;
 import com.velocitypowered.proxy.util.InformationUtils;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -393,4 +394,31 @@ public final class VelocityCommand {
       return Command.SINGLE_SUCCESS;
     }
   }
+
+  /**
+   * Callback SubCommand.
+   */
+  /*public static final class Callback implements Command<CommandSource> {
+
+    @Override
+    public int run(final CommandContext<CommandSource> context) throws CommandSyntaxException {
+      if (args.length != 1) {
+        return;
+      }
+
+      final UUID id;
+      try {
+        id = UUID.fromString(args[0]);
+      } catch (final IllegalArgumentException ignored) {
+        return;
+      }
+
+      ClickCallbackManager.INSTANCE.runCallback(source, id);
+    }
+
+    @Override
+    public boolean hasPermission(final CommandSource source, final String @NonNull [] args) {
+      return true;
+    }
+  }*/
 }
