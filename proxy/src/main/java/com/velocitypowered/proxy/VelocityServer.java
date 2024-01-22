@@ -226,7 +226,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     // Initialize commands first
     commandManager.register(VelocityCommand.create(this));
     commandManager.register(CallbackCommand.create());
-    commandManager.register("server", new ServerCommand(this));
+    commandManager.register(ServerCommand.create(this));
     commandManager.register("shutdown", ShutdownCommand.command(this),
         "end", "stop");
     new GlistCommand(this).register();
