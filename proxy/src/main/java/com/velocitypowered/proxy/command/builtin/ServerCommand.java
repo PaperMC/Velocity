@@ -42,7 +42,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * Implements Velocity's {@code /server} command.
  */
 public final class ServerCommand {
-
+  private static final String SERVER_ARG = "server";
   public static final int MAX_SERVERS_TO_LIST = 50;
 
   @SuppressWarnings("checkstyle:MissingJavadocMethod")
@@ -56,17 +56,23 @@ public final class ServerCommand {
           outputServerInformation(player, server);
           return Command.SINGLE_SUCCESS;
         })
-        .then(BrigadierCommand.requiredArgumentBuilder("server", StringArgumentType.word())
+        .then(BrigadierCommand.requiredArgumentBuilder(SERVER_ARG, StringArgumentType.word())
             .suggests((ctx, builder) -> {
+              final String argument = ctx.getArguments().containsKey(SERVER_ARG)
+                      ? StringArgumentType.getString(ctx, SERVER_ARG)
+                      : "";
               for (final RegisteredServer sv : server.getAllServers()) {
-                builder.suggest(sv.getServerInfo().getName());
+                final String serverName = sv.getServerInfo().getName();
+                if (serverName.regionMatches(true, 0, argument, 0, argument.length())) {
+                  builder.suggest(serverName);
+                }
               }
               return builder.buildFuture();
             })
             .executes(ctx -> {
               final Player player = (Player) ctx.getSource();
               // Trying to connect to a server.
-              final String serverName = StringArgumentType.getString(ctx, "server");
+              final String serverName = StringArgumentType.getString(ctx, SERVER_ARG);
               final Optional<RegisteredServer> toConnect = server.getServer(serverName);
               if (toConnect.isEmpty()) {
                 player.sendMessage(CommandMessages.SERVER_DOES_NOT_EXIST
@@ -104,7 +110,7 @@ public final class ServerCommand {
     final TextComponent.Builder serverListBuilder = Component.text()
         .append(Component.translatable("velocity.command.server-available",
             NamedTextColor.YELLOW))
-        .append(Component.space());
+        .appendSpace();
     for (int i = 0; i < servers.size(); i++) {
       final RegisteredServer rs = servers.get(i);
       serverListBuilder.append(formatServerComponent(currentServer, rs));
