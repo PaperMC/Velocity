@@ -22,11 +22,39 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
+import com.velocitypowered.proxy.util.collect.Enum2IntMap;
 import io.netty.buffer.ByteBuf;
+import java.util.Set;
 import java.util.UUID;
+import net.kyori.adventure.bossbar.BossBar;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class BossBarPacket implements MinecraftPacket {
+
+  private static final Enum2IntMap<BossBar.Color> COLORS_TO_PROTOCOL =
+      new Enum2IntMap.Builder<>(BossBar.Color.class)
+          .put(BossBar.Color.PINK, 0)
+          .put(BossBar.Color.BLUE, 1)
+          .put(BossBar.Color.RED, 2)
+          .put(BossBar.Color.GREEN, 3)
+          .put(BossBar.Color.YELLOW, 4)
+          .put(BossBar.Color.PURPLE, 5)
+          .put(BossBar.Color.WHITE, 6)
+          .build();
+  private static final Enum2IntMap<BossBar.Overlay> OVERLAY_TO_PROTOCOL =
+      new Enum2IntMap.Builder<>(BossBar.Overlay.class)
+          .put(BossBar.Overlay.PROGRESS, 0)
+          .put(BossBar.Overlay.NOTCHED_6, 1)
+          .put(BossBar.Overlay.NOTCHED_10, 2)
+          .put(BossBar.Overlay.NOTCHED_12, 3)
+          .put(BossBar.Overlay.NOTCHED_20, 4)
+          .build();
+  private static final Enum2IntMap<BossBar.Flag> FLAG_BITS_TO_PROTOCOL =
+      new Enum2IntMap.Builder<>(BossBar.Flag.class)
+          .put(BossBar.Flag.DARKEN_SCREEN, 0x1)
+          .put(BossBar.Flag.PLAY_BOSS_MUSIC, 0x2)
+          .put(BossBar.Flag.CREATE_WORLD_FOG, 0x4)
+          .build();
 
   public static final int ADD = 0;
   public static final int REMOVE = 1;
@@ -41,6 +69,66 @@ public class BossBarPacket implements MinecraftPacket {
   private int color;
   private int overlay;
   private short flags;
+
+  public static BossBarPacket createAddPacket(
+      final UUID id,
+      final BossBar bar,
+      final ComponentHolder name
+  ) {
+    final BossBarPacket packet = new BossBarPacket();
+    packet.setUuid(id);
+    packet.setAction(BossBarPacket.ADD);
+    packet.setName(name);
+    packet.setColor(COLORS_TO_PROTOCOL.get(bar.color()));
+    packet.setOverlay(OVERLAY_TO_PROTOCOL.get(bar.overlay()));
+    packet.setPercent(bar.progress());
+    packet.setFlags(serializeFlags(bar.flags()));
+    return packet;
+  }
+
+  public static BossBarPacket createRemovePacket(final UUID id, final BossBar bar) {
+    final BossBarPacket packet = new BossBarPacket();
+    packet.setUuid(id);
+    packet.setAction(REMOVE);
+    return packet;
+  }
+
+  public static BossBarPacket createUpdateProgressPacket(final UUID id, final BossBar bar) {
+    final BossBarPacket packet = new BossBarPacket();
+    packet.setUuid(id);
+    packet.setAction(UPDATE_PERCENT);
+    packet.setPercent(bar.progress());
+    return packet;
+  }
+
+  public static BossBarPacket createUpdateNamePacket(
+      final UUID id,
+      final BossBar bar,
+      final ComponentHolder name
+  ) {
+    final BossBarPacket packet = new BossBarPacket();
+    packet.setUuid(id);
+    packet.setAction(UPDATE_NAME);
+    packet.setName(name);
+    return packet;
+  }
+
+  public static BossBarPacket createUpdateStylePacket(final UUID id, final BossBar bar) {
+    final BossBarPacket packet = new BossBarPacket();
+    packet.setUuid(id);
+    packet.setAction(UPDATE_STYLE);
+    packet.setColor(COLORS_TO_PROTOCOL.get(bar.color()));
+    packet.setOverlay(OVERLAY_TO_PROTOCOL.get(bar.overlay()));
+    return packet;
+  }
+
+  public static BossBarPacket createUpdatePropertiesPacket(final UUID id, final BossBar bar) {
+    final BossBarPacket packet = new BossBarPacket();
+    packet.setUuid(id);
+    packet.setAction(UPDATE_PROPERTIES);
+    packet.setFlags(serializeFlags(bar.flags()));
+    return packet;
+  }
 
   public UUID getUuid() {
     if (uuid == null) {
@@ -187,15 +275,16 @@ public class BossBarPacket implements MinecraftPacket {
     }
   }
 
+  private static byte serializeFlags(Set<BossBar.Flag> flags) {
+    byte val = 0x0;
+    for (BossBar.Flag flag : flags) {
+      val |= FLAG_BITS_TO_PROTOCOL.get(flag);
+    }
+    return val;
+  }
+
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
-  }
-
-  public static BossBarPacket createRemovePacket(UUID id) {
-    BossBarPacket packet = new BossBarPacket();
-    packet.setUuid(id);
-    packet.setAction(REMOVE);
-    return packet;
   }
 }

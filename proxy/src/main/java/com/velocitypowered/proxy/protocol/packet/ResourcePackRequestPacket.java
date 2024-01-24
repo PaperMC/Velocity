@@ -146,7 +146,12 @@ public class ResourcePackRequestPacket implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "ResourcePackRequest{" + "url='" + url + '\'' + ", hash='" + hash + '\'' +
-        ", isRequired=" + isRequired + ", prompt='" + prompt + '\'' + '}';
+    return "ResourcePackRequestPacket{" +
+            "id=" + id +
+            ", url='" + url + '\'' +
+            ", hash='" + hash + '\'' +
+            ", isRequired=" + isRequired +
+            ", prompt=" + prompt +
+            '}';
   }
 }

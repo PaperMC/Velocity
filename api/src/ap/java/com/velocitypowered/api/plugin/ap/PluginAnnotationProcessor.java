@@ -7,6 +7,7 @@
 
 package com.velocitypowered.api.plugin.ap;
 
+import com.google.auto.service.AutoService;
 import com.google.gson.Gson;
 import com.velocitypowered.api.plugin.Plugin;
 import java.io.BufferedWriter;
@@ -16,6 +17,7 @@ import java.util.Objects;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
@@ -30,6 +32,7 @@ import javax.tools.StandardLocation;
 /**
  * Annotation processor for Velocity.
  */
+@AutoService(Processor.class)
 @SupportedAnnotationTypes({"com.velocitypowered.api.plugin.Plugin"})
 public class PluginAnnotationProcessor extends AbstractProcessor {
 
