@@ -18,6 +18,7 @@
 package com.velocitypowered.proxy.connection.registry;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.network.ProtocolVersion;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -40,11 +41,17 @@ public final class DimensionInfo {
    * @param isDebugType        if true constrains the world to the very limited debug-type world
    */
   public DimensionInfo(String registryIdentifier, @Nullable String levelName,
-      boolean isFlat, boolean isDebugType) {
+                       boolean isFlat, boolean isDebugType, ProtocolVersion protocolVersion) {
     this.registryIdentifier = Preconditions.checkNotNull(
         registryIdentifier, "registryIdentifier cannot be null");
-    Preconditions.checkArgument(registryIdentifier.length() > 0,
-        "registryIdentifier cannot be empty");
+    // TODO:
+    //  REMOVE this, a new PlayerSpawnInfo class will be created.
+    //  Mojang made a relatively large change to the loading of chunks
+    //  when logging into the server
+    if (protocolVersion.lessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
+      Preconditions.checkArgument(registryIdentifier.length() > 0,
+              "registryIdentifier cannot be empty");
+    }
     this.levelName = levelName;
     this.isFlat = isFlat;
     this.isDebugType = isDebugType;

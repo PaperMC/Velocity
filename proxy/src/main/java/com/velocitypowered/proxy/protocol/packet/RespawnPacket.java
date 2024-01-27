@@ -185,7 +185,7 @@ public class RespawnPacket implements MinecraftPacket {
       this.previousGamemode = buf.readByte();
       boolean isDebug = buf.readBoolean();
       boolean isFlat = buf.readBoolean();
-      this.dimensionInfo = new DimensionInfo(dimensionIdentifier, levelName, isFlat, isDebug);
+      this.dimensionInfo = new DimensionInfo(dimensionIdentifier, levelName, isFlat, isDebug, version);
       if (version.lessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
         this.dataToKeep = (byte) (buf.readBoolean() ? 1 : 0);
       } else if (version.lessThan(ProtocolVersion.MINECRAFT_1_20_2)) {

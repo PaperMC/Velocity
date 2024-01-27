@@ -284,7 +284,7 @@ public class JoinGamePacket implements MinecraftPacket {
 
     boolean isDebug = buf.readBoolean();
     boolean isFlat = buf.readBoolean();
-    this.dimensionInfo = new DimensionInfo(dimensionIdentifier, levelName, isFlat, isDebug);
+    this.dimensionInfo = new DimensionInfo(dimensionIdentifier, levelName, isFlat, isDebug, version);
 
     // optional death location
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19) && buf.readBoolean()) {
@@ -296,6 +296,7 @@ public class JoinGamePacket implements MinecraftPacket {
     }
   }
 
+  @SuppressWarnings("checkstyle:VariableDeclarationUsageDistance")
   private void decode1202Up(ByteBuf buf, ProtocolVersion version) {
     this.entityId = buf.readInt();
     this.isHardcore = buf.readBoolean();
@@ -320,7 +321,7 @@ public class JoinGamePacket implements MinecraftPacket {
 
     boolean isDebug = buf.readBoolean();
     boolean isFlat = buf.readBoolean();
-    this.dimensionInfo = new DimensionInfo(dimensionIdentifier, levelName, isFlat, isDebug);
+    this.dimensionInfo = new DimensionInfo(dimensionIdentifier, levelName, isFlat, isDebug, version);
 
     // optional death location
     if (buf.readBoolean()) {
