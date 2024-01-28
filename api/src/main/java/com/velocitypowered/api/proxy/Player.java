@@ -234,6 +234,11 @@ public interface Player extends
    * Gets the {@link ResourcePackInfo} of the currently applied
    * resource-pack or null if none.
    *
+   * <p> Note that since 1.20.3 it is no longer recommended to use
+   * this method as it will only return the last applied
+   * resource pack. To get all applied resource packs, use
+   * {@link #getAppliedResourcePacks()} instead. </p>
+   *
    * @return the applied resource pack or null if none.
    */
   @Nullable
@@ -244,6 +249,11 @@ public interface Player extends
    * Gets the {@link ResourcePackInfo} of the resource pack
    * the user is currently downloading or is currently
    * prompted to install or null if none.
+   *
+   * <p> Note that since 1.20.3 it is no longer recommended to use
+   * this method as it will only return the last pending
+   * resource pack. To get all pending resource packs, use
+   * {@link #getPendingResourcePacks()} instead. </p>
    *
    * @return the pending resource pack or null if none
    */

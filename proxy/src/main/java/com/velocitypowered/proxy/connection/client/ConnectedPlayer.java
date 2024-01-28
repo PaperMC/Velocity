@@ -50,6 +50,7 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.adventure.VelocityBossBarImplementation;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
@@ -64,6 +65,7 @@ import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.HeaderAndFooterPacket;
 import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
 import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
+import com.velocitypowered.proxy.protocol.packet.RemoveResourcePackPacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatType;
@@ -84,12 +86,16 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -101,6 +107,9 @@ import net.kyori.adventure.permission.PermissionChecker;
 import net.kyori.adventure.platform.facet.FacetPointers;
 import net.kyori.adventure.platform.facet.FacetPointers.Type;
 import net.kyori.adventure.pointer.Pointers;
+import net.kyori.adventure.resource.ResourcePackInfoLike;
+import net.kyori.adventure.resource.ResourcePackRequest;
+import net.kyori.adventure.resource.ResourcePackRequestLike;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
@@ -142,6 +151,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private @Nullable VelocityServerConnection connectionInFlight;
   private @Nullable PlayerSettings settings;
   private @Nullable ModInfo modInfo;
+  private final Set<VelocityBossBarImplementation> bossBars = new HashSet<>();
   private Component playerListHeader = Component.empty();
   private Component playerListFooter = Component.empty();
   private final InternalTabList tabList;
@@ -153,6 +163,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private final Queue<ResourcePackInfo> outstandingResourcePacks = new ArrayDeque<>();
   private @Nullable ResourcePackInfo pendingResourcePack;
   private @Nullable ResourcePackInfo appliedResourcePack;
+  private @NotNull List<ResourcePackInfo> pendingResourcePacks = new ArrayList<>();
+  private @NotNull List<ResourcePackInfo> appliedResourcePacks = new ArrayList<>();
   private final @NotNull Pointers pointers =
       Player.super.pointers().toBuilder().withDynamic(Identity.UUID, this::getUniqueId)
           .withDynamic(Identity.NAME, this::getUsername)
@@ -188,6 +200,15 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     this.playerKey = playerKey;
     this.chatQueue = new ChatQueue(this);
     this.chatBuilderFactory = new ChatBuilderFactory(this.getProtocolVersion());
+  }
+
+  /**
+   * Used for cleaning up resources during a disconnection.
+   */
+  public void disconnected() {
+    for (final VelocityBossBarImplementation bar : this.bossBars) {
+      bar.viewerDisconnected(this);
+    }
   }
 
   public ChatBuilderFactory getChatBuilderFactory() {
@@ -508,14 +529,20 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   @Override
   public void hideBossBar(@NonNull BossBar bar) {
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_9)) {
-      this.server.getBossBarManager().removeBossBar(this, bar);
+      final VelocityBossBarImplementation impl = VelocityBossBarImplementation.get(bar);
+      if (impl.viewerRemove(this)) {
+        this.bossBars.remove(impl);
+      }
     }
   }
 
   @Override
   public void showBossBar(@NonNull BossBar bar) {
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_9)) {
-      this.server.getBossBarManager().addBossBar(this, bar);
+      final VelocityBossBarImplementation impl = VelocityBossBarImplementation.get(bar);
+      if (impl.viewerAdd(this)) {
+        this.bossBars.add(impl);
+      }
     }
   }
 
@@ -974,6 +1001,44 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     }
   }
 
+  @Override
+  public void clearResourcePacks() {
+    if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
+      connection.write(new RemoveResourcePackPacket());
+    }
+  }
+
+  @Override
+  public void removeResourcePacks(@NotNull UUID id, @NotNull UUID @NotNull ... others) {
+    if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
+      connection.write(new RemoveResourcePackPacket(id));
+      for (final UUID other : others) {
+        connection.write(new RemoveResourcePackPacket(other));
+      }
+    }
+  }
+
+  @Override
+  public void removeResourcePacks(@NotNull ResourcePackRequest request) {
+    for (final net.kyori.adventure.resource.ResourcePackInfo resourcePackInfo : request.packs()) {
+      removeResourcePacks(resourcePackInfo.id());
+    }
+  }
+
+  @Override
+  public void removeResourcePacks(@NotNull ResourcePackRequestLike request) {
+    removeResourcePacks(request.asResourcePackRequest());
+  }
+
+  @Override
+  @SuppressWarnings("checkstyle:linelength")
+  public void removeResourcePacks(@NotNull ResourcePackInfoLike request, @NotNull ResourcePackInfoLike @NotNull ... others) {
+    removeResourcePacks(request.asResourcePackInfo().id());
+    for (final ResourcePackInfoLike other : others) {
+      removeResourcePacks(other.asResourcePackInfo().id());
+    }
+  }
+
   /**
    * Queues a resource-pack for sending to the player and sends it immediately if the queue is
    * empty.
@@ -1027,25 +1092,23 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   @Override
   @Deprecated
   public @Nullable ResourcePackInfo getAppliedResourcePack() {
-    //TODO which resource pack should be returned here?
     return appliedResourcePack;
   }
 
   @Override
   @Deprecated
   public @Nullable ResourcePackInfo getPendingResourcePack() {
-    //TODO which resource pack should be returned here?
     return pendingResourcePack;
   }
 
   @Override
   public Collection<ResourcePackInfo> getAppliedResourcePacks() {
-    return Collections.EMPTY_LIST; //TODO
+    return new ArrayList<>(appliedResourcePacks);
   }
 
   @Override
   public Collection<ResourcePackInfo> getPendingResourcePacks() {
-    return Collections.EMPTY_LIST; //TODO
+    return new ArrayList<>(pendingResourcePacks);
   }
 
   /**
@@ -1079,6 +1142,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       case ACCEPTED:
         previousResourceResponse = true;
         pendingResourcePack = queued;
+        if (this.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
+          pendingResourcePacks.clear();
+        }
+        pendingResourcePacks.add(queued);
         break;
       case DECLINED:
         previousResourceResponse = false;
@@ -1086,9 +1153,41 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       case SUCCESSFUL:
         appliedResourcePack = queued;
         pendingResourcePack = null;
+        appliedResourcePacks.add(queued);
+        if (this.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
+          pendingResourcePacks.clear();
+        }
+        if (queued != null) {
+          pendingResourcePacks.removeIf(resourcePackInfo -> {
+            if (resourcePackInfo.getId() == null) {
+              return resourcePackInfo.getUrl().equals(queued.getUrl())
+                      && Arrays.equals(resourcePackInfo.getHash(), queued.getHash());
+            }
+            return resourcePackInfo.getId().equals(queued.getId());
+          });
+        }
         break;
       case FAILED_DOWNLOAD:
         pendingResourcePack = null;
+        if (this.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
+          pendingResourcePacks.clear();
+        }
+        if (queued != null) {
+          pendingResourcePacks.removeIf(resourcePackInfo -> {
+            if (resourcePackInfo.getId() == null) {
+              return resourcePackInfo.getUrl().equals(queued.getUrl())
+                      && Arrays.equals(resourcePackInfo.getHash(), queued.getHash());
+            }
+            return resourcePackInfo.getId().equals(queued.getId());
+          });
+        }
+        break;
+      case DISCARDED:
+        if (queued != null && queued.getId() != null) {
+          appliedResourcePacks.removeIf(resourcePackInfo -> {
+            return queued.getId().equals(resourcePackInfo.getId());
+          });
+        }
         break;
       default:
         break;
