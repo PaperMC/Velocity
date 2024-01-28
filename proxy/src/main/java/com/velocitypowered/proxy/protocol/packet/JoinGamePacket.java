@@ -51,6 +51,7 @@ public class JoinGamePacket implements MinecraftPacket {
   private int simulationDistance; // 1.18+
   private @Nullable Pair<String, Long> lastDeathPosition; // 1.19+
   private int portalCooldown; // 1.20+
+  private boolean enforcesSecureChat; // 1.20.5+
 
   public int getEntityId() {
     return entityId;
@@ -178,6 +179,14 @@ public class JoinGamePacket implements MinecraftPacket {
 
   public void setPortalCooldown(int portalCooldown) {
     this.portalCooldown = portalCooldown;
+  }
+
+  public boolean getEnforcesSecureChat() {
+    return this.enforcesSecureChat;
+  }
+
+  public void setEnforcesSecureChat(final boolean enforcesSecureChat) {
+    this.enforcesSecureChat = enforcesSecureChat;
   }
 
   public CompoundBinaryTag getRegistry() {
@@ -329,6 +338,9 @@ public class JoinGamePacket implements MinecraftPacket {
     }
 
     this.portalCooldown = ProtocolUtils.readVarInt(buf);
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
+      this.enforcesSecureChat = buf.readBoolean();
+    }
   }
 
   @Override
@@ -470,6 +482,10 @@ public class JoinGamePacket implements MinecraftPacket {
     }
 
     ProtocolUtils.writeVarInt(buf, portalCooldown);
+
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
+      buf.writeBoolean(this.enforcesSecureChat);
+    }
   }
 
   @Override

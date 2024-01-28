@@ -44,10 +44,6 @@ public final class DimensionInfo {
                        boolean isFlat, boolean isDebugType, ProtocolVersion protocolVersion) {
     this.registryIdentifier = Preconditions.checkNotNull(
         registryIdentifier, "registryIdentifier cannot be null");
-    // TODO:
-    //  REMOVE this, a new PlayerSpawnInfo class will be created.
-    //  Mojang made a relatively large change to the loading of chunks
-    //  when logging into the server
     if (protocolVersion.lessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
       Preconditions.checkArgument(registryIdentifier.length() > 0,
               "registryIdentifier cannot be empty");
