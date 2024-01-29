@@ -34,6 +34,7 @@ import com.velocitypowered.api.event.player.PlayerModInfoEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.PlayerSettingsChangedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
+import com.velocitypowered.api.network.ProtocolState;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.PermissionProvider;
@@ -1269,6 +1270,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     public @NonNull UUID uuid() {
       return ConnectedPlayer.this.getUniqueId();
     }
+  }
+
+  @Override
+  public ProtocolState protocolState() {
+    return connection.getState().toProtocolState();
   }
 
   private class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {
