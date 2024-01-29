@@ -124,18 +124,13 @@ public final class PlayerDataForwarding {
             : MODERN_DEFAULT;
       }
       if (key != null) {
-        // No enhanced switch on java 11
-        switch (key.getKeyRevision()) {
-          case GENERIC_V1:
-            return MODERN_WITH_KEY;
+        return switch (key.getKeyRevision()) {
+          case GENERIC_V1 -> MODERN_WITH_KEY;
           // Since V2 is not backwards compatible we have to throw the key if v2 and requested is v1
-          case LINKED_V2:
-            return requested >= MODERN_WITH_KEY_V2
-                ? MODERN_WITH_KEY_V2
-                : MODERN_DEFAULT;
-          default:
-            return MODERN_DEFAULT;
-        }
+          case LINKED_V2 -> requested >= MODERN_WITH_KEY_V2
+                  ? MODERN_WITH_KEY_V2
+                  : MODERN_DEFAULT;
+        };
       } else {
         return MODERN_DEFAULT;
       }
