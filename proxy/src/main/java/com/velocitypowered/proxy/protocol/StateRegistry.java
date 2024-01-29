@@ -619,6 +619,11 @@ public enum StateRegistry {
     return (direction == SERVERBOUND ? serverbound : clientbound).getProtocolRegistry(version);
   }
 
+  /**
+   * Gets the API representation of the ProtocolState.
+   *
+   * @return the API representation
+   */
   public ProtocolState toProtocolState() {
     return switch (this) {
       case HANDSHAKE -> ProtocolState.HANDSHAKE;
