@@ -114,19 +114,17 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(PluginMessagePacket packet) {
-    VelocityServerConnection serverConn = player.getConnectionInFlight();
-    if (serverConn != null) {
-      if (PluginMessageUtil.isMcBrand(packet)) {
-        String brand = PluginMessageUtil.readBrandMessage(packet.content());
-        server.getEventManager().fireAndForget(new PlayerClientBrandEvent(player, brand));
-        player.setClientBrand(brand);
-        brandChannel = packet.getChannel();
-        // Client sends `minecraft:brand` packet immediately after Login,
-        // but at this time the backend server may not be ready
-      } else {
-        serverConn.ensureConnected().write(packet.retain());
-      }
+  public boolean handle(final PluginMessagePacket packet) {
+    final VelocityServerConnection serverConn = player.getConnectionInFlight();
+    if (PluginMessageUtil.isMcBrand(packet)) {
+      final String brand = PluginMessageUtil.readBrandMessage(packet.content());
+      server.getEventManager().fireAndForget(new PlayerClientBrandEvent(player, brand));
+      player.setClientBrand(brand);
+      brandChannel = packet.getChannel();
+      // Client sends `minecraft:brand` packet immediately after Login,
+      // but at this time the backend server may not be ready
+    } else if (serverConn != null) {
+      serverConn.ensureConnected().write(packet.retain());
     }
     return true;
   }
@@ -158,13 +156,13 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void handleUnknown(ByteBuf buf) {
-    VelocityServerConnection serverConnection = player.getConnectedServer();
+    final VelocityServerConnection serverConnection = player.getConnectedServer();
     if (serverConnection == null) {
       // No server connection yet, probably transitioning.
       return;
     }
 
-    MinecraftConnection smc = serverConnection.getConnection();
+    final MinecraftConnection smc = serverConnection.getConnection();
     if (smc != null && !smc.isClosed() && serverConnection.getPhase().consideredComplete()) {
       smc.write(buf.retain());
     }
@@ -188,13 +186,13 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
    * @return a future that completes when the config stage is finished
    */
   public CompletableFuture<Void> handleBackendFinishUpdate(VelocityServerConnection serverConn) {
-    MinecraftConnection smc = serverConn.ensureConnected();
+    final MinecraftConnection smc = serverConn.ensureConnected();
 
-    String brand = serverConn.getPlayer().getClientBrand();
+    final String brand = serverConn.getPlayer().getClientBrand();
     if (brand != null && brandChannel != null) {
-      ByteBuf buf = Unpooled.buffer();
+      final ByteBuf buf = Unpooled.buffer();
       ProtocolUtils.writeString(buf, brand);
-      PluginMessagePacket brandPacket = new PluginMessagePacket(brandChannel, buf);
+      final PluginMessagePacket brandPacket = new PluginMessagePacket(brandChannel, buf);
       smc.write(brandPacket);
     }
 
