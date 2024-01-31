@@ -24,7 +24,6 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
-import net.kyori.adventure.resource.ResourcePackRequest;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -38,11 +37,6 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
 
   LegacyResourcePackHandler(ConnectedPlayer player, VelocityServer server) {
     super(player, server);
-  }
-
-  @Override
-  public void sendResourcePackRequest(ResourcePackRequest resourcePacks) {
-
   }
 
   @Override

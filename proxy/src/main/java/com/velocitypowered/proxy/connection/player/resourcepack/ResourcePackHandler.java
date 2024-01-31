@@ -25,6 +25,7 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBufUtil;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Queue;
@@ -68,8 +69,6 @@ public abstract sealed class ResourcePackHandler
     return new ModernResourcePackHandler(player, server);
   }
 
-  public abstract void sendResourcePackRequest(ResourcePackRequest resourcePacks);
-
   public abstract @Nullable ResourcePackInfo getFirstAppliedPack();
 
   public abstract @Nullable ResourcePackInfo getFirstPendingPack();
@@ -93,6 +92,23 @@ public abstract sealed class ResourcePackHandler
     outstandingResourcePacks.add(info);
     if (outstandingResourcePacks.size() == 1) {
       tickResourcePackQueue();
+    }
+  }
+
+  /**
+   * Queues a resource-request for sending to the player and sends it immediately if the queue is
+   * empty.
+   */
+  public void queueResourcePack(ResourcePackRequest request) {
+    for (final net.kyori.adventure.resource.ResourcePackInfo pack : request.packs()) {
+      final ResourcePackInfo resourcePackInfo = server
+              .createResourcePackBuilder(pack.uri().toString())
+              .setHash(pack.hash().getBytes(StandardCharsets.UTF_8))
+              .setId(pack.id())
+              .setShouldForce(request.required())
+              .setPrompt(request.prompt())
+              .build();
+      queueResourcePack(resourcePackInfo);
     }
   }
 

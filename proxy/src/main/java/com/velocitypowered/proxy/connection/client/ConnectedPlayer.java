@@ -1005,7 +1005,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   @Override
   public void sendResourcePacks(@NotNull ResourcePackRequest request) {
-
+    if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
+      Preconditions.checkNotNull(request, "packRequest");
+      resourcePackHandler().queueResourcePack(request);
+    }
   }
 
   @Override

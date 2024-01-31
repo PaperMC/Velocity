@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
-import net.kyori.adventure.resource.ResourcePackRequest;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,11 +38,6 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
 
   ModernResourcePackHandler(ConnectedPlayer player, VelocityServer server) {
     super(player, server);
-  }
-
-  @Override
-  public void sendResourcePackRequest(ResourcePackRequest resourcePacks) {
-
   }
 
   @Override
