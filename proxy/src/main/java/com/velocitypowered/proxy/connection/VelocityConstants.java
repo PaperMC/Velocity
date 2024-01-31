@@ -26,12 +26,5 @@ public class VelocityConstants {
     throw new AssertionError();
   }
 
-  public static final String VELOCITY_IP_FORWARDING_CHANNEL = "velocity:player_info";
-  public static final int MODERN_FORWARDING_DEFAULT = 1;
-  public static final int MODERN_FORWARDING_WITH_KEY = 2;
-  public static final int MODERN_FORWARDING_WITH_KEY_V2 = 3;
-  public static final int MODERN_LAZY_SESSION = 4;
-  public static final int MODERN_FORWARDING_MAX_VERSION = MODERN_LAZY_SESSION;
-
   public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 }
