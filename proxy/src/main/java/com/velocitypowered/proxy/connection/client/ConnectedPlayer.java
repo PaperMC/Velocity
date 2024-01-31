@@ -31,7 +31,6 @@ import com.velocitypowered.api.event.player.KickedFromServerEvent.Notify;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.RedirectPlayer;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.ServerKickResult;
 import com.velocitypowered.api.event.player.PlayerModInfoEvent;
-import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.PlayerSettingsChangedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -55,6 +54,7 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
+import com.velocitypowered.proxy.connection.player.resourcepack.ResourcePackHandler;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.connection.util.VelocityInboundConnection;
@@ -66,7 +66,6 @@ import com.velocitypowered.proxy.protocol.packet.HeaderAndFooterPacket;
 import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
 import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.RemoveResourcePackPacket;
-import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatType;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
@@ -82,19 +81,14 @@ import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import com.velocitypowered.proxy.util.DurationUtils;
 import com.velocitypowered.proxy.util.TranslatableMapper;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -129,7 +123,6 @@ import org.jetbrains.annotations.NotNull;
 public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, KeyIdentifiable,
     VelocityInboundConnection {
 
-  private static final int MAX_PLUGIN_CHANNELS = 1024;
   private static final PlainTextComponentSerializer PASS_THRU_TRANSLATE =
       PlainTextComponentSerializer.builder().flattener(TranslatableMapper.FLATTENER).build();
   static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
@@ -159,12 +152,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private ClientConnectionPhase connectionPhase;
   private final CompletableFuture<Void> teardownFuture = new CompletableFuture<>();
   private @MonotonicNonNull List<String> serversToTry = null;
-  private @MonotonicNonNull Boolean previousResourceResponse;
-  private final Queue<ResourcePackInfo> outstandingResourcePacks = new ArrayDeque<>();
-  private @Nullable ResourcePackInfo pendingResourcePack;
-  private @Nullable ResourcePackInfo appliedResourcePack;
-  private @NotNull List<ResourcePackInfo> pendingResourcePacks = new ArrayList<>();
-  private @NotNull List<ResourcePackInfo> appliedResourcePacks = new ArrayList<>();
+  private @MonotonicNonNull ResourcePackHandler resourcePackHandler;
+
   private final @NotNull Pointers pointers =
       Player.super.pointers().toBuilder().withDynamic(Identity.UUID, this::getUniqueId)
           .withDynamic(Identity.NAME, this::getUsername)
@@ -174,7 +163,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
           .withStatic(FacetPointers.TYPE, Type.PLAYER).build();
   private @Nullable String clientBrand;
   private @Nullable Locale effectiveLocale;
-  private @Nullable IdentifiedKey playerKey;
+  private final @Nullable IdentifiedKey playerKey;
   private @Nullable ClientSettingsPacket clientSettingsPacket;
   private final ChatQueue chatQueue;
   private final ChatBuilderFactory chatBuilderFactory;
@@ -238,7 +227,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public void setEffectiveLocale(Locale locale) {
+  public void setEffectiveLocale(final @Nullable Locale locale) {
     effectiveLocale = locale;
   }
 
@@ -293,6 +282,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     return settings == null ? ClientSettingsWrapper.DEFAULT : this.settings;
   }
 
+  @Nullable
   public ClientSettingsPacket getClientSettingsPacket() {
     return clientSettingsPacket;
   }
@@ -367,7 +357,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   @Override
   public void sendMessage(@NonNull Identity identity, @NonNull Component message) {
-    Component translated = translateMessage(message);
+    final Component translated = translateMessage(message);
 
     connection.write(getChatBuilderFactory().builder()
         .component(translated).forIdentity(identity).toClient());
@@ -432,7 +422,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public void sendPlayerListHeaderAndFooter(final Component header, final Component footer) {
+  public void sendPlayerListHeaderAndFooter(final @NotNull Component header,
+                                            final @NotNull Component footer) {
     Component translatedHeader = translateMessage(header);
     Component translatedFooter = translateMessage(footer);
     this.playerListHeader = translatedHeader;
@@ -472,6 +463,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     }
   }
 
+  @SuppressWarnings("ConstantValue")
   @Override
   public <T> void sendTitlePart(@NotNull TitlePart<T> part, @NotNull T value) {
     if (part == null) {
@@ -744,11 +736,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
         return;
       }
 
-      if (event.getResult() instanceof DisconnectPlayer) {
-        DisconnectPlayer res = (DisconnectPlayer) event.getResult();
+      if (event.getResult() instanceof final DisconnectPlayer res) {
         disconnect(res.getReasonComponent());
-      } else if (event.getResult() instanceof RedirectPlayer) {
-        RedirectPlayer res = (RedirectPlayer) event.getResult();
+      } else if (event.getResult() instanceof final RedirectPlayer res) {
         createConnectionRequest(res.getServer(), previousConnection).connect()
             .whenCompleteAsync((status, throwable) -> {
               if (throwable != null) {
@@ -794,8 +784,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
                   break;
               }
             }, connection.eventLoop());
-      } else if (event.getResult() instanceof Notify) {
-        Notify res = (Notify) event.getResult();
+      } else if (event.getResult() instanceof final Notify res) {
         if (event.kickedDuringServerConnect() && previousConnection != null) {
           sendMessage(Identity.nil(), res.getMessageComponent());
         } else {
@@ -906,7 +895,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
     DisconnectEvent.LoginStatus status;
     if (connectedPlayer.isPresent()) {
-      if (!connectedPlayer.get().getCurrentServer().isPresent()) {
+      if (connectedPlayer.get().getCurrentServer().isEmpty()) {
         status = LoginStatus.PRE_SERVER_JOIN;
       } else {
         status = connectedPlayer.get() == this ? LoginStatus.SUCCESSFUL_LOGIN
@@ -933,9 +922,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   @Override
   public String toString() {
-    boolean isPlayerAddressLoggingEnabled = server.getConfiguration()
+    final boolean isPlayerAddressLoggingEnabled = server.getConfiguration()
         .isPlayerAddressLoggingEnabled();
-    String playerIp =
+    final String playerIp =
         isPlayerAddressLoggingEnabled ? getRemoteAddress().toString() : "<ip address withheld>";
     return "[connected player] " + profile.getName() + " (" + playerIp + ")";
   }
@@ -956,11 +945,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
+  @Nullable
   public String getClientBrand() {
     return clientBrand;
   }
 
-  void setClientBrand(String clientBrand) {
+  void setClientBrand(final @Nullable String clientBrand) {
     this.clientBrand = clientBrand;
   }
 
@@ -981,6 +971,18 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     }
   }
 
+  /**
+   * Get the ResourcePackHandler corresponding to the player's version.
+   *
+   * @return the ResourcePackHandler of this player
+   */
+  public ResourcePackHandler resourcePackHandler() {
+    if (resourcePackHandler == null) {
+      this.resourcePackHandler = ResourcePackHandler.create(this, server);
+    }
+    return this.resourcePackHandler;
+  }
+
   @Override
   @Deprecated
   public void sendResourcePack(String url) {
@@ -997,24 +999,41 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   public void sendResourcePackOffer(ResourcePackInfo packInfo) {
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       Preconditions.checkNotNull(packInfo, "packInfo");
-      queueResourcePack(packInfo);
+      resourcePackHandler().queueResourcePack(packInfo);
     }
+  }
+
+  @Override
+  public void sendResourcePacks(@NotNull ResourcePackRequest request) {
+
   }
 
   @Override
   public void clearResourcePacks() {
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
       connection.write(new RemoveResourcePackPacket());
+      resourcePackHandler().clearAppliedResourcePacks();
     }
   }
 
   @Override
   public void removeResourcePacks(@NotNull UUID id, @NotNull UUID @NotNull ... others) {
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
-      connection.write(new RemoveResourcePackPacket(id));
-      for (final UUID other : others) {
-        connection.write(new RemoveResourcePackPacket(other));
-      }
+      Preconditions.checkNotNull(id, "packUUID");
+      resourcePackHandler().removeIf(resourcePack -> {
+        final UUID resourceId = resourcePack.getId();
+        if (resourceId.equals(id)) {
+          connection.write(new RemoveResourcePackPacket(resourceId));
+          return true;
+        }
+        for (final UUID other : others) {
+          if (other.equals(resourceId)) {
+            connection.write(new RemoveResourcePackPacket(resourceId));
+            return true;
+          }
+        }
+        return false;
+      });
     }
   }
 
@@ -1039,175 +1058,29 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     }
   }
 
-  /**
-   * Queues a resource-pack for sending to the player and sends it immediately if the queue is
-   * empty.
-   */
-  public void queueResourcePack(ResourcePackInfo info) {
-    outstandingResourcePacks.add(info);
-    if (outstandingResourcePacks.size() == 1) {
-      tickResourcePackQueue();
-    }
-  }
-
-  private void tickResourcePackQueue() {
-    ResourcePackInfo queued = outstandingResourcePacks.peek();
-
-    if (queued != null) {
-      // Check if the player declined a resource pack once already
-      if (previousResourceResponse != null && !previousResourceResponse) {
-        // If that happened we can flush the queue right away.
-        // Unless its 1.17+ and forced it will come back denied anyway
-        while (!outstandingResourcePacks.isEmpty()) {
-          queued = outstandingResourcePacks.peek();
-          if (queued.getShouldForce() && getProtocolVersion()
-              .noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
-            break;
-          }
-          onResourcePackResponse(PlayerResourcePackStatusEvent.Status.DECLINED);
-          queued = null;
-        }
-        if (queued == null) {
-          // Exit as the queue was cleared
-          return;
-        }
-      }
-
-      ResourcePackRequestPacket request = new ResourcePackRequestPacket();
-      request.setId(queued.getId());
-      request.setUrl(queued.getUrl());
-      if (queued.getHash() != null) {
-        request.setHash(ByteBufUtil.hexDump(queued.getHash()));
-      } else {
-        request.setHash("");
-      }
-      request.setRequired(queued.getShouldForce());
-      request.setPrompt(queued.getPrompt() == null ? null :
-          new ComponentHolder(getProtocolVersion(), queued.getPrompt()));
-
-      connection.write(request);
-    }
-  }
-
   @Override
   @Deprecated
   public @Nullable ResourcePackInfo getAppliedResourcePack() {
-    return appliedResourcePack;
+    return resourcePackHandler().getFirstAppliedPack();
   }
 
   @Override
   @Deprecated
   public @Nullable ResourcePackInfo getPendingResourcePack() {
-    return pendingResourcePack;
+    return resourcePackHandler().getFirstPendingPack();
   }
 
   @Override
   public Collection<ResourcePackInfo> getAppliedResourcePacks() {
-    return new ArrayList<>(appliedResourcePacks);
+    return resourcePackHandler().getAppliedResourcePacks();
   }
 
   @Override
   public Collection<ResourcePackInfo> getPendingResourcePacks() {
-    return new ArrayList<>(pendingResourcePacks);
+    return resourcePackHandler().getPendingResourcePacks();
   }
 
-  /**
-   * Clears the applied resource pack field.
-   */
-  public void clearAppliedResourcePack() {
-    appliedResourcePack = null;
-  }
 
-  /**
-   * Processes a client response to a sent resource-pack.
-   */
-  public boolean onResourcePackResponse(PlayerResourcePackStatusEvent.Status status) {
-    final boolean peek = status.isIntermediate();
-    final ResourcePackInfo queued = peek
-        ? outstandingResourcePacks.peek() : outstandingResourcePacks.poll();
-
-    server.getEventManager().fire(new PlayerResourcePackStatusEvent(this, status, queued))
-        .thenAcceptAsync(event -> {
-          if (event.getStatus() == PlayerResourcePackStatusEvent.Status.DECLINED
-              && event.getPackInfo() != null && event.getPackInfo().getShouldForce()
-              && (!event.isOverwriteKick() || event.getPlayer()
-              .getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_17))
-          ) {
-            event.getPlayer().disconnect(Component
-                .translatable("multiplayer.requiredTexturePrompt.disconnect"));
-          }
-        });
-
-    switch (status) {
-      case ACCEPTED:
-        previousResourceResponse = true;
-        pendingResourcePack = queued;
-        if (this.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
-          pendingResourcePacks.clear();
-        }
-        pendingResourcePacks.add(queued);
-        break;
-      case DECLINED:
-        previousResourceResponse = false;
-        break;
-      case SUCCESSFUL:
-        appliedResourcePack = queued;
-        pendingResourcePack = null;
-        appliedResourcePacks.add(queued);
-        if (this.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
-          pendingResourcePacks.clear();
-        }
-        if (queued != null) {
-          pendingResourcePacks.removeIf(resourcePackInfo -> {
-            if (resourcePackInfo.getId() == null) {
-              return resourcePackInfo.getUrl().equals(queued.getUrl())
-                      && Arrays.equals(resourcePackInfo.getHash(), queued.getHash());
-            }
-            return resourcePackInfo.getId().equals(queued.getId());
-          });
-        }
-        break;
-      case FAILED_DOWNLOAD:
-        pendingResourcePack = null;
-        if (this.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
-          pendingResourcePacks.clear();
-        }
-        if (queued != null) {
-          pendingResourcePacks.removeIf(resourcePackInfo -> {
-            if (resourcePackInfo.getId() == null) {
-              return resourcePackInfo.getUrl().equals(queued.getUrl())
-                      && Arrays.equals(resourcePackInfo.getHash(), queued.getHash());
-            }
-            return resourcePackInfo.getId().equals(queued.getId());
-          });
-        }
-        break;
-      case DISCARDED:
-        if (queued != null && queued.getId() != null) {
-          appliedResourcePacks.removeIf(resourcePackInfo -> {
-            return queued.getId().equals(resourcePackInfo.getId());
-          });
-        }
-        break;
-      default:
-        break;
-    }
-
-    if (!peek) {
-      connection.eventLoop().execute(this::tickResourcePackQueue);
-    }
-
-    return queued != null
-        && queued.getOriginalOrigin() != ResourcePackInfo.Origin.DOWNSTREAM_SERVER;
-  }
-
-  /**
-   * Gives an indication about the previous resource pack responses.
-   */
-  public @Nullable Boolean getPreviousResourceResponse() {
-    //TODO can probably be removed
-    return previousResourceResponse;
-  }
 
   /**
    * Sends a {@link KeepAlivePacket} packet to the player with a random ID.
@@ -1271,7 +1144,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     }
   }
 
-  private class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {
+  private final class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {
 
     private final RegisteredServer toConnect;
     private final @Nullable VelocityRegisteredServer previousServer;
@@ -1315,7 +1188,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
             new ServerPreConnectEvent(ConnectedPlayer.this, toConnect, previousServer);
         return server.getEventManager().fire(event).thenComposeAsync(newEvent -> {
           Optional<RegisteredServer> newDest = newEvent.getResult().getServer();
-          if (!newDest.isPresent()) {
+          if (newDest.isEmpty()) {
             return completedFuture(
                 plainResult(ConnectionRequestBuilder.Status.CONNECTION_CANCELLED, toConnect));
           }

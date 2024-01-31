@@ -19,10 +19,14 @@ package com.velocitypowered.proxy.connection.player;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.UUID;
+import net.kyori.adventure.resource.ResourcePackRequest;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Implements {@link ResourcePackInfo}.
@@ -31,13 +35,13 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
 
   private final UUID id;
   private final String url;
-  private final @Nullable byte[] hash;
+  private final byte @Nullable [] hash;
   private final boolean shouldForce;
   private final @Nullable Component prompt; // 1.17+ only
   private final Origin origin;
   private Origin originalOrigin;
 
-  private VelocityResourcePackInfo(UUID id, String url, @Nullable byte[] hash, boolean shouldForce,
+  private VelocityResourcePackInfo(UUID id, String url, byte @Nullable [] hash, boolean shouldForce,
                                    @Nullable Component prompt, Origin origin) {
     this.id = id;
     this.url = url;
@@ -69,7 +73,7 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
   }
 
   @Override
-  public @Nullable byte[] getHash() {
+  public byte @Nullable[] getHash() {
     return hash == null ? null : hash.clone(); // Thanks spotbugs, very helpful.
   }
 
@@ -105,6 +109,19 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
         .setPrompt(prompt);
   }
 
+  @Override
+  public @NotNull ResourcePackRequest asResourcePackRequest() {
+    return ResourcePackRequest.resourcePackRequest()
+            .packs(net.kyori.adventure.resource.ResourcePackInfo.resourcePackInfo()
+                    .id(this.id)
+                    .uri(URI.create(this.url))
+                    .hash(Arrays.toString(this.hash))
+                    .build())
+            .required(this.shouldForce)
+            .prompt(this.prompt)
+            .build();
+  }
+
   /**
    * Implements the builder for {@link ResourcePackInfo} instances.
    */
@@ -113,7 +130,7 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
     private UUID id;
     private final String url;
     private boolean shouldForce;
-    private @Nullable byte[] hash;
+    private byte @Nullable [] hash;
     private @Nullable Component prompt;
     private Origin origin = Origin.PLUGIN_ON_PROXY;
 
@@ -135,7 +152,7 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
     }
 
     @Override
-    public BuilderImpl setHash(@Nullable byte[] hash) {
+    public BuilderImpl setHash(final byte @Nullable [] hash) {
       if (hash != null) {
         Preconditions.checkArgument(hash.length == 20, "Hash length is not 20");
         this.hash = hash.clone(); // Thanks spotbugs, very helpful.

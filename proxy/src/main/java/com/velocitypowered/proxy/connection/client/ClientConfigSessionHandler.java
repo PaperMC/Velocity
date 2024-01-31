@@ -71,16 +71,12 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public void deactivated() {
-  }
-
-  @Override
   public boolean handle(KeepAlivePacket packet) {
-    VelocityServerConnection serverConnection = player.getConnectedServer();
+    final VelocityServerConnection serverConnection = player.getConnectedServer();
     if (serverConnection != null) {
-      Long sentTime = serverConnection.getPendingPings().remove(packet.getRandomId());
+      final Long sentTime = serverConnection.getPendingPings().remove(packet.getRandomId());
       if (sentTime != null) {
-        MinecraftConnection smc = serverConnection.getConnection();
+        final MinecraftConnection smc = serverConnection.getConnection();
         if (smc != null) {
           player.setPing(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - sentTime));
           smc.write(packet);
@@ -101,7 +97,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
     if (player.getConnectionInFlight() != null) {
       player.getConnectionInFlight().ensureConnected().write(packet);
     }
-    return player.onResourcePackResponse(packet.getStatus());
+    return player.resourcePackHandler().onResourcePackResponse(packet.getStatus());
   }
 
   @Override

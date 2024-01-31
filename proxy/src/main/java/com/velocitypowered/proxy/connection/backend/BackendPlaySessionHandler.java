@@ -188,13 +188,13 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         return;
       }
       if (serverResourcePackSendEvent.getResult().isAllowed()) {
-        ResourcePackInfo toSend = serverResourcePackSendEvent.getProvidedResourcePack();
+        final ResourcePackInfo toSend = serverResourcePackSendEvent.getProvidedResourcePack();
         if (toSend != serverResourcePackSendEvent.getReceivedResourcePack()) {
           ((VelocityResourcePackInfo) toSend)
               .setOriginalOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
         }
 
-        serverConn.getPlayer().queueResourcePack(toSend);
+        serverConn.getPlayer().resourcePackHandler().queueResourcePack(toSend);
       } else if (serverConn.getConnection() != null) {
         serverConn.getConnection().write(new ResourcePackResponsePacket(
             packet.getId(),
