@@ -998,7 +998,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   public void sendResourcePackOffer(ResourcePackInfo packInfo) {
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       Preconditions.checkNotNull(packInfo, "packInfo");
-      resourcePackHandler().queueResourcePack(packInfo);
+      this.resourcePackHandler.queueResourcePack(packInfo);
     }
   }
 
@@ -1006,7 +1006,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   public void sendResourcePacks(@NotNull ResourcePackRequest request) {
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       Preconditions.checkNotNull(request, "packRequest");
-      resourcePackHandler().queueResourcePack(request);
+      this.resourcePackHandler.queueResourcePack(request);
     }
   }
 
@@ -1014,7 +1014,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   public void clearResourcePacks() {
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
       connection.write(new RemoveResourcePackPacket());
-      resourcePackHandler().clearAppliedResourcePacks();
+      this.resourcePackHandler.clearAppliedResourcePacks();
     }
   }
 
@@ -1022,7 +1022,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   public void removeResourcePacks(@NotNull UUID id, @NotNull UUID @NotNull ... others) {
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
       Preconditions.checkNotNull(id, "packUUID");
-      resourcePackHandler().removeIf(resourcePack -> {
+      this.resourcePackHandler.removeIf(resourcePack -> {
         final UUID resourceId = resourcePack.getId();
         if (resourceId.equals(id)) {
           connection.write(new RemoveResourcePackPacket(resourceId));
@@ -1063,23 +1063,23 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   @Override
   @Deprecated
   public @Nullable ResourcePackInfo getAppliedResourcePack() {
-    return resourcePackHandler().getFirstAppliedPack();
+    return this.resourcePackHandler.getFirstAppliedPack();
   }
 
   @Override
   @Deprecated
   public @Nullable ResourcePackInfo getPendingResourcePack() {
-    return resourcePackHandler().getFirstPendingPack();
+    return this.resourcePackHandler.getFirstPendingPack();
   }
 
   @Override
   public Collection<ResourcePackInfo> getAppliedResourcePacks() {
-    return resourcePackHandler().getAppliedResourcePacks();
+    return this.resourcePackHandler.getAppliedResourcePacks();
   }
 
   @Override
   public Collection<ResourcePackInfo> getPendingResourcePacks() {
-    return resourcePackHandler().getPendingResourcePacks();
+    return this.resourcePackHandler.getPendingResourcePacks();
   }
 
   /**

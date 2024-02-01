@@ -122,6 +122,19 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
             .build();
   }
 
+  @SuppressWarnings("checkstyle:MissingJavadocMethod")
+  public static ResourcePackInfo fromAdventureRequest(
+          final ResourcePackRequest request,
+          final net.kyori.adventure.resource.ResourcePackInfo pack
+  ) {
+    return new BuilderImpl(pack.uri().toString())
+            .setHash(pack.hash().getBytes(StandardCharsets.UTF_8))
+            .setId(pack.id())
+            .setShouldForce(request.required())
+            .setPrompt(request.prompt())
+            .build();
+  }
+
   /**
    * Implements the builder for {@link ResourcePackInfo} instances.
    */

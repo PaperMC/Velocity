@@ -22,16 +22,17 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBufUtil;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Queue;
 import java.util.function.Predicate;
 import net.kyori.adventure.resource.ResourcePackRequest;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -101,14 +102,7 @@ public abstract sealed class ResourcePackHandler
    */
   public void queueResourcePack(ResourcePackRequest request) {
     for (final net.kyori.adventure.resource.ResourcePackInfo pack : request.packs()) {
-      final ResourcePackInfo resourcePackInfo = server
-              .createResourcePackBuilder(pack.uri().toString())
-              .setHash(pack.hash().getBytes(StandardCharsets.UTF_8))
-              .setId(pack.id())
-              .setShouldForce(request.required())
-              .setPrompt(request.prompt())
-              .build();
-      queueResourcePack(resourcePackInfo);
+      queueResourcePack(VelocityResourcePackInfo.fromAdventureRequest(request, pack));
     }
   }
 
@@ -135,20 +129,24 @@ public abstract sealed class ResourcePackHandler
         }
       }
 
-      final ResourcePackRequestPacket request = new ResourcePackRequestPacket();
-      request.setId(queued.getId());
-      request.setUrl(queued.getUrl());
-      if (queued.getHash() != null) {
-        request.setHash(ByteBufUtil.hexDump(queued.getHash()));
-      } else {
-        request.setHash("");
-      }
-      request.setRequired(queued.getShouldForce());
-      request.setPrompt(queued.getPrompt() == null ? null :
-              new ComponentHolder(player.getProtocolVersion(), queued.getPrompt()));
-
-      player.getConnection().write(request);
+      sendResourcePackRequestPacket(queued);
     }
+  }
+
+  private void sendResourcePackRequestPacket(final @NotNull ResourcePackInfo queued) {
+    final ResourcePackRequestPacket request = new ResourcePackRequestPacket();
+    request.setId(queued.getId());
+    request.setUrl(queued.getUrl());
+    if (queued.getHash() != null) {
+      request.setHash(ByteBufUtil.hexDump(queued.getHash()));
+    } else {
+      request.setHash("");
+    }
+    request.setRequired(queued.getShouldForce());
+    request.setPrompt(queued.getPrompt() == null ? null :
+            new ComponentHolder(player.getProtocolVersion(), queued.getPrompt()));
+
+    player.getConnection().write(request);
   }
 
   /**
