@@ -152,10 +152,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private ClientConnectionPhase connectionPhase;
   private final CompletableFuture<Void> teardownFuture = new CompletableFuture<>();
   private @MonotonicNonNull List<String> serversToTry = null;
-  private @MonotonicNonNull ResourcePackHandler resourcePackHandler;
+  private final ResourcePackHandler resourcePackHandler;
 
   private final @NotNull Pointers pointers =
-      Player.super.pointers().toBuilder().withDynamic(Identity.UUID, this::getUniqueId)
+      Player.super.pointers().toBuilder()
+          .withDynamic(Identity.UUID, this::getUniqueId)
           .withDynamic(Identity.NAME, this::getUsername)
           .withDynamic(Identity.DISPLAY_NAME, () -> Component.text(this.getUsername()))
           .withDynamic(Identity.LOCALE, this::getEffectiveLocale)
@@ -189,6 +190,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     this.playerKey = playerKey;
     this.chatQueue = new ChatQueue(this);
     this.chatBuilderFactory = new ChatBuilderFactory(this.getProtocolVersion());
+    this.resourcePackHandler = ResourcePackHandler.create(this, server);
   }
 
   /**
@@ -977,9 +979,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
    * @return the ResourcePackHandler of this player
    */
   public ResourcePackHandler resourcePackHandler() {
-    if (resourcePackHandler == null) {
-      this.resourcePackHandler = ResourcePackHandler.create(this, server);
-    }
     return this.resourcePackHandler;
   }
 
@@ -1082,8 +1081,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   public Collection<ResourcePackInfo> getPendingResourcePacks() {
     return resourcePackHandler().getPendingResourcePacks();
   }
-
-
 
   /**
    * Sends a {@link KeepAlivePacket} packet to the player with a random ID.
