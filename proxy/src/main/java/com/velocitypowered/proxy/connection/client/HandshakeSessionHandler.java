@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.event.connection.ConnectionEstablishEvent;
 import com.velocitypowered.api.event.connection.ConnectionHandshakeEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
@@ -87,29 +88,55 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   public boolean handle(HandshakePacket handshake) {
     InitialInboundConnection ic = new InitialInboundConnection(connection,
         cleanVhost(handshake.getServerAddress()), handshake);
-    StateRegistry nextState = getStateForProtocol(handshake.getNextStatus());
-    if (nextState == null) {
-      LOGGER.error("{} provided invalid protocol {}", ic, handshake.getNextStatus());
-      connection.close(true);
-    } else {
-      connection.setProtocolVersion(handshake.getProtocolVersion());
-      connection.setAssociation(ic);
 
-      switch (nextState) {
-        case STATUS:
-          connection.setActiveSessionHandler(StateRegistry.STATUS,
-              new StatusSessionHandler(server, ic));
-          break;
-        case LOGIN:
-          this.handleLogin(handshake, ic);
-          break;
-        default:
-          // If you get this, it's a bug in Velocity.
-          throw new AssertionError("getStateForProtocol provided invalid state!");
-      }
-    }
+    // Handle connection establish event.
+    connection.setAutoReading(false);
+    server.getEventManager()
+            .fire(new ConnectionEstablishEvent(
+                    ic, getIntentionForStatus(handshake.getNextStatus())))
+            .thenAcceptAsync(result -> {
+              // Clean up the disabling of auto-read.
+              connection.setAutoReading(true);
+
+              if (!result.getResult().isAllowed()) {
+                connection.close(true);
+              } else {
+                StateRegistry nextState = getStateForProtocol(handshake.getNextStatus());
+                if (nextState == null) {
+                  LOGGER.error("{} provided invalid protocol {}", ic, handshake.getNextStatus());
+                  connection.close(true);
+                } else {
+                  connection.setProtocolVersion(handshake.getProtocolVersion());
+                  connection.setAssociation(ic);
+
+                  switch (nextState) {
+                    case STATUS:
+                      connection.setActiveSessionHandler(StateRegistry.STATUS,
+                              new StatusSessionHandler(server, ic));
+                      break;
+                    case LOGIN:
+                      this.handleLogin(handshake, ic);
+                      break;
+                    default:
+                      // If you get this, it's a bug in Velocity.
+                      throw new AssertionError("getStateForProtocol provided invalid state!");
+                  }
+                }
+              }
+            });
 
     return true;
+  }
+
+  private static ConnectionEstablishEvent.@Nullable Intention getIntentionForStatus(int status) {
+    switch (status) {
+      case StateRegistry.STATUS_ID:
+        return ConnectionEstablishEvent.Intention.STATUS;
+      case StateRegistry.LOGIN_ID:
+        return ConnectionEstablishEvent.Intention.LOGIN;
+      default:
+        return null;
+    }
   }
 
   private static @Nullable StateRegistry getStateForProtocol(int status) {
