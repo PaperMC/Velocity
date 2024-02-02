@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.function.Predicate;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Legacy (Minecraft <1.17) ResourcePackHandler.
@@ -52,7 +53,7 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
   }
 
   @Override
-  public Collection<ResourcePackInfo> getAppliedResourcePacks() {
+  public @NotNull Collection<ResourcePackInfo> getAppliedResourcePacks() {
     if (appliedResourcePack == null) {
       return List.of();
     }
@@ -60,7 +61,7 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
   }
 
   @Override
-  public Collection<ResourcePackInfo> getPendingResourcePacks() {
+  public @NotNull Collection<ResourcePackInfo> getPendingResourcePacks() {
     if (pendingResourcePack == null) {
       return List.of();
     }
@@ -73,14 +74,16 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
   }
 
   @Override
-  public void removeIf(final Predicate<ResourcePackInfo> removePredicate) {
+  public void removeIf(final @NotNull Predicate<ResourcePackInfo> removePredicate) {
     if (appliedResourcePack != null && removePredicate.test(appliedResourcePack)) {
       appliedResourcePack = null;
     }
   }
 
   @Override
-  public boolean onResourcePackResponse(PlayerResourcePackStatusEvent.Status status) {
+  public boolean onResourcePackResponse(
+          final PlayerResourcePackStatusEvent.@NotNull Status status
+  ) {
     final boolean peek = status.isIntermediate();
     final ResourcePackInfo queued = peek
             ? outstandingResourcePacks.peek() : outstandingResourcePacks.poll();
@@ -123,7 +126,7 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
             && queued.getOriginalOrigin() != ResourcePackInfo.Origin.DOWNSTREAM_SERVER;
   }
 
-  protected boolean shouldDisconnectForForcePack(PlayerResourcePackStatusEvent event) {
+  protected boolean shouldDisconnectForForcePack(final PlayerResourcePackStatusEvent event) {
     return event.getStatus() == PlayerResourcePackStatusEvent.Status.DECLINED
             && event.getPackInfo() != null && event.getPackInfo().getShouldForce();
   }

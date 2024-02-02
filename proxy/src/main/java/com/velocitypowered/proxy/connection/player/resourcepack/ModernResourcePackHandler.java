@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
 import net.kyori.adventure.text.Component;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -36,7 +37,7 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
   private final List<ResourcePackInfo> pendingResourcePacks = new ArrayList<>();
   private final List<ResourcePackInfo> appliedResourcePacks = new ArrayList<>();
 
-  ModernResourcePackHandler(ConnectedPlayer player, VelocityServer server) {
+  ModernResourcePackHandler(final ConnectedPlayer player, final VelocityServer server) {
     super(player, server);
   }
 
@@ -57,12 +58,12 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
   }
 
   @Override
-  public Collection<ResourcePackInfo> getAppliedResourcePacks() {
+  public @NotNull Collection<ResourcePackInfo> getAppliedResourcePacks() {
     return List.copyOf(appliedResourcePacks);
   }
 
   @Override
-  public Collection<ResourcePackInfo> getPendingResourcePacks() {
+  public @NotNull Collection<ResourcePackInfo> getPendingResourcePacks() {
     return List.copyOf(pendingResourcePacks);
   }
 
@@ -72,12 +73,14 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
   }
 
   @Override
-  public void removeIf(Predicate<ResourcePackInfo> removePredicate) {
+  public void removeIf(final @NotNull Predicate<ResourcePackInfo> removePredicate) {
     appliedResourcePacks.removeIf(removePredicate);
   }
 
   @Override
-  public boolean onResourcePackResponse(PlayerResourcePackStatusEvent.Status status) {
+  public boolean onResourcePackResponse(
+          final PlayerResourcePackStatusEvent.@NotNull Status status
+  ) {
     final boolean peek = status.isIntermediate();
     final ResourcePackInfo queued = peek
             ? outstandingResourcePacks.peek() : outstandingResourcePacks.poll();
@@ -94,11 +97,14 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
             });
 
     switch (status) {
+      // The player has accepted the resource pack and will proceed to download it.
       case ACCEPTED -> {
         previousResourceResponse = true;
         pendingResourcePacks.add(queued);
       }
+      // The player has rejected the resource pack.
       case DECLINED -> previousResourceResponse = false;
+      // The resource pack has been applied correctly.
       case SUCCESSFUL -> {
         appliedResourcePacks.add(queued);
         if (queued != null) {
@@ -111,6 +117,8 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
           });
         }
       }
+      // An error occurred while trying to download the resource pack to the client,
+      // so the resource pack cannot be applied.
       case FAILED_DOWNLOAD -> {
         if (queued != null) {
           pendingResourcePacks.removeIf(resourcePackInfo -> {
@@ -122,12 +130,14 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
           });
         }
       }
+      // The player has removed one of his resource packs from the server.
       case DISCARDED -> {
         if (queued != null && queued.getId() != null) {
           appliedResourcePacks.removeIf(
                   resourcePackInfo -> queued.getId().equals(resourcePackInfo.getId()));
         }
       }
+      // The other cases in which no action is taken are documented in the javadocs.
       default -> {
       }
     }

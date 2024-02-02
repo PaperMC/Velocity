@@ -45,7 +45,7 @@ public abstract sealed class ResourcePackHandler
   protected final ConnectedPlayer player;
   protected final VelocityServer server;
 
-  protected ResourcePackHandler(ConnectedPlayer player, VelocityServer server) {
+  protected ResourcePackHandler(final ConnectedPlayer player, final VelocityServer server) {
     this.player = player;
     this.server = server;
   }
@@ -58,7 +58,7 @@ public abstract sealed class ResourcePackHandler
    *
    * @return a new ResourcePackHandler
    */
-  public static ResourcePackHandler create(final ConnectedPlayer player,
+  public static @NotNull ResourcePackHandler create(final ConnectedPlayer player,
                                            final VelocityServer server) {
     final ProtocolVersion protocolVersion = player.getProtocolVersion();
     if (protocolVersion.lessThan(ProtocolVersion.MINECRAFT_1_17)) {
@@ -74,22 +74,23 @@ public abstract sealed class ResourcePackHandler
 
   public abstract @Nullable ResourcePackInfo getFirstPendingPack();
 
-  public abstract Collection<ResourcePackInfo> getAppliedResourcePacks();
+  public abstract @NotNull Collection<ResourcePackInfo> getAppliedResourcePacks();
 
-  public abstract Collection<ResourcePackInfo> getPendingResourcePacks();
+  public abstract @NotNull Collection<ResourcePackInfo> getPendingResourcePacks();
 
   /**
    * Clears the applied resource pack field.
    */
   public abstract void clearAppliedResourcePacks();
 
-  public abstract void removeIf(Predicate<ResourcePackInfo> removePredicate);
+  public abstract void removeIf(
+          final @NotNull Predicate<@NotNull ResourcePackInfo> removePredicate);
 
   /**
    * Queues a resource-pack for sending to the player and sends it immediately if the queue is
    * empty.
    */
-  public void queueResourcePack(ResourcePackInfo info) {
+  public void queueResourcePack(final @NotNull ResourcePackInfo info) {
     outstandingResourcePacks.add(info);
     if (outstandingResourcePacks.size() == 1) {
       tickResourcePackQueue();
@@ -100,7 +101,7 @@ public abstract sealed class ResourcePackHandler
    * Queues a resource-request for sending to the player and sends it immediately if the queue is
    * empty.
    */
-  public void queueResourcePack(ResourcePackRequest request) {
+  public void queueResourcePack(final @NotNull ResourcePackRequest request) {
     for (final net.kyori.adventure.resource.ResourcePackInfo pack : request.packs()) {
       queueResourcePack(VelocityResourcePackInfo.fromAdventureRequest(request, pack));
     }
@@ -151,6 +152,25 @@ public abstract sealed class ResourcePackHandler
 
   /**
    * Processes a client response to a sent resource-pack.
+   * <ul>
+   * <p>Cases in which no action will be taken:</p>
+   *
+   * <br><li><b>DOWNLOADED</b>
+   * <p>In this case the resource pack is downloaded and will be applied to the client,
+   * no action is required in Velocity.</p>
+   *
+   * <br><li><b>INVALID_URL</b>
+   * <p>In this case, the client has received a resource pack request
+   * and the first check it performs is if the URL is valid, if not,
+   * it will return this value</p>
+   *
+   * <br><li><b>FAILED_RELOAD</b>
+   * <p>In this case, when trying to reload the client's resources,
+   * an error occurred while reloading a resource pack</p>
+   * </ul>
+   *
+   * @param status the resource pack status
    */
-  public abstract boolean onResourcePackResponse(PlayerResourcePackStatusEvent.Status status);
+  public abstract boolean onResourcePackResponse(
+          final @NotNull PlayerResourcePackStatusEvent.Status status);
 }
