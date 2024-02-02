@@ -35,7 +35,9 @@ import com.velocitypowered.proxy.command.CommandGraphInjector;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
+import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
+import com.velocitypowered.proxy.connection.player.resourcepack.ResourcePackHandler;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -219,7 +221,15 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(RemoveResourcePackPacket packet) {
-    return false; //TODO
+    final ConnectedPlayer player = serverConn.getPlayer();
+    final ResourcePackHandler handler = player.resourcePackHandler();
+    if (packet.getId() != null) {
+      handler.remove(packet.getId());
+    } else {
+      handler.clearAppliedResourcePacks();
+    }
+    playerConnection.write(packet);
+    return true;
   }
 
   @Override
