@@ -24,8 +24,11 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,6 +37,7 @@ import org.jetbrains.annotations.Nullable;
  * Modern (Minecraft 1.20.3+) ResourcePackHandler
  */
 public final class ModernResourcePackHandler extends ResourcePackHandler {
+  private final Map<UUID, ResourcePackInfo> outstandingResourcePacks = new ConcurrentHashMap<>();
   private final List<ResourcePackInfo> pendingResourcePacks = new ArrayList<>();
   private final List<ResourcePackInfo> appliedResourcePacks = new ArrayList<>();
 
@@ -73,19 +77,32 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
   }
 
   @Override
-  public void removeIf(final @NotNull Predicate<ResourcePackInfo> removePredicate) {
-    appliedResourcePacks.removeIf(removePredicate);
+  public boolean remove(final @NotNull UUID uuid) {
+    final Iterator<ResourcePackInfo> appliedResourcePackIterator = appliedResourcePacks.iterator();
+    while (appliedResourcePackIterator.hasNext()) {
+      ResourcePackInfo resourcePackInfo = appliedResourcePackIterator.next();
+      if (resourcePackInfo.getId().equals(uuid)) {
+        appliedResourcePackIterator.remove();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @Override
+  public void queueResourcePack(final @NotNull ResourcePackInfo info) {
+    this.outstandingResourcePacks.put(info.getId(), info);
+    sendResourcePackRequestPacket(info);
   }
 
   @Override
   public boolean onResourcePackResponse(
-          final PlayerResourcePackStatusEvent.@NotNull Status status
+          final @NotNull ResourcePackResponseBundle bundle
   ) {
-    final boolean peek = status.isIntermediate();
-    final ResourcePackInfo queued = peek
-            ? outstandingResourcePacks.peek() : outstandingResourcePacks.poll();
+    final ResourcePackInfo queued = this.outstandingResourcePacks.remove(bundle.uuid());
 
-    server.getEventManager().fire(new PlayerResourcePackStatusEvent(this.player, status, queued))
+    server.getEventManager()
+            .fire(new PlayerResourcePackStatusEvent(this.player, bundle.status(), queued))
             .thenAcceptAsync(event -> {
               if (event.getStatus() == PlayerResourcePackStatusEvent.Status.DECLINED
                       && event.getPackInfo() != null && event.getPackInfo().getShouldForce()
@@ -96,14 +113,9 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
               }
             });
 
-    switch (status) {
+    switch (bundle.status()) {
       // The player has accepted the resource pack and will proceed to download it.
-      case ACCEPTED -> {
-        previousResourceResponse = true;
-        pendingResourcePacks.add(queued);
-      }
-      // The player has rejected the resource pack.
-      case DECLINED -> previousResourceResponse = false;
+      case ACCEPTED -> pendingResourcePacks.add(queued);
       // The resource pack has been applied correctly.
       case SUCCESSFUL -> {
         appliedResourcePacks.add(queued);
@@ -140,10 +152,6 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
       // The other cases in which no action is taken are documented in the javadocs.
       default -> {
       }
-    }
-
-    if (!peek) {
-      player.getConnection().eventLoop().execute(this::tickResourcePackQueue);
     }
 
     return queued != null

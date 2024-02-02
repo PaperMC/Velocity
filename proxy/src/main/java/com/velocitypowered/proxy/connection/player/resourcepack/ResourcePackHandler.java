@@ -17,7 +17,6 @@
 
 package com.velocitypowered.proxy.connection.player.resourcepack;
 
-import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
@@ -26,12 +25,9 @@ import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBufUtil;
-import java.util.ArrayDeque;
 import java.util.Collection;
-import java.util.Queue;
-import java.util.function.Predicate;
+import java.util.UUID;
 import net.kyori.adventure.resource.ResourcePackRequest;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,8 +36,6 @@ import org.jetbrains.annotations.Nullable;
  */
 public abstract sealed class ResourcePackHandler
         permits LegacyResourcePackHandler, ModernResourcePackHandler {
-  protected final Queue<ResourcePackInfo> outstandingResourcePacks = new ArrayDeque<>();
-  protected @MonotonicNonNull Boolean previousResourceResponse;
   protected final ConnectedPlayer player;
   protected final VelocityServer server;
 
@@ -83,19 +77,13 @@ public abstract sealed class ResourcePackHandler
    */
   public abstract void clearAppliedResourcePacks();
 
-  public abstract void removeIf(
-          final @NotNull Predicate<@NotNull ResourcePackInfo> removePredicate);
+  public abstract boolean remove(final UUID id);
 
   /**
    * Queues a resource-pack for sending to the player and sends it immediately if the queue is
    * empty.
    */
-  public void queueResourcePack(final @NotNull ResourcePackInfo info) {
-    outstandingResourcePacks.add(info);
-    if (outstandingResourcePacks.size() == 1) {
-      tickResourcePackQueue();
-    }
-  }
+  public abstract void queueResourcePack(final @NotNull ResourcePackInfo info);
 
   /**
    * Queues a resource-request for sending to the player and sends it immediately if the queue is
@@ -107,34 +95,7 @@ public abstract sealed class ResourcePackHandler
     }
   }
 
-  protected void tickResourcePackQueue() {
-    ResourcePackInfo queued = outstandingResourcePacks.peek();
-
-    if (queued != null) {
-      // Check if the player declined a resource pack once already
-      if (previousResourceResponse != null && !previousResourceResponse) {
-        // If that happened we can flush the queue right away.
-        // Unless its 1.17+ and forced it will come back denied anyway
-        while (!outstandingResourcePacks.isEmpty()) {
-          queued = outstandingResourcePacks.peek();
-          if (queued.getShouldForce() && player.getProtocolVersion()
-                  .noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
-            break;
-          }
-          onResourcePackResponse(PlayerResourcePackStatusEvent.Status.DECLINED);
-          queued = null;
-        }
-        if (queued == null) {
-          // Exit as the queue was cleared
-          return;
-        }
-      }
-
-      sendResourcePackRequestPacket(queued);
-    }
-  }
-
-  private void sendResourcePackRequestPacket(final @NotNull ResourcePackInfo queued) {
+  protected void sendResourcePackRequestPacket(final @NotNull ResourcePackInfo queued) {
     final ResourcePackRequestPacket request = new ResourcePackRequestPacket();
     request.setId(queued.getId());
     request.setUrl(queued.getUrl());
@@ -169,8 +130,13 @@ public abstract sealed class ResourcePackHandler
    * an error occurred while reloading a resource pack</p>
    * </ul>
    *
-   * @param status the resource pack status
+   * <br><li><b>DECLINED</b>
+   * <p>Only in modern versions, as the resource pack has already been rejected,
+   * there is nothing to do, if the resource pack is required,
+   * the client will be kicked out of the server.</p>
+   *
+   * @param bundle the resource pack response bundle
    */
   public abstract boolean onResourcePackResponse(
-          final @NotNull PlayerResourcePackStatusEvent.Status status);
+          final @NotNull ResourcePackResponseBundle bundle);
 }

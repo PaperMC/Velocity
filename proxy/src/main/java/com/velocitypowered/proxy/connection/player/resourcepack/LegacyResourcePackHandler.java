@@ -18,13 +18,17 @@
 package com.velocitypowered.proxy.connection.player.resourcepack;
 
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.Queue;
+import java.util.UUID;
 import net.kyori.adventure.text.Component;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,10 +37,12 @@ import org.jetbrains.annotations.NotNull;
  */
 public sealed class LegacyResourcePackHandler extends ResourcePackHandler
         permits Legacy117ResourcePackHandler {
+  protected @MonotonicNonNull Boolean previousResourceResponse;
+  protected final Queue<ResourcePackInfo> outstandingResourcePacks = new ArrayDeque<>();
   private @Nullable ResourcePackInfo pendingResourcePack;
   private @Nullable ResourcePackInfo appliedResourcePack;
 
-  LegacyResourcePackHandler(ConnectedPlayer player, VelocityServer server) {
+  LegacyResourcePackHandler(final ConnectedPlayer player, final VelocityServer server) {
     super(player, server);
   }
 
@@ -74,21 +80,60 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
   }
 
   @Override
-  public void removeIf(final @NotNull Predicate<ResourcePackInfo> removePredicate) {
-    if (appliedResourcePack != null && removePredicate.test(appliedResourcePack)) {
+  public boolean remove(final @NotNull UUID id) {
+    if (appliedResourcePack != null && id.equals(appliedResourcePack.getId())) {
       appliedResourcePack = null;
+      return true;
+    }
+    return false;
+  }
+
+  @Override
+  public void queueResourcePack(@NotNull ResourcePackInfo info) {
+    outstandingResourcePacks.add(info);
+    if (outstandingResourcePacks.size() == 1) {
+      tickResourcePackQueue();
+    }
+  }
+
+  private void tickResourcePackQueue() {
+    ResourcePackInfo queued = outstandingResourcePacks.peek();
+
+    if (queued != null) {
+      // Check if the player declined a resource pack once already
+      if (previousResourceResponse != null && !previousResourceResponse) {
+        // If that happened we can flush the queue right away.
+        // Unless its 1.17+ and forced it will come back denied anyway
+        while (!outstandingResourcePacks.isEmpty()) {
+          queued = outstandingResourcePacks.peek();
+          if (queued.getShouldForce() && player.getProtocolVersion()
+                  .noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
+            break;
+          }
+          onResourcePackResponse(new ResourcePackResponseBundle(queued.getId(),
+                  PlayerResourcePackStatusEvent.Status.DECLINED));
+          queued = null;
+        }
+        if (queued == null) {
+          // Exit as the queue was cleared
+          return;
+        }
+      }
+
+      sendResourcePackRequestPacket(queued);
     }
   }
 
   @Override
   public boolean onResourcePackResponse(
-          final PlayerResourcePackStatusEvent.@NotNull Status status
+          final @NotNull ResourcePackResponseBundle bundle
   ) {
-    final boolean peek = status.isIntermediate();
+    final boolean peek = bundle.status().isIntermediate();
     final ResourcePackInfo queued = peek
             ? outstandingResourcePacks.peek() : outstandingResourcePacks.poll();
 
-    server.getEventManager().fire(new PlayerResourcePackStatusEvent(this.player, status, queued))
+    server.getEventManager()
+            .fire(new PlayerResourcePackStatusEvent(this.player, bundle.status(), queued))
             .thenAcceptAsync(event -> {
               if (shouldDisconnectForForcePack(event)) {
                 event.getPlayer().disconnect(Component
@@ -96,7 +141,7 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
               }
             });
 
-    switch (status) {
+    switch (bundle.status()) {
       case ACCEPTED -> {
         previousResourceResponse = true;
         pendingResourcePack = queued;

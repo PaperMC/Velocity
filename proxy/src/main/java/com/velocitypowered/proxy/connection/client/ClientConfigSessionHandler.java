@@ -22,6 +22,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
+import com.velocitypowered.proxy.connection.player.resourcepack.ResourcePackResponseBundle;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -97,7 +98,9 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
     if (player.getConnectionInFlight() != null) {
       player.getConnectionInFlight().ensureConnected().write(packet);
     }
-    return player.resourcePackHandler().onResourcePackResponse(packet.getStatus());
+    return player.resourcePackHandler().onResourcePackResponse(
+            new ResourcePackResponseBundle(packet.getId(), packet.getStatus())
+    );
   }
 
   @Override

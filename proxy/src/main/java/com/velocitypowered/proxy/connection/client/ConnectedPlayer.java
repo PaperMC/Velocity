@@ -1022,20 +1022,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   public void removeResourcePacks(@NotNull UUID id, @NotNull UUID @NotNull ... others) {
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
       Preconditions.checkNotNull(id, "packUUID");
-      this.resourcePackHandler.removeIf(resourcePack -> {
-        final UUID resourceId = resourcePack.getId();
-        if (resourceId.equals(id)) {
-          connection.write(new RemoveResourcePackPacket(resourceId));
-          return true;
+      if (this.resourcePackHandler.remove(id)) {
+        connection.write(new RemoveResourcePackPacket(id));
+      }
+      for (final UUID other : others) {
+        if (this.resourcePackHandler.remove(other)) {
+          connection.write(new RemoveResourcePackPacket(other));
         }
-        for (final UUID other : others) {
-          if (other.equals(resourceId)) {
-            connection.write(new RemoveResourcePackPacket(resourceId));
-            return true;
-          }
-        }
-        return false;
-      });
+      }
     }
   }
 
