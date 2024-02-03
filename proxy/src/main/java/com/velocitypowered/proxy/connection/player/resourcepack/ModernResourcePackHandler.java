@@ -24,7 +24,6 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -78,15 +77,7 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
 
   @Override
   public boolean remove(final @NotNull UUID uuid) {
-    final Iterator<ResourcePackInfo> appliedResourcePackIterator = appliedResourcePacks.iterator();
-    while (appliedResourcePackIterator.hasNext()) {
-      ResourcePackInfo resourcePackInfo = appliedResourcePackIterator.next();
-      if (resourcePackInfo.getId().equals(uuid)) {
-        appliedResourcePackIterator.remove();
-        return true;
-      }
-    }
-    return false;
+    return appliedResourcePacks.removeIf(resourcePackInfo -> resourcePackInfo.getId().equals(uuid));
   }
 
   @Override
