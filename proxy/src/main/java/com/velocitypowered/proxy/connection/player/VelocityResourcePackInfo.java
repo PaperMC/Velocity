@@ -19,9 +19,9 @@ package com.velocitypowered.proxy.connection.player;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
+import io.netty.buffer.ByteBufUtil;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.UUID;
 import net.kyori.adventure.resource.ResourcePackRequest;
 import net.kyori.adventure.text.Component;
@@ -115,7 +115,7 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
             .packs(net.kyori.adventure.resource.ResourcePackInfo.resourcePackInfo()
                     .id(this.id)
                     .uri(URI.create(this.url))
-                    .hash(Arrays.toString(this.hash))
+                    .hash(this.hash == null ? "" : ByteBufUtil.hexDump(this.hash))
                     .build())
             .required(this.shouldForce)
             .prompt(this.prompt)
@@ -128,7 +128,7 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
           final net.kyori.adventure.resource.ResourcePackInfo pack
   ) {
     return new BuilderImpl(pack.uri().toString())
-            .setHash(pack.hash().getBytes(StandardCharsets.UTF_8))
+            .setHash(pack.hash().isEmpty() ? null : ByteBufUtil.decodeHexDump(pack.hash()))
             .setId(pack.id())
             .setShouldForce(request.required())
             .setPrompt(request.prompt())
