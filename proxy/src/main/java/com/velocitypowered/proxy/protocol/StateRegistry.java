@@ -48,6 +48,7 @@ import static com.velocitypowered.proxy.protocol.ProtocolUtils.Direction.SERVERB
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommandsPacket;
 import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
+import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
@@ -572,6 +573,10 @@ public enum StateRegistry {
           StartUpdatePacket::new,
           map(0x65, MINECRAFT_1_20_2, false),
           map(0x67, MINECRAFT_1_20_3, false));
+      clientbound.register(
+          BundleDelimiterPacket.class,
+          BundleDelimiterPacket::new,
+          map(0x00, MINECRAFT_1_19_4, true));
     }
   },
   LOGIN {
