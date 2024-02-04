@@ -133,7 +133,8 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
             ? outstandingResourcePacks.peek() : outstandingResourcePacks.poll();
 
     server.getEventManager()
-            .fire(new PlayerResourcePackStatusEvent(this.player, bundle.status(), queued))
+            .fire(new PlayerResourcePackStatusEvent(
+                this.player, bundle.uuid(), bundle.status(), queued))
             .thenAcceptAsync(event -> {
               if (shouldDisconnectForForcePack(event)) {
                 event.getPlayer().disconnect(Component

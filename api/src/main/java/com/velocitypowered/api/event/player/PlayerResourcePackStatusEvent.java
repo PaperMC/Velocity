@@ -12,6 +12,7 @@ import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
+import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -24,28 +25,18 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class PlayerResourcePackStatusEvent {
 
   private final Player player;
+  private final UUID packId;
   private final Status status;
   private final @MonotonicNonNull ResourcePackInfo packInfo;
   private boolean overwriteKick;
 
   /**
    * Instantiates this event.
-   *
-   * @deprecated Use {@link PlayerResourcePackStatusEvent#PlayerResourcePackStatusEvent
-   *             (Player, Status, ResourcePackInfo)} instead.
    */
-  @Deprecated
-  public PlayerResourcePackStatusEvent(Player player, Status status) {
+  public PlayerResourcePackStatusEvent(
+          Player player, UUID packId, Status status, ResourcePackInfo packInfo) {
     this.player = Preconditions.checkNotNull(player, "player");
-    this.status = Preconditions.checkNotNull(status, "status");
-    this.packInfo = null;
-  }
-
-  /**
-   * Instantiates this event.
-   */
-  public PlayerResourcePackStatusEvent(Player player, Status status, ResourcePackInfo packInfo) {
-    this.player = Preconditions.checkNotNull(player, "player");
+    this.packId = Preconditions.checkNotNull(packId, "packId");
     this.status = Preconditions.checkNotNull(status, "status");
     this.packInfo = packInfo;
   }
@@ -57,6 +48,15 @@ public class PlayerResourcePackStatusEvent {
    */
   public Player getPlayer() {
     return player;
+  }
+
+  /**
+   * Returns the id of the resource pack.
+   *
+   * @return the id
+   */
+  public UUID getPackId() {
+    return packId;
   }
 
   /**

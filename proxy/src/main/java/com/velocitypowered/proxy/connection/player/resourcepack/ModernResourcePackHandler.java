@@ -17,13 +17,14 @@
 
 package com.velocitypowered.proxy.connection.player.resourcepack;
 
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimaps;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -36,9 +37,10 @@ import org.jetbrains.annotations.Nullable;
  * Modern (Minecraft 1.20.3+) ResourcePackHandler
  */
 public final class ModernResourcePackHandler extends ResourcePackHandler {
-  private final Map<UUID, ResourcePackInfo> outstandingResourcePacks = new ConcurrentHashMap<>();
-  private final List<ResourcePackInfo> pendingResourcePacks = new ArrayList<>();
-  private final List<ResourcePackInfo> appliedResourcePacks = new ArrayList<>();
+  private final ListMultimap<UUID, ResourcePackInfo> outstandingResourcePacks =
+      Multimaps.newListMultimap(new ConcurrentHashMap<>(), LinkedList::new);
+  private final Map<UUID, ResourcePackInfo> pendingResourcePacks = new ConcurrentHashMap<>();
+  private final Map<UUID, ResourcePackInfo> appliedResourcePacks = new ConcurrentHashMap<>();
 
   ModernResourcePackHandler(final ConnectedPlayer player, final VelocityServer server) {
     super(player, server);
@@ -49,7 +51,7 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
     if (appliedResourcePacks.isEmpty()) {
       return null;
     }
-    return appliedResourcePacks.get(0);
+    return appliedResourcePacks.values().iterator().next();
   }
 
   @Override
@@ -57,43 +59,63 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
     if (pendingResourcePacks.isEmpty()) {
       return null;
     }
-    return pendingResourcePacks.get(0);
+    return pendingResourcePacks.values().iterator().next();
   }
 
   @Override
   public @NotNull Collection<ResourcePackInfo> getAppliedResourcePacks() {
-    return List.copyOf(appliedResourcePacks);
+    return List.copyOf(appliedResourcePacks.values());
   }
 
   @Override
   public @NotNull Collection<ResourcePackInfo> getPendingResourcePacks() {
-    return List.copyOf(pendingResourcePacks);
+    return List.copyOf(pendingResourcePacks.values());
   }
 
   @Override
   public void clearAppliedResourcePacks() {
+    this.outstandingResourcePacks.clear();
+    this.pendingResourcePacks.clear();
     this.appliedResourcePacks.clear();
   }
 
   @Override
   public boolean remove(final @NotNull UUID uuid) {
-    return appliedResourcePacks.removeIf(resourcePackInfo -> resourcePackInfo.getId().equals(uuid));
+    outstandingResourcePacks.removeAll(uuid);
+    return appliedResourcePacks.remove(uuid) != null | pendingResourcePacks.remove(uuid) != null;
   }
 
   @Override
   public void queueResourcePack(final @NotNull ResourcePackInfo info) {
-    this.outstandingResourcePacks.put(info.getId(), info);
-    sendResourcePackRequestPacket(info);
+    final List<ResourcePackInfo> outstandingResourcePacks =
+        this.outstandingResourcePacks.get(info.getId());
+    outstandingResourcePacks.add(info);
+    if (outstandingResourcePacks.size() == 1) {
+      tickResourcePackQueue(outstandingResourcePacks.get(0).getId());
+    }
+  }
+
+  private void tickResourcePackQueue(final @NotNull UUID uuid) {
+    final List<ResourcePackInfo> outstandingResourcePacks =
+        this.outstandingResourcePacks.get(uuid);
+    if (!outstandingResourcePacks.isEmpty()) {
+      sendResourcePackRequestPacket(outstandingResourcePacks.get(0));
+    }
   }
 
   @Override
   public boolean onResourcePackResponse(
           final @NotNull ResourcePackResponseBundle bundle
   ) {
-    final ResourcePackInfo queued = this.outstandingResourcePacks.remove(bundle.uuid());
+    final UUID uuid = bundle.uuid();
+    final List<ResourcePackInfo> outstandingResourcePacks =
+        this.outstandingResourcePacks.get(uuid);
+    final boolean peek = bundle.status().isIntermediate();
+    final ResourcePackInfo queued = outstandingResourcePacks.isEmpty() ? null :
+        peek ? outstandingResourcePacks.get(0) : outstandingResourcePacks.remove(0);
 
     server.getEventManager()
-            .fire(new PlayerResourcePackStatusEvent(this.player, bundle.status(), queued))
+            .fire(new PlayerResourcePackStatusEvent(this.player, uuid, bundle.status(), queued))
             .thenAcceptAsync(event -> {
               if (event.getStatus() == PlayerResourcePackStatusEvent.Status.DECLINED
                       && event.getPackInfo() != null && event.getPackInfo().getShouldForce()
@@ -106,43 +128,31 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
 
     switch (bundle.status()) {
       // The player has accepted the resource pack and will proceed to download it.
-      case ACCEPTED -> pendingResourcePacks.add(queued);
+      case ACCEPTED -> {
+        if (queued != null) {
+          pendingResourcePacks.put(uuid, queued);
+        }
+      }
       // The resource pack has been applied correctly.
       case SUCCESSFUL -> {
-        appliedResourcePacks.add(queued);
         if (queued != null) {
-          pendingResourcePacks.removeIf(resourcePackInfo -> {
-            if (resourcePackInfo.getId() == null) {
-              return resourcePackInfo.getUrl().equals(queued.getUrl())
-                      && Arrays.equals(resourcePackInfo.getHash(), queued.getHash());
-            }
-            return resourcePackInfo.getId().equals(queued.getId());
-          });
+          appliedResourcePacks.put(uuid, queued);
         }
+        pendingResourcePacks.remove(uuid);
       }
       // An error occurred while trying to download the resource pack to the client,
       // so the resource pack cannot be applied.
-      case FAILED_DOWNLOAD -> {
-        if (queued != null) {
-          pendingResourcePacks.removeIf(resourcePackInfo -> {
-            if (resourcePackInfo.getId() == null) {
-              return resourcePackInfo.getUrl().equals(queued.getUrl())
-                      && Arrays.equals(resourcePackInfo.getHash(), queued.getHash());
-            }
-            return resourcePackInfo.getId().equals(queued.getId());
-          });
-        }
-      }
-      // The player has removed one of his resource packs from the server.
-      case DISCARDED -> {
-        if (queued != null && queued.getId() != null) {
-          appliedResourcePacks.removeIf(
-                  resourcePackInfo -> queued.getId().equals(resourcePackInfo.getId()));
-        }
+      case DISCARDED, DECLINED, FAILED_RELOAD, FAILED_DOWNLOAD, INVALID_URL -> {
+        pendingResourcePacks.remove(uuid);
+        appliedResourcePacks.remove(uuid);
       }
       // The other cases in which no action is taken are documented in the javadocs.
       default -> {
       }
+    }
+
+    if (!peek) {
+      player.getConnection().eventLoop().execute(() -> tickResourcePackQueue(uuid));
     }
 
     return queued != null
