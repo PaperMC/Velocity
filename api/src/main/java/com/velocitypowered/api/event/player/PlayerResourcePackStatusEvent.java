@@ -25,7 +25,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class PlayerResourcePackStatusEvent {
 
   private final Player player;
-  private final UUID packId;
+  private final @MonotonicNonNull UUID packId;
   private final Status status;
   private final @MonotonicNonNull ResourcePackInfo packInfo;
   private boolean overwriteKick;
@@ -77,6 +77,7 @@ public class PlayerResourcePackStatusEvent {
    *
    * @return the id
    */
+  @Nullable
   public UUID getPackId() {
     return packId;
   }
