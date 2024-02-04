@@ -100,11 +100,11 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
   @Override
   public void queueResourcePack(@NotNull ResourcePackRequest request) {
     if (request.packs().size() > 1) {
-      player.getConnection().write(new BundleDelimiterPacket());
+      player.getConnection().write(BundleDelimiterPacket.INSTANCE);
       try {
         super.queueResourcePack(request);
       } finally {
-        player.getConnection().write(new BundleDelimiterPacket());
+        player.getConnection().write(BundleDelimiterPacket.INSTANCE);
       }
     } else {
       super.queueResourcePack(request);

@@ -23,7 +23,11 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
-public class BundleDelimiterPacket implements MinecraftPacket {
+public final class BundleDelimiterPacket implements MinecraftPacket {
+  public static final BundleDelimiterPacket INSTANCE = new BundleDelimiterPacket();
+
+  private BundleDelimiterPacket() {
+  }
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
