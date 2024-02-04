@@ -32,11 +32,33 @@ public class PlayerResourcePackStatusEvent {
 
   /**
    * Instantiates this event.
+   *
+   * @deprecated Use {@link PlayerResourcePackStatusEvent#PlayerResourcePackStatusEvent
+   *             (Player, UUID, Status, ResourcePackInfo)} instead.
+   */
+  @Deprecated
+  public PlayerResourcePackStatusEvent(Player player, Status status) {
+    this(player, null, status, null);
+  }
+
+  /**
+   * Instantiates this event.
+   *
+   * @deprecated Use {@link PlayerResourcePackStatusEvent#PlayerResourcePackStatusEvent
+   *             (Player, UUID, Status, ResourcePackInfo)} instead.
+   */
+  @Deprecated
+  public PlayerResourcePackStatusEvent(Player player, Status status, ResourcePackInfo packInfo) {
+    this(player, null, status, packInfo);
+  }
+
+  /**
+   * Instantiates this event.
    */
   public PlayerResourcePackStatusEvent(
           Player player, UUID packId, Status status, ResourcePackInfo packInfo) {
     this.player = Preconditions.checkNotNull(player, "player");
-    this.packId = Preconditions.checkNotNull(packId, "packId");
+    this.packId = packId == null ? packInfo == null ? null : packInfo.getId() : packId;
     this.status = Preconditions.checkNotNull(status, "status");
     this.packInfo = packInfo;
   }
