@@ -15,19 +15,20 @@ public enum ProtocolState {
   /**
    * Initial connection state.
    * <p>This status can be caused by a STATUS, LOGIN or TRANSFER intent.</p>
-   * If the intent is LOGIN or TRANSFER, the connection will proceed, otherwise,
-   * it will go to the STATUS state.
+   * If the intent is LOGIN or TRANSFER, the next state will be {@link #LOGIN},
+   * otherwise, it will go to the {@link #STATUS} state.
    */
   HANDSHAKE,
   /**
    * Ping status of a connection.
-   * Connections with the STATUS HandshakeIntent will pass through this state
-   * and be disconnected.
+   * <br>Connections with the STATUS HandshakeIntent will pass through this state
+   * and be disconnected after it requests the ping from the server
+   * and the server responds with the respective ping.
    */
   STATUS,
   /**
    * Authentication state of a connection, at this moment the player is authenticating
-   * with the authentication servers (Mojang).
+   * with the authentication servers.
    */
   LOGIN,
   /**
