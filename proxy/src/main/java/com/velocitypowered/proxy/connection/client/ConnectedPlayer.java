@@ -153,6 +153,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private final CompletableFuture<Void> teardownFuture = new CompletableFuture<>();
   private @MonotonicNonNull List<String> serversToTry = null;
   private final ResourcePackHandler resourcePackHandler;
+  private final BundleDelimiterHandler bundleHandler = new BundleDelimiterHandler();
 
   private final @NotNull Pointers pointers =
       Player.super.pointers().toBuilder()
@@ -208,6 +209,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   public ChatQueue getChatQueue() {
     return chatQueue;
+  }
+
+  public BundleDelimiterHandler getBundleHandler() {
+    return this.bundleHandler;
   }
 
   @Override
@@ -1095,7 +1100,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
    */
   public void switchToConfigState() {
     CompletableFuture.runAsync(() -> {
-      connection.write(new StartUpdatePacket());
+      connection.write(StartUpdatePacket.INSTANCE);
       connection.getChannel().pipeline()
           .get(MinecraftEncoder.class).setState(StateRegistry.CONFIG);
       // Make sure we don't send any play packets to the player after update start

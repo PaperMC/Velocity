@@ -30,15 +30,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import net.kyori.adventure.resource.ResourcePackRequest;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Modern (Minecraft 1.20.3+) ResourcePackHandler
  */
 public final class ModernResourcePackHandler extends ResourcePackHandler {
+  private static final Logger LOGGER = LoggerFactory.getLogger(ModernResourcePackHandler.class);
   private final ListMultimap<UUID, ResourcePackInfo> outstandingResourcePacks =
       Multimaps.newListMultimap(new ConcurrentHashMap<>(), LinkedList::new);
   private final Map<UUID, ResourcePackInfo> pendingResourcePacks = new ConcurrentHashMap<>();
@@ -98,13 +102,27 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
   }
 
   @Override
-  public void queueResourcePack(@NotNull ResourcePackRequest request) {
+  public void queueResourcePack(final @NotNull ResourcePackRequest request) {
     if (request.packs().size() > 1) {
-      player.getConnection().write(BundleDelimiterPacket.INSTANCE);
-      try {
-        super.queueResourcePack(request);
-      } finally {
+      final Runnable resourcePackRequestAction = () -> {
         player.getConnection().write(BundleDelimiterPacket.INSTANCE);
+        try {
+          super.queueResourcePack(request);
+        } finally {
+          player.getConnection().write(BundleDelimiterPacket.INSTANCE);
+        }
+      };
+      if (player.getBundleHandler().isInBundleSession()) {
+        player.getBundleHandler().bundleSessionFuture()
+                .thenRunAsync(resourcePackRequestAction, player.getConnection().eventLoop())
+                .orTimeout(1, TimeUnit.SECONDS)
+                .exceptionally(ex -> {
+                  LOGGER.warn(
+                      "The backend server has taken too long to finish sending a packet bundle.");
+                  return null;
+                });
+      } else {
+        resourcePackRequestAction.run();
       }
     } else {
       super.queueResourcePack(request);

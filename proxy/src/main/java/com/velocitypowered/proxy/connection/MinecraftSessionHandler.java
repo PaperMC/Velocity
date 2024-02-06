@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.connection;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommandsPacket;
 import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
+import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
@@ -322,6 +323,10 @@ public interface MinecraftSessionHandler {
   }
 
   default boolean handle(ChatAcknowledgementPacket chatAcknowledgement) {
+    return false;
+  }
+
+  default boolean handle(BundleDelimiterPacket bundleDelimiterPacket) {
     return false;
   }
 }

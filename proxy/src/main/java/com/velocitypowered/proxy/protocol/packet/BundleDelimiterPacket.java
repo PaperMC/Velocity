@@ -41,6 +41,6 @@ public final class BundleDelimiterPacket implements MinecraftPacket {
 
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
-    return false;
+    return handler.handle(this);
   }
 }

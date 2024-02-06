@@ -576,7 +576,7 @@ public enum StateRegistry {
       clientbound.register(
           BundleDelimiterPacket.class,
           () -> BundleDelimiterPacket.INSTANCE,
-          map(0x00, MINECRAFT_1_19_4, true));
+          map(0x00, MINECRAFT_1_19_4, false));
     }
   },
   LOGIN {

@@ -44,6 +44,7 @@ import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommandsPacket;
 import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
+import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
@@ -124,6 +125,12 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       serverConn.disconnect();
       return true;
     }
+    return false;
+  }
+
+  @Override
+  public boolean handle(BundleDelimiterPacket bundleDelimiterPacket) {
+    serverConn.getPlayer().getBundleHandler().toggleBundleSession();
     return false;
   }
 
