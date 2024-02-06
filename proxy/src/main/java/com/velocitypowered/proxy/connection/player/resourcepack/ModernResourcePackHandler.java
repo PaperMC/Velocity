@@ -23,14 +23,12 @@ import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import net.kyori.adventure.resource.ResourcePackRequest;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
@@ -104,26 +102,9 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
   @Override
   public void queueResourcePack(final @NotNull ResourcePackRequest request) {
     if (request.packs().size() > 1) {
-      final Runnable resourcePackRequestAction = () -> {
-        player.getConnection().write(BundleDelimiterPacket.INSTANCE);
-        try {
-          super.queueResourcePack(request);
-        } finally {
-          player.getConnection().write(BundleDelimiterPacket.INSTANCE);
-        }
-      };
-      if (player.getBundleHandler().isInBundleSession()) {
-        player.getBundleHandler().bundleSessionFuture()
-                .thenRunAsync(resourcePackRequestAction, player.getConnection().eventLoop())
-                .orTimeout(1, TimeUnit.SECONDS)
-                .exceptionally(ex -> {
-                  LOGGER.warn(
-                      "The backend server has taken too long to finish sending a packet bundle.");
-                  return null;
-                });
-      } else {
-        resourcePackRequestAction.run();
-      }
+      player.getBundleHandler().bundlePackets(() -> {
+        super.queueResourcePack(request);
+      });
     } else {
       super.queueResourcePack(request);
     }

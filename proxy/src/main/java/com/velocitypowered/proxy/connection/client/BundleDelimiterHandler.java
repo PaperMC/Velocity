@@ -17,14 +17,23 @@
 
 package com.velocitypowered.proxy.connection.client;
 
+import com.velocitypowered.proxy.connection.MinecraftConnection;
+import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
+import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import java.util.concurrent.CompletableFuture;
 
 /**
  * BundleDelimiterHandler.
  */
 public final class BundleDelimiterHandler {
+  private final ConnectedPlayer player;
   private boolean inBundleSession = false;
-  private volatile CompletableFuture<Void> finishedBundleSessionFuture;
+  private CompletableFuture<Void> finishedBundleSessionFuture;
+
+  public BundleDelimiterHandler(ConnectedPlayer player) {
+    this.player = player;
+  }
 
   public boolean isInBundleSession() {
     return this.inBundleSession;
@@ -44,7 +53,42 @@ public final class BundleDelimiterHandler {
     this.inBundleSession = !this.inBundleSession;
   }
 
-  public CompletableFuture<Void> bundleSessionFuture() {
-    return this.finishedBundleSessionFuture;
+  /**
+   * Bundles all packets sent in the given Runnable.
+   */
+  public CompletableFuture<Void> bundlePackets(final Runnable sendPackets) {
+    VelocityServerConnection connectedServer = player.getConnectedServer();
+    MinecraftConnection connection = connectedServer == null
+        ? null : connectedServer.getConnection();
+    if (connection == null) {
+      sendPackets(sendPackets);
+      return CompletableFuture.completedFuture(null);
+    }
+    CompletableFuture<Void> future = new CompletableFuture<>();
+    connection.eventLoop().execute(() -> {
+      if (inBundleSession) {
+        finishedBundleSessionFuture.thenRun(() -> {
+          sendPackets(sendPackets);
+          future.complete(null);
+        });
+      } else {
+        if (connection.getState() == StateRegistry.PLAY) {
+          sendPackets(sendPackets);
+        } else {
+          sendPackets.run();
+        }
+        future.complete(null);
+      }
+    });
+    return future;
+  }
+
+  private void sendPackets(Runnable sendPackets) {
+    player.getConnection().write(BundleDelimiterPacket.INSTANCE);
+    try {
+      sendPackets.run();
+    } finally {
+      player.getConnection().write(BundleDelimiterPacket.INSTANCE);
+    }
   }
 }

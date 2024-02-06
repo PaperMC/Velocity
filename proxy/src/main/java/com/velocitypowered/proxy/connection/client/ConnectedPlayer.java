@@ -153,7 +153,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private final CompletableFuture<Void> teardownFuture = new CompletableFuture<>();
   private @MonotonicNonNull List<String> serversToTry = null;
   private final ResourcePackHandler resourcePackHandler;
-  private final BundleDelimiterHandler bundleHandler = new BundleDelimiterHandler();
+  private final BundleDelimiterHandler bundleHandler = new BundleDelimiterHandler(this);
 
   private final @NotNull Pointers pointers =
       Player.super.pointers().toBuilder()
