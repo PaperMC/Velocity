@@ -36,7 +36,6 @@ import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import net.kyori.adventure.text.Component;
@@ -101,7 +100,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
     }
     return player.resourcePackHandler().onResourcePackResponse(
         new ResourcePackResponseBundle(packet.getId(),
-            packet.getHash().getBytes(StandardCharsets.UTF_8),
+            packet.getHash(),
             packet.getStatus())
     );
   }

@@ -74,7 +74,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -395,7 +394,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   public boolean handle(ResourcePackResponsePacket packet) {
     return player.resourcePackHandler().onResourcePackResponse(
         new ResourcePackResponseBundle(packet.getId(),
-            packet.getHash().getBytes(StandardCharsets.UTF_8),
+            packet.getHash(),
             packet.getStatus()));
   }
 

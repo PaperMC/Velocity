@@ -108,7 +108,7 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
             break;
           }
           onResourcePackResponse(new ResourcePackResponseBundle(queued.getId(),
-                  queued.getHash(),
+                  new String(queued.getHash()),
                   PlayerResourcePackStatusEvent.Status.DECLINED));
           queued = null;
         }
@@ -171,7 +171,7 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
     if (!handled) {
       if (player.getConnectionInFlight() != null) {
         player.getConnectionInFlight().getConnection().write(new ResourcePackResponsePacket(
-                bundle.uuid(), "", bundle.status())); // TODO: Fetch hash?!
+                bundle.uuid(), bundle.hash(), bundle.status())); // TODO: Fetch hash?!
       }
     }
     return handled;

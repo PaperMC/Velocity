@@ -21,6 +21,6 @@ import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import java.util.UUID;
 
 @SuppressWarnings("checkstyle:MissingJavadocType")
-public record ResourcePackResponseBundle(UUID uuid, byte[] hash,
+public record ResourcePackResponseBundle(UUID uuid, String hash,
                                          PlayerResourcePackStatusEvent.Status status) {
 }
