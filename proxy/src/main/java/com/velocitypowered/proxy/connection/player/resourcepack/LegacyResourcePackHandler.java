@@ -75,17 +75,13 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
   }
 
   @Override
-  public void clearAppliedResourcePacks() {
-    this.appliedResourcePack = null;
+  public void clearAppliedResourcePacks() throws UnsupportedOperationException {
+    throw new UnsupportedOperationException("Cannot remove a ResourcePack from a legacy client");
   }
 
   @Override
-  public boolean remove(final @NotNull UUID id) {
-    if (appliedResourcePack != null && id.equals(appliedResourcePack.getId())) {
-      appliedResourcePack = null;
-      return true;
-    }
-    return false;
+  public boolean remove(final @NotNull UUID id) throws UnsupportedOperationException {
+    throw new UnsupportedOperationException("Cannot remove a ResourcePack from a legacy client");
   }
 
   @Override
