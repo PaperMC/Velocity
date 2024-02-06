@@ -22,6 +22,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.List;
@@ -107,6 +108,7 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
             break;
           }
           onResourcePackResponse(new ResourcePackResponseBundle(queued.getId(),
+                  queued.getHash(),
                   PlayerResourcePackStatusEvent.Status.DECLINED));
           queued = null;
         }
@@ -164,8 +166,15 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
       player.getConnection().eventLoop().execute(this::tickResourcePackQueue);
     }
 
-    return queued != null
+    boolean handled = queued != null
             && queued.getOriginalOrigin() != ResourcePackInfo.Origin.DOWNSTREAM_SERVER;
+    if (!handled) {
+      if (player.getConnectionInFlight() != null) {
+        player.getConnectionInFlight().getConnection().write(new ResourcePackResponsePacket(
+                bundle.uuid(), "", bundle.status())); // TODO: Fetch hash?!
+      }
+    }
+    return handled;
   }
 
   protected boolean shouldDisconnectForForcePack(final PlayerResourcePackStatusEvent event) {

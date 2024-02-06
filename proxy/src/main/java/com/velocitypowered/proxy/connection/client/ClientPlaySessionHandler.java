@@ -74,6 +74,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -302,9 +303,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // Handling edge case when packet with FML client handshake (state COMPLETE)
     // arrives after JoinGame packet from destination server
     VelocityServerConnection serverConn =
-            (player.getConnectedServer() == null
-                    && packet.getChannel().equals(
-                            LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL))
+        (player.getConnectedServer() == null
+            && packet.getChannel().equals(
+            LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL))
             ? player.getConnectionInFlight() : player.getConnectedServer();
 
     MinecraftConnection backendConn = serverConn != null ? serverConn.getConnection() : null;
@@ -393,7 +394,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ResourcePackResponsePacket packet) {
     return player.resourcePackHandler().onResourcePackResponse(
-            new ResourcePackResponseBundle(packet.getId(), packet.getStatus()));
+        new ResourcePackResponseBundle(packet.getId(),
+            packet.getHash().getBytes(StandardCharsets.UTF_8),
+            packet.getStatus()));
   }
 
   @Override
@@ -552,7 +555,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // Tell the server about the proxy's plugin message channels.
     ProtocolVersion serverVersion = serverMc.getProtocolVersion();
     final Collection<String> channels = server.getChannelRegistrar()
-            .getChannelsForProtocol(serverMc.getProtocolVersion());
+        .getChannelsForProtocol(serverMc.getProtocolVersion());
     if (!channels.isEmpty()) {
       serverMc.delayedWrite(constructChannelsPacket(serverVersion, channels));
     }
@@ -717,7 +720,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
               if (suggestion.getTooltip() != null
                   && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
                 tooltip = new ComponentHolder(player.getProtocolVersion(),
-                        ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent());
+                    ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent());
               }
               response.getOffers().add(new Offer(offer, tooltip));
             }
