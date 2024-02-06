@@ -75,8 +75,9 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
   }
 
   @Override
-  public void clearAppliedResourcePacks() throws UnsupportedOperationException {
-    throw new UnsupportedOperationException("Cannot remove a ResourcePack from a legacy client");
+  public void clearAppliedResourcePacks() {
+    // This is valid only for players with 1.20.2 versions
+    this.appliedResourcePack = null;
   }
 
   @Override
