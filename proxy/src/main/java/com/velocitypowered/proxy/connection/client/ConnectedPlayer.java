@@ -70,6 +70,7 @@ import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatType;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
+import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatCompletionPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderFactory;
 import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChatPacket;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
@@ -962,6 +963,26 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   void setClientBrand(String clientBrand) {
     this.clientBrand = clientBrand;
+  }
+
+  @Override
+  public void addCustomChatCompletions(@NotNull Collection<String> completions) {
+    this.sendCustomChatCompletionPacket(completions, PlayerChatCompletionPacket.Action.ADD);
+  }
+
+  @Override
+  public void removeCustomChatCompletions(@NotNull Collection<String> completions) {
+    this.sendCustomChatCompletionPacket(completions, PlayerChatCompletionPacket.Action.REMOVE);
+  }
+
+  @Override
+  public void setCustomChatCompletions(@NotNull Collection<String> completions) {
+    this.sendCustomChatCompletionPacket(completions, PlayerChatCompletionPacket.Action.SET);
+  }
+
+  private void sendCustomChatCompletionPacket(@NotNull Collection<String> completions,
+                                              PlayerChatCompletionPacket.Action action) {
+    connection.write(new PlayerChatCompletionPacket(completions.toArray(new String[0]), action));
   }
 
   @Override
