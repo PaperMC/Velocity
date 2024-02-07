@@ -72,6 +72,14 @@ public class JavaPluginLoader implements PluginLoader {
       throw new InvalidPluginException("Plugin ID '" + pd.getId() + "' is invalid.");
     }
 
+    for (SerializedPluginDescription.Dependency dependency : pd.getDependencies()) {
+      if (!SerializedPluginDescription.ID_PATTERN.matcher(dependency.getId()).matches()) {
+        throw new InvalidPluginException(
+            "Dependency ID '" + dependency.getId() + "' for plugin '" + pd.getId() + "' is invalid."
+        );
+      }
+    }
+
     return createCandidateDescription(pd, source);
   }
 
