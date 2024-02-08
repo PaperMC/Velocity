@@ -174,7 +174,7 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
     if (hash == null) {
       return false;
     }
-    for (final Map.Entry<UUID, ResourcePackInfo> appliedPack : this.appliedResourcePacks.entrySet()) {
+    for (final Map.Entry<UUID, ResourcePackInfo> appliedPack : appliedResourcePacks.entrySet()) {
       if (Arrays.equals(appliedPack.getValue().getHash(), hash)) {
         return true;
       }

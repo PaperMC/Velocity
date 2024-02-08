@@ -120,7 +120,8 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
 
     final ResourcePackInfo resourcePackInfo = packet.toServerPromptedPack();
     // Do not apply a resource pack that has already been applied
-    if (serverConn.getPlayer().resourcePackHandler().hasPackAppliedByHash(resourcePackInfo.getHash())) {
+    if (serverConn.getPlayer().resourcePackHandler()
+            .hasPackAppliedByHash(resourcePackInfo.getHash())) {
       if (serverConn.getConnection() != null) {
         serverConn.getConnection().write(new ResourcePackResponsePacket(
                 packet.getId(), packet.getHash(), PlayerResourcePackStatusEvent.Status.ACCEPTED));
