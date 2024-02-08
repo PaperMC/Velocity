@@ -174,7 +174,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(ResourcePackRequestPacket packet) {
+  public boolean handle(final ResourcePackRequestPacket packet) {
     ResourcePackInfo.Builder builder = new VelocityResourcePackInfo.BuilderImpl(
         Preconditions.checkNotNull(packet.getUrl()))
         .setId(packet.getId())
@@ -182,15 +182,24 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         .setShouldForce(packet.isRequired())
         .setOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
 
-    String hash = packet.getHash();
+    final String hash = packet.getHash();
     if (hash != null && !hash.isEmpty()) {
       if (PLAUSIBLE_SHA1_HASH.matcher(hash).matches()) {
         builder.setHash(ByteBufUtil.decodeHexDump(hash));
       }
     }
 
-    ServerResourcePackSendEvent event = new ServerResourcePackSendEvent(
-        builder.build(), this.serverConn);
+    final ResourcePackInfo resourcePackInfo = builder.build();
+    // Do not apply a resource pack that has already been applied
+    if (serverConn.getPlayer().resourcePackHandler().hasPackAppliedByHash(resourcePackInfo.getHash())) {
+      if (serverConn.getConnection() != null) {
+        serverConn.getConnection().write(new ResourcePackResponsePacket(
+                packet.getId(), packet.getHash(), PlayerResourcePackStatusEvent.Status.ACCEPTED));
+      }
+      return true;
+    }
+    final ServerResourcePackSendEvent event = new ServerResourcePackSendEvent(
+            resourcePackInfo, this.serverConn);
 
     server.getEventManager().fire(event).thenAcceptAsync(serverResourcePackSendEvent -> {
       if (playerConnection.isClosed()) {

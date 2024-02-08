@@ -156,4 +156,6 @@ public abstract sealed class ResourcePackHandler
     }
     return handled;
   }
+
+  public abstract boolean hasPackAppliedByHash(final byte[] hash);
 }

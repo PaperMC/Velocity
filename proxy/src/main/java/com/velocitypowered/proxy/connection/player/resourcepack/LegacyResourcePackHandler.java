@@ -22,6 +22,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import java.util.Arrays;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.List;
@@ -167,6 +168,12 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
     }
 
     return handleResponseResult(queued, bundle);
+  }
+
+  @Override
+  public boolean hasPackAppliedByHash(final byte[] hash) {
+    return this.appliedResourcePack != null
+            && Arrays.equals(this.appliedResourcePack.getHash(), hash);
   }
 
   protected boolean shouldDisconnectForForcePack(final PlayerResourcePackStatusEvent event) {

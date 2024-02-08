@@ -45,7 +45,6 @@ import com.velocitypowered.proxy.protocol.packet.config.TagsUpdatePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
-import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -54,8 +53,6 @@ import org.apache.logging.log4j.Logger;
  * 1.20.2+ switching. Yes, some of this is exceptionally stupid.
  */
 public class ConfigSessionHandler implements MinecraftSessionHandler {
-
-  private static final Pattern PLAUSIBLE_SHA1_HASH = Pattern.compile("^[a-z0-9]{40}$");
   private static final Logger logger = LogManager.getLogger(ConfigSessionHandler.class);
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
@@ -118,11 +115,20 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(ResourcePackRequestPacket packet) {
+  public boolean handle(final ResourcePackRequestPacket packet) {
     final MinecraftConnection playerConnection = serverConn.getPlayer().getConnection();
 
-    ServerResourcePackSendEvent event =
-        new ServerResourcePackSendEvent(packet.toServerPromptedPack(), this.serverConn);
+    final ResourcePackInfo resourcePackInfo = packet.toServerPromptedPack();
+    // Do not apply a resource pack that has already been applied
+    if (serverConn.getPlayer().resourcePackHandler().hasPackAppliedByHash(resourcePackInfo.getHash())) {
+      if (serverConn.getConnection() != null) {
+        serverConn.getConnection().write(new ResourcePackResponsePacket(
+                packet.getId(), packet.getHash(), PlayerResourcePackStatusEvent.Status.ACCEPTED));
+      }
+      return true;
+    }
+    final ServerResourcePackSendEvent event =
+        new ServerResourcePackSendEvent(resourcePackInfo, this.serverConn);
 
     server.getEventManager().fire(event).thenAcceptAsync(serverResourcePackSendEvent -> {
       if (playerConnection.isClosed()) {
