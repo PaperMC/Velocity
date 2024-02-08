@@ -22,7 +22,6 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.List;
@@ -76,8 +75,9 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
   }
 
   @Override
-  public void clearAppliedResourcePacks() throws UnsupportedOperationException {
-    throw new UnsupportedOperationException("Cannot remove a ResourcePack from a legacy client");
+  public void clearAppliedResourcePacks() {
+    // This is valid only for players with 1.20.2 versions
+    this.appliedResourcePack = null;
   }
 
   @Override
