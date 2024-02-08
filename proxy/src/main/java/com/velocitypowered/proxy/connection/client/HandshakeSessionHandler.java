@@ -85,13 +85,13 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(HandshakePacket handshake) {
-    final InitialInboundConnection ic = new InitialInboundConnection(connection,
-        cleanVhost(handshake.getServerAddress()), handshake);
     final StateRegistry nextState = getStateForProtocol(handshake.getNextStatus());
     if (nextState == null) {
-      LOGGER.error("{} provided invalid protocol {}", ic, handshake.getNextStatus());
+      LOGGER.error("Received an invalid protocol!");
       connection.close(true);
     } else {
+      final InitialInboundConnection ic = new InitialInboundConnection(connection,
+                          cleanVhost(handshake.getServerAddress()), handshake);
       connection.setProtocolVersion(handshake.getProtocolVersion());
       connection.setAssociation(ic);
 
@@ -237,8 +237,9 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     public String toString() {
       boolean isPlayerAddressLoggingEnabled = connection.server.getConfiguration()
           .isPlayerAddressLoggingEnabled();
+      boolean isValidAddress = this.getRemoteAddress() != null;
       String playerIp =
-          isPlayerAddressLoggingEnabled
+          (isPlayerAddressLoggingEnabled && isValidAddress)
               ? this.getRemoteAddress().toString() : "<ip address withheld>";
       return "[legacy connection] " + playerIp;
     }

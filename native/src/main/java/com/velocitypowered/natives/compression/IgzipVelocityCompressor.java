@@ -25,15 +25,15 @@ import java.util.zip.DataFormatException;
 /**
  * Implements deflate compression using the {@code libdeflate} native C library.
  */
-public class LibdeflateVelocityCompressor implements VelocityCompressor {
+public class IgzipVelocityCompressor implements VelocityCompressor {
 
-  public static final VelocityCompressorFactory FACTORY = LibdeflateVelocityCompressor::new;
+  public static final VelocityCompressorFactory FACTORY = IgzipVelocityCompressor::new;
 
   private final long inflateCtx;
   private final long deflateCtx;
   private boolean disposed = false;
 
-  private LibdeflateVelocityCompressor(int level) {
+  private IgzipVelocityCompressor(int level) {
     int correctedLevel = level == -1 ? 6 : level;
     if (correctedLevel > 12 || correctedLevel < 1) {
       throw new IllegalArgumentException("Invalid compression level " + level);
@@ -48,9 +48,6 @@ public class LibdeflateVelocityCompressor implements VelocityCompressor {
       throws DataFormatException {
     ensureNotDisposed();
 
-    // libdeflate recommends we work with a known uncompressed size - so we work strictly within
-    // those parameters. If the uncompressed size doesn't match the compressed size, then we will
-    // throw an exception from native code.
     destination.ensureWritable(uncompressedSize);
 
     long sourceAddress = source.memoryAddress() + source.readerIndex();
@@ -78,7 +75,7 @@ public class LibdeflateVelocityCompressor implements VelocityCompressor {
         // Insufficient room - enlarge the buffer.
         destination.capacity(destination.capacity() * 2);
       } else {
-        throw new DataFormatException("libdeflate returned unknown code " + produced);
+        throw new DataFormatException("Unable to deflate data");
       }
     }
   }

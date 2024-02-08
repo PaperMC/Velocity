@@ -96,4 +96,5 @@ native/mbedtls
 native/zlib-ng
 native/zlib-cf
 native/libdeflate
+native/isa-l
 native/src/main/resources/linux_x86_64/velocity-cipher.so

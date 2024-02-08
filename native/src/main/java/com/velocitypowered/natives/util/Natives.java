@@ -19,8 +19,8 @@ package com.velocitypowered.natives.util;
 
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.natives.NativeSetupException;
+import com.velocitypowered.natives.compression.IgzipVelocityCompressor;
 import com.velocitypowered.natives.compression.JavaVelocityCompressor;
-import com.velocitypowered.natives.compression.LibdeflateVelocityCompressor;
 import com.velocitypowered.natives.compression.VelocityCompressorFactory;
 import com.velocitypowered.natives.encryption.JavaVelocityCipher;
 import com.velocitypowered.natives.encryption.NativeVelocityCipher;
@@ -82,16 +82,16 @@ public class Natives {
       ImmutableList.of(
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
               copyAndLoadNative("/linux_x86_64/velocity-compress.so"),
-              "libdeflate (Linux x86_64)",
-              LibdeflateVelocityCompressor.FACTORY), // compiled with Debian 10
+              "isa-l igzip (Linux x86_64)",
+              IgzipVelocityCompressor.FACTORY),
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64,
               copyAndLoadNative("/linux_aarch64/velocity-compress.so"),
-              "libdeflate (Linux aarch64)",
-              LibdeflateVelocityCompressor.FACTORY), // compiled with Fedora 36
+              "isa-l igzip (Linux aarch64)",
+              IgzipVelocityCompressor.FACTORY),
           new NativeCodeLoader.Variant<>(NativeConstraints.MACOS_AARCH64,
               copyAndLoadNative("/macos_arm64/velocity-compress.dylib"),
-              "libdeflate (macOS ARM64 / Apple Silicon)",
-              LibdeflateVelocityCompressor.FACTORY),
+              "isa-l igzip (macOS ARM64 / Apple Silicon)",
+              IgzipVelocityCompressor.FACTORY),
           new NativeCodeLoader.Variant<>(NativeCodeLoader.ALWAYS, () -> {
           }, "Java", JavaVelocityCompressor.FACTORY)
       )

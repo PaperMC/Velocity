@@ -76,8 +76,9 @@ public final class InitialInboundConnection implements VelocityInboundConnection
   public String toString() {
     final boolean isPlayerAddressLoggingEnabled = connection.server.getConfiguration()
         .isPlayerAddressLoggingEnabled();
+    final boolean isValidAddress = this.getRemoteAddress() != null;
     final String playerIp =
-        isPlayerAddressLoggingEnabled
+        (isPlayerAddressLoggingEnabled && isValidAddress)
             ? connection.getRemoteAddress().toString() : "<ip address withheld>";
     return "[initial connection] " + playerIp;
   }
@@ -94,8 +95,9 @@ public final class InitialInboundConnection implements VelocityInboundConnection
    */
   public void disconnect(Component reason) {
     Component translated = GlobalTranslator.render(reason, ClosestLocaleMatcher.INSTANCE
-        .lookupClosest(Locale.getDefault()));
-    if (connection.server.getConfiguration().isLogPlayerConnections()) {
+            .lookupClosest(Locale.getDefault()));
+    if (connection.server.getConfiguration().isLogPlayerConnections()
+            && this.toString().contains("(")) {
       logger.info(Component.text(this + " has disconnected: ").append(translated));
     }
     connection.closeWith(DisconnectPacket.create(translated, getProtocolVersion(), true));
