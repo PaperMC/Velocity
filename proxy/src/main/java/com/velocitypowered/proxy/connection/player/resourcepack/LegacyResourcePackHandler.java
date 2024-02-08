@@ -22,7 +22,6 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.List;
@@ -167,15 +166,7 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
       player.getConnection().eventLoop().execute(this::tickResourcePackQueue);
     }
 
-    boolean handled = queued != null
-            && queued.getOriginalOrigin() != ResourcePackInfo.Origin.DOWNSTREAM_SERVER;
-    if (!handled) {
-      if (player.getConnectionInFlight() != null) {
-        player.getConnectionInFlight().ensureConnected().write(new ResourcePackResponsePacket(
-                bundle.uuid(), bundle.hash(), bundle.status()));
-      }
-    }
-    return handled;
+    return handleResponseResult(queued, bundle);
   }
 
   protected boolean shouldDisconnectForForcePack(final PlayerResourcePackStatusEvent event) {
