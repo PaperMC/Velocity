@@ -164,7 +164,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
           logger.warn("UUID for Player {} mismatches! "
               + "Chat/Commands signatures will not work correctly for this player!",
           */
-                  player.getUsername());
+                  player.getUsername();
         }
       }
     }
