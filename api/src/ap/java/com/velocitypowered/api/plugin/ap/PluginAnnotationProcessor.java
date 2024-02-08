@@ -9,6 +9,7 @@ package com.velocitypowered.api.plugin.ap;
 
 import com.google.auto.service.AutoService;
 import com.google.gson.Gson;
+import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -85,6 +86,16 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
             + ". IDs must start alphabetically, have lowercase alphanumeric characters, and "
             + "can contain dashes or underscores.");
         return false;
+      }
+
+      for (Dependency dependency : plugin.dependencies()) {
+        if (!SerializedPluginDescription.ID_PATTERN.matcher(dependency.id()).matches()) {
+          environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                  "Invalid dependency ID '" + dependency.id() + "' for plugin " + qualifiedName
+                  + ". IDs must start alphabetically, have lowercase alphanumeric characters, and "
+                  + "can contain dashes or underscores.");
+          return false;
+        }
       }
 
       // All good, generate the velocity-plugin.json.
