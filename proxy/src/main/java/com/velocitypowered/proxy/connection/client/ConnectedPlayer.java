@@ -967,22 +967,27 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   @Override
   public void addCustomChatCompletions(@NotNull Collection<String> completions) {
+    Preconditions.checkNotNull(completions, "completions");
     this.sendCustomChatCompletionPacket(completions, PlayerChatCompletionPacket.Action.ADD);
   }
 
   @Override
   public void removeCustomChatCompletions(@NotNull Collection<String> completions) {
+    Preconditions.checkNotNull(completions, "completions");
     this.sendCustomChatCompletionPacket(completions, PlayerChatCompletionPacket.Action.REMOVE);
   }
 
   @Override
   public void setCustomChatCompletions(@NotNull Collection<String> completions) {
+    Preconditions.checkNotNull(completions, "completions");
     this.sendCustomChatCompletionPacket(completions, PlayerChatCompletionPacket.Action.SET);
   }
 
   private void sendCustomChatCompletionPacket(@NotNull Collection<String> completions,
                                               PlayerChatCompletionPacket.Action action) {
-    connection.write(new PlayerChatCompletionPacket(completions.toArray(new String[0]), action));
+    if (connection.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19_1)) {
+      connection.write(new PlayerChatCompletionPacket(completions.toArray(new String[0]), action));
+    }
   }
 
   @Override
