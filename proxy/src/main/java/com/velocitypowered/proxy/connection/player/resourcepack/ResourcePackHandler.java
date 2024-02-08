@@ -148,7 +148,8 @@ public abstract sealed class ResourcePackHandler
     final boolean handled = queued != null
             && queued.getOriginalOrigin() != ResourcePackInfo.Origin.DOWNSTREAM_SERVER;
     if (!handled) {
-      if (player.getConnectionInFlight() != null && player.getConnectionInFlight().getConnection() != null) {
+      if (player.getConnectionInFlight() != null
+              && player.getConnectionInFlight().getConnection() != null) {
         player.getConnectionInFlight().getConnection().write(new ResourcePackResponsePacket(
                 bundle.uuid(), bundle.hash(), bundle.status()));
       }
