@@ -28,11 +28,10 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 import java.util.UUID;
 import java.util.regex.Pattern;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class ResourcePackRequestPacket implements MinecraftPacket {
 
@@ -80,7 +79,7 @@ public class ResourcePackRequestPacket implements MinecraftPacket {
     return prompt;
   }
 
-  public void setPrompt(ComponentHolder prompt) {
+  public void setPrompt(@Nullable ComponentHolder prompt) {
     this.prompt = prompt;
   }
 
@@ -126,7 +125,7 @@ public class ResourcePackRequestPacket implements MinecraftPacket {
   }
 
   public VelocityResourcePackInfo toServerPromptedPack() {
-    ResourcePackInfo.Builder builder =
+    final ResourcePackInfo.Builder builder =
         new VelocityResourcePackInfo.BuilderImpl(Preconditions.checkNotNull(url))
             .setId(id).setPrompt(prompt == null ? null : prompt.getComponent())
             .setShouldForce(isRequired).setOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);

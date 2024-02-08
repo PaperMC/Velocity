@@ -48,6 +48,7 @@ import static com.velocitypowered.proxy.protocol.ProtocolUtils.Direction.SERVERB
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommandsPacket;
 import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
+import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
@@ -144,7 +145,7 @@ public enum StateRegistry {
           PluginMessagePacket.class, PluginMessagePacket::new,
           map(0x01, MINECRAFT_1_20_2, false));
       serverbound.register(
-          FinishedUpdatePacket.class, FinishedUpdatePacket::new,
+          FinishedUpdatePacket.class, () -> FinishedUpdatePacket.INSTANCE,
           map(0x02, MINECRAFT_1_20_2, false));
       serverbound.register(KeepAlivePacket.class, KeepAlivePacket::new,
           map(0x03, MINECRAFT_1_20_2, false));
@@ -163,7 +164,7 @@ public enum StateRegistry {
           DisconnectPacket.class, () -> new DisconnectPacket(false),
           map(0x01, MINECRAFT_1_20_2, false));
       clientbound.register(
-          FinishedUpdatePacket.class, FinishedUpdatePacket::new,
+          FinishedUpdatePacket.class, () -> FinishedUpdatePacket.INSTANCE,
           map(0x02, MINECRAFT_1_20_2, false));
       clientbound.register(KeepAlivePacket.class, KeepAlivePacket::new,
           map(0x03, MINECRAFT_1_20_2, false));
@@ -289,7 +290,7 @@ public enum StateRegistry {
           map(0x27, MINECRAFT_1_20_2, false),
           map(0x28, MINECRAFT_1_20_3, false));
       serverbound.register(
-          FinishedUpdatePacket.class, FinishedUpdatePacket::new,
+          FinishedUpdatePacket.class, () -> FinishedUpdatePacket.INSTANCE,
           map(0x0B, MINECRAFT_1_20_2, false));
 
       clientbound.register(
@@ -569,9 +570,13 @@ public enum StateRegistry {
           map(0x49, MINECRAFT_1_20_3, false));
       clientbound.register(
           StartUpdatePacket.class,
-          StartUpdatePacket::new,
+          () -> StartUpdatePacket.INSTANCE,
           map(0x65, MINECRAFT_1_20_2, false),
           map(0x67, MINECRAFT_1_20_3, false));
+      clientbound.register(
+          BundleDelimiterPacket.class,
+          () -> BundleDelimiterPacket.INSTANCE,
+          map(0x00, MINECRAFT_1_19_4, false));
     }
   },
   LOGIN {

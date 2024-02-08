@@ -67,7 +67,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(LegacyPingPacket packet) {
     connection.setProtocolVersion(ProtocolVersion.LEGACY);
-    StatusSessionHandler handler =
+    final StatusSessionHandler handler =
         new StatusSessionHandler(server, new LegacyInboundConnection(connection, packet));
     connection.setActiveSessionHandler(StateRegistry.STATUS, handler);
     handler.handle(packet);
@@ -85,9 +85,9 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(HandshakePacket handshake) {
-    InitialInboundConnection ic = new InitialInboundConnection(connection,
+    final InitialInboundConnection ic = new InitialInboundConnection(connection,
         cleanVhost(handshake.getServerAddress()), handshake);
-    StateRegistry nextState = getStateForProtocol(handshake.getNextStatus());
+    final StateRegistry nextState = getStateForProtocol(handshake.getNextStatus());
     if (nextState == null) {
       LOGGER.error("{} provided invalid protocol {}", ic, handshake.getNextStatus());
       connection.close(true);
@@ -96,14 +96,10 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
       connection.setAssociation(ic);
 
       switch (nextState) {
-        case STATUS:
-          connection.setActiveSessionHandler(StateRegistry.STATUS,
+        case STATUS -> connection.setActiveSessionHandler(StateRegistry.STATUS,
               new StatusSessionHandler(server, ic));
-          break;
-        case LOGIN:
-          this.handleLogin(handshake, ic);
-          break;
-        default:
+        case LOGIN -> this.handleLogin(handshake, ic);
+        default ->
           // If you get this, it's a bug in Velocity.
           throw new AssertionError("getStateForProtocol provided invalid state!");
       }
@@ -113,24 +109,23 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   }
 
   private static @Nullable StateRegistry getStateForProtocol(int status) {
-    switch (status) {
-      case StateRegistry.STATUS_ID:
-        return StateRegistry.STATUS;
-      case StateRegistry.LOGIN_ID:
-        return StateRegistry.LOGIN;
-      default:
-        return null;
-    }
+    return switch (status) {
+      case StateRegistry.STATUS_ID -> StateRegistry.STATUS;
+      case StateRegistry.LOGIN_ID -> StateRegistry.LOGIN;
+      default -> null;
+    };
   }
 
   private void handleLogin(HandshakePacket handshake, InitialInboundConnection ic) {
     if (!ProtocolVersion.isSupported(handshake.getProtocolVersion())) {
-      ic.disconnectQuietly(Component.translatable("multiplayer.disconnect.outdated_client")
-          .args(Component.text(ProtocolVersion.SUPPORTED_VERSION_STRING)));
+      ic.disconnectQuietly(Component.translatable()
+              .key("multiplayer.disconnect.outdated_client")
+              .arguments(Component.text(ProtocolVersion.SUPPORTED_VERSION_STRING))
+              .build());
       return;
     }
 
-    InetAddress address = ((InetSocketAddress) connection.getRemoteAddress()).getAddress();
+    final InetAddress address = ((InetSocketAddress) connection.getRemoteAddress()).getAddress();
     if (!server.getIpAttemptLimiter().attempt(address)) {
       // Bump connection into correct protocol state so that we can send the disconnect packet.
       connection.setState(StateRegistry.LOGIN);
@@ -151,7 +146,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
       return;
     }
 
-    LoginInboundConnection lic = new LoginInboundConnection(ic);
+    final LoginInboundConnection lic = new LoginInboundConnection(ic);
     server.getEventManager().fireAndForget(new ConnectionHandshakeEvent(lic));
     connection.setActiveSessionHandler(StateRegistry.LOGIN,
         new InitialLoginSessionHandler(server, connection, lic));
@@ -213,16 +208,10 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     connection.close(true);
   }
 
-  private static class LegacyInboundConnection implements VelocityInboundConnection {
-
-    private final MinecraftConnection connection;
-    private final LegacyPingPacket ping;
-
-    private LegacyInboundConnection(MinecraftConnection connection,
-        LegacyPingPacket ping) {
-      this.connection = connection;
-      this.ping = ping;
-    }
+  private record LegacyInboundConnection(
+          MinecraftConnection connection,
+          LegacyPingPacket ping
+  ) implements VelocityInboundConnection {
 
     @Override
     public InetSocketAddress getRemoteAddress() {
