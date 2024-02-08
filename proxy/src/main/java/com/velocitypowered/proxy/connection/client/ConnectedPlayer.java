@@ -1001,6 +1001,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   @Override
   public void sendResourcePackOffer(ResourcePackInfo packInfo) {
+    this.resourcePackHandler.checkAlreadyAppliedPack(packInfo.getHash());
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       Preconditions.checkNotNull(packInfo, "packInfo");
       this.resourcePackHandler.queueResourcePack(packInfo);
