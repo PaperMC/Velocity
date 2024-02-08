@@ -84,8 +84,8 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   public void activated() {
     ConnectedPlayer player = serverConn.getPlayer();
     if (player.getProtocolVersion() == ProtocolVersion.MINECRAFT_1_20_2) {
-      resourcePackToApply = player.getAppliedResourcePack();
-      player.clearAppliedResourcePack();
+      resourcePackToApply = player.resourcePackHandler().getFirstAppliedPack();
+      player.resourcePackHandler().clearAppliedResourcePacks();
     }
   }
 
@@ -136,7 +136,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
         }
 
         resourcePackToApply = null;
-        serverConn.getPlayer().queueResourcePack(toSend);
+        serverConn.getPlayer().resourcePackHandler().queueResourcePack(toSend);
       } else if (serverConn.getConnection() != null) {
         serverConn.getConnection().write(new ResourcePackResponsePacket(
                 packet.getId(), packet.getHash(), PlayerResourcePackStatusEvent.Status.DECLINED));
@@ -174,8 +174,9 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
         smc.setActiveSessionHandler(StateRegistry.PLAY,
             new TransitionSessionHandler(server, serverConn, resultFuture));
       }
-      if (player.getAppliedResourcePack() == null && resourcePackToApply != null) {
-        player.queueResourcePack(resourcePackToApply);
+      if (player.resourcePackHandler().getFirstAppliedPack() == null
+              && resourcePackToApply != null) {
+        player.resourcePackHandler().queueResourcePack(resourcePackToApply);
       }
       smc.setAutoReading(true);
     }, smc.eventLoop());
@@ -228,7 +229,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   /**
    * Represents the state of the configuration stage.
    */
-  public static enum State {
+  public enum State {
     START, NEGOTIATING, PLUGIN_MESSAGE_INTERRUPT, RESOURCE_PACK_INTERRUPT, COMPLETE
   }
 }

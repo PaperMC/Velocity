@@ -38,6 +38,7 @@ import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
+import com.velocitypowered.proxy.connection.player.resourcepack.ResourcePackResponseBundle;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
@@ -172,11 +173,11 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(KeepAlivePacket packet) {
-    VelocityServerConnection serverConnection = player.getConnectedServer();
+    final VelocityServerConnection serverConnection = player.getConnectedServer();
     if (serverConnection != null) {
-      Long sentTime = serverConnection.getPendingPings().remove(packet.getRandomId());
+      final Long sentTime = serverConnection.getPendingPings().remove(packet.getRandomId());
       if (sentTime != null) {
-        MinecraftConnection smc = serverConnection.getConnection();
+        final MinecraftConnection smc = serverConnection.getConnection();
         if (smc != null) {
           player.setPing(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - sentTime));
           smc.write(packet);
@@ -203,7 +204,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     if (player.getCurrentServer().isEmpty()) {
       return true;
     }
-
 
     if (!updateTimeKeeper(packet.getTimeStamp())) {
       return true;
@@ -392,7 +392,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ResourcePackResponsePacket packet) {
-    return player.onResourcePackResponse(packet.getStatus());
+    return player.resourcePackHandler().onResourcePackResponse(
+            new ResourcePackResponseBundle(packet.getId(), packet.getStatus()));
   }
 
   @Override

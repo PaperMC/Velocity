@@ -35,13 +35,16 @@ import com.velocitypowered.proxy.command.CommandGraphInjector;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
+import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
+import com.velocitypowered.proxy.connection.player.resourcepack.ResourcePackHandler;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommandsPacket;
 import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
+import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
@@ -126,6 +129,12 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
+  public boolean handle(BundleDelimiterPacket bundleDelimiterPacket) {
+    serverConn.getPlayer().getBundleHandler().toggleBundleSession();
+    return false;
+  }
+
+  @Override
   public boolean handle(StartUpdatePacket packet) {
     MinecraftConnection smc = serverConn.ensureConnected();
     smc.setAutoReading(false);
@@ -188,13 +197,13 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         return;
       }
       if (serverResourcePackSendEvent.getResult().isAllowed()) {
-        ResourcePackInfo toSend = serverResourcePackSendEvent.getProvidedResourcePack();
+        final ResourcePackInfo toSend = serverResourcePackSendEvent.getProvidedResourcePack();
         if (toSend != serverResourcePackSendEvent.getReceivedResourcePack()) {
           ((VelocityResourcePackInfo) toSend)
               .setOriginalOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
         }
 
-        serverConn.getPlayer().queueResourcePack(toSend);
+        serverConn.getPlayer().resourcePackHandler().queueResourcePack(toSend);
       } else if (serverConn.getConnection() != null) {
         serverConn.getConnection().write(new ResourcePackResponsePacket(
             packet.getId(),
@@ -219,7 +228,15 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(RemoveResourcePackPacket packet) {
-    return false; //TODO
+    final ConnectedPlayer player = serverConn.getPlayer();
+    final ResourcePackHandler handler = player.resourcePackHandler();
+    if (packet.getId() != null) {
+      handler.remove(packet.getId());
+    } else {
+      handler.clearAppliedResourcePacks();
+    }
+    playerConnection.write(packet);
+    return true;
   }
 
   @Override
