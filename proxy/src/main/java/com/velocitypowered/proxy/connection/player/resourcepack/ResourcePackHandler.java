@@ -23,6 +23,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBufUtil;
 import java.util.Collection;
@@ -139,4 +140,20 @@ public abstract sealed class ResourcePackHandler
    */
   public abstract boolean onResourcePackResponse(
           final @NotNull ResourcePackResponseBundle bundle);
+
+  protected boolean handleResponseResult(
+          final @Nullable ResourcePackInfo queued,
+          final @NotNull ResourcePackResponseBundle bundle
+  ) {
+    final boolean handled = queued != null
+            && queued.getOriginalOrigin() != ResourcePackInfo.Origin.DOWNSTREAM_SERVER;
+    if (!handled) {
+      if (player.getConnectionInFlight() != null
+              && player.getConnectionInFlight().getConnection() != null) {
+        player.getConnectionInFlight().getConnection().write(new ResourcePackResponsePacket(
+                bundle.uuid(), bundle.hash(), bundle.status()));
+      }
+    }
+    return handled;
+  }
 }

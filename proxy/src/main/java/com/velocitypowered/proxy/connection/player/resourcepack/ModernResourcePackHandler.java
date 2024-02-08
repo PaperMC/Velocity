@@ -33,14 +33,11 @@ import net.kyori.adventure.resource.ResourcePackRequest;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Modern (Minecraft 1.20.3+) ResourcePackHandler
  */
 public final class ModernResourcePackHandler extends ResourcePackHandler {
-  private static final Logger LOGGER = LoggerFactory.getLogger(ModernResourcePackHandler.class);
   private final ListMultimap<UUID, ResourcePackInfo> outstandingResourcePacks =
       Multimaps.newListMultimap(new ConcurrentHashMap<>(), LinkedList::new);
   private final Map<UUID, ResourcePackInfo> pendingResourcePacks = new ConcurrentHashMap<>();
@@ -102,9 +99,7 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
   @Override
   public void queueResourcePack(final @NotNull ResourcePackRequest request) {
     if (request.packs().size() > 1) {
-      player.getBundleHandler().bundlePackets(() -> {
-        super.queueResourcePack(request);
-      });
+      player.getBundleHandler().bundlePackets(() -> super.queueResourcePack(request));
     } else {
       super.queueResourcePack(request);
     }
@@ -170,7 +165,6 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
       player.getConnection().eventLoop().execute(() -> tickResourcePackQueue(uuid));
     }
 
-    return queued != null
-            && queued.getOriginalOrigin() != ResourcePackInfo.Origin.DOWNSTREAM_SERVER;
+    return handleResponseResult(queued, bundle);
   }
 }

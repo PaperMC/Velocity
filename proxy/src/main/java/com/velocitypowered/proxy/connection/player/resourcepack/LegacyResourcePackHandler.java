@@ -108,6 +108,7 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
             break;
           }
           onResourcePackResponse(new ResourcePackResponseBundle(queued.getId(),
+                  new String(queued.getHash()),
                   PlayerResourcePackStatusEvent.Status.DECLINED));
           queued = null;
         }
@@ -165,8 +166,7 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
       player.getConnection().eventLoop().execute(this::tickResourcePackQueue);
     }
 
-    return queued != null
-            && queued.getOriginalOrigin() != ResourcePackInfo.Origin.DOWNSTREAM_SERVER;
+    return handleResponseResult(queued, bundle);
   }
 
   protected boolean shouldDisconnectForForcePack(final PlayerResourcePackStatusEvent event) {
