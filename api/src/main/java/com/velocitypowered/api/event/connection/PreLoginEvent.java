@@ -42,8 +42,10 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
    *
    * @param connection the connection logging into the proxy
    * @param username the player's username
+   * @deprecated use {@link #PreLoginEvent(InboundConnection, String, UUID)}
    */
-  public PreLoginEvent(InboundConnection connection, String username) {
+  @Deprecated
+  public PreLoginEvent(final InboundConnection connection, final String username) {
     this(connection, username, null);
   }
 
@@ -54,7 +56,7 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
    * @param username the player's username
    * @param uuid the player's uuid, if known
    */
-  public PreLoginEvent(InboundConnection connection, String username, @Nullable UUID uuid) {
+  public PreLoginEvent(final InboundConnection connection, final String username, final @Nullable UUID uuid) {
     this.connection = Preconditions.checkNotNull(connection, "connection");
     this.username = Preconditions.checkNotNull(username, "username");
     this.uuid = uuid;
@@ -74,7 +76,7 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
    *
    * @return the uuid
    */
-  public @Nullable UUID getUuid() {
+  public @Nullable UUID getUniqueId() {
     return uuid;
   }
 
@@ -84,7 +86,7 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
   }
 
   @Override
-  public void setResult(@NonNull PreLoginComponentResult result) {
+  public void setResult(final @NonNull PreLoginComponentResult result) {
     this.result = Preconditions.checkNotNull(result, "result");
   }
 
@@ -138,16 +140,12 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
 
     @Override
     public String toString() {
-      switch (result) {
-        case ALLOWED:
-          return "allowed";
-        case FORCE_OFFLINE:
-          return "allowed with force offline mode";
-        case FORCE_ONLINE:
-          return "allowed with online mode";
-        default:
-          return "denied";
-      }
+        return switch (result) {
+            case ALLOWED -> "allowed";
+            case FORCE_OFFLINE -> "allowed with force offline mode";
+            case FORCE_ONLINE -> "allowed with online mode";
+            default -> "denied";
+        };
     }
 
     /**
