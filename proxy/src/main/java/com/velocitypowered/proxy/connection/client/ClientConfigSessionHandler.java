@@ -99,7 +99,9 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
       player.getConnectionInFlight().ensureConnected().write(packet);
     }
     return player.resourcePackHandler().onResourcePackResponse(
-            new ResourcePackResponseBundle(packet.getId(), packet.getStatus())
+        new ResourcePackResponseBundle(packet.getId(),
+            packet.getHash(),
+            packet.getStatus())
     );
   }
 
