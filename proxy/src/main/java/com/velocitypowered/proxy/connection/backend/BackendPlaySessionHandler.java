@@ -175,7 +175,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(final ResourcePackRequestPacket packet) {
-    ResourcePackInfo.Builder builder = new VelocityResourcePackInfo.BuilderImpl(
+    final ResourcePackInfo.Builder builder = new VelocityResourcePackInfo.BuilderImpl(
         Preconditions.checkNotNull(packet.getUrl()))
         .setId(packet.getId())
         .setPrompt(packet.getPrompt() == null ? null : packet.getPrompt().getComponent())
@@ -190,30 +190,33 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     final ResourcePackInfo resourcePackInfo = builder.build();
-    // Do not apply a resource pack that has already been applied
-    if (serverConn.getPlayer().resourcePackHandler()
-            .hasPackAppliedByHash(resourcePackInfo.getHash())) {
-      if (serverConn.getConnection() != null) {
-        serverConn.getConnection().write(new ResourcePackResponsePacket(
-                packet.getId(), packet.getHash(), PlayerResourcePackStatusEvent.Status.ACCEPTED));
-      }
-      return true;
-    }
     final ServerResourcePackSendEvent event = new ServerResourcePackSendEvent(
             resourcePackInfo, this.serverConn);
-
     server.getEventManager().fire(event).thenAcceptAsync(serverResourcePackSendEvent -> {
       if (playerConnection.isClosed()) {
         return;
       }
       if (serverResourcePackSendEvent.getResult().isAllowed()) {
         final ResourcePackInfo toSend = serverResourcePackSendEvent.getProvidedResourcePack();
+        boolean modifiedPack = false;
         if (toSend != serverResourcePackSendEvent.getReceivedResourcePack()) {
           ((VelocityResourcePackInfo) toSend)
               .setOriginalOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
+          modifiedPack = true;
         }
-
-        serverConn.getPlayer().resourcePackHandler().queueResourcePack(toSend);
+        if (serverConn.getPlayer().resourcePackHandler().hasPackAppliedByHash(toSend.getHash())) {
+          // Do not apply a resource pack that has already been applied
+          if (serverConn.getConnection() != null) {
+            serverConn.getConnection().write(new ResourcePackResponsePacket(
+                    packet.getId(), packet.getHash(), PlayerResourcePackStatusEvent.Status.ACCEPTED));
+          }
+          if (modifiedPack) {
+            logger.warn("A plugin has tried to modify a ResourcePack provided by the backend server "
+                    + "with a ResourcePack already applied, the applying of the resource pack will be skipped.");
+          }
+        } else {
+          serverConn.getPlayer().resourcePackHandler().queueResourcePack(toSend);
+        }
       } else if (serverConn.getConnection() != null) {
         serverConn.getConnection().write(new ResourcePackResponsePacket(
             packet.getId(),
