@@ -140,12 +140,12 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
 
     @Override
     public String toString() {
-        return switch (result) {
-            case ALLOWED -> "allowed";
-            case FORCE_OFFLINE -> "allowed with force offline mode";
-            case FORCE_ONLINE -> "allowed with online mode";
-            default -> "denied";
-        };
+      return switch (result) {
+        case ALLOWED -> "allowed";
+        case FORCE_OFFLINE -> "allowed with force offline mode";
+        case FORCE_ONLINE -> "allowed with online mode";
+        default -> "denied";
+      };
     }
 
     /**
