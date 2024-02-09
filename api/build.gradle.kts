@@ -59,7 +59,7 @@ tasks {
 
         val o = options as StandardJavadocDocletOptions
         o.encoding = "UTF-8"
-        o.source = "8"
+        o.source = "17"
 
         o.links(
             "https://www.slf4j.org/apidocs/",
