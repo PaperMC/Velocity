@@ -23,8 +23,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
-import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
+import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import org.apache.logging.log4j.LogManager;
@@ -48,22 +47,14 @@ public class InitialConnectSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(PluginMessage packet) {
+  public boolean handle(PluginMessagePacket packet) {
     VelocityServerConnection serverConn = player.getConnectionInFlight();
     if (serverConn != null) {
       if (player.getPhase().handle(player, packet, serverConn)) {
         return true;
       }
 
-      if (PluginMessageUtil.isRegister(packet)) {
-        player.getKnownChannels().addAll(PluginMessageUtil.getChannels(packet));
-        serverConn.ensureConnected().write(packet.retain());
-        return true;
-      } else if (PluginMessageUtil.isUnregister(packet)) {
-        player.getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
-        serverConn.ensureConnected().write(packet.retain());
-        return true;
-      } else if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
+      if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
         return true;
       }
 
@@ -79,7 +70,7 @@ public class InitialConnectSessionHandler implements MinecraftSessionHandler {
       server.getEventManager().fire(event)
           .thenAcceptAsync(pme -> {
             if (pme.getResult().isAllowed() && serverConn.isActive()) {
-              PluginMessage copied = new PluginMessage(packet.getChannel(),
+              PluginMessagePacket copied = new PluginMessagePacket(packet.getChannel(),
                   Unpooled.wrappedBuffer(copy));
               serverConn.ensureConnected().write(copied);
             }

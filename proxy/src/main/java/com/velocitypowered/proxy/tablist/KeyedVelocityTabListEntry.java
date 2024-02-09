@@ -22,7 +22,7 @@ import com.velocitypowered.api.proxy.player.ChatSession;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
+import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItemPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
 import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -68,7 +68,7 @@ public class KeyedVelocityTabListEntry implements TabListEntry {
   @Override
   public TabListEntry setDisplayName(net.kyori.adventure.text.@Nullable Component displayName) {
     this.displayName = displayName;
-    tabList.updateEntry(LegacyPlayerListItem.UPDATE_DISPLAY_NAME, this);
+    tabList.updateEntry(LegacyPlayerListItemPacket.UPDATE_DISPLAY_NAME, this);
     return this;
   }
 
@@ -84,7 +84,7 @@ public class KeyedVelocityTabListEntry implements TabListEntry {
   @Override
   public TabListEntry setLatency(int latency) {
     this.latency = latency;
-    tabList.updateEntry(LegacyPlayerListItem.UPDATE_LATENCY, this);
+    tabList.updateEntry(LegacyPlayerListItemPacket.UPDATE_LATENCY, this);
     return this;
   }
 
@@ -100,7 +100,7 @@ public class KeyedVelocityTabListEntry implements TabListEntry {
   @Override
   public TabListEntry setGameMode(int gameMode) {
     this.gameMode = gameMode;
-    tabList.updateEntry(LegacyPlayerListItem.UPDATE_GAMEMODE, this);
+    tabList.updateEntry(LegacyPlayerListItemPacket.UPDATE_GAMEMODE, this);
     return this;
   }
 

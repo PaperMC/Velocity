@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCach
 
 plugins {
     application
-    `set-manifest-impl-version`
+    id("velocity-init-manifest")
     alias(libs.plugins.shadow)
 }
 
@@ -85,14 +85,21 @@ tasks {
         exclude("org/checkerframework/checker/**")
 
         relocate("org.bstats", "com.velocitypowered.proxy.bstats")
+
+        // Include Configurate 3
+        val configurateBuildTask = project(":deprecated-configurate3").tasks.named("shadowJar")
+        dependsOn(configurateBuildTask)
+        from(zipTree(configurateBuildTask.map { it.outputs.files.singleFile }))
     }
 }
 
 dependencies {
     implementation(project(":velocity-api"))
     implementation(project(":velocity-native"))
+    implementation(project(":velocity-proxy-log4j2-plugin"))
 
     implementation(libs.bundles.log4j)
+    implementation(libs.kyori.ansi)
     implementation(libs.netty.codec)
     implementation(libs.netty.codec.haproxy)
     implementation(libs.netty.codec.http)
@@ -100,6 +107,9 @@ dependencies {
     implementation(libs.netty.transport.native.epoll)
     implementation(variantOf(libs.netty.transport.native.epoll) { classifier("linux-x86_64") })
     implementation(variantOf(libs.netty.transport.native.epoll) { classifier("linux-aarch_64") })
+    implementation(libs.netty.transport.native.kqueue)
+    implementation(variantOf(libs.netty.transport.native.kqueue) { classifier("osx-x86_64") })
+    implementation(variantOf(libs.netty.transport.native.kqueue) { classifier("osx-aarch_64") })
 
     implementation(libs.jopt)
     implementation(libs.terminalconsoleappender)
@@ -109,12 +119,15 @@ dependencies {
     implementation(platform(libs.adventure.bom))
     implementation("net.kyori:adventure-nbt")
     implementation(libs.adventure.facet)
-    implementation(libs.asynchttpclient)
     implementation(libs.completablefutures)
     implementation(libs.nightconfig)
     implementation(libs.bstats)
     implementation(libs.lmbda)
+    implementation(libs.asm)
     implementation(libs.bundles.flare)
     compileOnly(libs.spotbugs.annotations)
+    compileOnly(libs.auto.service.annotations)
     testImplementation(libs.mockito)
+
+    annotationProcessor(libs.auto.service)
 }

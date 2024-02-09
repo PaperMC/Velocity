@@ -26,8 +26,7 @@ import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
-import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
+import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItemPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -60,6 +59,11 @@ public class KeyedVelocityTabList implements InternalTabList {
     this.connection = player.getConnection();
   }
 
+  @Override
+  public Player getPlayer() {
+    return player;
+  }
+
   @Deprecated
   @Override
   public void setHeaderAndFooter(Component header, Component footer) {
@@ -70,7 +74,7 @@ public class KeyedVelocityTabList implements InternalTabList {
 
   @Override
   public void clearHeaderAndFooter() {
-    connection.write(HeaderAndFooter.reset());
+    this.player.clearPlayerListHeaderAndFooter();
   }
 
   @Override
@@ -83,9 +87,9 @@ public class KeyedVelocityTabList implements InternalTabList {
     Preconditions.checkArgument(entry instanceof KeyedVelocityTabListEntry,
         "Not a Velocity tab list entry");
 
-    LegacyPlayerListItem.Item packetItem = LegacyPlayerListItem.Item.from(entry);
+    LegacyPlayerListItemPacket.Item packetItem = LegacyPlayerListItemPacket.Item.from(entry);
     connection.write(
-        new LegacyPlayerListItem(LegacyPlayerListItem.ADD_PLAYER,
+        new LegacyPlayerListItemPacket(LegacyPlayerListItemPacket.ADD_PLAYER,
             Collections.singletonList(packetItem)));
     entries.put(entry.getProfile().getId(), (KeyedVelocityTabListEntry) entry);
   }
@@ -96,9 +100,9 @@ public class KeyedVelocityTabList implements InternalTabList {
 
     TabListEntry entry = entries.remove(uuid);
     if (entry != null) {
-      LegacyPlayerListItem.Item packetItem = LegacyPlayerListItem.Item.from(entry);
+      LegacyPlayerListItemPacket.Item packetItem = LegacyPlayerListItemPacket.Item.from(entry);
       connection.write(
-          new LegacyPlayerListItem(LegacyPlayerListItem.REMOVE_PLAYER,
+          new LegacyPlayerListItemPacket(LegacyPlayerListItemPacket.REMOVE_PLAYER,
               Collections.singletonList(packetItem)));
     }
 
@@ -127,12 +131,18 @@ public class KeyedVelocityTabList implements InternalTabList {
     if (listEntries.isEmpty()) {
       return;
     }
-    List<LegacyPlayerListItem.Item> items = new ArrayList<>(listEntries.size());
+    List<LegacyPlayerListItemPacket.Item> items = new ArrayList<>(listEntries.size());
     for (TabListEntry value : listEntries) {
-      items.add(LegacyPlayerListItem.Item.from(value));
+      items.add(LegacyPlayerListItemPacket.Item.from(value));
     }
+    clearAllSilent();
+    connection.delayedWrite(new LegacyPlayerListItemPacket(
+            LegacyPlayerListItemPacket.REMOVE_PLAYER, items));
+  }
+
+  @Override
+  public void clearAllSilent() {
     entries.clear();
-    connection.delayedWrite(new LegacyPlayerListItem(LegacyPlayerListItem.REMOVE_PLAYER, items));
   }
 
   @Override
@@ -156,19 +166,20 @@ public class KeyedVelocityTabList implements InternalTabList {
   }
 
   @Override
-  public void processLegacy(LegacyPlayerListItem packet) {
+  public void processLegacy(LegacyPlayerListItemPacket packet) {
     // Packets are already forwarded on, so no need to do that here
-    for (LegacyPlayerListItem.Item item : packet.getItems()) {
+    for (LegacyPlayerListItemPacket.Item item : packet.getItems()) {
       UUID uuid = item.getUuid();
       assert uuid != null : "1.7 tab list entry given to modern tab list handler!";
 
-      if (packet.getAction() != LegacyPlayerListItem.ADD_PLAYER && !entries.containsKey(uuid)) {
+      if (packet.getAction() != LegacyPlayerListItemPacket.ADD_PLAYER
+              && !entries.containsKey(uuid)) {
         // Sometimes UPDATE_GAMEMODE is sent before ADD_PLAYER so don't want to warn here
         continue;
       }
 
       switch (packet.getAction()) {
-        case LegacyPlayerListItem.ADD_PLAYER: {
+        case LegacyPlayerListItemPacket.ADD_PLAYER: {
           // ensure that name and properties are available
           String name = item.getName();
           List<GameProfile.Property> properties = item.getProperties();
@@ -186,24 +197,24 @@ public class KeyedVelocityTabList implements InternalTabList {
               .build());
           break;
         }
-        case LegacyPlayerListItem.REMOVE_PLAYER:
+        case LegacyPlayerListItemPacket.REMOVE_PLAYER:
           entries.remove(uuid);
           break;
-        case LegacyPlayerListItem.UPDATE_DISPLAY_NAME: {
+        case LegacyPlayerListItemPacket.UPDATE_DISPLAY_NAME: {
           KeyedVelocityTabListEntry entry = entries.get(uuid);
           if (entry != null) {
             entry.setDisplayNameInternal(item.getDisplayName());
           }
           break;
         }
-        case LegacyPlayerListItem.UPDATE_LATENCY: {
+        case LegacyPlayerListItemPacket.UPDATE_LATENCY: {
           KeyedVelocityTabListEntry entry = entries.get(uuid);
           if (entry != null) {
             entry.setLatencyInternal(item.getLatency());
           }
           break;
         }
-        case LegacyPlayerListItem.UPDATE_GAMEMODE: {
+        case LegacyPlayerListItemPacket.UPDATE_GAMEMODE: {
           KeyedVelocityTabListEntry entry = entries.get(uuid);
           if (entry != null) {
             entry.setGameModeInternal(item.getGameMode());
@@ -219,7 +230,7 @@ public class KeyedVelocityTabList implements InternalTabList {
 
   void updateEntry(int action, TabListEntry entry) {
     if (entries.containsKey(entry.getProfile().getId())) {
-      LegacyPlayerListItem.Item packetItem = LegacyPlayerListItem.Item.from(entry);
+      LegacyPlayerListItemPacket.Item packetItem = LegacyPlayerListItemPacket.Item.from(entry);
 
       IdentifiedKey selectedKey = packetItem.getPlayerKey();
       Optional<Player> existing = proxyServer.getPlayer(entry.getProfile().getId());
@@ -236,7 +247,7 @@ public class KeyedVelocityTabList implements InternalTabList {
         packetItem.setPlayerKey(null);
       }
 
-      connection.write(new LegacyPlayerListItem(action, Collections.singletonList(packetItem)));
+      connection.write(new LegacyPlayerListItemPacket(action, List.of(packetItem)));
     }
   }
 }

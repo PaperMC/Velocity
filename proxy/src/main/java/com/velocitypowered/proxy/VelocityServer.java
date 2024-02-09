@@ -37,7 +37,9 @@ import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.command.VelocityCommandManager;
+import com.velocitypowered.proxy.command.builtin.CallbackCommand;
 import com.velocitypowered.proxy.command.builtin.GlistCommand;
+import com.velocitypowered.proxy.command.builtin.SendCommand;
 import com.velocitypowered.proxy.command.builtin.ServerCommand;
 import com.velocitypowered.proxy.command.builtin.ShutdownCommand;
 import com.velocitypowered.proxy.command.builtin.VelocityCommand;
@@ -59,7 +61,6 @@ import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import com.velocitypowered.proxy.util.ResourceUtils;
 import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
-import com.velocitypowered.proxy.util.bossbar.AdventureBossBarManager;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -70,6 +71,7 @@ import io.netty.channel.EventLoopGroup;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.net.http.HttpClient;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.AccessController;
@@ -99,7 +101,6 @@ import net.kyori.adventure.translation.GlobalTranslator;
 import net.kyori.adventure.translation.TranslationRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.asynchttpclient.AsyncHttpClient;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -115,21 +116,34 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
       .registerTypeHierarchyAdapter(GameProfile.class, GameProfileSerializer.INSTANCE)
       .create();
-  private static final Gson PRE_1_16_PING_SERIALIZER = ProtocolUtils
-      .getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_15_2)
-      .serializer()
-      .newBuilder()
+  private static final Gson PRE_1_16_PING_SERIALIZER = new GsonBuilder()
+      .registerTypeHierarchyAdapter(
+          Component.class,
+          ProtocolUtils.getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_15_2)
+                  .serializer().getAdapter(Component.class)
+      )
       .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
       .create();
-  private static final Gson POST_1_16_PING_SERIALIZER = ProtocolUtils
-      .getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_16)
-      .serializer()
-      .newBuilder()
+  private static final Gson PRE_1_20_3_PING_SERIALIZER = new GsonBuilder()
+      .registerTypeHierarchyAdapter(
+          Component.class,
+          ProtocolUtils.getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_20_2)
+                  .serializer().getAdapter(Component.class)
+      )
+      .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
+      .create();
+  private static final Gson MODERN_PING_SERIALIZER = new GsonBuilder()
+      .registerTypeHierarchyAdapter(
+          Component.class,
+          ProtocolUtils.getJsonChatSerializer(ProtocolVersion.MINECRAFT_1_20_3)
+                  .serializer().getAdapter(Component.class)
+      )
       .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
       .create();
 
   private final ConnectionManager cm;
   private final ProxyOptions options;
+  private final HttpClient httpClient;
   private @MonotonicNonNull VelocityConfiguration configuration;
   private @MonotonicNonNull KeyPair serverKeyPair;
   private final ServerMap servers;
@@ -137,7 +151,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   private final AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
   private boolean shutdown = false;
   private final VelocityPluginManager pluginManager;
-  private final AdventureBossBarManager bossBarManager;
 
   private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
   private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
@@ -155,10 +168,10 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     scheduler = new VelocityScheduler(pluginManager);
     console = new VelocityConsole(this);
     cm = new ConnectionManager(this);
+    httpClient = HttpClient.newHttpClient();
     servers = new ServerMap(this);
     serverListPingHandler = new ServerListPingHandler(this);
     this.options = options;
-    this.bossBarManager = new AdventureBossBarManager();
   }
 
   public KeyPair getServerKeyPair() {
@@ -211,11 +224,13 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     cm.logChannelInformation();
 
     // Initialize commands first
-    commandManager.register("velocity", new VelocityCommand(this));
-    commandManager.register("server", new ServerCommand(this));
+    commandManager.register(VelocityCommand.create(this));
+    commandManager.register(CallbackCommand.create());
+    commandManager.register(ServerCommand.create(this));
     commandManager.register("shutdown", ShutdownCommand.command(this),
         "end", "stop");
     new GlistCommand(this).register();
+    new SendCommand(this).register();
 
     this.doStartupConfigLoad();
 
@@ -239,6 +254,12 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       this.cm.bind(new InetSocketAddress(configuration.getBind().getHostString(), port));
     } else {
       this.cm.bind(configuration.getBind());
+    }
+
+    final Boolean haproxy = this.options.isHaproxy();
+    if (haproxy != null) {
+      logger.debug("Overriding HAProxy protocol to {} from command line option", haproxy);
+      configuration.setProxyProtocol(haproxy);
     }
 
     if (configuration.isQueryEnabled()) {
@@ -572,7 +593,12 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     shutdown(true);
   }
 
-  public AsyncHttpClient getAsyncHttpClient() {
+  @Override
+  public void closeListeners() {
+    this.cm.closeEndpoints(false);
+  }
+
+  public HttpClient getHttpClient() {
     return cm.getHttpClient();
   }
 
@@ -633,7 +659,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   public void unregisterConnection(ConnectedPlayer connection) {
     connectionsByName.remove(connection.getUsername().toLowerCase(Locale.US), connection);
     connectionsByUuid.remove(connection.getUniqueId(), connection);
-    bossBarManager.onDisconnect(connection);
+    connection.disconnected();
   }
 
   @Override
@@ -743,13 +769,21 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     return audiences;
   }
 
-  public AdventureBossBarManager getBossBarManager() {
-    return bossBarManager;
-  }
-
+  /**
+   * Returns a Gson instance for use in serializing server ping instances.
+   *
+   * @param version the protocol version in use
+   * @return the Gson instance
+   */
   public static Gson getPingGsonInstance(ProtocolVersion version) {
-    return version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0 ? POST_1_16_PING_SERIALIZER
-        : PRE_1_16_PING_SERIALIZER;
+    if (version == ProtocolVersion.UNKNOWN
+        || version.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
+      return MODERN_PING_SERIALIZER;
+    }
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16)) {
+      return PRE_1_20_3_PING_SERIALIZER;
+    }
+    return PRE_1_16_PING_SERIALIZER;
   }
 
   @Override
