@@ -197,7 +197,10 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
       smc.write(brandPacket);
     }
 
-    player.getConnection().write(FinishedUpdatePacket.INSTANCE);
+    player.getConnection().eventLoop().execute(() -> {
+      player.getConnection().write(FinishedUpdatePacket.INSTANCE);
+      player.getConnection().getChannel().pipeline().get(MinecraftEncoder.class).setState(StateRegistry.PLAY);
+    });
 
     smc.write(FinishedUpdatePacket.INSTANCE);
     smc.getChannel().pipeline().get(MinecraftEncoder.class).setState(StateRegistry.PLAY);
