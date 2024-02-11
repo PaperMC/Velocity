@@ -133,27 +133,16 @@ public class VelocityEventManager implements EventManager {
 
   /**
    * Represents the registration of a single {@link EventHandler}.
+   *
+   * @param instance The instance of the {@link EventHandler} or the listener instance that was registered.
    */
-  static final class HandlerRegistration {
-
-    final PluginContainer plugin;
-    final short order;
-    final Class<?> eventType;
-    final EventHandler<Object> handler;
-
-    /**
-     * The instance of the {@link EventHandler} or the listener instance that was registered.
-     */
-    final Object instance;
-
-    public HandlerRegistration(final PluginContainer plugin, final short order,
-        final Class<?> eventType, final Object instance, final EventHandler<Object> handler) {
-      this.plugin = plugin;
-      this.order = order;
-      this.eventType = eventType;
-      this.instance = instance;
-      this.handler = handler;
-    }
+  record HandlerRegistration(
+          PluginContainer plugin,
+          short order,
+          Class<?> eventType,
+          Object instance,
+          EventHandler<Object> handler
+  ) {
   }
 
   enum AsyncType {
@@ -167,13 +156,7 @@ public class VelocityEventManager implements EventManager {
     NEVER
   }
 
-  static final class HandlersCache {
-
-    final HandlerRegistration[] handlers;
-
-    HandlersCache(final HandlerRegistration[] handlers) {
-      this.handlers = handlers;
-    }
+  record HandlersCache(HandlerRegistration[] handlers) {
   }
 
   private @Nullable HandlersCache bakeHandlers(final Class<?> eventType) {
@@ -227,23 +210,13 @@ public class VelocityEventManager implements EventManager {
     return LambdaFactory.create(type.defineClassesWith(lookup), methodHandle);
   }
 
-  static final class MethodHandlerInfo {
-
-    final Method method;
-    final @Nullable Class<?> eventType;
-    final short order;
-    final @Nullable String errors;
-    final @Nullable Class<?> continuationType;
-
-    private MethodHandlerInfo(final Method method, final @Nullable Class<?> eventType,
-        final short order, final @Nullable String errors,
-        final @Nullable Class<?> continuationType) {
-      this.method = method;
-      this.eventType = eventType;
-      this.order = order;
-      this.errors = errors;
-      this.continuationType = continuationType;
-    }
+  record MethodHandlerInfo(
+          Method method,
+          @Nullable Class<?> eventType,
+          short order,
+          @Nullable String errors,
+          @Nullable Class<?> continuationType
+  ) {
   }
 
   private void collectMethods(final Class<?> targetClass,
@@ -340,12 +313,12 @@ public class VelocityEventManager implements EventManager {
   @Override
   public void register(final Object plugin, final Object listener) {
     requireNonNull(listener, "listener");
-    final PluginContainer pluginContainer = pluginManager.ensurePluginContainer(plugin);
+    final VelocityPluginContainer pluginContainer
+            = (VelocityPluginContainer) pluginManager.ensurePluginContainer(plugin);
     if (plugin == listener) {
       // Allow to register main class as listener after unregistering it
-      VelocityPluginContainer velocityPluginContainer = (VelocityPluginContainer) pluginContainer;
-      if (velocityPluginContainer.unregisteredMainClassListener()) {
-        velocityPluginContainer.unregisteredMainClassListener(false);
+      if (pluginContainer.unregisteredMainClassListener()) {
+        pluginContainer.unregisteredMainClassListener(false);
       } else {
         throw new IllegalArgumentException("The plugin main instance is automatically registered.");
       }
@@ -400,14 +373,24 @@ public class VelocityEventManager implements EventManager {
 
   @Override
   public void unregisterListeners(final Object plugin) {
-    final PluginContainer pluginContainer = pluginManager.ensurePluginContainer(plugin);
+    final VelocityPluginContainer pluginContainer
+            = (VelocityPluginContainer) pluginManager.ensurePluginContainer(plugin);
+    // If the main class is unregistered, it is marked as such,
+    // to allow it to be re-registered
+    pluginContainer.unregisteredMainClassListener(true);
     unregisterIf(registration -> registration.plugin == pluginContainer);
   }
 
   @Override
   public void unregisterListener(final Object plugin, final Object handler) {
-    final PluginContainer pluginContainer = pluginManager.ensurePluginContainer(plugin);
     requireNonNull(handler, "handler");
+    final VelocityPluginContainer pluginContainer
+            = (VelocityPluginContainer) pluginManager.ensurePluginContainer(plugin);
+    // If the main class is unregistered, it is marked as such,
+    // to allow it to be re-registered
+    if (plugin == handler) {
+      pluginContainer.unregisteredMainClassListener(true);
+    }
     unregisterIf(registration ->
         registration.plugin == pluginContainer && registration.instance == handler);
   }
@@ -425,13 +408,6 @@ public class VelocityEventManager implements EventManager {
       while (it.hasNext()) {
         final HandlerRegistration registration = it.next();
         if (predicate.test(registration)) {
-          // If the main class is unregistered, it is marked as such,
-          // to allow it to be re-registered
-          if (registration.instance == registration.plugin) {
-            VelocityPluginContainer container = (VelocityPluginContainer) pluginManager
-                    .ensurePluginContainer(registration.plugin);
-            container.unregisteredMainClassListener(true);
-          }
           it.remove();
           removed.add(registration);
         }
