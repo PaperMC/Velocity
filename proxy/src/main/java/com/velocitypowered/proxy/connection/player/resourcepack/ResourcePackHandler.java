@@ -92,7 +92,9 @@ public abstract sealed class ResourcePackHandler
    */
   public void queueResourcePack(final @NotNull ResourcePackRequest request) {
     for (final net.kyori.adventure.resource.ResourcePackInfo pack : request.packs()) {
-      queueResourcePack(VelocityResourcePackInfo.fromAdventureRequest(request, pack));
+      final ResourcePackInfo resourcePackInfo = VelocityResourcePackInfo.fromAdventureRequest(request, pack);
+      this.checkAlreadyAppliedPack(resourcePackInfo.getHash());
+      queueResourcePack(resourcePackInfo);
     }
   }
 
@@ -155,5 +157,19 @@ public abstract sealed class ResourcePackHandler
       }
     }
     return handled;
+  }
+
+  /**
+   * Check if a pack has already been applied.
+   *
+   * @param hash the resource pack hash
+   */
+  public abstract boolean hasPackAppliedByHash(final byte[] hash);
+
+  @SuppressWarnings("checkstyle:MissingJavadocMethod")
+  public void checkAlreadyAppliedPack(final byte[] hash) {
+    if (this.hasPackAppliedByHash(hash)) {
+      throw new IllegalStateException("Cannot apply a resource pack already applied");
+    }
   }
 }

@@ -54,8 +54,7 @@ public interface ResourcePackInfo extends ResourcePackRequestLike {
    *
    * @return the hash if present or null otherwise
    */
-  @Nullable
-  byte[] getHash();
+  byte @Nullable [] getHash();
 
   /**
    * Gets the {@link Origin} of this resource-pack.

@@ -23,6 +23,7 @@ import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -166,5 +167,18 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
     }
 
     return handleResponseResult(queued, bundle);
+  }
+
+  @Override
+  public boolean hasPackAppliedByHash(final byte[] hash) {
+    if (hash == null) {
+      return false;
+    }
+    for (final Map.Entry<UUID, ResourcePackInfo> appliedPack : appliedResourcePacks.entrySet()) {
+      if (Arrays.equals(appliedPack.getValue().getHash(), hash)) {
+        return true;
+      }
+    }
+    return false;
   }
 }
