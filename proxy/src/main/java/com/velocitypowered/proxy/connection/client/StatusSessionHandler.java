@@ -95,7 +95,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
         .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
         .thenAcceptAsync(
             (event) -> {
-              StringBuilder json = new StringBuilder();
+              final StringBuilder json = new StringBuilder();
               VelocityServer.getPingGsonInstance(connection.getProtocolVersion())
                   .toJson(event.getPing(), json);
               connection.write(new StatusResponsePacket(json));

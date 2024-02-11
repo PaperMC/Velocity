@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2021 Velocity Contributors
+ * Copyright (C) 2024 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,19 +15,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.natives.compression;
+package com.velocitypowered.proxy.connection.player.resourcepack;
 
-import java.util.zip.DataFormatException;
+import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
+import java.util.UUID;
 
-/**
- * Represents a native interface for zlib's inflate functions.
- */
-class NativeZlibInflate {
-
-  static native long init();
-
-  static native long free(long ctx);
-
-  static native boolean process(long ctx, long sourceAddress, int sourceLength,
-      long destinationAddress, int destinationLength) throws DataFormatException;
+@SuppressWarnings("checkstyle:MissingJavadocType")
+public record ResourcePackResponseBundle(UUID uuid, String hash,
+                                         PlayerResourcePackStatusEvent.Status status) {
 }
