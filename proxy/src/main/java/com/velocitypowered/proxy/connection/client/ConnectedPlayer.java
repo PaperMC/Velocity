@@ -53,8 +53,10 @@ import com.velocitypowered.proxy.adventure.VelocityBossBarImplementation;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
-import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
-import com.velocitypowered.proxy.connection.player.resourcepack.ResourcePackHandler;
+import com.velocitypowered.proxy.connection.player.bundle.BundleDelimiterHandler;
+import com.velocitypowered.proxy.connection.player.configuration.ConfigurationStateHandler;
+import com.velocitypowered.proxy.connection.player.resourcepack.VelocityResourcePackInfo;
+import com.velocitypowered.proxy.connection.player.resourcepack.handler.ResourcePackHandler;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.connection.util.VelocityInboundConnection;
@@ -155,6 +157,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private @MonotonicNonNull List<String> serversToTry = null;
   private final ResourcePackHandler resourcePackHandler;
   private final BundleDelimiterHandler bundleHandler = new BundleDelimiterHandler(this);
+  private final ConfigurationStateHandler configStateHandler = new ConfigurationStateHandler(this);
 
   private final @NotNull Pointers pointers =
       Player.super.pointers().toBuilder()
@@ -652,8 +655,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       friendlyError = Component.translatable("velocity.error.connected-server-error",
           Component.text(server.getServerInfo().getName()));
     } else {
-      logger.error("{}: unable to connect to server {}", this, server.getServerInfo().getName(),
-          wrapped);
+      logger.error("{}: unable to connect to server {} with error {}", this, server.getServerInfo().getName(),
+          wrapped.toString());
       friendlyError = Component.translatable("velocity.error.connecting-server-error",
           Component.text(server.getServerInfo().getName()));
     }
@@ -794,7 +797,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
             }, connection.eventLoop());
       } else if (event.getResult() instanceof final Notify res) {
         if (event.kickedDuringServerConnect() && previousConnection != null) {
-          sendMessage(Identity.nil(), res.getMessageComponent());
+          sendMessage(res.getMessageComponent());
         } else {
           disconnect(res.getMessageComponent());
         }
@@ -1013,6 +1016,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     return this.resourcePackHandler;
   }
 
+  public ConfigurationStateHandler configurationStateHandler() {
+    return this.configStateHandler;
+  }
+
   @Override
   @Deprecated
   public void sendResourcePack(String url) {
@@ -1120,22 +1127,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       keepAlive.setRandomId(ThreadLocalRandom.current().nextLong());
       connection.write(keepAlive);
     }
-  }
-
-  /**
-   * Switches the connection to the client into config state.
-   */
-  public void switchToConfigState() {
-    CompletableFuture.runAsync(() -> {
-      connection.write(StartUpdatePacket.INSTANCE);
-      connection.getChannel().pipeline()
-          .get(MinecraftEncoder.class).setState(StateRegistry.CONFIG);
-      // Make sure we don't send any play packets to the player after update start
-      connection.addPlayPacketQueueHandler();
-    }, connection.eventLoop()).exceptionally((ex) -> {
-      logger.error("Error switching player connection to config state:", ex);
-      return null;
-    });
   }
 
   /**
@@ -1263,24 +1254,20 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
         }
 
         switch (status.getStatus()) {
-          case ALREADY_CONNECTED:
-            sendMessage(Identity.nil(), ConnectionMessages.ALREADY_CONNECTED);
-            break;
-          case CONNECTION_IN_PROGRESS:
-            sendMessage(Identity.nil(), ConnectionMessages.IN_PROGRESS);
-            break;
-          case CONNECTION_CANCELLED:
+          case ALREADY_CONNECTED -> sendMessage(ConnectionMessages.ALREADY_CONNECTED);
+          case CONNECTION_IN_PROGRESS -> sendMessage(ConnectionMessages.IN_PROGRESS);
+          case CONNECTION_CANCELLED -> {
             // Ignored; the plugin probably already handled this.
-            break;
-          case SERVER_DISCONNECTED:
-            Component reason = status.getReasonComponent()
-                .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
+          }
+          case SERVER_DISCONNECTED -> {
+            final Component reason = status.getReasonComponent()
+                    .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
             handleConnectionException(toConnect,
-                DisconnectPacket.create(reason, getProtocolVersion(), false), status.isSafe());
-            break;
-          default:
+                    DisconnectPacket.create(reason, getProtocolVersion(), false), status.isSafe());
+          }
+          default -> {
             // The only remaining value is successful (no need to do anything!)
-            break;
+          }
         }
       }, connection.eventLoop()).thenApply(Result::isSuccessful);
     }

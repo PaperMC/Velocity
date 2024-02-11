@@ -26,7 +26,7 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientConfigSessionHandler;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
+import com.velocitypowered.proxy.connection.player.resourcepack.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
@@ -166,15 +166,16 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(FinishedUpdatePacket packet) {
-    MinecraftConnection smc = serverConn.ensureConnected();
-    ConnectedPlayer player = serverConn.getPlayer();
-    ClientConfigSessionHandler configHandler =
+    final MinecraftConnection smc = serverConn.ensureConnected();
+    final ConnectedPlayer player = serverConn.getPlayer();
+    final ClientConfigSessionHandler configHandler =
         (ClientConfigSessionHandler) player.getConnection().getActiveSessionHandler();
 
     smc.setAutoReading(false);
     // Even when not auto reading messages are still decoded. Decode them with the correct state
     smc.getChannel().pipeline().get(MinecraftDecoder.class).setState(StateRegistry.PLAY);
-    configHandler.handleBackendFinishUpdate(serverConn).thenAcceptAsync((unused) -> {
+    //noinspection DataFlowIssue
+    configHandler.handleBackendFinishUpdate(serverConn).thenRunAsync(() -> {
       if (serverConn == player.getConnectedServer()) {
         smc.setActiveSessionHandler(StateRegistry.PLAY);
         player.sendPlayerListHeaderAndFooter(

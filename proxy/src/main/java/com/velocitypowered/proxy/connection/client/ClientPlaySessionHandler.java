@@ -487,7 +487,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
    * @return a future that completes when the switch is complete
    */
   public CompletableFuture<Void> doSwitch() {
-    VelocityServerConnection existingConnection = player.getConnectedServer();
+    final VelocityServerConnection existingConnection = player.getConnectedServer();
 
     if (existingConnection != null) {
       // Shut down the existing server connection.
@@ -504,7 +504,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       player.getTabList().clearAllSilent();
     }
 
-    player.switchToConfigState();
+    player.configurationStateHandler().switchToConfigState();
 
     return configSwitchFuture;
   }
