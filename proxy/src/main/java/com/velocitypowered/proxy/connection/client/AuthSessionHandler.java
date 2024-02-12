@@ -142,10 +142,9 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
     }
 
     if (player.getIdentifiedKey() != null) {
-      IdentifiedKey playerKey = player.getIdentifiedKey();
+      final IdentifiedKey playerKey = player.getIdentifiedKey();
       if (playerKey.getSignatureHolder() == null) {
-        if (playerKey instanceof IdentifiedKeyImpl) {
-          IdentifiedKeyImpl unlinkedKey = (IdentifiedKeyImpl) playerKey;
+        if (playerKey instanceof IdentifiedKeyImpl unlinkedKey) {
           // Failsafe
           if (!unlinkedKey.internalAddHolder(player.getUniqueId())) {
             if (onlineMode) {
@@ -153,7 +152,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
                   Component.translatable("multiplayer.disconnect.invalid_public_key"));
               return;
             } else {
-              logger.warn("Key for player " + player.getUsername() + " could not be verified!");
+              logger.warn("Key for player {} could not be verified!", player.getUsername());
             }
           }
         } else {
@@ -161,8 +160,9 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
         }
       } else {
         if (!Objects.equals(playerKey.getSignatureHolder(), playerUniqueId)) {
-          logger.warn("UUID for Player " + player.getUsername() + " mismatches! "
-              + "Chat/Commands signatures will not work correctly for this player!");
+          logger.warn("UUID for Player {} mismatches! "
+              + "Chat/Commands signatures will not work correctly for this player!",
+                  player.getUsername());
         }
       }
     }
@@ -240,7 +240,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
 
     return server.getEventManager().fire(event).thenRunAsync(() -> {
       Optional<RegisteredServer> toTry = event.getInitialServer();
-      if (!toTry.isPresent()) {
+      if (toTry.isEmpty()) {
         player.disconnect0(
             Component.translatable("velocity.error.no-available-servers", NamedTextColor.RED),
             true);
@@ -263,7 +263,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
     this.inbound.cleanup();
   }
 
-  static enum State {
+  enum State {
     START, SUCCESS_SENT, ACKNOWLEDGED
   }
 }

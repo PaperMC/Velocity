@@ -74,7 +74,11 @@ public class ServerLoginPacket implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "ServerLogin{" + "username='" + username + '\'' + "playerKey='" + playerKey + '\'' + '}';
+    return "ServerLogin{"
+        + "username='" + username + '\''
+        + "uuid='" + holderUuid + '\''
+        + "playerKey='" + playerKey + '\''
+        + '}';
   }
 
   @Override

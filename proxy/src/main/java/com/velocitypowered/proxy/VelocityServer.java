@@ -93,6 +93,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.audience.ForwardingAudience;
 import net.kyori.adventure.key.Key;
@@ -143,7 +144,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
   private final ConnectionManager cm;
   private final ProxyOptions options;
-  private final HttpClient httpClient;
   private @MonotonicNonNull VelocityConfiguration configuration;
   private @MonotonicNonNull KeyPair serverKeyPair;
   private final ServerMap servers;
@@ -159,7 +159,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   private final VelocityEventManager eventManager;
   private final VelocityScheduler scheduler;
   private final VelocityChannelRegistrar channelRegistrar = new VelocityChannelRegistrar();
-  private ServerListPingHandler serverListPingHandler;
+  private final ServerListPingHandler serverListPingHandler;
 
   VelocityServer(final ProxyOptions options) {
     pluginManager = new VelocityPluginManager(this);
@@ -168,7 +168,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     scheduler = new VelocityScheduler(pluginManager);
     console = new VelocityConsole(this);
     cm = new ConnectionManager(this);
-    httpClient = HttpClient.newHttpClient();
     servers = new ServerMap(this);
     serverListPingHandler = new ServerListPingHandler(this);
     this.options = options;
@@ -282,40 +281,39 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
         try {
           if (!Files.exists(langPath)) {
             Files.createDirectory(langPath);
-            Files.walk(path).forEach(file -> {
-              if (!Files.isRegularFile(file)) {
-                return;
-              }
-              try {
-                Path langFile = langPath.resolve(file.getFileName().toString());
-                if (!Files.exists(langFile)) {
-                  try (InputStream is = Files.newInputStream(file)) {
-                    Files.copy(is, langFile);
+            try (final Stream<Path> files = Files.walk(path)) {
+              files.filter(Files::isRegularFile).forEach(file -> {
+                try {
+                  final Path langFile = langPath.resolve(file.getFileName().toString());
+                  if (!Files.exists(langFile)) {
+                    try (final InputStream is = Files.newInputStream(file)) {
+                      Files.copy(is, langFile);
+                    }
                   }
+                } catch (IOException e) {
+                  logger.error("Encountered an I/O error whilst loading translations", e);
                 }
-              } catch (IOException e) {
-                logger.error("Encountered an I/O error whilst loading translations", e);
-              }
+              });
+            }
+
+          }
+
+          try (final Stream<Path> files = Files.walk(langPath)) {
+            files.filter(Files::isRegularFile).forEach(file -> {
+              final String filename = com.google.common.io.Files
+                      .getNameWithoutExtension(file.getFileName().toString());
+              final String localeName = filename.replace("messages_", "")
+                      .replace("messages", "")
+                      .replace('_', '-');
+              final Locale locale = localeName.isBlank()
+                      ? Locale.US
+                      : Locale.forLanguageTag(localeName);
+
+              translationRegistry.registerAll(locale, file, false);
+              ClosestLocaleMatcher.INSTANCE.registerKnown(locale);
             });
           }
 
-          Files.walk(langPath).forEach(file -> {
-            if (!Files.isRegularFile(file)) {
-              return;
-            }
-
-            String filename = com.google.common.io.Files
-                .getNameWithoutExtension(file.getFileName().toString());
-            String localeName = filename.replace("messages_", "")
-                .replace("messages", "")
-                .replace('_', '-');
-            Locale locale = localeName.isBlank()
-                ? Locale.US
-                : Locale.forLanguageTag(localeName);
-
-            translationRegistry.registerAll(locale, file, false);
-            ClosestLocaleMatcher.INSTANCE.registerKnown(locale);
-          });
         } catch (IOException e) {
           logger.error("Encountered an I/O error whilst loading translations", e);
         }
@@ -419,10 +417,9 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     // move back to a fallback server.
     Collection<ConnectedPlayer> evacuate = new ArrayList<>();
     for (Map.Entry<String, String> entry : newConfiguration.getServers().entrySet()) {
-      ServerInfo newInfo =
-          new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue()));
+      ServerInfo newInfo = new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue()));
       Optional<RegisteredServer> rs = servers.getServer(entry.getKey());
-      if (!rs.isPresent()) {
+      if (rs.isEmpty()) {
         servers.register(newInfo);
       } else if (!rs.get().getServerInfo().equals(newInfo)) {
         for (Player player : rs.get().getPlayersConnected()) {

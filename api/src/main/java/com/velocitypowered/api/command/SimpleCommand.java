@@ -16,7 +16,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  * <p>Prefer using {@link BrigadierCommand}, which is also
  * backwards-compatible with older clients.
  */
-public interface SimpleCommand extends InvocableCommand<SimpleCommand.Invocation> {
+public non-sealed interface SimpleCommand extends InvocableCommand<SimpleCommand.Invocation> {
 
   /**
    * Contains the invocation data for a simple command.

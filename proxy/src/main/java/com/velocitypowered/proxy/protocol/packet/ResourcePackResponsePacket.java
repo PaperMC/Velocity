@@ -54,6 +54,10 @@ public class ResourcePackResponsePacket implements MinecraftPacket {
     return hash;
   }
 
+  public UUID getId() {
+    return id;
+  }
+
   @Override
   public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
     if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {

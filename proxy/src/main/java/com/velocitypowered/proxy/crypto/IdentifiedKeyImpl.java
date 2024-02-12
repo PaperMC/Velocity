@@ -119,7 +119,7 @@ public class IdentifiedKeyImpl implements IdentifiedKey {
     if (revision == Revision.GENERIC_V1) {
       String pemKey = EncryptionUtils.pemEncodeRsaKey(publicKey);
       long expires = expiryTemporal.toEpochMilli();
-      byte[] toVerify = ("" + expires + pemKey).getBytes(StandardCharsets.US_ASCII);
+      byte[] toVerify = (expires + pemKey).getBytes(StandardCharsets.US_ASCII);
       return EncryptionUtils.verifySignature(
           EncryptionUtils.SHA1_WITH_RSA, EncryptionUtils.getYggdrasilSessionKey(), signature,
           toVerify);
@@ -166,11 +166,9 @@ public class IdentifiedKeyImpl implements IdentifiedKey {
     if (this == o) {
       return true;
     }
-    if (!(o instanceof IdentifiedKey)) {
+    if (!(o instanceof final IdentifiedKey that)) {
       return false;
     }
-
-    IdentifiedKey that = (IdentifiedKey) o;
 
     return Objects.equal(this.getSignedPublicKey(), that.getSignedPublicKey())
         && Objects.equal(this.getExpiryTemporal(), that.getExpiryTemporal())
