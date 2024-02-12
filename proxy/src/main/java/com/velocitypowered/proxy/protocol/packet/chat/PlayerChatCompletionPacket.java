@@ -28,6 +28,13 @@ public class PlayerChatCompletionPacket implements MinecraftPacket {
   private String[] completions;
   private Action action;
 
+  public PlayerChatCompletionPacket() {
+  }
+
+  public PlayerChatCompletionPacket(String[] completions, Action action) {
+    this.completions = completions;
+    this.action = action;
+  }
 
   public String[] getCompletions() {
     return completions;
@@ -64,9 +71,9 @@ public class PlayerChatCompletionPacket implements MinecraftPacket {
     return handler.handle(this);
   }
 
-  enum Action {
+  public enum Action {
     ADD,
     REMOVE,
-    ALTER
+    SET
   }
 }

@@ -39,7 +39,7 @@ public class LegacyPingEncoder extends MessageToByteEncoder<LegacyDisconnect> {
   protected void encode(ChannelHandlerContext ctx, LegacyDisconnect msg, ByteBuf out)
       throws Exception {
     out.writeByte(0xff);
-    writeLegacyString(out, msg.getReason());
+    writeLegacyString(out, msg.reason());
   }
 
   private static void writeLegacyString(ByteBuf out, String string) {

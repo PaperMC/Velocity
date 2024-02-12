@@ -311,6 +311,35 @@ public interface Player extends
    */
   @Nullable String getClientBrand();
 
+
+  /**
+   * Add custom chat completion suggestions shown to the player while typing a message.
+   *
+   * @param completions the completions to send
+   */
+  void addCustomChatCompletions(@NotNull Collection<String> completions);
+
+  /**
+   * Remove custom chat completion suggestions shown to the player while typing a message.
+   *
+   * <p>Online player names can't be removed with this method, it will only affect
+   * custom completions added by {@link #addCustomChatCompletions(Collection)}
+   * or {@link #setCustomChatCompletions(Collection)}.
+   *
+   * @param completions the completions to remove
+   */
+  void removeCustomChatCompletions(@NotNull Collection<String> completions);
+
+  /**
+   * Set the list of chat completion suggestions shown to the player while typing a message.
+   *
+   * <p>If completions were set previously, this method will remove them all
+   * and replace them with the provided completions.
+   *
+   * @param completions the completions to set
+   */
+  void setCustomChatCompletions(@NotNull Collection<String> completions);
+
   /**
    * Transfers a Player to a host.
    *
@@ -318,5 +347,5 @@ public interface Player extends
    * @throws IllegalArgumentException if the player is from a version lower than 1.20.5
    * @since 3.3.0
    */
-  void transferToHost(InetSocketAddress address);
+  void transferToHost(@NotNull InetSocketAddress address);
 }
