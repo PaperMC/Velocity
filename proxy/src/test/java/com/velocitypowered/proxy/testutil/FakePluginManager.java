@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
+import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
@@ -52,14 +53,11 @@ public class FakePluginManager implements PluginManager {
 
   @Override
   public @NonNull Optional<PluginContainer> getPlugin(@NonNull String id) {
-    switch (id) {
-      case "a":
-        return Optional.of(PC_A);
-      case "b":
-        return Optional.of(PC_B);
-      default:
-        return Optional.empty();
-    }
+    return switch (id) {
+      case "a" -> Optional.of(PC_A);
+      case "b" -> Optional.of(PC_B);
+      default -> Optional.empty();
+    };
   }
 
   @Override
@@ -77,13 +75,14 @@ public class FakePluginManager implements PluginManager {
     throw new UnsupportedOperationException();
   }
 
-  private static class FakePluginContainer implements PluginContainer {
+  private static class FakePluginContainer extends VelocityPluginContainer {
 
     private final String id;
     private final Object instance;
     private final ExecutorService service;
 
     private FakePluginContainer(String id, Object instance) {
+      super(null);
       this.id = id;
       this.instance = instance;
       this.service = ForkJoinPool.commonPool();

@@ -289,13 +289,7 @@ public class EventTest {
     void resumeWithError(Exception exception);
   }
 
-  private static final class FancyContinuationImpl implements FancyContinuation {
-
-    private final Continuation continuation;
-
-    private FancyContinuationImpl(final Continuation continuation) {
-      this.continuation = continuation;
-    }
+  private record FancyContinuationImpl(Continuation continuation) implements FancyContinuation {
 
     @Override
     public void resume() {
