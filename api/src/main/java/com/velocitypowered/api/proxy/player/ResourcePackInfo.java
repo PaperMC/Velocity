@@ -8,13 +8,14 @@
 package com.velocitypowered.api.proxy.player;
 
 import java.util.UUID;
+import net.kyori.adventure.resource.ResourcePackRequestLike;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Represents the information for a resource pack to apply that can be sent to the client.
  */
-public interface ResourcePackInfo {
+public interface ResourcePackInfo extends ResourcePackRequestLike {
 
   /**
    * Gets the id of this resource-pack.
@@ -53,8 +54,7 @@ public interface ResourcePackInfo {
    *
    * @return the hash if present or null otherwise
    */
-  @Nullable
-  byte[] getHash();
+  byte @Nullable [] getHash();
 
   /**
    * Gets the {@link Origin} of this resource-pack.

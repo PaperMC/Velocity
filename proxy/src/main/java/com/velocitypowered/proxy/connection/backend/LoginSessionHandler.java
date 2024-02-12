@@ -19,37 +19,30 @@ package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.event.player.ServerLoginPluginMessageEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-import com.velocitypowered.proxy.connection.VelocityConstants;
+import com.velocitypowered.proxy.connection.PlayerDataForwarding;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.Disconnect;
-import com.velocitypowered.proxy.protocol.packet.EncryptionRequest;
-import com.velocitypowered.proxy.protocol.packet.LoginAcknowledged;
-import com.velocitypowered.proxy.protocol.packet.LoginPluginMessage;
-import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
-import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
-import com.velocitypowered.proxy.protocol.packet.SetCompression;
+import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
+import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.LoginAcknowledgedPacket;
+import com.velocitypowered.proxy.protocol.packet.LoginPluginMessagePacket;
+import com.velocitypowered.proxy.protocol.packet.LoginPluginResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
+import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.CompletableFuture;
-import javax.crypto.Mac;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -77,33 +70,39 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(EncryptionRequest packet) {
+  public boolean handle(EncryptionRequestPacket packet) {
     throw new IllegalStateException("Backend server is online-mode!");
   }
 
   @Override
-  public boolean handle(LoginPluginMessage packet) {
+  public boolean handle(LoginPluginMessagePacket packet) {
     MinecraftConnection mc = serverConn.ensureConnected();
     VelocityConfiguration configuration = server.getConfiguration();
     if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
-        && packet.getChannel().equals(VelocityConstants.VELOCITY_IP_FORWARDING_CHANNEL)) {
+        && packet.getChannel().equals(PlayerDataForwarding.CHANNEL)) {
 
-      int requestedForwardingVersion = VelocityConstants.MODERN_FORWARDING_DEFAULT;
+      int requestedForwardingVersion = PlayerDataForwarding.MODERN_DEFAULT;
       // Check version
       if (packet.content().readableBytes() == 1) {
         requestedForwardingVersion = packet.content().readByte();
       }
-      ByteBuf forwardingData = createForwardingData(configuration.getForwardingSecret(),
-          serverConn.getPlayerRemoteAddressAsString(), serverConn.getPlayer(),
+      ConnectedPlayer player = serverConn.getPlayer();
+      ByteBuf forwardingData = PlayerDataForwarding.createForwardingData(
+          configuration.getForwardingSecret(),
+          serverConn.getPlayerRemoteAddressAsString(),
+          player.getProtocolVersion(),
+          player.getGameProfile(),
+          player.getIdentifiedKey(),
           requestedForwardingVersion);
 
-      LoginPluginResponse response = new LoginPluginResponse(packet.getId(), true, forwardingData);
+      LoginPluginResponsePacket response = new LoginPluginResponsePacket(
+              packet.getId(), true, forwardingData);
       mc.write(response);
       informationForwarded = true;
     } else {
       // Don't understand, fire event if we have subscribers
       if (!this.server.getEventManager().hasSubscribers(ServerLoginPluginMessageEvent.class)) {
-        mc.write(new LoginPluginResponse(packet.getId(), false, Unpooled.EMPTY_BUFFER));
+        mc.write(new LoginPluginResponsePacket(packet.getId(), false, Unpooled.EMPTY_BUFFER));
         return true;
       }
 
@@ -114,10 +113,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
               contents, packet.getId()))
           .thenAcceptAsync(event -> {
             if (event.getResult().isAllowed()) {
-              mc.write(new LoginPluginResponse(packet.getId(), true, Unpooled
+              mc.write(new LoginPluginResponsePacket(packet.getId(), true, Unpooled
                   .wrappedBuffer(event.getResult().getResponse())));
             } else {
-              mc.write(new LoginPluginResponse(packet.getId(), false, Unpooled.EMPTY_BUFFER));
+              mc.write(new LoginPluginResponsePacket(packet.getId(), false, Unpooled.EMPTY_BUFFER));
             }
           }, mc.eventLoop());
     }
@@ -125,20 +124,20 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(Disconnect packet) {
+  public boolean handle(DisconnectPacket packet) {
     resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
     serverConn.disconnect();
     return true;
   }
 
   @Override
-  public boolean handle(SetCompression packet) {
+  public boolean handle(SetCompressionPacket packet) {
     serverConn.ensureConnected().setCompressionThreshold(packet.getThreshold());
     return true;
   }
 
   @Override
-  public boolean handle(ServerLoginSuccess packet) {
+  public boolean handle(ServerLoginSuccessPacket packet) {
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
         && !informationForwarded) {
       resultFuture.complete(ConnectionRequestResults.forDisconnect(MODERN_IP_FORWARDING_FAILURE,
@@ -152,11 +151,11 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
     // Move into the PLAY phase.
     MinecraftConnection smc = serverConn.ensureConnected();
-    if (smc.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0) {
+    if (smc.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
       smc.setActiveSessionHandler(StateRegistry.PLAY,
           new TransitionSessionHandler(server, serverConn, resultFuture));
     } else {
-      smc.write(new LoginAcknowledged());
+      smc.write(new LoginAcknowledgedPacket());
       smc.setActiveSessionHandler(StateRegistry.CONFIG,
           new ConfigSessionHandler(server, serverConn, resultFuture));
       ConnectedPlayer player = serverConn.getPlayer();
@@ -184,96 +183,16 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   public void disconnected() {
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.LEGACY) {
       resultFuture.completeExceptionally(new QuietRuntimeException(
-          "The connection to the remote server was unexpectedly closed.\n"
-              + "This is usually because the remote server "
-              + "does not have BungeeCord IP forwarding "
-              + "correctly enabled.\nSee https://velocitypowered.com/wiki/users/forwarding/ "
-              + "for instructions on how to configure player info forwarding correctly."));
+              """
+              The connection to the remote server was unexpectedly closed.
+              This is usually because the remote server does not have \
+              BungeeCord IP forwarding correctly enabled.
+              See https://velocitypowered.com/wiki/users/forwarding/ for instructions \
+              on how to configure player info forwarding correctly."""));
     } else {
       resultFuture.completeExceptionally(
           new QuietRuntimeException("The connection to the remote server was unexpectedly closed.")
       );
-    }
-  }
-
-  private static int findForwardingVersion(int requested, ConnectedPlayer player) {
-    // Ensure we are in range
-    requested = Math.min(requested, VelocityConstants.MODERN_FORWARDING_MAX_VERSION);
-    if (requested > VelocityConstants.MODERN_FORWARDING_DEFAULT) {
-      if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
-        return requested >= VelocityConstants.MODERN_LAZY_SESSION
-            ? VelocityConstants.MODERN_LAZY_SESSION
-            : VelocityConstants.MODERN_FORWARDING_DEFAULT;
-      }
-      if (player.getIdentifiedKey() != null) {
-        // No enhanced switch on java 11
-        switch (player.getIdentifiedKey().getKeyRevision()) {
-          case GENERIC_V1:
-            return VelocityConstants.MODERN_FORWARDING_WITH_KEY;
-          // Since V2 is not backwards compatible we have to throw the key if v2 and requested is v1
-          case LINKED_V2:
-            return requested >= VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2
-                ? VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2
-                : VelocityConstants.MODERN_FORWARDING_DEFAULT;
-          default:
-            return VelocityConstants.MODERN_FORWARDING_DEFAULT;
-        }
-      } else {
-        return VelocityConstants.MODERN_FORWARDING_DEFAULT;
-      }
-    }
-    return VelocityConstants.MODERN_FORWARDING_DEFAULT;
-  }
-
-  private static ByteBuf createForwardingData(byte[] hmacSecret, String address,
-      ConnectedPlayer player, int requestedVersion) {
-    ByteBuf forwarded = Unpooled.buffer(2048);
-    try {
-      int actualVersion = findForwardingVersion(requestedVersion, player);
-
-      ProtocolUtils.writeVarInt(forwarded, actualVersion);
-      ProtocolUtils.writeString(forwarded, address);
-      ProtocolUtils.writeUuid(forwarded, player.getGameProfile().getId());
-      ProtocolUtils.writeString(forwarded, player.getGameProfile().getName());
-      ProtocolUtils.writeProperties(forwarded, player.getGameProfile().getProperties());
-
-      // This serves as additional redundancy. The key normally is stored in the
-      // login start to the server, but some setups require this.
-      if (actualVersion >= VelocityConstants.MODERN_FORWARDING_WITH_KEY
-          && actualVersion < VelocityConstants.MODERN_LAZY_SESSION) {
-        IdentifiedKey key = player.getIdentifiedKey();
-        assert key != null;
-        ProtocolUtils.writePlayerKey(forwarded, key);
-
-        // Provide the signer UUID since the UUID may differ from the
-        // assigned UUID. Doing that breaks the signatures anyway but the server
-        // should be able to verify the key independently.
-        if (actualVersion >= VelocityConstants.MODERN_FORWARDING_WITH_KEY_V2) {
-          if (key.getSignatureHolder() != null) {
-            forwarded.writeBoolean(true);
-            ProtocolUtils.writeUuid(forwarded, key.getSignatureHolder());
-          } else {
-            // Should only not be provided if the player was connected
-            // as offline-mode and the signer UUID was not backfilled
-            forwarded.writeBoolean(false);
-          }
-        }
-      }
-
-      SecretKey key = new SecretKeySpec(hmacSecret, "HmacSHA256");
-      Mac mac = Mac.getInstance("HmacSHA256");
-      mac.init(key);
-      mac.update(forwarded.array(), forwarded.arrayOffset(), forwarded.readableBytes());
-      byte[] sig = mac.doFinal();
-
-      return Unpooled.wrappedBuffer(Unpooled.wrappedBuffer(sig), forwarded);
-    } catch (InvalidKeyException e) {
-      forwarded.release();
-      throw new RuntimeException("Unable to authenticate data", e);
-    } catch (NoSuchAlgorithmException e) {
-      // Should never happen
-      forwarded.release();
-      throw new AssertionError(e);
     }
   }
 }

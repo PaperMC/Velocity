@@ -12,6 +12,7 @@ import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
+import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -24,6 +25,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class PlayerResourcePackStatusEvent {
 
   private final Player player;
+  private final @MonotonicNonNull UUID packId;
   private final Status status;
   private final @MonotonicNonNull ResourcePackInfo packInfo;
   private boolean overwriteKick;
@@ -32,20 +34,31 @@ public class PlayerResourcePackStatusEvent {
    * Instantiates this event.
    *
    * @deprecated Use {@link PlayerResourcePackStatusEvent#PlayerResourcePackStatusEvent
-   *             (Player, Status, ResourcePackInfo)} instead.
+   *             (Player, UUID, Status, ResourcePackInfo)} instead.
    */
   @Deprecated
   public PlayerResourcePackStatusEvent(Player player, Status status) {
-    this.player = Preconditions.checkNotNull(player, "player");
-    this.status = Preconditions.checkNotNull(status, "status");
-    this.packInfo = null;
+    this(player, null, status, null);
+  }
+
+  /**
+   * Instantiates this event.
+   *
+   * @deprecated Use {@link PlayerResourcePackStatusEvent#PlayerResourcePackStatusEvent
+   *             (Player, UUID, Status, ResourcePackInfo)} instead.
+   */
+  @Deprecated
+  public PlayerResourcePackStatusEvent(Player player, Status status, ResourcePackInfo packInfo) {
+    this(player, null, status, packInfo);
   }
 
   /**
    * Instantiates this event.
    */
-  public PlayerResourcePackStatusEvent(Player player, Status status, ResourcePackInfo packInfo) {
+  public PlayerResourcePackStatusEvent(
+          Player player, UUID packId, Status status, ResourcePackInfo packInfo) {
     this.player = Preconditions.checkNotNull(player, "player");
+    this.packId = packId == null ? packInfo == null ? null : packInfo.getId() : packId;
     this.status = Preconditions.checkNotNull(status, "status");
     this.packInfo = packInfo;
   }
@@ -57,6 +70,16 @@ public class PlayerResourcePackStatusEvent {
    */
   public Player getPlayer() {
     return player;
+  }
+
+  /**
+   * Returns the id of the resource pack.
+   *
+   * @return the id
+   */
+  @Nullable
+  public UUID getPackId() {
+    return packId;
   }
 
   /**
@@ -100,7 +123,7 @@ public class PlayerResourcePackStatusEvent {
    */
   public void setOverwriteKick(boolean overwriteKick) {
     Preconditions.checkArgument(player.getProtocolVersion()
-            .compareTo(ProtocolVersion.MINECRAFT_1_17) < 0,
+            .lessThan(ProtocolVersion.MINECRAFT_1_17),
             "overwriteKick is not supported on 1.17 or newer");
     this.overwriteKick = overwriteKick;
   }

@@ -10,6 +10,7 @@ package com.velocitypowered.api.network;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+import com.velocitypowered.api.util.Ordered;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +20,7 @@ import java.util.Set;
 /**
  * Represents each Minecraft protocol version.
  */
-public enum ProtocolVersion {
+public enum ProtocolVersion implements Ordered<ProtocolVersion> {
   UNKNOWN(-1, "Unknown"),
   LEGACY(-2, "Legacy"),
   MINECRAFT_1_7_2(4,

@@ -22,7 +22,7 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatType;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import com.velocitypowered.proxy.protocol.packet.chat.LastSeenMessages;
-import com.velocitypowered.proxy.protocol.packet.chat.SystemChat;
+import com.velocitypowered.proxy.protocol.packet.chat.SystemChatPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderV2;
 import net.kyori.adventure.text.Component;
 
@@ -36,21 +36,21 @@ public class SessionChatBuilder extends ChatBuilderV2 {
   public MinecraftPacket toClient() {
     // This is temporary
     Component msg = component == null ? Component.text(message) : component;
-    return new SystemChat(new ComponentHolder(version, msg), type == ChatType.CHAT ? ChatType.SYSTEM : type);
+    return new SystemChatPacket(new ComponentHolder(version, msg), type == ChatType.CHAT ? ChatType.SYSTEM : type);
   }
 
   @Override
   public MinecraftPacket toServer() {
     if (message.startsWith("/")) {
-      SessionPlayerCommand command = new SessionPlayerCommand();
+      SessionPlayerCommandPacket command = new SessionPlayerCommandPacket();
       command.command = message.substring(1);
       command.salt = 0L;
       command.timeStamp = timestamp;
-      command.argumentSignatures = new SessionPlayerCommand.ArgumentSignatures();
+      command.argumentSignatures = new SessionPlayerCommandPacket.ArgumentSignatures();
       command.lastSeenMessages = new LastSeenMessages();
       return command;
     } else {
-      SessionPlayerChat chat = new SessionPlayerChat();
+      SessionPlayerChatPacket chat = new SessionPlayerChatPacket();
       chat.message = message;
       chat.signed = false;
       chat.signature = new byte[0];

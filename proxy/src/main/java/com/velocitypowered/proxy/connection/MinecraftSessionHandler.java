@@ -18,52 +18,53 @@
 package com.velocitypowered.proxy.connection;
 
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.packet.AvailableCommands;
-import com.velocitypowered.proxy.protocol.packet.BossBar;
-import com.velocitypowered.proxy.protocol.packet.ClientSettings;
-import com.velocitypowered.proxy.protocol.packet.Disconnect;
-import com.velocitypowered.proxy.protocol.packet.EncryptionRequest;
-import com.velocitypowered.proxy.protocol.packet.EncryptionResponse;
-import com.velocitypowered.proxy.protocol.packet.Handshake;
-import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
-import com.velocitypowered.proxy.protocol.packet.JoinGame;
-import com.velocitypowered.proxy.protocol.packet.KeepAlive;
-import com.velocitypowered.proxy.protocol.packet.LegacyHandshake;
-import com.velocitypowered.proxy.protocol.packet.LegacyPing;
-import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
-import com.velocitypowered.proxy.protocol.packet.LoginAcknowledged;
-import com.velocitypowered.proxy.protocol.packet.LoginPluginMessage;
-import com.velocitypowered.proxy.protocol.packet.LoginPluginResponse;
-import com.velocitypowered.proxy.protocol.packet.PingIdentify;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
-import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfo;
-import com.velocitypowered.proxy.protocol.packet.RemoveResourcePack;
-import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
-import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
-import com.velocitypowered.proxy.protocol.packet.Respawn;
-import com.velocitypowered.proxy.protocol.packet.ServerData;
-import com.velocitypowered.proxy.protocol.packet.ServerLogin;
-import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
-import com.velocitypowered.proxy.protocol.packet.SetCompression;
-import com.velocitypowered.proxy.protocol.packet.StatusPing;
-import com.velocitypowered.proxy.protocol.packet.StatusRequest;
-import com.velocitypowered.proxy.protocol.packet.StatusResponse;
-import com.velocitypowered.proxy.protocol.packet.TabCompleteRequest;
-import com.velocitypowered.proxy.protocol.packet.TabCompleteResponse;
-import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
-import com.velocitypowered.proxy.protocol.packet.chat.ChatAcknowledgement;
-import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatCompletion;
-import com.velocitypowered.proxy.protocol.packet.chat.SystemChat;
-import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerChat;
-import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerCommand;
-import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChat;
-import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChat;
-import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommand;
-import com.velocitypowered.proxy.protocol.packet.config.ActiveFeatures;
-import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdate;
-import com.velocitypowered.proxy.protocol.packet.config.RegistrySync;
-import com.velocitypowered.proxy.protocol.packet.config.StartUpdate;
-import com.velocitypowered.proxy.protocol.packet.config.TagsUpdate;
+import com.velocitypowered.proxy.protocol.packet.AvailableCommandsPacket;
+import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
+import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
+import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
+import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.EncryptionResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.HandshakePacket;
+import com.velocitypowered.proxy.protocol.packet.HeaderAndFooterPacket;
+import com.velocitypowered.proxy.protocol.packet.JoinGamePacket;
+import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
+import com.velocitypowered.proxy.protocol.packet.LegacyHandshakePacket;
+import com.velocitypowered.proxy.protocol.packet.LegacyPingPacket;
+import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItemPacket;
+import com.velocitypowered.proxy.protocol.packet.LoginAcknowledgedPacket;
+import com.velocitypowered.proxy.protocol.packet.LoginPluginMessagePacket;
+import com.velocitypowered.proxy.protocol.packet.LoginPluginResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.PingIdentifyPacket;
+import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
+import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfoPacket;
+import com.velocitypowered.proxy.protocol.packet.RemoveResourcePackPacket;
+import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.RespawnPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerDataPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
+import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
+import com.velocitypowered.proxy.protocol.packet.StatusPingPacket;
+import com.velocitypowered.proxy.protocol.packet.StatusRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.StatusResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.TabCompleteRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.TabCompleteResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfoPacket;
+import com.velocitypowered.proxy.protocol.packet.chat.ChatAcknowledgementPacket;
+import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatCompletionPacket;
+import com.velocitypowered.proxy.protocol.packet.chat.SystemChatPacket;
+import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerChatPacket;
+import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerCommandPacket;
+import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChatPacket;
+import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChatPacket;
+import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommandPacket;
+import com.velocitypowered.proxy.protocol.packet.config.ActiveFeaturesPacket;
+import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
+import com.velocitypowered.proxy.protocol.packet.config.RegistrySyncPacket;
+import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
+import com.velocitypowered.proxy.protocol.packet.config.TagsUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.title.LegacyTitlePacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleActionbarPacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleClearPacket;
@@ -117,103 +118,103 @@ public interface MinecraftSessionHandler {
 
   }
 
-  default boolean handle(AvailableCommands commands) {
+  default boolean handle(AvailableCommandsPacket commands) {
     return false;
   }
 
-  default boolean handle(BossBar packet) {
+  default boolean handle(BossBarPacket packet) {
     return false;
   }
 
-  default boolean handle(LegacyChat packet) {
+  default boolean handle(LegacyChatPacket packet) {
     return false;
   }
 
-  default boolean handle(ClientSettings packet) {
+  default boolean handle(ClientSettingsPacket packet) {
     return false;
   }
 
-  default boolean handle(Disconnect packet) {
+  default boolean handle(DisconnectPacket packet) {
     return false;
   }
 
-  default boolean handle(EncryptionRequest packet) {
+  default boolean handle(EncryptionRequestPacket packet) {
     return false;
   }
 
-  default boolean handle(EncryptionResponse packet) {
+  default boolean handle(EncryptionResponsePacket packet) {
     return false;
   }
 
-  default boolean handle(Handshake packet) {
+  default boolean handle(HandshakePacket packet) {
     return false;
   }
 
-  default boolean handle(HeaderAndFooter packet) {
+  default boolean handle(HeaderAndFooterPacket packet) {
     return false;
   }
 
-  default boolean handle(JoinGame packet) {
+  default boolean handle(JoinGamePacket packet) {
     return false;
   }
 
-  default boolean handle(KeepAlive packet) {
+  default boolean handle(KeepAlivePacket packet) {
     return false;
   }
 
-  default boolean handle(LegacyHandshake packet) {
+  default boolean handle(LegacyHandshakePacket packet) {
     return false;
   }
 
-  default boolean handle(LegacyPing packet) {
+  default boolean handle(LegacyPingPacket packet) {
     return false;
   }
 
-  default boolean handle(LoginPluginMessage packet) {
+  default boolean handle(LoginPluginMessagePacket packet) {
     return false;
   }
 
-  default boolean handle(LoginPluginResponse packet) {
+  default boolean handle(LoginPluginResponsePacket packet) {
     return false;
   }
 
-  default boolean handle(PluginMessage packet) {
+  default boolean handle(PluginMessagePacket packet) {
     return false;
   }
 
-  default boolean handle(Respawn packet) {
+  default boolean handle(RespawnPacket packet) {
     return false;
   }
 
-  default boolean handle(ServerLogin packet) {
+  default boolean handle(ServerLoginPacket packet) {
     return false;
   }
 
-  default boolean handle(ServerLoginSuccess packet) {
+  default boolean handle(ServerLoginSuccessPacket packet) {
     return false;
   }
 
-  default boolean handle(SetCompression packet) {
+  default boolean handle(SetCompressionPacket packet) {
     return false;
   }
 
-  default boolean handle(StatusPing packet) {
+  default boolean handle(StatusPingPacket packet) {
     return false;
   }
 
-  default boolean handle(StatusRequest packet) {
+  default boolean handle(StatusRequestPacket packet) {
     return false;
   }
 
-  default boolean handle(StatusResponse packet) {
+  default boolean handle(StatusResponsePacket packet) {
     return false;
   }
 
-  default boolean handle(TabCompleteRequest packet) {
+  default boolean handle(TabCompleteRequestPacket packet) {
     return false;
   }
 
-  default boolean handle(TabCompleteResponse packet) {
+  default boolean handle(TabCompleteResponsePacket packet) {
     return false;
   }
 
@@ -241,87 +242,91 @@ public interface MinecraftSessionHandler {
     return false;
   }
 
-  default boolean handle(LegacyPlayerListItem packet) {
+  default boolean handle(LegacyPlayerListItemPacket packet) {
     return false;
   }
 
-  default boolean handle(ResourcePackRequest packet) {
+  default boolean handle(ResourcePackRequestPacket packet) {
     return false;
   }
 
-  default boolean handle(RemoveResourcePack packet) {
+  default boolean handle(RemoveResourcePackPacket packet) {
     return false;
   }
 
-  default boolean handle(ResourcePackResponse packet) {
+  default boolean handle(ResourcePackResponsePacket packet) {
     return false;
   }
 
-  default boolean handle(KeyedPlayerChat packet) {
+  default boolean handle(KeyedPlayerChatPacket packet) {
     return false;
   }
 
-  default boolean handle(SessionPlayerChat packet) {
+  default boolean handle(SessionPlayerChatPacket packet) {
     return false;
   }
 
-  default boolean handle(SystemChat packet) {
+  default boolean handle(SystemChatPacket packet) {
     return false;
   }
 
-  default boolean handle(KeyedPlayerCommand packet) {
+  default boolean handle(KeyedPlayerCommandPacket packet) {
     return false;
   }
 
-  default boolean handle(SessionPlayerCommand packet) {
+  default boolean handle(SessionPlayerCommandPacket packet) {
     return false;
   }
 
-  default boolean handle(PlayerChatCompletion packet) {
+  default boolean handle(PlayerChatCompletionPacket packet) {
     return false;
   }
 
-  default boolean handle(ServerData serverData) {
+  default boolean handle(ServerDataPacket serverData) {
     return false;
   }
 
-  default boolean handle(RemovePlayerInfo packet) {
+  default boolean handle(RemovePlayerInfoPacket packet) {
     return false;
   }
 
-  default boolean handle(UpsertPlayerInfo packet) {
+  default boolean handle(UpsertPlayerInfoPacket packet) {
     return false;
   }
 
-  default boolean handle(LoginAcknowledged packet) {
+  default boolean handle(LoginAcknowledgedPacket packet) {
     return false;
   }
 
-  default boolean handle(ActiveFeatures packet) {
+  default boolean handle(ActiveFeaturesPacket packet) {
     return false;
   }
 
-  default boolean handle(FinishedUpdate packet) {
+  default boolean handle(FinishedUpdatePacket packet) {
     return false;
   }
 
-  default boolean handle(RegistrySync packet) {
+  default boolean handle(RegistrySyncPacket packet) {
     return false;
   }
 
-  default boolean handle(TagsUpdate packet) {
+  default boolean handle(TagsUpdatePacket packet) {
     return false;
   }
 
-  default boolean handle(StartUpdate packet) {
+  default boolean handle(StartUpdatePacket packet) {
     return false;
   }
 
-  default boolean handle(PingIdentify pingIdentify) {
+  default boolean handle(PingIdentifyPacket pingIdentify) {
     return false;
   }
 
-  default boolean handle(ChatAcknowledgement chatAcknowledgement) {
+  default boolean handle(ChatAcknowledgementPacket chatAcknowledgement) {
+    return false;
+  }
+
+  default boolean handle(BundleDelimiterPacket bundleDelimiterPacket) {
     return false;
   }
 }

@@ -21,12 +21,12 @@ import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.packet.chat.ChatAcknowledgement;
+import com.velocitypowered.proxy.protocol.packet.chat.ChatAcknowledgementPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.CommandHandler;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 
-public class SessionCommandHandler implements CommandHandler<SessionPlayerCommand> {
+public class SessionCommandHandler implements CommandHandler<SessionPlayerCommandPacket> {
 
   private final ConnectedPlayer player;
   private final VelocityServer server;
@@ -37,12 +37,12 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
   }
 
   @Override
-  public Class<SessionPlayerCommand> packetClass() {
-    return SessionPlayerCommand.class;
+  public Class<SessionPlayerCommandPacket> packetClass() {
+    return SessionPlayerCommandPacket.class;
   }
 
   @Override
-  public void handlePlayerCommandInternal(SessionPlayerCommand packet) {
+  public void handlePlayerCommandInternal(SessionPlayerCommandPacket packet) {
     queueCommandResult(this.server, this.player, event -> {
       CommandExecuteEvent.CommandResult result = event.getResult();
       if (result == CommandExecuteEvent.CommandResult.denied()) {
@@ -55,8 +55,8 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
                   + "Contact your network administrator."));
         }
         // We seemingly can't actually do this if signed args exist, if not, we can probs keep stuff happy
-        if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
-          return CompletableFuture.completedFuture(new ChatAcknowledgement(packet.lastSeenMessages.getOffset()));
+        if (player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
+          return CompletableFuture.completedFuture(new ChatAcknowledgementPacket(packet.lastSeenMessages.getOffset()));
         }
         return CompletableFuture.completedFuture(null);
       }
@@ -108,8 +108,8 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
                 .toServer();
           }
         }
-        if (player.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
-          return new ChatAcknowledgement(packet.lastSeenMessages.getOffset());
+        if (player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
+          return new ChatAcknowledgementPacket(packet.lastSeenMessages.getOffset());
         }
         return null;
       });

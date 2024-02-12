@@ -39,9 +39,9 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.LoginAcknowledged;
-import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccess;
-import com.velocitypowered.proxy.protocol.packet.SetCompression;
+import com.velocitypowered.proxy.protocol.packet.LoginAcknowledgedPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
+import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
 import io.netty.buffer.ByteBuf;
 import java.util.Objects;
 import java.util.Optional;
@@ -131,8 +131,8 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
 
   private void startLoginCompletion(ConnectedPlayer player) {
     int threshold = server.getConfiguration().getCompressionThreshold();
-    if (threshold >= 0 && mcConnection.getProtocolVersion().compareTo(MINECRAFT_1_8) >= 0) {
-      mcConnection.write(new SetCompression(threshold));
+    if (threshold >= 0 && mcConnection.getProtocolVersion().noLessThan(MINECRAFT_1_8)) {
+      mcConnection.write(new SetCompressionPacket(threshold));
       mcConnection.setCompressionThreshold(threshold);
     }
     VelocityConfiguration configuration = server.getConfiguration();
@@ -142,10 +142,9 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
     }
 
     if (player.getIdentifiedKey() != null) {
-      IdentifiedKey playerKey = player.getIdentifiedKey();
+      final IdentifiedKey playerKey = player.getIdentifiedKey();
       if (playerKey.getSignatureHolder() == null) {
-        if (playerKey instanceof IdentifiedKeyImpl) {
-          IdentifiedKeyImpl unlinkedKey = (IdentifiedKeyImpl) playerKey;
+        if (playerKey instanceof IdentifiedKeyImpl unlinkedKey) {
           // Failsafe
           if (!unlinkedKey.internalAddHolder(player.getUniqueId())) {
             if (onlineMode) {
@@ -153,7 +152,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
                   Component.translatable("multiplayer.disconnect.invalid_public_key"));
               return;
             } else {
-              logger.warn("Key for player " + player.getUsername() + " could not be verified!");
+              logger.warn("Key for player {} could not be verified!", player.getUsername());
             }
           }
         } else {
@@ -161,8 +160,9 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
         }
       } else {
         if (!Objects.equals(playerKey.getSignatureHolder(), playerUniqueId)) {
-          logger.warn("UUID for Player " + player.getUsername() + " mismatches! "
-              + "Chat/Commands signatures will not work correctly for this player!");
+          logger.warn("UUID for Player {} mismatches! "
+              + "Chat/Commands signatures will not work correctly for this player!",
+                  player.getUsername());
         }
       }
     }
@@ -171,7 +171,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(LoginAcknowledged packet) {
+  public boolean handle(LoginAcknowledgedPacket packet) {
     if (loginState != State.SUCCESS_SENT) {
       inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_player_data"));
     } else {
@@ -209,14 +209,14 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
           return;
         }
 
-        ServerLoginSuccess success = new ServerLoginSuccess();
+        ServerLoginSuccessPacket success = new ServerLoginSuccessPacket();
         success.setUsername(player.getUsername());
         success.setProperties(player.getGameProfileProperties());
         success.setUuid(player.getUniqueId());
         mcConnection.write(success);
 
         loginState = State.SUCCESS_SENT;
-        if (inbound.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_20_2) < 0) {
+        if (inbound.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
           loginState = State.ACKNOWLEDGED;
           mcConnection.setActiveSessionHandler(StateRegistry.PLAY,
               new InitialConnectSessionHandler(player, server));
@@ -240,7 +240,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
 
     return server.getEventManager().fire(event).thenRunAsync(() -> {
       Optional<RegisteredServer> toTry = event.getInitialServer();
-      if (!toTry.isPresent()) {
+      if (toTry.isEmpty()) {
         player.disconnect0(
             Component.translatable("velocity.error.no-available-servers", NamedTextColor.RED),
             true);
@@ -263,7 +263,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
     this.inbound.cleanup();
   }
 
-  static enum State {
+  enum State {
     START, SUCCESS_SENT, ACKNOWLEDGED
   }
 }

@@ -18,6 +18,8 @@ java {
 }
 
 dependencies {
+    compileOnlyApi(libs.jspecify)
+
     api(libs.gson)
     api(libs.guava)
 
@@ -41,6 +43,9 @@ dependencies {
     api(libs.brigadier)
     api(libs.bundles.configurate4)
     api(libs.caffeine)
+
+    compileOnly(libs.auto.service.annotations)
+    annotationProcessor(libs.auto.service)
 }
 
 tasks {
@@ -54,15 +59,14 @@ tasks {
 
         val o = options as StandardJavadocDocletOptions
         o.encoding = "UTF-8"
-        o.source = "8"
+        o.source = "17"
 
         o.links(
             "https://www.slf4j.org/apidocs/",
             "https://guava.dev/releases/${libs.guava.get().version}/api/docs/",
             "https://google.github.io/guice/api-docs/${libs.guice.get().version}/javadoc/",
             "https://docs.oracle.com/en/java/javase/17/docs/api/",
-            //"https://jd.advntr.dev/api/${libs.adventure.bom.get().version}/",
-            "https://jd.advntr.dev/api/4.14.0/",
+            "https://jd.advntr.dev/api/${libs.adventure.bom.get().version}/",
             "https://javadoc.io/doc/com.github.ben-manes.caffeine/caffeine"
         )
 

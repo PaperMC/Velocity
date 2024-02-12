@@ -4,7 +4,6 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         mavenCentral()
-        maven("https://s01.oss.sonatype.org/content/repositories/snapshots/") // adventure
         maven("https://repo.papermc.io/repository/maven-public/")
     }
 }
@@ -18,7 +17,7 @@ pluginManagement {
 }
 
 plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.4.0"
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
 }
 
 rootProject.name = "velocity"

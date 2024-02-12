@@ -33,19 +33,18 @@ import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
-import com.velocitypowered.proxy.protocol.packet.Disconnect;
-import com.velocitypowered.proxy.protocol.packet.KeepAlive;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
-import com.velocitypowered.proxy.protocol.packet.ResourcePackRequest;
-import com.velocitypowered.proxy.protocol.packet.ResourcePackResponse;
-import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdate;
-import com.velocitypowered.proxy.protocol.packet.config.RegistrySync;
-import com.velocitypowered.proxy.protocol.packet.config.StartUpdate;
-import com.velocitypowered.proxy.protocol.packet.config.TagsUpdate;
+import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
+import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
+import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
+import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
+import com.velocitypowered.proxy.protocol.packet.config.RegistrySyncPacket;
+import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
+import com.velocitypowered.proxy.protocol.packet.config.TagsUpdatePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
-import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -54,8 +53,6 @@ import org.apache.logging.log4j.Logger;
  * 1.20.2+ switching. Yes, some of this is exceptionally stupid.
  */
 public class ConfigSessionHandler implements MinecraftSessionHandler {
-
-  private static final Pattern PLAUSIBLE_SHA1_HASH = Pattern.compile("^[a-z0-9]{40}$");
   private static final Logger logger = LogManager.getLogger(ConfigSessionHandler.class);
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
@@ -84,8 +81,8 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   public void activated() {
     ConnectedPlayer player = serverConn.getPlayer();
     if (player.getProtocolVersion() == ProtocolVersion.MINECRAFT_1_20_2) {
-      resourcePackToApply = player.getAppliedResourcePack();
-      player.clearAppliedResourcePack();
+      resourcePackToApply = player.resourcePackHandler().getFirstAppliedPack();
+      player.resourcePackHandler().clearAppliedResourcePacks();
     }
   }
 
@@ -100,51 +97,65 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(StartUpdate packet) {
+  public boolean handle(StartUpdatePacket packet) {
     serverConn.ensureConnected().write(packet);
     return true;
   }
 
   @Override
-  public boolean handle(TagsUpdate packet) {
+  public boolean handle(TagsUpdatePacket packet) {
     serverConn.getPlayer().getConnection().write(packet);
     return true;
   }
 
   @Override
-  public boolean handle(KeepAlive packet) {
+  public boolean handle(KeepAlivePacket packet) {
     serverConn.ensureConnected().write(packet);
     return true;
   }
 
   @Override
-  public boolean handle(ResourcePackRequest packet) {
+  public boolean handle(final ResourcePackRequestPacket packet) {
     final MinecraftConnection playerConnection = serverConn.getPlayer().getConnection();
 
-    ServerResourcePackSendEvent event =
-        new ServerResourcePackSendEvent(packet.toServerPromptedPack(), this.serverConn);
+    final ResourcePackInfo resourcePackInfo = packet.toServerPromptedPack();
+    final ServerResourcePackSendEvent event =
+        new ServerResourcePackSendEvent(resourcePackInfo, this.serverConn);
 
     server.getEventManager().fire(event).thenAcceptAsync(serverResourcePackSendEvent -> {
       if (playerConnection.isClosed()) {
         return;
       }
       if (serverResourcePackSendEvent.getResult().isAllowed()) {
-        ResourcePackInfo toSend = serverResourcePackSendEvent.getProvidedResourcePack();
+        final ResourcePackInfo toSend = serverResourcePackSendEvent.getProvidedResourcePack();
+        boolean modifiedPack = false;
         if (toSend != serverResourcePackSendEvent.getReceivedResourcePack()) {
           ((VelocityResourcePackInfo) toSend).setOriginalOrigin(
               ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
+          modifiedPack = true;
         }
-
-        resourcePackToApply = null;
-        serverConn.getPlayer().queueResourcePack(toSend);
+        if (serverConn.getPlayer().resourcePackHandler().hasPackAppliedByHash(toSend.getHash())) {
+          // Do not apply a resource pack that has already been applied
+          if (serverConn.getConnection() != null) {
+            serverConn.getConnection().write(new ResourcePackResponsePacket(
+                    packet.getId(), packet.getHash(), PlayerResourcePackStatusEvent.Status.ACCEPTED));
+          }
+          if (modifiedPack) {
+            logger.warn("A plugin has tried to modify a ResourcePack provided by the backend server "
+                    + "with a ResourcePack already applied, the applying of the resource pack will be skipped.");
+          }
+        } else {
+          resourcePackToApply = null;
+          serverConn.getPlayer().resourcePackHandler().queueResourcePack(toSend);
+        }
       } else if (serverConn.getConnection() != null) {
-        serverConn.getConnection().write(new ResourcePackResponse(packet.getId(), packet.getHash(),
-            PlayerResourcePackStatusEvent.Status.DECLINED));
+        serverConn.getConnection().write(new ResourcePackResponsePacket(
+                packet.getId(), packet.getHash(), PlayerResourcePackStatusEvent.Status.DECLINED));
       }
     }, playerConnection.eventLoop()).exceptionally((ex) -> {
       if (serverConn.getConnection() != null) {
-        serverConn.getConnection().write(new ResourcePackResponse(packet.getId(), packet.getHash(),
-            PlayerResourcePackStatusEvent.Status.DECLINED));
+        serverConn.getConnection().write(new ResourcePackResponsePacket(
+                packet.getId(), packet.getHash(), PlayerResourcePackStatusEvent.Status.DECLINED));
       }
       logger.error("Exception while handling resource pack send for {}", playerConnection, ex);
       return null;
@@ -154,7 +165,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(FinishedUpdate packet) {
+  public boolean handle(FinishedUpdatePacket packet) {
     MinecraftConnection smc = serverConn.ensureConnected();
     ConnectedPlayer player = serverConn.getPlayer();
     ClientConfigSessionHandler configHandler =
@@ -174,8 +185,9 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
         smc.setActiveSessionHandler(StateRegistry.PLAY,
             new TransitionSessionHandler(server, serverConn, resultFuture));
       }
-      if (player.getAppliedResourcePack() == null && resourcePackToApply != null) {
-        player.queueResourcePack(resourcePackToApply);
+      if (player.resourcePackHandler().getFirstAppliedPack() == null
+              && resourcePackToApply != null) {
+        player.resourcePackHandler().queueResourcePack(resourcePackToApply);
       }
       smc.setAutoReading(true);
     }, smc.eventLoop());
@@ -183,14 +195,14 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(Disconnect packet) {
+  public boolean handle(DisconnectPacket packet) {
     serverConn.disconnect();
     resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
     return true;
   }
 
   @Override
-  public boolean handle(PluginMessage packet) {
+  public boolean handle(PluginMessagePacket packet) {
     if (PluginMessageUtil.isMcBrand(packet)) {
       serverConn.getPlayer().getConnection().write(
           PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion(),
@@ -202,7 +214,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(RegistrySync packet) {
+  public boolean handle(RegistrySyncPacket packet) {
     serverConn.getPlayer().getConnection().write(packet.retain());
     return true;
   }
@@ -228,7 +240,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   /**
    * Represents the state of the configuration stage.
    */
-  public static enum State {
+  public enum State {
     START, NEGOTIATING, PLUGIN_MESSAGE_INTERRUPT, RESOURCE_PACK_INTERRUPT, COMPLETE
   }
 }
