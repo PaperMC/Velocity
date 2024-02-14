@@ -18,7 +18,6 @@
 package com.velocitypowered.proxy.network;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.velocitypowered.api.event.proxy.ListenerBoundEvent;
 import com.velocitypowered.api.event.proxy.ListenerCloseEvent;
 import com.velocitypowered.api.network.ListenerType;
@@ -38,8 +37,6 @@ import java.net.InetSocketAddress;
 import java.net.http.HttpClient;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -65,10 +62,9 @@ public final class ConnectionManager {
   public final BackendChannelInitializerHolder backendChannelInitializer;
 
   private final SeparatePoolInetNameResolver resolver;
-  private final Supplier<HttpClient> httpClientSupplier;
 
   /**
-   * Initalizes the {@code ConnectionManager}.
+   * Initializes the {@code ConnectionManager}.
    *
    * @param server a reference to the Velocity server
    */
@@ -82,10 +78,6 @@ public final class ConnectionManager {
     this.backendChannelInitializer = new BackendChannelInitializerHolder(
         new BackendChannelInitializer(this.server));
     this.resolver = new SeparatePoolInetNameResolver(GlobalEventExecutor.INSTANCE);
-    // TODO: Replace with a try-with-resources usage in Java 21
-    this.httpClientSupplier = Suppliers.memoizeWithExpiration(() -> HttpClient.newBuilder()
-            .executor(this.workerGroup)
-            .build(), 5, TimeUnit.SECONDS);
   }
 
   public void logChannelInformation() {
@@ -242,8 +234,11 @@ public final class ConnectionManager {
     return this.serverChannelInitializer;
   }
 
+  @SuppressWarnings("checkstyle:MissingJavadocMethod")
   public HttpClient getHttpClient() {
-    return this.httpClientSupplier.get();
+    return HttpClient.newBuilder()
+            .executor(this.workerGroup)
+            .build();
   }
 
   public BackendChannelInitializerHolder getBackendChannelInitializer() {
