@@ -235,7 +235,7 @@ public final class ConnectionManager {
   }
 
   @SuppressWarnings("checkstyle:MissingJavadocMethod")
-  public HttpClient getHttpClient() {
+  public HttpClient createHttpClient() {
     return HttpClient.newBuilder()
             .executor(this.workerGroup)
             .build();
