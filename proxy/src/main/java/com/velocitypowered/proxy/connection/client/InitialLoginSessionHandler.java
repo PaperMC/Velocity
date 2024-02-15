@@ -43,6 +43,7 @@ import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.security.GeneralSecurityException;
@@ -213,7 +214,8 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
                       server.getVersion().getName() + "/" + server.getVersion().getVersion())
               .uri(URI.create(url))
               .build();
-      server.getHttpClient().sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
+      final HttpClient httpClient = server.createHttpClient();
+      httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
           .whenCompleteAsync((response, throwable) -> {
             if (mcConnection.isClosed()) {
               // The player disconnected after we authenticated them.
@@ -264,7 +266,18 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
                   response.statusCode(), login.getUsername(), playerIp);
               inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
             }
-          }, mcConnection.eventLoop());
+          }, mcConnection.eventLoop())
+          .thenRun(() -> {
+            if (httpClient instanceof final AutoCloseable closeable) {
+              try {
+                closeable.close();
+              } catch (Exception e) {
+                // In Java 21, the HttpClient does not throw any Exception
+                // when trying to clean its resources, so this should not happen
+                logger.error("An unknown error occurred while trying to close an HttpClient", e);
+              }
+            }
+          });
     } catch (GeneralSecurityException e) {
       logger.error("Unable to enable encryption", e);
       mcConnection.close(true);
