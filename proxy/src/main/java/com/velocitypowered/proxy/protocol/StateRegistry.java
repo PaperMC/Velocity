@@ -161,7 +161,7 @@ public enum StateRegistry {
           PluginMessagePacket.class, PluginMessagePacket::new,
           map(0x00, MINECRAFT_1_20_2, false));
       clientbound.register(
-          DisconnectPacket.class, () -> new DisconnectPacket(false),
+          DisconnectPacket.class, () -> new DisconnectPacket(this),
           map(0x01, MINECRAFT_1_20_2, false));
       clientbound.register(
           FinishedUpdatePacket.class, () -> FinishedUpdatePacket.INSTANCE,
@@ -354,7 +354,7 @@ public enum StateRegistry {
           map(0x18, MINECRAFT_1_20_2, false));
       clientbound.register(
           DisconnectPacket.class,
-          () -> new DisconnectPacket(false),
+          () -> new DisconnectPacket(this),
           map(0x40, MINECRAFT_1_7_2, false),
           map(0x1A, MINECRAFT_1_9, false),
           map(0x1B, MINECRAFT_1_13, false),
@@ -595,7 +595,7 @@ public enum StateRegistry {
           map(0x03, MINECRAFT_1_20_2, false));
 
       clientbound.register(
-          DisconnectPacket.class, () -> new DisconnectPacket(true),
+          DisconnectPacket.class, () -> new DisconnectPacket(this),
           map(0x00, MINECRAFT_1_7_2, false));
       clientbound.register(
           EncryptionRequestPacket.class, EncryptionRequestPacket::new,
@@ -795,7 +795,8 @@ public enum StateRegistry {
     private final @Nullable ProtocolVersion lastValidProtocolVersion;
 
     PacketMapping(int id, ProtocolVersion protocolVersion,
-                  ProtocolVersion lastValidProtocolVersion, boolean packetDecoding) {
+                  @Nullable ProtocolVersion lastValidProtocolVersion,
+                  boolean packetDecoding) {
       this.id = id;
       this.protocolVersion = protocolVersion;
       this.lastValidProtocolVersion = lastValidProtocolVersion;

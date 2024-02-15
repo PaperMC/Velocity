@@ -22,6 +22,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.text.Component;
@@ -30,14 +31,14 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class DisconnectPacket implements MinecraftPacket {
 
   private @Nullable ComponentHolder reason;
-  private final boolean login;
+  private final StateRegistry state;
 
-  public DisconnectPacket(boolean login) {
-    this.login = login;
+  public DisconnectPacket(StateRegistry state) {
+    this.state = state;
   }
 
-  private DisconnectPacket(boolean login, ComponentHolder reason) {
-    this.login = login;
+  private DisconnectPacket(StateRegistry state, ComponentHolder reason) {
+    this.state = state;
     this.reason = Preconditions.checkNotNull(reason, "reason");
   }
 
@@ -61,7 +62,8 @@ public class DisconnectPacket implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-	  reason = ComponentHolder.read(buf, login ? ProtocolVersion.MINECRAFT_1_20_2 : version);
+	  reason = ComponentHolder.read(buf, state == StateRegistry.LOGIN
+              ? ProtocolVersion.MINECRAFT_1_20_2 : version);
   }
 
   @Override
@@ -74,8 +76,9 @@ public class DisconnectPacket implements MinecraftPacket {
     return handler.handle(this);
   }
 
-  public static DisconnectPacket create(Component component, ProtocolVersion version, boolean login) {
+  public static DisconnectPacket create(Component component, ProtocolVersion version, StateRegistry state) {
     Preconditions.checkNotNull(component, "component");
-    return new DisconnectPacket(login, new ComponentHolder(login ? ProtocolVersion.MINECRAFT_1_20_2 : version, component));
+    return new DisconnectPacket(state, new ComponentHolder(state == StateRegistry.LOGIN
+            ? ProtocolVersion.MINECRAFT_1_20_2 : version, component));
   }
 }
