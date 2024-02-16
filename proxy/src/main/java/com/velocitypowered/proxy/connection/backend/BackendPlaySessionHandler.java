@@ -399,7 +399,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       if (server.getConfiguration().isFailoverOnUnexpectedServerDisconnect()) {
         serverConn.getPlayer().handleConnectionException(serverConn.getServer(),
             DisconnectPacket.create(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR,
-                serverConn.getPlayer().getProtocolVersion(), false), true);
+                serverConn.getPlayer().getProtocolVersion(),
+                    serverConn.getPlayer().getConnection().getState()), true);
       } else {
         serverConn.getPlayer().disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
       }
