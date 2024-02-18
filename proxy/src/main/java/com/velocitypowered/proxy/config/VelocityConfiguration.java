@@ -31,7 +31,6 @@ import com.velocitypowered.proxy.config.migration.ForwardingMigration;
 import com.velocitypowered.proxy.config.migration.KeyAuthenticationMigration;
 import com.velocitypowered.proxy.config.migration.MotdMigration;
 import com.velocitypowered.proxy.util.AddressUtil;
-import com.velocitypowered.proxy.util.TcpFastOpenUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -359,12 +358,8 @@ public class VelocityConfiguration implements ProxyConfig {
     advanced.setProxyProtocol(proxyProtocol);
   }
 
-  public boolean useTcpFastOpenClient() {
-    return advanced.isTcpFastOpen() && TcpFastOpenUtil.IS_SUPPORTING_TCP_FASTOPEN_CLIENT;
-  }
-
-  public boolean useTcpFastOpenServer() {
-    return advanced.isTcpFastOpen() && TcpFastOpenUtil.IS_SUPPORTING_TCP_FASTOPEN_SERVER;
+  public boolean useTcpFastOpen() {
+    return advanced.isTcpFastOpen();
   }
 
   public Metrics getMetrics() {

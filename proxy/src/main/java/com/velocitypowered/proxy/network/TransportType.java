@@ -47,32 +47,44 @@ public enum TransportType {
   NIO("NIO", NioServerSocketChannel::new,
       NioSocketChannel::new,
       NioDatagramChannel::new,
-      (name, type) -> new NioEventLoopGroup(0, createThreadFactory(name, type))),
+      (name, type) -> new NioEventLoopGroup(0, createThreadFactory(name, type)),
+      false,
+      false),
   EPOLL("epoll", EpollServerSocketChannel::new,
       EpollSocketChannel::new,
       EpollDatagramChannel::new,
-      (name, type) -> new EpollEventLoopGroup(0, createThreadFactory(name, type))),
-  KQUEUE("kqueue", KQueueServerSocketChannel::new,
+      (name, type) -> new EpollEventLoopGroup(0, createThreadFactory(name, type)),
+      Epoll.isTcpFastOpenServerSideAvailable(),
+      Epoll.isTcpFastOpenClientSideAvailable()),
+  KQUEUE("kqueue",KQueueServerSocketChannel::new,
       KQueueSocketChannel::new,
       KQueueDatagramChannel::new,
-      (name, type) -> new KQueueEventLoopGroup(0, createThreadFactory(name, type)));
+      (name, type) -> new KQueueEventLoopGroup(0, createThreadFactory(name, type)),
+      KQueue.isTcpFastOpenServerSideAvailable(),
+      KQueue.isTcpFastOpenClientSideAvailable());
 
   final String name;
   final ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory;
   final ChannelFactory<? extends SocketChannel> socketChannelFactory;
   final ChannelFactory<? extends DatagramChannel> datagramChannelFactory;
   final BiFunction<String, Type, EventLoopGroup> eventLoopGroupFactory;
+  final boolean supportsTcpFastOpenServer;
+  final boolean supportsTcpFastOpenClient;
 
   TransportType(final String name,
       final ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory,
       final ChannelFactory<? extends SocketChannel> socketChannelFactory,
       final ChannelFactory<? extends DatagramChannel> datagramChannelFactory,
-      final BiFunction<String, Type, EventLoopGroup> eventLoopGroupFactory) {
+      final BiFunction<String, Type, EventLoopGroup> eventLoopGroupFactory,
+      final boolean supportsTcpFastOpenServer,
+      final boolean supportsTcpFastOpenClient) {
     this.name = name;
     this.serverSocketChannelFactory = serverSocketChannelFactory;
     this.socketChannelFactory = socketChannelFactory;
     this.datagramChannelFactory = datagramChannelFactory;
     this.eventLoopGroupFactory = eventLoopGroupFactory;
+    this.supportsTcpFastOpenServer = supportsTcpFastOpenServer;
+    this.supportsTcpFastOpenClient = supportsTcpFastOpenClient;
   }
 
   @Override
@@ -82,6 +94,14 @@ public enum TransportType {
 
   public EventLoopGroup createEventLoopGroup(final Type type) {
     return this.eventLoopGroupFactory.apply(this.name, type);
+  }
+
+  public boolean supportsTcpFastOpenServer() {
+    return supportsTcpFastOpenServer;
+  }
+
+  public boolean supportsTcpFastOpenClient() {
+    return supportsTcpFastOpenClient;
   }
 
   private static ThreadFactory createThreadFactory(final String name, final Type type) {
