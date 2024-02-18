@@ -56,7 +56,7 @@ public enum TransportType {
       (name, type) -> new EpollEventLoopGroup(0, createThreadFactory(name, type)),
       Epoll.isTcpFastOpenServerSideAvailable(),
       Epoll.isTcpFastOpenClientSideAvailable()),
-  KQUEUE("kqueue",KQueueServerSocketChannel::new,
+  KQUEUE("kqueue", KQueueServerSocketChannel::new,
       KQueueSocketChannel::new,
       KQueueDatagramChannel::new,
       (name, type) -> new KQueueEventLoopGroup(0, createThreadFactory(name, type)),
