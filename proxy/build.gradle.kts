@@ -2,6 +2,8 @@ import com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCach
 
 plugins {
     application
+    `maven-publish`
+    id("velocity-publish")
     id("velocity-init-manifest")
     alias(libs.plugins.shadow)
 }

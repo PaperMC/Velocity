@@ -29,8 +29,8 @@ public class LibdeflateVelocityCompressor implements VelocityCompressor {
 
   public static final VelocityCompressorFactory FACTORY = LibdeflateVelocityCompressor::new;
 
-  private final long inflateCtx;
-  private final long deflateCtx;
+  private long inflateCtx;
+  private long deflateCtx;
   private boolean disposed = false;
 
   private LibdeflateVelocityCompressor(int level) {
@@ -91,8 +91,12 @@ public class LibdeflateVelocityCompressor implements VelocityCompressor {
   public void close() {
     if (!disposed) {
       NativeZlibInflate.free(inflateCtx);
+      this.inflateCtx = 0;
+
       NativeZlibDeflate.free(deflateCtx);
+      this.deflateCtx = 0;
     }
+
     disposed = true;
   }
 

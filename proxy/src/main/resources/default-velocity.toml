@@ -47,6 +47,9 @@ forwarding-secret-file = "forwarding.secret"
 # instead for a nicer display in the server list.
 announce-forge = false
 
+# If set, disables handling of inbound Forge handshakes.
+disable-forge = false
+
 # If enabled (default is false) and the proxy is in online mode, Velocity will kick
 # any existing player who is online if a duplicate connection attempt is made.
 kick-existing-players = false

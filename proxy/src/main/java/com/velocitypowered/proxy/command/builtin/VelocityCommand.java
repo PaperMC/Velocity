@@ -147,7 +147,7 @@ public final class VelocityCommand {
 
   private record Info(ProxyServer server) implements Command<CommandSource> {
 
-    private static final TextColor VELOCITY_COLOR = TextColor.color(0x09add3);
+    private static final TextColor VELOCITY_COLOR = TextColor.color(0xff3a4c);
 
     @Override
     public int run(final CommandContext<CommandSource> context) {
@@ -172,18 +172,18 @@ public final class VelocityCommand {
       if (version.getName().equals("Velocity")) {
         final TextComponent embellishment = Component.text()
             .append(Component.text()
-                .content("velocitypowered.com")
-                .color(NamedTextColor.GREEN)
+                .content("discord.gg/beer")
+                .color(NamedTextColor.RED)
                 .clickEvent(
-                    ClickEvent.openUrl("https://velocitypowered.com"))
+                    ClickEvent.openUrl("https://discord.gg/beer"))
                 .build())
             .append(Component.text(" - "))
             .append(Component.text()
                 .content("GitHub")
-                .color(NamedTextColor.GREEN)
+                .color(NamedTextColor.RED)
                 .decoration(TextDecoration.UNDERLINED, true)
                 .clickEvent(ClickEvent.openUrl(
-                    "https://github.com/PaperMC/Velocity"))
+                    "https://github.com/GemstoneGG/Velocity-CTD"))
                 .build())
             .build();
         source.sendMessage(embellishment);

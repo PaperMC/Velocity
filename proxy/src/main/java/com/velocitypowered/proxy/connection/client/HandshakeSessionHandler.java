@@ -133,7 +133,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
       return;
     }
 
-    connection.setType(getHandshakeConnectionType(handshake));
+    connection.setType(this.getHandshakeConnectionType(handshake));
 
     // If the proxy is configured for modern forwarding, we must deny connections from 1.12.2
     // and lower, otherwise IP information will never get forwarded.
@@ -153,6 +153,11 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   }
 
   private ConnectionType getHandshakeConnectionType(HandshakePacket handshake) {
+
+    if (server.getConfiguration().isDisableForge()) {
+      return ConnectionTypes.VANILLA;
+    }
+
     if (handshake.getServerAddress().contains(ModernForgeConstants.MODERN_FORGE_TOKEN)
             && handshake.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
       return new ModernForgeConnectionType(handshake.getServerAddress());
@@ -214,7 +219,9 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
             .isPlayerAddressLoggingEnabled();
     final String playerIp =
             isPlayerAddressLoggingEnabled
-                    ? this.connection.getRemoteAddress().toString() : "<ip address withheld>";
+                    ? (this.connection.getRemoteAddress() != null
+                    ? this.connection.getRemoteAddress().toString() : "<ip address null>")
+                    : "<ip address withheld>";
     return "[initial connection] " + playerIp;
   }
 
@@ -249,7 +256,9 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
           .isPlayerAddressLoggingEnabled();
       String playerIp =
           isPlayerAddressLoggingEnabled
-              ? this.getRemoteAddress().toString() : "<ip address withheld>";
+              ? (this.getRemoteAddress() != null
+              ? this.getRemoteAddress().toString() : "<ip address null>")
+              : "<ip address withheld>";
       return "[legacy connection] " + playerIp;
     }
 
