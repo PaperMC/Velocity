@@ -564,10 +564,6 @@ public class VelocityConfiguration implements ProxyConfig {
     return onlineModeKickExistingPlayers;
   }
 
-  public boolean isDisableForge() {
-    return disableForge;
-  }
-
   public boolean isLogOfflineConnections() {
     return logOfflineConnections;
   }
