@@ -72,6 +72,9 @@ ping-passthrough = "DISABLED"
 # If not enabled (default is true) player IP addresses will be replaced by <ip address withheld> in logs
 enable-player-address-logging = true
 
+# If false, disables logging for offline player connections.
+log-offline-connections = false
+
 [servers]
 # Configure your servers here. Each key represents the server's name, and the value
 # represents the IP address of the server to connect to.

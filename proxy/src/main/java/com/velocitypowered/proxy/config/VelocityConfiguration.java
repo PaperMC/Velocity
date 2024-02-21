@@ -91,6 +91,8 @@ public class VelocityConfiguration implements ProxyConfig {
   @Expose
   private boolean forceKeyAuthentication = true; // Added in 1.19
   @Expose
+  private boolean logOfflineConnections = false;
+  @Expose
   private boolean disableForge = true;
 
   private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
@@ -421,6 +423,7 @@ public class VelocityConfiguration implements ProxyConfig {
         .add("favicon", favicon)
         .add("enablePlayerAddressLogging", enablePlayerAddressLogging)
         .add("forceKeyAuthentication", forceKeyAuthentication)
+        .add("logOfflineConnections", logOfflineConnections)
         .add("disableForge", disableForge)
         .toString();
   }
@@ -559,6 +562,14 @@ public class VelocityConfiguration implements ProxyConfig {
 
   public boolean isOnlineModeKickExistingPlayers() {
     return onlineModeKickExistingPlayers;
+  }
+
+  public boolean isDisableForge() {
+    return disableForge;
+  }
+
+  public boolean isLogOfflineConnections() {
+    return logOfflineConnections;
   }
 
   public boolean isDisableForge() {
