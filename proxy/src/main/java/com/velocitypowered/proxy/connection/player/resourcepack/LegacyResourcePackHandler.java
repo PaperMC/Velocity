@@ -34,7 +34,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Legacy (Minecraft <1.17) ResourcePackHandler.
+ * Legacy (Minecraft &lt;1.17) ResourcePackHandler.
  */
 public sealed class LegacyResourcePackHandler extends ResourcePackHandler
         permits Legacy117ResourcePackHandler {

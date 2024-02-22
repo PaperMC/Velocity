@@ -26,8 +26,11 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 import net.kyori.adventure.identity.Identified;
+import net.kyori.adventure.inventory.Book;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.key.Keyed;
+import net.kyori.adventure.sound.Sound;
+import net.kyori.adventure.sound.SoundStop;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.event.HoverEventSource;
@@ -341,4 +344,59 @@ public interface Player extends
    * @param completions the completions to set
    */
   void setCustomChatCompletions(@NotNull Collection<String> completions);
+
+  //
+  // Non Supported Adventure Operations
+  // TODO: Service API
+  //
+
+  /**
+   * {@inheritDoc}
+   *
+   * <b>This method is not currently implemented in Velocity
+   * and will not perform any actions.</b>
+   */
+  @Override
+  default void playSound(@NotNull Sound sound) {
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <b>This method is not currently implemented in Velocity
+   * and will not perform any actions.</b>
+   */
+  @Override
+  default void playSound(@NotNull Sound sound, double x, double y, double z) {
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <b>This method is not currently implemented in Velocity
+   * and will not perform any actions.</b>
+   */
+  @Override
+  default void playSound(@NotNull Sound sound, Sound.Emitter emitter) {
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <b>This method is not currently implemented in Velocity
+   * and will not perform any actions.</b>
+   */
+  @Override
+  default void stopSound(@NotNull SoundStop stop) {
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <b>This method is not currently implemented in Velocity
+   * and will not perform any actions.</b>
+   */
+  @Override
+  default void openBook(@NotNull Book book) {
+  }
 }
