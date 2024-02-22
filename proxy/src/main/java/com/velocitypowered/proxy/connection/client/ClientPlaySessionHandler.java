@@ -54,6 +54,7 @@ import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponsePacket.Offer;
+import com.velocitypowered.proxy.protocol.packet.chat.ChatAcknowledgementPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatTimeKeeper;
 import com.velocitypowered.proxy.protocol.packet.chat.CommandHandler;
@@ -420,6 +421,15 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       });
     }
     configSwitchFuture.complete(null);
+    return true;
+  }
+
+  @Override
+  public boolean handle(ChatAcknowledgementPacket packet) {
+    if (player.getCurrentServer().isEmpty()) {
+      return true;
+    }
+    player.getChatQueue().handleAcknowledgement(packet.offset());
     return true;
   }
 

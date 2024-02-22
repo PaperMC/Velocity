@@ -99,4 +99,15 @@ public class SessionPlayerChatPacket implements MinecraftPacket {
     buf.readBytes(signature);
     return signature;
   }
+
+  public SessionPlayerChatPacket withLastSeenMessages(LastSeenMessages lastSeenMessages) {
+    SessionPlayerChatPacket packet = new SessionPlayerChatPacket();
+    packet.message = message;
+    packet.timestamp = timestamp;
+    packet.salt = salt;
+    packet.signed = signed;
+    packet.signature = signature;
+    packet.lastSeenMessages = lastSeenMessages;
+    return packet;
+  }
 }
