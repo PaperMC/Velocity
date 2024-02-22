@@ -146,10 +146,20 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
       }
       // The resource pack has been applied correctly.
       case SUCCESSFUL -> {
+        pendingResourcePacks.remove(uuid);
         if (queued != null) {
           appliedResourcePacks.put(uuid, queued);
+        } else {
+          // When transitioning to another server that has a resource pack to apply,
+          // if one or more resource packs have already been applied from Velocity,
+          // the player sends more than 1 SUCCESSFUL response to the backend server,
+          // which results in the server receiving more resource pack responses
+          // than the server has sent requests to the player
+          final ResourcePackInfo appliedPack = appliedResourcePacks.get(uuid);
+          if (appliedPack != null) {
+            return handleResponseResult(appliedPack, bundle);
+          }
         }
-        pendingResourcePacks.remove(uuid);
       }
       // An error occurred while trying to download the resource pack to the client,
       // so the resource pack cannot be applied.
