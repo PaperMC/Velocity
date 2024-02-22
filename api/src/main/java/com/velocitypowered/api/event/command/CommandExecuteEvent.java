@@ -39,6 +39,11 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
     this.result = CommandResult.allowed();
   }
 
+  /**
+   * Gets the source responsible for the execution of this command.
+   *
+   * @return the source executing the command
+   */
   public CommandSource getCommandSource() {
     return commandSource;
   }
@@ -47,6 +52,10 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
    * Gets the original command being executed without the first slash.
    *
    * @return the original command being executed
+   * @apiNote Note that the player can provide a command that begins with spaces,
+   *          but still be validly executed. For example, the command {@code /  velocity info},
+   *          although not valid in the chat bar, will be executed as correctly as if
+   *          the player had executed {@code /velocity info}
    */
   public String getCommand() {
     return command;
@@ -58,7 +67,7 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
   }
 
   @Override
-  public void setResult(CommandResult result) {
+  public void setResult(final @NonNull CommandResult result) {
     this.result = Preconditions.checkNotNull(result, "result");
   }
 
@@ -80,11 +89,11 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
     private static final CommandResult DENIED = new CommandResult(false, false, null);
     private static final CommandResult FORWARD_TO_SERVER = new CommandResult(false, true, null);
 
-    private @Nullable String command;
+    private final @Nullable String command;
     private final boolean status;
     private final boolean forward;
 
-    private CommandResult(boolean status, boolean forward, @Nullable String command) {
+    private CommandResult(final boolean status, final boolean forward, final @Nullable String command) {
       this.status = status;
       this.forward = forward;
       this.command = command;
@@ -142,7 +151,7 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
      * @param newCommand the command without first slash to use instead
      * @return a result with a new command being forwarded to server
      */
-    public static CommandResult forwardToServer(@NonNull String newCommand) {
+    public static CommandResult forwardToServer(final @NonNull String newCommand) {
       Preconditions.checkNotNull(newCommand, "newCommand");
       return new CommandResult(false, true, newCommand);
     }
@@ -154,7 +163,7 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
      * @param newCommand the command to use instead without first slash
      * @return a result with a new command
      */
-    public static CommandResult command(@NonNull String newCommand) {
+    public static CommandResult command(final @NonNull String newCommand) {
       Preconditions.checkNotNull(newCommand, "newCommand");
       return new CommandResult(true, false, newCommand);
     }

@@ -267,7 +267,7 @@ public interface Player extends
    *
    * @return collection of the applied resource packs.
    */
-  Collection<ResourcePackInfo> getAppliedResourcePacks();
+  @NotNull Collection<ResourcePackInfo> getAppliedResourcePacks();
 
   /**
    * Gets the {@link ResourcePackInfo} of the resource packs
@@ -276,7 +276,7 @@ public interface Player extends
    *
    * @return collection of the pending resource packs
    */
-  Collection<ResourcePackInfo> getPendingResourcePacks();
+  @NotNull Collection<ResourcePackInfo> getPendingResourcePacks();
 
   /**
    * <strong>Note that this method does not send a plugin message to the server the player
@@ -288,7 +288,7 @@ public interface Player extends
    * @inheritDoc
    */
   @Override
-  boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data);
+  boolean sendPluginMessage(@NotNull ChannelIdentifier identifier, byte @NotNull[] data);
 
   @Override
   default @NotNull Key key() {
@@ -298,7 +298,7 @@ public interface Player extends
   @Override
   default @NotNull HoverEvent<HoverEvent.ShowEntity> asHoverEvent(
           @NotNull UnaryOperator<HoverEvent.ShowEntity> op) {
-    return HoverEvent.showEntity(op.apply(HoverEvent.ShowEntity.of(this, getUniqueId(),
+    return HoverEvent.showEntity(op.apply(HoverEvent.ShowEntity.showEntity(this, getUniqueId(),
             Component.text(getUsername()))));
   }
 
@@ -310,6 +310,9 @@ public interface Player extends
    */
   @Nullable String getClientBrand();
 
+  //
+  // Custom Chat Completions API
+  //
 
   /**
    * Add custom chat completion suggestions shown to the player while typing a message.
