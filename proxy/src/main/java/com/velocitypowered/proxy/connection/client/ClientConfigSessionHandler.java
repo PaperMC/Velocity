@@ -95,9 +95,6 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ResourcePackResponsePacket packet) {
-    if (player.getConnectionInFlight() != null) {
-      player.getConnectionInFlight().ensureConnected().write(packet);
-    }
     return player.resourcePackHandler().onResourcePackResponse(
         new ResourcePackResponseBundle(packet.getId(),
             packet.getHash(),
