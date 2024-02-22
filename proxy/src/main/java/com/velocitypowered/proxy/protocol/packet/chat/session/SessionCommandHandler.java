@@ -93,23 +93,25 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
 
   @Override
   public void handlePlayerCommandInternal(SessionPlayerCommandPacket packet) {
-    queueCommandResult(this.server, this.player, event -> {
+    queueCommandResult(this.server, this.player, (event, newLastSeenMessages) -> {
+      SessionPlayerCommandPacket fixedPacket = packet.withLastSeenMessages(newLastSeenMessages);
+
       CommandExecuteEvent.CommandResult result = event.getResult();
       if (result == CommandExecuteEvent.CommandResult.denied()) {
-        return CompletableFuture.completedFuture(consumeCommand(packet));
+        return CompletableFuture.completedFuture(consumeCommand(fixedPacket));
       }
 
-      String commandToRun = result.getCommand().orElse(packet.command);
+      String commandToRun = result.getCommand().orElse(fixedPacket.command);
       if (result.isForwardToServer()) {
-        return CompletableFuture.completedFuture(forwardCommand(packet, commandToRun));
+        return CompletableFuture.completedFuture(forwardCommand(fixedPacket, commandToRun));
       }
 
       return runCommand(this.server, this.player, commandToRun, hasRun -> {
         if (hasRun) {
-          return consumeCommand(packet);
+          return consumeCommand(fixedPacket);
         }
-        return forwardCommand(packet, commandToRun);
+        return forwardCommand(fixedPacket, commandToRun);
       });
-    }, packet.command, packet.timeStamp);
+    }, packet.command, packet.timeStamp, packet.lastSeenMessages);
   }
 }

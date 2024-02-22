@@ -23,7 +23,9 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import io.netty.channel.ChannelFuture;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import java.time.Instant;
+import java.util.BitSet;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 /**
@@ -64,13 +66,15 @@ public class ChatQueue {
    * packets. This maintains order on the server-level for the client insertions of commands
    * and messages. All entries are locked through an internal object lock.
    *
-   * @param nextPacket the {@link CompletableFuture} which will provide the next-processed packet.
-   * @param timestamp  the new {@link Instant} timestamp of this packet to update the internal chat state.
+   * @param nextPacket       a function mapping {@link LastSeenMessages} state to a {@link CompletableFuture} that will
+   *                         provide the next-processed packet. This should include the fixed {@link LastSeenMessages}.
+   * @param timestamp        the new {@link Instant} timestamp of this packet to update the internal chat state.
+   * @param lastSeenMessages the new {@link LastSeenMessages} last seen messages to update the internal chat state.
    */
-  public void queuePacket(CompletableFuture<MinecraftPacket> nextPacket, @Nullable Instant timestamp) {
+  public void queuePacket(Function<LastSeenMessages, CompletableFuture<MinecraftPacket>> nextPacket, @Nullable Instant timestamp, @Nullable LastSeenMessages lastSeenMessages) {
     queueTask((chatState, smc) -> {
-      chatState.update(timestamp);
-      return nextPacket.thenCompose(packet -> writePacket(packet, smc));
+      LastSeenMessages newLastSeenMessages = chatState.updateFromMessage(timestamp, lastSeenMessages);
+      return nextPacket.apply(newLastSeenMessages).thenCompose(packet -> writePacket(packet, smc));
     });
   }
 
@@ -85,6 +89,16 @@ public class ChatQueue {
     queueTask((chatState, smc) -> {
       T packet = packetFunction.apply(chatState);
       return writePacket(packet, smc);
+    });
+  }
+
+  public void handleAcknowledgement(int offset) {
+    queueTask((chatState, smc) -> {
+      int ackCountToForward = chatState.accumulateAckCount(offset);
+      if (ackCountToForward > 0) {
+        return writePacket(new ChatAcknowledgementPacket(ackCountToForward), smc);
+      }
+      return CompletableFuture.completedFuture(null);
     });
   }
 
@@ -103,16 +117,64 @@ public class ChatQueue {
     CompletableFuture<Void> update(ChatState chatState, MinecraftConnection smc);
   }
 
+  /**
+   * Tracks the last Secure Chat state that we received from the client. This is important to always have a valid 'last
+   * seen' state that is consistent with future and past updates from the client (which may be signed). This state is
+   * used to construct 'spoofed' command packets from the proxy to the server.
+   * <ul>
+   *     <li>If we last forwarded a chat or command packet from the client, we have a known 'last seen' that we can
+   *     reuse.</li>
+   *     <li>If we last forwarded a {@link ChatAcknowledgementPacket}, the previous 'last seen' cannot be reused. We
+   *     cannot predict an up-to-date 'last seen', as we do not know which messages the client actually saw.</li>
+   *     <li>Therefore, we need to hold back any acknowledgement packets so that we can continue to reuse the last valid
+   *     'last seen' state.</li>
+   *     <li>However, there is a limit to the number of messages that can remain unacknowledged on the server.</li>
+   *     <li>To address this, we know that if the client has moved its 'last seen' window far enough, we can fill in the
+   *     gap with dummy 'last seen', and it will never be checked.</li>
+   * </ul>
+   *
+   * Note that this is effectively unused for 1.20.5+ clients, as commands without any signature do not send 'last seen'
+   * updates.
+   */
   public static class ChatState {
+    private static final int MINIMUM_DELAYED_ACK_COUNT = LastSeenMessages.WINDOW_SIZE;
+    private static final BitSet DUMMY_LAST_SEEN_MESSAGES = new BitSet();
+
     public volatile Instant lastTimestamp = Instant.EPOCH;
+    private volatile BitSet lastSeenMessages = new BitSet();
+    private final AtomicInteger delayedAckCount = new AtomicInteger();
 
     private ChatState() {
     }
 
-    public void update(@Nullable Instant timestamp) {
+    @Nullable
+    public LastSeenMessages updateFromMessage(@Nullable Instant timestamp, @Nullable LastSeenMessages lastSeenMessages) {
       if (timestamp != null) {
         this.lastTimestamp = timestamp;
       }
+      if (lastSeenMessages != null) {
+        // We held back some acknowledged messages, so flush that out now that we have a known 'last seen' state again
+        int delayedAckCount = this.delayedAckCount.getAndSet(0);
+        this.lastSeenMessages = lastSeenMessages.getAcknowledged();
+        return lastSeenMessages.offset(delayedAckCount);
+      }
+      return null;
+    }
+
+    public int accumulateAckCount(int ackCount) {
+      int delayedAckCount = this.delayedAckCount.addAndGet(ackCount);
+      int ackCountToForward = delayedAckCount - MINIMUM_DELAYED_ACK_COUNT;
+      if (ackCountToForward >= LastSeenMessages.WINDOW_SIZE) {
+        // Because we only forward acknowledgements above the window size, we don't have to shift the previous 'last seen' state
+        this.lastSeenMessages = DUMMY_LAST_SEEN_MESSAGES;
+        this.delayedAckCount.set(MINIMUM_DELAYED_ACK_COUNT);
+        return ackCountToForward;
+      }
+      return 0;
+    }
+
+    public LastSeenMessages createLastSeen() {
+      return new LastSeenMessages(0, lastSeenMessages);
     }
   }
 }
