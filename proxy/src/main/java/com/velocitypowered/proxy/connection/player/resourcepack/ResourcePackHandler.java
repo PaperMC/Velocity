@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.connection.player.resourcepack;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
@@ -147,12 +148,15 @@ public abstract sealed class ResourcePackHandler
           final @Nullable ResourcePackInfo queued,
           final @NotNull ResourcePackResponseBundle bundle
   ) {
+    // If Velocity, through a plugin, has sent a resource pack to the client,
+    // there is no need to report the status of the response to the server
+    // since it has no information that a resource pack has been sent
     final boolean handled = queued != null
-            && queued.getOriginalOrigin() != ResourcePackInfo.Origin.DOWNSTREAM_SERVER;
+            && queued.getOriginalOrigin() == ResourcePackInfo.Origin.PLUGIN_ON_PROXY;
     if (!handled) {
-      if (player.getConnectionInFlight() != null
-              && player.getConnectionInFlight().getConnection() != null) {
-        player.getConnectionInFlight().getConnection().write(new ResourcePackResponsePacket(
+      final VelocityServerConnection connectionInFlight = player.getConnectionInFlight();
+      if (connectionInFlight != null && connectionInFlight.getConnection() != null) {
+        connectionInFlight.getConnection().write(new ResourcePackResponsePacket(
                 bundle.uuid(), bundle.hash(), bundle.status()));
       }
     }
