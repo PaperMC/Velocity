@@ -13,6 +13,7 @@ import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.util.Optional;
+import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -29,7 +30,7 @@ public final class KickedFromServerEvent implements
 
   private final Player player;
   private final RegisteredServer server;
-  private final net.kyori.adventure.text.@Nullable Component originalReason;
+  private final @Nullable Component originalReason;
   private final boolean duringServerConnect;
   private ServerKickResult result;
 
@@ -43,7 +44,7 @@ public final class KickedFromServerEvent implements
    * @param result the initial result
    */
   public KickedFromServerEvent(Player player, RegisteredServer server,
-      net.kyori.adventure.text.@Nullable Component originalReason,
+      @Nullable Component originalReason,
       boolean duringServerConnect, ServerKickResult result) {
     this.player = Preconditions.checkNotNull(player, "player");
     this.server = Preconditions.checkNotNull(server, "server");
@@ -53,24 +54,39 @@ public final class KickedFromServerEvent implements
   }
 
   @Override
-  public ServerKickResult getResult() {
+  public @NonNull ServerKickResult getResult() {
     return result;
   }
 
   @Override
-  public void setResult(@NonNull ServerKickResult result) {
+  public void setResult(final @NonNull ServerKickResult result) {
     this.result = Preconditions.checkNotNull(result, "result");
   }
 
-  public Player getPlayer() {
+  /**
+   * The player who has been kicked out.
+   *
+   * @return the player affected
+   */
+  public @NonNull Player getPlayer() {
     return player;
   }
 
-  public RegisteredServer getServer() {
+  /**
+   * The server from which the player has been kicked.
+   *
+   * @return the server the player disconnected from
+   */
+  public @NonNull RegisteredServer getServer() {
     return server;
   }
 
-  public Optional<net.kyori.adventure.text.Component> getServerKickReason() {
+  /**
+   * The reason why the player was kicked, the server may or may not provide this reason.
+   *
+   * @return the reason for being kicked, optional
+   */
+  public Optional<Component> getServerKickReason() {
     return Optional.ofNullable(originalReason);
   }
 
@@ -98,7 +114,7 @@ public final class KickedFromServerEvent implements
   /**
    * Represents the base interface for {@link KickedFromServerEvent} results.
    */
-  public interface ServerKickResult extends ResultedEvent.Result {
+  public sealed interface ServerKickResult extends ResultedEvent.Result {
 
   }
 
@@ -107,9 +123,9 @@ public final class KickedFromServerEvent implements
    */
   public static final class DisconnectPlayer implements ServerKickResult {
 
-    private final net.kyori.adventure.text.Component component;
+    private final Component component;
 
-    private DisconnectPlayer(net.kyori.adventure.text.Component component) {
+    private DisconnectPlayer(final Component component) {
       this.component = Preconditions.checkNotNull(component, "component");
     }
 
@@ -118,7 +134,7 @@ public final class KickedFromServerEvent implements
       return true;
     }
 
-    public net.kyori.adventure.text.Component getReasonComponent() {
+    public Component getReasonComponent() {
       return component;
     }
 
@@ -128,8 +144,14 @@ public final class KickedFromServerEvent implements
      * @param reason the reason to use when disconnecting the player
      * @return the disconnect result
      */
-    public static DisconnectPlayer create(net.kyori.adventure.text.Component reason) {
+    public static DisconnectPlayer create(Component reason) {
       return new DisconnectPlayer(reason);
+    }
+
+    @Override
+    public String toString() {
+      return "KickedFromServerEvent#DisconnectPlater{isAllowed=%s,component=%s}"
+              .formatted(isAllowed(), component);
     }
   }
 
@@ -138,11 +160,10 @@ public final class KickedFromServerEvent implements
    */
   public static final class RedirectPlayer implements ServerKickResult {
 
-    private final net.kyori.adventure.text.Component message;
+    private final Component message;
     private final RegisteredServer server;
 
-    private RedirectPlayer(RegisteredServer server,
-        net.kyori.adventure.text.@Nullable Component message) {
+    private RedirectPlayer(final RegisteredServer server, final @Nullable Component message) {
       this.server = Preconditions.checkNotNull(server, "server");
       this.message = message;
     }
@@ -152,11 +173,11 @@ public final class KickedFromServerEvent implements
       return false;
     }
 
-    public RegisteredServer getServer() {
+    public @NonNull RegisteredServer getServer() {
       return server;
     }
 
-    public net.kyori.adventure.text.@Nullable Component getMessageComponent() {
+    public @Nullable Component getMessageComponent() {
       return message;
     }
 
@@ -169,8 +190,7 @@ public final class KickedFromServerEvent implements
      * @param message the message will be sent to the player after redirecting
      * @return the redirect result
      */
-    public static RedirectPlayer create(RegisteredServer server,
-        net.kyori.adventure.text.Component message) {
+    public static RedirectPlayer create(final @NonNull RegisteredServer server, final Component message) {
       return new RedirectPlayer(server, message);
     }
 
@@ -181,8 +201,14 @@ public final class KickedFromServerEvent implements
      * @param server the server to send the player to
      * @return the redirect result
      */
-    public static ServerKickResult create(RegisteredServer server) {
+    public static ServerKickResult create(final RegisteredServer server) {
       return new RedirectPlayer(server, null);
+    }
+
+    @Override
+    public String toString() {
+      return "KickedFromServerEvent#RedirectPlayer{isAllowed=%s,message=%s,server=%s}"
+              .formatted(isAllowed(), this.message, this.server);
     }
   }
 
@@ -193,9 +219,9 @@ public final class KickedFromServerEvent implements
    */
   public static final class Notify implements ServerKickResult {
 
-    private final net.kyori.adventure.text.Component message;
+    private final Component message;
 
-    private Notify(net.kyori.adventure.text.Component message) {
+    private Notify(Component message) {
       this.message = Preconditions.checkNotNull(message, "message");
     }
 
@@ -204,7 +230,7 @@ public final class KickedFromServerEvent implements
       return false;
     }
 
-    public net.kyori.adventure.text.Component getMessageComponent() {
+    public Component getMessageComponent() {
       return message;
     }
 
@@ -214,8 +240,14 @@ public final class KickedFromServerEvent implements
      * @param message the server to send the player to
      * @return the redirect result
      */
-    public static Notify create(net.kyori.adventure.text.Component message) {
+    public static Notify create(final @NonNull Component message) {
       return new Notify(message);
+    }
+
+    @Override
+    public String toString() {
+      return "KickedFromServerEvent#Notify{isAllowed=%s,message=%s}"
+              .formatted(isAllowed(), message);
     }
   }
 }
