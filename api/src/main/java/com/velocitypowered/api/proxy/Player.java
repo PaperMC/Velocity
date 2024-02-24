@@ -7,6 +7,7 @@
 
 package com.velocitypowered.api.proxy;
 
+import com.google.common.io.ByteArrayDataOutput;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.proxy.crypto.KeyIdentifiable;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import net.kyori.adventure.identity.Identified;
 import net.kyori.adventure.key.Key;
@@ -281,14 +283,52 @@ public interface Player extends
   /**
    * <strong>Note that this method does not send a plugin message to the server the player
    * is connected to.</strong> You should only use this method if you are trying to communicate
-   * with a mod that is installed on the player's client. To send a plugin message to the server
+   * with a mod that is installed on the player's client.
+   *
+   * <p>To send a plugin message to the server
    * from the player, you should use the equivalent method on the instance returned by
    * {@link #getCurrentServer()}.
+   *
+   * <pre>
+   *    final ChannelIdentifier identifier;
+   *    final Player player;
+   *    player.getCurrentServer()
+   *          .map(ServerConnection::getServer)
+   *          .ifPresent((RegisteredServer server) -> {
+   *            server.sendPluginMessage(identifier, data);
+   *          });
+   *  </pre>
    *
    * @inheritDoc
    */
   @Override
   boolean sendPluginMessage(@NotNull ChannelIdentifier identifier, byte @NotNull [] data);
+
+  /**
+   * {@inheritDoc}
+   *
+   * <strong>Note that this method does not send a plugin message to the server the player
+   * is connected to.</strong> You should only use this method if you are trying to communicate
+   * with a mod that is installed on the player's client.
+   *
+   * <p>To send a plugin message to the server
+   * from the player, you should use the equivalent method on the instance returned by
+   * {@link #getCurrentServer()}.
+   *
+   * <pre>
+   *   final ChannelIdentifier identifier;
+   *   final Player player;
+   *   player.getCurrentServer()
+   *         .map(ServerConnection::getServer)
+   *         .ifPresent((RegisteredServer server) -> {
+   *           server.sendPluginMessage(identifier, dataEncoder);
+   *         });
+   * </pre>
+   *
+   * @inheritDoc
+   */
+  @Override
+  boolean sendPluginMessage(@NotNull ChannelIdentifier identifier, @NotNull Consumer<ByteArrayDataOutput> dataEncoder);
 
   @Override
   default @NotNull Key key() {
