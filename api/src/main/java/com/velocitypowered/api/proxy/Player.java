@@ -28,8 +28,11 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import net.kyori.adventure.identity.Identified;
+import net.kyori.adventure.inventory.Book;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.key.Keyed;
+import net.kyori.adventure.sound.Sound;
+import net.kyori.adventure.sound.SoundStop;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.event.HoverEventSource;
@@ -269,7 +272,7 @@ public interface Player extends
    *
    * @return collection of the applied resource packs.
    */
-  Collection<ResourcePackInfo> getAppliedResourcePacks();
+  @NotNull Collection<ResourcePackInfo> getAppliedResourcePacks();
 
   /**
    * Gets the {@link ResourcePackInfo} of the resource packs
@@ -278,7 +281,7 @@ public interface Player extends
    *
    * @return collection of the pending resource packs
    */
-  Collection<ResourcePackInfo> getPendingResourcePacks();
+  @NotNull Collection<ResourcePackInfo> getPendingResourcePacks();
 
   /**
    * <strong>Note that this method does not send a plugin message to the server the player
@@ -338,7 +341,7 @@ public interface Player extends
   @Override
   default @NotNull HoverEvent<HoverEvent.ShowEntity> asHoverEvent(
           @NotNull UnaryOperator<HoverEvent.ShowEntity> op) {
-    return HoverEvent.showEntity(op.apply(HoverEvent.ShowEntity.of(this, getUniqueId(),
+    return HoverEvent.showEntity(op.apply(HoverEvent.ShowEntity.showEntity(this, getUniqueId(),
             Component.text(getUsername()))));
   }
 
@@ -350,6 +353,9 @@ public interface Player extends
    */
   @Nullable String getClientBrand();
 
+  //
+  // Custom Chat Completions API
+  //
 
   /**
    * Add custom chat completion suggestions shown to the player while typing a message.
@@ -378,4 +384,59 @@ public interface Player extends
    * @param completions the completions to set
    */
   void setCustomChatCompletions(@NotNull Collection<String> completions);
+
+  //
+  // Non Supported Adventure Operations
+  // TODO: Service API
+  //
+
+  /**
+   * {@inheritDoc}
+   *
+   * <b>This method is not currently implemented in Velocity
+   * and will not perform any actions.</b>
+   */
+  @Override
+  default void playSound(@NotNull Sound sound) {
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <b>This method is not currently implemented in Velocity
+   * and will not perform any actions.</b>
+   */
+  @Override
+  default void playSound(@NotNull Sound sound, double x, double y, double z) {
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <b>This method is not currently implemented in Velocity
+   * and will not perform any actions.</b>
+   */
+  @Override
+  default void playSound(@NotNull Sound sound, Sound.Emitter emitter) {
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <b>This method is not currently implemented in Velocity
+   * and will not perform any actions.</b>
+   */
+  @Override
+  default void stopSound(@NotNull SoundStop stop) {
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <b>This method is not currently implemented in Velocity
+   * and will not perform any actions.</b>
+   */
+  @Override
+  default void openBook(@NotNull Book book) {
+  }
 }

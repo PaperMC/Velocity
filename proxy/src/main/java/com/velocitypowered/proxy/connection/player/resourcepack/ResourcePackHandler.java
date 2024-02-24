@@ -117,27 +117,27 @@ public abstract sealed class ResourcePackHandler
 
   /**
    * Processes a client response to a sent resource-pack.
-   * <ul>
    * <p>Cases in which no action will be taken:</p>
+   * <ul>
    *
-   * <br><li><b>DOWNLOADED</b>
+   * <li><b>DOWNLOADED</b>
    * <p>In this case the resource pack is downloaded and will be applied to the client,
    * no action is required in Velocity.</p>
    *
-   * <br><li><b>INVALID_URL</b>
+   * <li><b>INVALID_URL</b>
    * <p>In this case, the client has received a resource pack request
    * and the first check it performs is if the URL is valid, if not,
    * it will return this value</p>
    *
-   * <br><li><b>FAILED_RELOAD</b>
+   * <li><b>FAILED_RELOAD</b>
    * <p>In this case, when trying to reload the client's resources,
    * an error occurred while reloading a resource pack</p>
-   * </ul>
    *
-   * <br><li><b>DECLINED</b>
+   * <li><b>DECLINED</b>
    * <p>Only in modern versions, as the resource pack has already been rejected,
    * there is nothing to do, if the resource pack is required,
    * the client will be kicked out of the server.</p>
+   * </ul>
    *
    * @param bundle the resource pack response bundle
    */
