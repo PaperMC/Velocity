@@ -23,9 +23,11 @@ import static com.velocitypowered.proxy.network.Connections.HANDLER;
 import static com.velocitypowered.proxy.network.Connections.MINECRAFT_DECODER;
 import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
+import static java.util.Objects.requireNonNull;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteArrayDataOutput;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.server.PingOptions;
@@ -42,6 +44,7 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
+import com.velocitypowered.proxy.protocol.util.ByteBufDataOutput;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -55,10 +58,12 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.audience.ForwardingAudience;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents a server registered on the proxy.
@@ -107,9 +112,9 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
       throw new IllegalStateException("No Velocity proxy instance available");
     }
     CompletableFuture<ServerPing> pingFuture = new CompletableFuture<>();
-    server.createBootstrap(loop).handler(new ChannelInitializer<Channel>() {
+    server.createBootstrap(loop).handler(new ChannelInitializer<>() {
       @Override
-      protected void initChannel(Channel ch) throws Exception {
+      protected void initChannel(Channel ch) {
         ch.pipeline().addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
             .addLast(READ_TIMEOUT, new ReadTimeoutHandler(
                 pingOptions.getTimeout() == 0
@@ -143,8 +148,28 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   }
 
   @Override
-  public boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data) {
+  public boolean sendPluginMessage(final @NotNull ChannelIdentifier identifier, final byte @NotNull [] data) {
+    requireNonNull(identifier);
+    requireNonNull(data);
     return sendPluginMessage(identifier, Unpooled.wrappedBuffer(data));
+  }
+
+  @Override
+  public boolean sendPluginMessage(
+          final @NotNull ChannelIdentifier identifier,
+          final @NotNull Consumer<ByteArrayDataOutput> dataEncoder
+  ) {
+    requireNonNull(identifier);
+    requireNonNull(dataEncoder);
+    final ByteBuf buf = Unpooled.buffer();
+    final ByteBufDataOutput dataInput = new ByteBufDataOutput(buf);
+    dataEncoder.accept(dataInput);
+    if (buf.isReadable()) {
+      return sendPluginMessage(identifier, buf);
+    } else {
+      buf.release();
+      return false;
+    }
   }
 
   /**
@@ -156,8 +181,8 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
    * @return whether or not the message was sent
    */
   public boolean sendPluginMessage(ChannelIdentifier identifier, ByteBuf data) {
-    for (ConnectedPlayer player : players.values()) {
-      VelocityServerConnection serverConnection = player.getConnectedServer();
+    for (final ConnectedPlayer player : players.values()) {
+      final VelocityServerConnection serverConnection = player.getConnectedServer();
       if (serverConnection != null && serverConnection.getConnection() != null
               && serverConnection.getServer() == this) {
         return serverConnection.sendPluginMessage(identifier, data);

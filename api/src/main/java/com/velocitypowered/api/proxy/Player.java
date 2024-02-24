@@ -288,7 +288,7 @@ public interface Player extends
    * @inheritDoc
    */
   @Override
-  boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data);
+  boolean sendPluginMessage(@NotNull ChannelIdentifier identifier, byte @NotNull [] data);
 
   @Override
   default @NotNull Key key() {

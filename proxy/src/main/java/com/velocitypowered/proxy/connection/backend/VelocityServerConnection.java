@@ -19,8 +19,10 @@ package com.velocitypowered.proxy.connection.backend;
 
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN;
 import static com.velocitypowered.proxy.network.Connections.HANDLER;
+import static java.util.Objects.requireNonNull;
 
 import com.google.common.base.Preconditions;
+import com.google.common.io.ByteArrayDataOutput;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
@@ -41,6 +43,7 @@ import com.velocitypowered.proxy.protocol.packet.HandshakePacket;
 import com.velocitypowered.proxy.protocol.packet.JoinGamePacket;
 import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
+import com.velocitypowered.proxy.protocol.util.ByteBufDataOutput;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -49,9 +52,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Handles a connection from the proxy to some backend server.
@@ -255,8 +260,29 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   }
 
   @Override
-  public boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data) {
+  public boolean sendPluginMessage(
+          final @NotNull ChannelIdentifier identifier,
+          final byte @NotNull [] data
+  ) {
     return sendPluginMessage(identifier, Unpooled.wrappedBuffer(data));
+  }
+
+  @Override
+  public boolean sendPluginMessage(
+          final @NotNull ChannelIdentifier identifier,
+          final @NotNull Consumer<ByteArrayDataOutput> dataEncoder
+  ) {
+    requireNonNull(identifier);
+    requireNonNull(dataEncoder);
+    final ByteBuf buf = Unpooled.buffer();
+    final ByteBufDataOutput dataOutput = new ByteBufDataOutput(buf);
+    dataEncoder.accept(dataOutput);
+    if (buf.isReadable()) {
+      return sendPluginMessage(identifier, buf);
+    } else {
+      buf.release();
+      return false;
+    }
   }
 
   /**
@@ -270,9 +296,9 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     Preconditions.checkNotNull(identifier, "identifier");
     Preconditions.checkNotNull(data, "data");
 
-    MinecraftConnection mc = ensureConnected();
+    final MinecraftConnection mc = ensureConnected();
 
-    PluginMessagePacket message = new PluginMessagePacket(identifier.getId(), data);
+    final PluginMessagePacket message = new PluginMessagePacket(identifier.getId(), data);
     mc.write(message);
     return true;
   }

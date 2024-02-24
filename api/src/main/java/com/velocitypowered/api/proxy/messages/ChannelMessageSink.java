@@ -7,6 +7,10 @@
 
 package com.velocitypowered.api.proxy.messages;
 
+import com.google.common.io.ByteArrayDataOutput;
+import java.util.function.Consumer;
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Represents something that can be sent plugin messages.
  */
@@ -19,5 +23,9 @@ public interface ChannelMessageSink {
    * @param data the data to send
    * @return whether or not the message could be sent
    */
-  boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data);
+  boolean sendPluginMessage(@NotNull ChannelIdentifier identifier, byte @NotNull[] data);
+
+  boolean sendPluginMessage(
+          @NotNull ChannelIdentifier identifier,
+          @NotNull Consumer<ByteArrayDataOutput> dataEncoder);
 }
