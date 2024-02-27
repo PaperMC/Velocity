@@ -608,7 +608,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       logger.info(Component.text(this + " has disconnected: ").append(translated));
     }
     connection.closeWith(DisconnectPacket.create(translated,
-            this.getProtocolVersion(), duringLogin));
+            this.getProtocolVersion(), connection.getState()));
   }
 
   public @Nullable VelocityServerConnection getConnectedServer() {
@@ -777,7 +777,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
                   Component reason = status.getReasonComponent()
                       .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
                   handleConnectionException(res.getServer(),
-                      DisconnectPacket.create(reason, getProtocolVersion(), false),
+                      DisconnectPacket.create(reason, getProtocolVersion(), connection.getState()),
                       ((Impl) status).isSafe());
                   break;
                 case SUCCESS:
@@ -945,7 +945,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public boolean sendPluginMessage(ChannelIdentifier identifier, byte[] data) {
+  public boolean sendPluginMessage(@NotNull ChannelIdentifier identifier, byte @NotNull [] data) {
     Preconditions.checkNotNull(identifier, "identifier");
     Preconditions.checkNotNull(data, "data");
     PluginMessagePacket message = new PluginMessagePacket(identifier.getId(),
@@ -1120,12 +1120,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public Collection<ResourcePackInfo> getAppliedResourcePacks() {
+  public @NotNull Collection<ResourcePackInfo> getAppliedResourcePacks() {
     return this.resourcePackHandler.getAppliedResourcePacks();
   }
 
   @Override
-  public Collection<ResourcePackInfo> getPendingResourcePacks() {
+  public @NotNull Collection<ResourcePackInfo> getPendingResourcePacks() {
     return this.resourcePackHandler.getPendingResourcePacks();
   }
 
@@ -1297,7 +1297,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
             Component reason = status.getReasonComponent()
                 .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
             handleConnectionException(toConnect,
-                DisconnectPacket.create(reason, getProtocolVersion(), false), status.isSafe());
+                DisconnectPacket.create(reason, getProtocolVersion(), connection.getState()), status.isSafe());
             break;
           default:
             // The only remaining value is successful (no need to do anything!)

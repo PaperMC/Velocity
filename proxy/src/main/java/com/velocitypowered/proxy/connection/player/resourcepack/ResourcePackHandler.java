@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.connection.player.resourcepack;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
@@ -116,27 +117,27 @@ public abstract sealed class ResourcePackHandler
 
   /**
    * Processes a client response to a sent resource-pack.
-   * <ul>
    * <p>Cases in which no action will be taken:</p>
+   * <ul>
    *
-   * <br><li><b>DOWNLOADED</b>
+   * <li><b>DOWNLOADED</b>
    * <p>In this case the resource pack is downloaded and will be applied to the client,
    * no action is required in Velocity.</p>
    *
-   * <br><li><b>INVALID_URL</b>
+   * <li><b>INVALID_URL</b>
    * <p>In this case, the client has received a resource pack request
    * and the first check it performs is if the URL is valid, if not,
    * it will return this value</p>
    *
-   * <br><li><b>FAILED_RELOAD</b>
+   * <li><b>FAILED_RELOAD</b>
    * <p>In this case, when trying to reload the client's resources,
    * an error occurred while reloading a resource pack</p>
-   * </ul>
    *
-   * <br><li><b>DECLINED</b>
+   * <li><b>DECLINED</b>
    * <p>Only in modern versions, as the resource pack has already been rejected,
    * there is nothing to do, if the resource pack is required,
    * the client will be kicked out of the server.</p>
+   * </ul>
    *
    * @param bundle the resource pack response bundle
    */
@@ -147,12 +148,15 @@ public abstract sealed class ResourcePackHandler
           final @Nullable ResourcePackInfo queued,
           final @NotNull ResourcePackResponseBundle bundle
   ) {
+    // If Velocity, through a plugin, has sent a resource pack to the client,
+    // there is no need to report the status of the response to the server
+    // since it has no information that a resource pack has been sent
     final boolean handled = queued != null
-            && queued.getOriginalOrigin() != ResourcePackInfo.Origin.DOWNSTREAM_SERVER;
+            && queued.getOriginalOrigin() == ResourcePackInfo.Origin.PLUGIN_ON_PROXY;
     if (!handled) {
-      if (player.getConnectionInFlight() != null
-              && player.getConnectionInFlight().getConnection() != null) {
-        player.getConnectionInFlight().getConnection().write(new ResourcePackResponsePacket(
+      final VelocityServerConnection connectionInFlight = player.getConnectionInFlight();
+      if (connectionInFlight != null && connectionInFlight.getConnection() != null) {
+        connectionInFlight.getConnection().write(new ResourcePackResponsePacket(
                 bundle.uuid(), bundle.hash(), bundle.status()));
       }
     }
