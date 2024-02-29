@@ -118,6 +118,8 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
   private void handleLogin(HandshakePacket handshake, InitialInboundConnection ic) {
     if (!ProtocolVersion.isSupported(handshake.getProtocolVersion())) {
+      // Bump connection into correct protocol state so that we can send the disconnect packet.
+      connection.setState(StateRegistry.LOGIN);
       ic.disconnectQuietly(Component.translatable()
               .key("multiplayer.disconnect.outdated_client")
               .arguments(Component.text(ProtocolVersion.SUPPORTED_VERSION_STRING))
