@@ -212,13 +212,12 @@ public enum ProtocolVersion implements Ordered<ProtocolVersion> {
   }
 
   /**
-   * Gets the {@link ProtocolVersion} for the given protocol.
+   * Returns whether this {@link ProtocolVersion} is supported.
    *
-   * @param protocol the protocol as an int
-   * @return the protocol version
+   * @return if the protocol supported
    */
-  public static ProtocolVersion getProtocolVersion(int protocol) {
-    return ID_TO_PROTOCOL_CONSTANT.getOrDefault(protocol, UNKNOWN);
+  public boolean isSupported() {
+    return noLessThan(MINIMUM_VERSION);
   }
 
   /**
@@ -238,7 +237,17 @@ public enum ProtocolVersion implements Ordered<ProtocolVersion> {
    * @return if the protocol supported
    */
   public static boolean isSupported(ProtocolVersion version) {
-    return version != null && version.isSupported();
+    return version.isSupported();
+  }
+
+  /**
+   * Gets the {@link ProtocolVersion} for the given protocol.
+   *
+   * @param protocol the protocol as an int
+   * @return the protocol version
+   */
+  public static ProtocolVersion getProtocolVersion(int protocol) {
+    return ID_TO_PROTOCOL_CONSTANT.getOrDefault(protocol, UNKNOWN);
   }
 
   /**
@@ -257,15 +266,6 @@ public enum ProtocolVersion implements Ordered<ProtocolVersion> {
    */
   public boolean isLegacy() {
     return false;
-  }
-
-  /**
-   * Returns whether this {@link ProtocolVersion} is supported.
-   *
-   * @return if the protocol supported
-   */
-  public boolean isSupported() {
-    return noLessThan(MINIMUM_VERSION);
   }
 
   @Override
