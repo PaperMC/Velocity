@@ -237,7 +237,7 @@ public enum ProtocolVersion implements Ordered<ProtocolVersion> {
    * @return if the protocol supported
    */
   public static boolean isSupported(ProtocolVersion version) {
-    return version.isSupported();
+    return version != null && version.isSupported();
   }
 
   /**
