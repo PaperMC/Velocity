@@ -23,7 +23,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import com.google.common.base.Preconditions;
-import com.google.common.io.ByteArrayDataOutput;
 import com.google.gson.JsonObject;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus;
@@ -45,6 +44,7 @@ import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.crypto.KeyIdentifiable;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.messages.PluginMessageEncoder;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -99,7 +99,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.Consumer;
 import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.identity.Identity;
@@ -960,13 +959,13 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   @Override
   public boolean sendPluginMessage(
           final @NotNull ChannelIdentifier identifier,
-          @NotNull Consumer<ByteArrayDataOutput> dataEncoder
+          final @NotNull PluginMessageEncoder dataEncoder
   ) {
     requireNonNull(identifier);
     requireNonNull(dataEncoder);
     final ByteBuf buf = Unpooled.buffer();
     final ByteBufDataOutput dataOutput = new ByteBufDataOutput(buf);
-    dataEncoder.accept(dataOutput);
+    dataEncoder.encode(dataOutput);
     if (buf.isReadable()) {
       final PluginMessagePacket message = new PluginMessagePacket(identifier.getId(), buf);
       connection.write(message);

@@ -7,13 +7,13 @@
 
 package com.velocitypowered.api.proxy;
 
-import com.google.common.io.ByteArrayDataOutput;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.proxy.crypto.KeyIdentifiable;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
+import com.velocitypowered.api.proxy.messages.PluginMessageEncoder;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.api.proxy.player.TabList;
@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import net.kyori.adventure.identity.Identified;
 import net.kyori.adventure.inventory.Book;
@@ -284,9 +283,11 @@ public interface Player extends
   @NotNull Collection<ResourcePackInfo> getPendingResourcePacks();
 
   /**
-   * <strong>Note that this method does not send a plugin message to the server the player
+   * {@inheritDoc}
+   *
+   * <p><strong>Note that this method does not send a plugin message to the server the player
    * is connected to.</strong> You should only use this method if you are trying to communicate
-   * with a mod that is installed on the player's client.
+   * with a mod that is installed on the player's client.</p>
    *
    * <p>To send a plugin message to the server
    * from the player, you should use the equivalent method on the instance returned by
@@ -302,36 +303,22 @@ public interface Player extends
    *          });
    *  </pre>
    *
-   * @inheritDoc
    */
   @Override
   boolean sendPluginMessage(@NotNull ChannelIdentifier identifier, byte @NotNull [] data);
 
   /**
    * {@inheritDoc}
-   *
-   * <strong>Note that this method does not send a plugin message to the server the player
+   * <p><strong>Note that this method does not send a plugin message to the server the player
    * is connected to.</strong> You should only use this method if you are trying to communicate
-   * with a mod that is installed on the player's client.
+   * with a mod that is installed on the player's client.</p>
    *
    * <p>To send a plugin message to the server
    * from the player, you should use the equivalent method on the instance returned by
    * {@link #getCurrentServer()}.
-   *
-   * <pre>
-   *   final ChannelIdentifier identifier;
-   *   final Player player;
-   *   player.getCurrentServer()
-   *         .map(ServerConnection::getServer)
-   *         .ifPresent((RegisteredServer server) -> {
-   *           server.sendPluginMessage(identifier, dataEncoder);
-   *         });
-   * </pre>
-   *
-   * @inheritDoc
    */
   @Override
-  boolean sendPluginMessage(@NotNull ChannelIdentifier identifier, @NotNull Consumer<ByteArrayDataOutput> dataEncoder);
+  boolean sendPluginMessage(@NotNull ChannelIdentifier identifier, @NotNull PluginMessageEncoder dataEncoder);
 
   @Override
   default @NotNull Key key() {

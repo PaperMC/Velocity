@@ -27,9 +27,9 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.ByteArrayDataOutput;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.messages.PluginMessageEncoder;
 import com.velocitypowered.api.proxy.server.PingOptions;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
@@ -58,7 +58,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.audience.ForwardingAudience;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -157,13 +156,13 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   @Override
   public boolean sendPluginMessage(
           final @NotNull ChannelIdentifier identifier,
-          final @NotNull Consumer<ByteArrayDataOutput> dataEncoder
+          final @NotNull PluginMessageEncoder dataEncoder
   ) {
     requireNonNull(identifier);
     requireNonNull(dataEncoder);
     final ByteBuf buf = Unpooled.buffer();
     final ByteBufDataOutput dataInput = new ByteBufDataOutput(buf);
-    dataEncoder.accept(dataInput);
+    dataEncoder.encode(dataInput);
     if (buf.isReadable()) {
       return sendPluginMessage(identifier, buf);
     } else {

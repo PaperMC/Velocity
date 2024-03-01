@@ -22,10 +22,10 @@ import static com.velocitypowered.proxy.network.Connections.HANDLER;
 import static java.util.Objects.requireNonNull;
 
 import com.google.common.base.Preconditions;
-import com.google.common.io.ByteArrayDataOutput;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.messages.PluginMessageEncoder;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.proxy.VelocityServer;
@@ -52,7 +52,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -270,13 +269,13 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   @Override
   public boolean sendPluginMessage(
           final @NotNull ChannelIdentifier identifier,
-          final @NotNull Consumer<ByteArrayDataOutput> dataEncoder
+          final @NotNull PluginMessageEncoder dataEncoder
   ) {
     requireNonNull(identifier);
     requireNonNull(dataEncoder);
     final ByteBuf buf = Unpooled.buffer();
     final ByteBufDataOutput dataOutput = new ByteBufDataOutput(buf);
-    dataEncoder.accept(dataOutput);
+    dataEncoder.encode(dataOutput);
     if (buf.isReadable()) {
       return sendPluginMessage(identifier, buf);
     } else {

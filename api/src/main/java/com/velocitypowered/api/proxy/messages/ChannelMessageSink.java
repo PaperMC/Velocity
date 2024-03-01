@@ -7,8 +7,7 @@
 
 package com.velocitypowered.api.proxy.messages;
 
-import com.google.common.io.ByteArrayDataOutput;
-import java.util.function.Consumer;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -41,7 +40,8 @@ public interface ChannelMessageSink {
    * @param dataEncoder the encoder of the data to be sent
    * @return whether the message could be sent
    */
+  @ApiStatus.Experimental
   boolean sendPluginMessage(
           @NotNull ChannelIdentifier identifier,
-          @NotNull Consumer<ByteArrayDataOutput> dataEncoder);
+          @NotNull PluginMessageEncoder dataEncoder);
 }
