@@ -625,7 +625,7 @@ public enum StateRegistry {
   }
 
   /**
-   * Gets the API representation of the ProtocolState.
+   * Gets the API representation of the StateRegistry.
    *
    * @return the API representation
    */
