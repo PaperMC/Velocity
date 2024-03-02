@@ -42,6 +42,8 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Handles the client config stage.
@@ -72,17 +74,11 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(KeepAlivePacket packet) {
+  public boolean handle(final KeepAlivePacket packet) {
     final VelocityServerConnection serverConnection = player.getConnectedServer();
-    if (serverConnection != null) {
-      final Long sentTime = serverConnection.getPendingPings().remove(packet.getRandomId());
-      if (sentTime != null) {
-        final MinecraftConnection smc = serverConnection.getConnection();
-        if (smc != null) {
-          player.setPing(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - sentTime));
-          smc.write(packet);
-        }
-      }
+    if (!this.sendKeepAliveToBackend(serverConnection, packet)) {
+      final VelocityServerConnection connectionInFlight = player.getConnectionInFlight();
+      this.sendKeepAliveToBackend(connectionInFlight, packet);
     }
     return true;
   }
@@ -95,9 +91,6 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ResourcePackResponsePacket packet) {
-    if (player.getConnectionInFlight() != null) {
-      player.getConnectionInFlight().ensureConnected().write(packet);
-    }
     return player.resourcePackHandler().onResourcePackResponse(
         new ResourcePackResponseBundle(packet.getId(),
             packet.getHash(),
@@ -178,6 +171,24 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   public void exception(Throwable throwable) {
     player.disconnect(
         Component.translatable("velocity.error.player-connection-error", NamedTextColor.RED));
+  }
+
+  private boolean sendKeepAliveToBackend(
+          final @Nullable VelocityServerConnection serverConnection,
+          final @NotNull KeepAlivePacket packet
+  ) {
+    if (serverConnection != null) {
+      final Long sentTime = serverConnection.getPendingPings().remove(packet.getRandomId());
+      if (sentTime != null) {
+        final MinecraftConnection smc = serverConnection.getConnection();
+        if (smc != null) {
+          player.setPing(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - sentTime));
+          smc.write(packet);
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**
