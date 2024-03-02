@@ -33,6 +33,7 @@ import com.velocitypowered.api.event.player.KickedFromServerEvent.ServerKickResu
 import com.velocitypowered.api.event.player.PlayerModInfoEvent;
 import com.velocitypowered.api.event.player.PlayerSettingsChangedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
+import com.velocitypowered.api.event.player.configuration.PlayerEnterConfigurationEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.PermissionProvider;
@@ -54,7 +55,6 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.player.bundle.BundleDelimiterHandler;
-import com.velocitypowered.proxy.connection.player.configuration.ConfigurationStateHandler;
 import com.velocitypowered.proxy.connection.player.resourcepack.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.player.resourcepack.handler.ResourcePackHandler;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
@@ -157,7 +157,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private @MonotonicNonNull List<String> serversToTry = null;
   private final ResourcePackHandler resourcePackHandler;
   private final BundleDelimiterHandler bundleHandler = new BundleDelimiterHandler(this);
-  private final ConfigurationStateHandler configStateHandler = new ConfigurationStateHandler(this);
 
   private final @NotNull Pointers pointers =
       Player.super.pointers().toBuilder()
@@ -1016,10 +1015,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     return this.resourcePackHandler;
   }
 
-  public ConfigurationStateHandler configurationStateHandler() {
-    return this.configStateHandler;
-  }
-
   @Override
   @Deprecated
   public void sendResourcePack(String url) {
@@ -1127,6 +1122,23 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       keepAlive.setRandomId(ThreadLocalRandom.current().nextLong());
       connection.write(keepAlive);
     }
+  }
+
+  /**
+   * Switches the connection to the client into config state.
+   */
+  public void switchToConfigState() {
+    CompletableFuture.runAsync(() -> {
+      connection.write(StartUpdatePacket.INSTANCE);
+      connection.getChannel().pipeline()
+              .get(MinecraftEncoder.class).setState(StateRegistry.CONFIG);
+      // Make sure we don't send any play packets to the player after update start
+      connection.addPlayPacketQueueHandler();
+      server.getEventManager().fireAndForget(new PlayerEnterConfigurationEvent(this));
+    }, connection.eventLoop()).exceptionally((ex) -> {
+      logger.error("Error switching player connection to config state", ex);
+      return null;
+    });
   }
 
   /**
