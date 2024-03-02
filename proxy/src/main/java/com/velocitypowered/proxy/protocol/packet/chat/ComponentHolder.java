@@ -43,6 +43,8 @@ import net.kyori.adventure.nbt.LongBinaryTag;
 import net.kyori.adventure.nbt.ShortBinaryTag;
 import net.kyori.adventure.nbt.StringBinaryTag;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -91,8 +93,37 @@ public class ComponentHolder {
           throw ex;
         }
       }
+      if (component != null) {
+        component = parseComponentUrls((TextComponent) component);
+      }
     }
     return component;
+  }
+
+  private Component parseComponentUrls(TextComponent component) {
+    TextComponent.Builder newComponent = Component.text();
+    StringBuilder content = new StringBuilder();
+
+    for (String contentPart : component.content().split(" ")) {
+        if (!contentPart.startsWith("http")) {
+            content.append(!content.isEmpty() ? " " : "").append(contentPart);
+        } else {
+            newComponent.append(Component.text(content + " ").color(component.color()));
+            newComponent.append(Component.text(contentPart)
+                    .clickEvent(ClickEvent.openUrl(contentPart))
+                    .color(component.color()));
+            content.setLength(0);
+            content.append(" ");
+        }
+    }
+    if (!content.isEmpty()) {
+        newComponent.append(Component.text(content + "").color(component.color()));
+    }
+
+    component.children().forEach(childComponent ->
+            newComponent.append(parseComponentUrls((TextComponent) childComponent))
+    );
+    return newComponent.build();
   }
 
   public String getJson() {
