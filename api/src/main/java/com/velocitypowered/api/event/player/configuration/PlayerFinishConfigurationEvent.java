@@ -1,15 +1,23 @@
+/*
+ * Copyright (C) 2024 Velocity Contributors
+ *
+ * The Velocity API is licensed under the terms of the MIT License. For more details,
+ * reference the LICENSE file in the api top-level directory.
+ */
+
 package com.velocitypowered.api.event.player.configuration;
 
+import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.Player;
 import org.jetbrains.annotations.NotNull;
 
 // TODO: Protocol State API
 /**
- * Event executed when a player of version 1.20.2 finishes the Configuration state.
- * <p>From this moment on, the {@link Player#protocolState()} method
- * will return {@link ProtocolState#PLAY}.</p>
+ * This event is executed when the player is about to finish the Configuration state.
+ * <p>Velocity will wait for this event to finish the configuration phase on the client.</p>
  *
- * @param player The player who has completed the Configuration state
+ * @param player The player who is about to complete the configuration phase
  */
+@AwaitingEvent
 public record PlayerFinishConfigurationEvent(@NotNull Player player) {
 }
