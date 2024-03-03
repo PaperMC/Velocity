@@ -1172,7 +1172,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public ProtocolState protocolState() {
+  public ProtocolState getProtocolState() {
     return connection.getState().toProtocolState();
   }
 

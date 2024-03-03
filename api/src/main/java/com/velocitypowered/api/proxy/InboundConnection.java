@@ -50,5 +50,5 @@ public interface InboundConnection {
    *
    * @return the protocol state of the connection
    */
-  ProtocolState protocolState();
+  ProtocolState getProtocolState();
 }

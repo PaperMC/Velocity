@@ -169,7 +169,7 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
   }
 
   @Override
-  public ProtocolState protocolState() {
-    return delegate.protocolState();
+  public ProtocolState getProtocolState() {
+    return delegate.getProtocolState();
   }
 }

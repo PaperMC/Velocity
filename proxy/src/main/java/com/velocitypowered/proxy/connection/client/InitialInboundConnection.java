@@ -89,7 +89,7 @@ public final class InitialInboundConnection implements VelocityInboundConnection
   }
 
   @Override
-  public ProtocolState protocolState() {
+  public ProtocolState getProtocolState() {
     return connection.getState().toProtocolState();
   }
 
