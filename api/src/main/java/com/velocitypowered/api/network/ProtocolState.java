@@ -15,35 +15,38 @@ package com.velocitypowered.api.network;
  */
 public enum ProtocolState {
   /**
-   * Initial connection state.
+   * Initial connection State.
    * <p>This status can be caused by a STATUS, LOGIN or TRANSFER intent.</p>
    * If the intent is LOGIN or TRANSFER, the next state will be {@link #LOGIN},
    * otherwise, it will go to the {@link #STATUS} state.
    */
   HANDSHAKE,
   /**
-   * Ping status of a connection.
-   * <br>Connections with the STATUS HandshakeIntent will pass through this state
+   * Ping State of a connection.
+   * <p>Connections with the STATUS HandshakeIntent will pass through this state
    * and be disconnected after it requests the ping from the server
-   * and the server responds with the respective ping.
+   * and the server responds with the respective ping.</p>
    */
   STATUS,
   /**
-   * Authentication state of a connection, at this moment the player is authenticating
-   * with the authentication servers.
+   * Authentication State of a connection.
+   * <p>At this moment the player is authenticating with the authentication servers.</p>
    */
   LOGIN,
   /**
-   * Configuration State, at this point the player allows the server to send information
+   * Configuration State of a connection.
+   * <p>At this point the player allows the server to send information
    * such as resource packs and plugin messages, at the same time the player
-   * will send his client brand and the respective plugin messages if it is a modded client.
+   * will send his client brand and the respective plugin messages
+   * if it is a modded client.</p>
    *
    * @sinceMinecraft 1.20.2
    */
   CONFIGURATION,
   /**
-   * In this state is where the whole game runs, the server is able to change
-   * the player's state to Configuration as needed in versions 1.20.2 and higher.
+   * Game State of a connection.
+   * <p>In this state is where the whole game runs, the server is able to change
+   * the player's state to {@link #CONFIGURATION} as needed in versions 1.20.2 and higher.</p>
    */
   PLAY
 }
