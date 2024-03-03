@@ -64,6 +64,7 @@ public interface PlayerSettings {
    * This feature was introduced in 1.18.
    *
    * @return whether or not the client explicitly allows listing. Always false on older clients.
+   * @sinceMinecraft 1.18
    */
   boolean isClientListingAllowed();
 

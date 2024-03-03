@@ -75,6 +75,7 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
    * Returns the UUID of the connecting player. This value is {@code null} on 1.19.1 and lower.
    *
    * @return the uuid
+   * @sinceMinecraft 1.19.1
    */
   public @Nullable UUID getUniqueId() {
     return uuid;
