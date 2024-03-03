@@ -10,6 +10,8 @@ package com.velocitypowered.api.network;
 /**
  * Representation of the state of the protocol
  * in which a connection can be present.
+ *
+ * @since 3.3.0
  */
 public enum ProtocolState {
   /**
@@ -36,12 +38,12 @@ public enum ProtocolState {
    * such as resource packs and plugin messages, at the same time the player
    * will send his client brand and the respective plugin messages if it is a modded client.
    *
-   * @since Minecraft 1.20.2
+   * @sinceMinecraft Minecraft 1.20.2
    */
   CONFIGURATION,
   /**
    * In this state is where the whole game runs, the server is able to change
    * the player's state to Configuration as needed in versions 1.20.2 and higher.
    */
-  PLAY;
+  PLAY
 }
