@@ -70,6 +70,12 @@ tasks {
             "https://javadoc.io/doc/com.github.ben-manes.caffeine/caffeine"
         )
 
+        o.tags(
+            "apiNote:a:API Note:",
+            "implSpec:a:Implementation Requirements:",
+            "implNote:a:Implementation Note:"
+        )
+
         // Disable the crazy super-strict doclint tool in Java 8
         o.addStringOption("Xdoclint:none", "-quiet")
     }
