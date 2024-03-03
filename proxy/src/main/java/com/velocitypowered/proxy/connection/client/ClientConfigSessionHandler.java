@@ -18,6 +18,8 @@
 package com.velocitypowered.proxy.connection.client;
 
 import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
+import com.velocitypowered.api.event.player.configuration.PlayerFinishConfigurationEvent;
+import com.velocitypowered.api.event.player.configuration.PlayerFinishedConfigurationEvent;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -208,10 +210,13 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
       smc.write(brandPacket);
     }
 
-    player.getConnection().eventLoop().execute(() -> {
-      player.getConnection().write(FinishedUpdatePacket.INSTANCE);
-      player.getConnection().getChannel().pipeline().get(MinecraftEncoder.class).setState(StateRegistry.PLAY);
-    });
+    server.getEventManager().fire(new PlayerFinishConfigurationEvent(player))
+        .thenAcceptAsync(event -> {
+          player.getConnection().write(FinishedUpdatePacket.INSTANCE);
+          player.getConnection().getChannel().pipeline()
+                  .get(MinecraftEncoder.class).setState(StateRegistry.PLAY);
+          server.getEventManager().fireAndForget(new PlayerFinishedConfigurationEvent(player));
+        }, player.getConnection().eventLoop());
 
     smc.write(FinishedUpdatePacket.INSTANCE);
     smc.getChannel().pipeline().get(MinecraftEncoder.class).setState(StateRegistry.PLAY);

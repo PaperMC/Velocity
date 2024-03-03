@@ -26,6 +26,7 @@ import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChannelRegisterEvent;
 import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
 import com.velocitypowered.api.event.player.TabCompleteEvent;
+import com.velocitypowered.api.event.player.configuration.PlayerEnterConfigurationEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
@@ -402,6 +403,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   public boolean handle(FinishedUpdatePacket packet) {
     // Complete client switch
     player.getConnection().setActiveSessionHandler(StateRegistry.CONFIG);
+    server.getEventManager().fireAndForget(new PlayerEnterConfigurationEvent(player));
     VelocityServerConnection serverConnection = player.getConnectedServer();
     if (serverConnection != null) {
       MinecraftConnection smc = serverConnection.ensureConnected();
@@ -487,7 +489,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
    * @return a future that completes when the switch is complete
    */
   public CompletableFuture<Void> doSwitch() {
-    VelocityServerConnection existingConnection = player.getConnectedServer();
+    final VelocityServerConnection existingConnection = player.getConnectedServer();
 
     if (existingConnection != null) {
       // Shut down the existing server connection.
