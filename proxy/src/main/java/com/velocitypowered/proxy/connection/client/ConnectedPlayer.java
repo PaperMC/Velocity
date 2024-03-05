@@ -848,24 +848,26 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
             }
 
             if (emptiestServer.isEmpty()) {
+              if ((connectedServer != null && hasSameName(connectedServer.getServer(), serverName))
+                      || (connectionInFlight != null && hasSameName(connectionInFlight.getServer(), serverName))
+                      || (current != null && hasSameName(current, serverName))) {
+                continue;
+              }
               index = connOrder.indexOf(serverName);
               emptiestServer = Optional.of(registeredServer);
             } else {
               if (registeredServer.getPlayersConnected().size() < emptiestServer.get().getPlayersConnected().size()) {
+                if ((connectedServer != null && hasSameName(connectedServer.getServer(), serverName))
+                        || (connectionInFlight != null && hasSameName(connectionInFlight.getServer(), serverName))
+                        || (current != null && hasSameName(current, serverName))) {
+                  continue;
+                }
                 index = connOrder.indexOf(serverName);
                 emptiestServer = Optional.of(registeredServer);
               }
             }
           }
           tryIndex = index;
-
-          String toTryName = emptiestServer.get().getServerInfo().getName();
-          if ((connectedServer != null && hasSameName(connectedServer.getServer(), toTryName))
-                  || (connectionInFlight != null && hasSameName(connectionInFlight.getServer(), toTryName))
-                  || (current != null && hasSameName(current, toTryName))) {
-            return Optional.empty();
-          }
-
           return emptiestServer;
         }
 
