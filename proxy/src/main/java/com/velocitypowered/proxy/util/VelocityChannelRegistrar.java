@@ -115,7 +115,7 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
    * @return the list of channels to register
    */
   public Collection<String> getChannelsForProtocol(ProtocolVersion protocolVersion) {
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0) {
+    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_13)) {
       return getModernChannelIds();
     }
     return getLegacyChannelIds();

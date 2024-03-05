@@ -47,6 +47,9 @@ public class ServerListPingHandler {
   }
 
   private ServerPing constructLocalPing(ProtocolVersion version) {
+    if (version == ProtocolVersion.UNKNOWN) {
+      version = ProtocolVersion.MAXIMUM_VERSION;
+    }
     VelocityConfiguration configuration = server.getConfiguration();
     return new ServerPing(
         new ServerPing.Version(version.getProtocol(),
@@ -140,7 +143,7 @@ public class ServerListPingHandler {
    */
   public CompletableFuture<ServerPing> getInitialPing(VelocityInboundConnection connection) {
     VelocityConfiguration configuration = server.getConfiguration();
-    ProtocolVersion shownVersion = ProtocolVersion.isSupported(connection.getProtocolVersion())
+    ProtocolVersion shownVersion = connection.getProtocolVersion().isSupported()
         ? connection.getProtocolVersion() : ProtocolVersion.MAXIMUM_VERSION;
     PingPassthroughMode passthroughMode = configuration.getPingPassthrough();
 

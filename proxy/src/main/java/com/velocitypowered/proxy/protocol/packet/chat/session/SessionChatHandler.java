@@ -29,7 +29,7 @@ import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SessionChatHandler implements ChatHandler<SessionPlayerChat> {
+public class SessionChatHandler implements ChatHandler<SessionPlayerChatPacket> {
 
   private static final Logger logger = LogManager.getLogger(SessionChatHandler.class);
 
@@ -42,12 +42,12 @@ public class SessionChatHandler implements ChatHandler<SessionPlayerChat> {
   }
 
   @Override
-  public Class<SessionPlayerChat> packetClass() {
-    return SessionPlayerChat.class;
+  public Class<SessionPlayerChatPacket> packetClass() {
+    return SessionPlayerChatPacket.class;
   }
 
   @Override
-  public void handlePlayerChatInternal(SessionPlayerChat packet) {
+  public void handlePlayerChatInternal(SessionPlayerChatPacket packet) {
     ChatQueue chatQueue = this.player.getChatQueue();
     EventManager eventManager = this.server.getEventManager();
     PlayerChatEvent toSend = new PlayerChatEvent(player, packet.getMessage());

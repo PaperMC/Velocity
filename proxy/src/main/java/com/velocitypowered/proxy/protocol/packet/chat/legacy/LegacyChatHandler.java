@@ -23,7 +23,7 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatHandler;
 
-public class LegacyChatHandler implements ChatHandler<LegacyChat> {
+public class LegacyChatHandler implements ChatHandler<LegacyChatPacket> {
 
   private final VelocityServer server;
   private final ConnectedPlayer player;
@@ -34,12 +34,12 @@ public class LegacyChatHandler implements ChatHandler<LegacyChat> {
   }
 
   @Override
-  public Class<LegacyChat> packetClass() {
-    return LegacyChat.class;
+  public Class<LegacyChatPacket> packetClass() {
+    return LegacyChatPacket.class;
   }
 
   @Override
-  public void handlePlayerChatInternal(LegacyChat packet) {
+  public void handlePlayerChatInternal(LegacyChatPacket packet) {
     MinecraftConnection serverConnection = player.ensureAndGetCurrentServer().ensureConnected();
     if (serverConnection == null) {
       return;

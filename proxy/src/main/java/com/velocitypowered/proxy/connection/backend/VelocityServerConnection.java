@@ -17,40 +17,38 @@
 
 package com.velocitypowered.proxy.connection.backend;
 
-import static com.velocitypowered.proxy.VelocityServer.GENERAL_GSON;
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN;
 import static com.velocitypowered.proxy.network.Connections.HANDLER;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
-import com.velocitypowered.api.util.GameProfile.Property;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
+import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.connection.PlayerDataForwarding;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import com.velocitypowered.proxy.connection.forge.modern.ModernForgeConnectionType;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.Handshake;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
-import com.velocitypowered.proxy.protocol.packet.ServerLogin;
+import com.velocitypowered.proxy.protocol.packet.HandshakePacket;
+import com.velocitypowered.proxy.protocol.packet.JoinGamePacket;
+import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
+import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.UnaryOperator;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -91,8 +89,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   /**
    * Connects to the server.
    *
-   * @return a {@link com.velocitypowered.api.proxy.ConnectionRequestBuilder.Result} representing
-   *         whether or not the connect succeeded
+   * @return a {@link com.velocitypowered.api.proxy.ConnectionRequestBuilder.Result}
+   *     representing whether the connection succeeded
    */
   public CompletableFuture<Impl> connect() {
     CompletableFuture<Impl> result = new CompletableFuture<>();
@@ -108,15 +106,21 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
             future.channel().pipeline().addLast(HANDLER, connection);
 
             // Kick off the connection process
-            connection.setSessionHandler(
-                new LoginSessionHandler(server, VelocityServerConnection.this, result));
+            if (!connection.setActiveSessionHandler(StateRegistry.HANDSHAKE)) {
+              MinecraftSessionHandler handler =
+                  new LoginSessionHandler(server, VelocityServerConnection.this, result);
+              connection.setActiveSessionHandler(StateRegistry.HANDSHAKE, handler);
+              connection.addSessionHandler(StateRegistry.LOGIN, handler);
+            }
 
-            // Set the connection phase, which may, for future forge (or whatever), be determined
+            // Set the connection phase, which may, for future forge (or whatever), be
+            // determined
             // at this point already
             connectionPhase = connection.getType().getInitialBackendPhase();
             startHandshake();
           } else {
-            // Complete the result immediately. ConnectedPlayer will reset the in-flight connection.
+            // Complete the result immediately. ConnectedPlayer will reset the in-flight
+            // connection.
             result.completeExceptionally(future.cause());
           }
         });
@@ -133,36 +137,23 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     }
   }
 
-  private String createLegacyForwardingAddress(UnaryOperator<List<Property>> propertiesTransform) {
-    // BungeeCord IP forwarding is simply a special injection after the "address" in the handshake,
-    // separated by \0 (the null byte). In order, you send the original host, the player's IP, their
-    // UUID (undashed), and if you are in online-mode, their login properties (from Mojang).
-    StringBuilder data = new StringBuilder()
-        .append(proxyPlayer.getVirtualHost()
-            .orElseGet(() -> registeredServer.getServerInfo().getAddress())
-            .getHostString())
-        .append('\0')
-        .append(getPlayerRemoteAddressAsString())
-        .append('\0')
-        .append(proxyPlayer.getGameProfile().getUndashedId())
-        .append('\0');
-    GENERAL_GSON
-        .toJson(propertiesTransform.apply(proxyPlayer.getGameProfile().getProperties()), data);
-    return data.toString();
-  }
-
   private String createLegacyForwardingAddress() {
-    return createLegacyForwardingAddress(UnaryOperator.identity());
+    return PlayerDataForwarding.createLegacyForwardingAddress(
+      proxyPlayer.getVirtualHost().orElseGet(() ->
+        registeredServer.getServerInfo().getAddress()).getHostString(),
+      getPlayerRemoteAddressAsString(),
+      proxyPlayer.getGameProfile()
+    );
   }
 
   private String createBungeeGuardForwardingAddress(byte[] forwardingSecret) {
-    // Append forwarding secret as a BungeeGuard token.
-    Property property = new Property("bungeeguard-token",
-        new String(forwardingSecret, StandardCharsets.UTF_8), "");
-    return createLegacyForwardingAddress(properties -> ImmutableList.<Property>builder()
-        .addAll(properties)
-        .add(property)
-        .build());
+    return PlayerDataForwarding.createBungeeGuardForwardingAddress(
+      proxyPlayer.getVirtualHost().orElseGet(() ->
+        registeredServer.getServerInfo().getAddress()).getHostString(),
+      getPlayerRemoteAddressAsString(),
+      proxyPlayer.getGameProfile(),
+      forwardingSecret
+    );
   }
 
   private void startHandshake() {
@@ -172,10 +163,10 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     // Initiate the handshake.
     ProtocolVersion protocolVersion = proxyPlayer.getConnection().getProtocolVersion();
     String playerVhost = proxyPlayer.getVirtualHost()
-        .orElseGet(() -> registeredServer.getServerInfo().getAddress())
-        .getHostString();
+                .orElseGet(() -> registeredServer.getServerInfo().getAddress())
+                .getHostString();
 
-    Handshake handshake = new Handshake();
+    HandshakePacket handshake = new HandshakePacket();
     handshake.setNextStatus(StateRegistry.LOGIN_ID);
     handshake.setProtocolVersion(protocolVersion);
     if (forwardingMode == PlayerInfoForwarding.LEGACY) {
@@ -185,20 +176,26 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
       handshake.setServerAddress(createBungeeGuardForwardingAddress(secret));
     } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
       handshake.setServerAddress(playerVhost + HANDSHAKE_HOSTNAME_TOKEN);
+    } else if (proxyPlayer.getConnection().getType() instanceof ModernForgeConnectionType) {
+      handshake.setServerAddress(playerVhost + ((ModernForgeConnectionType) proxyPlayer
+              .getConnection().getType()).getModernToken());
     } else {
       handshake.setServerAddress(playerVhost);
     }
 
-    handshake.setPort(registeredServer.getServerInfo().getAddress().getPort());
+    handshake.setPort(proxyPlayer.getVirtualHost()
+            .orElseGet(() -> registeredServer.getServerInfo().getAddress())
+            .getPort());
     mc.delayedWrite(handshake);
 
     mc.setProtocolVersion(protocolVersion);
-    mc.setState(StateRegistry.LOGIN);
+    mc.setActiveSessionHandler(StateRegistry.LOGIN);
     if (proxyPlayer.getIdentifiedKey() == null
-        && proxyPlayer.getProtocolVersion().compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
-      mc.delayedWrite(new ServerLogin(proxyPlayer.getUsername(), proxyPlayer.getUniqueId()));
+        && proxyPlayer.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
+      mc.delayedWrite(new ServerLoginPacket(proxyPlayer.getUsername(), proxyPlayer.getUniqueId()));
     } else {
-      mc.delayedWrite(new ServerLogin(proxyPlayer.getUsername(), proxyPlayer.getIdentifiedKey()));
+      mc.delayedWrite(new ServerLoginPacket(proxyPlayer.getUsername(),
+              proxyPlayer.getIdentifiedKey()));
     }
     mc.flush();
   }
@@ -275,7 +272,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
     MinecraftConnection mc = ensureConnected();
 
-    PluginMessage message = new PluginMessage(identifier.getId(), data);
+    PluginMessagePacket message = new PluginMessagePacket(identifier.getId(), data);
     mc.write(message);
     return true;
   }
@@ -335,7 +332,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   }
 
   /**
-   * Gets whether the {@link com.velocitypowered.proxy.protocol.packet.JoinGame} packet has been
+   * Gets whether the {@link JoinGamePacket} packet has been
    * sent by this server.
    *
    * @return Whether the join has been completed.

@@ -44,6 +44,28 @@ public interface TabList {
   void addEntry(TabListEntry entry);
 
   /**
+   * Adds a {@link Iterable} of {@link TabListEntry}'s to the {@link Player}'s tab list.
+   *
+   * @param entries to add to the tab list
+   */
+  default void addEntries(Iterable<TabListEntry> entries) {
+    for (TabListEntry entry : entries) {
+      addEntry(entry);
+    }
+  }
+
+  /**
+   * Adds an array of {@link TabListEntry}'s to the {@link Player}'s tab list.
+   *
+   * @param entries to add to the tab list
+   */
+  default void addEntries(TabListEntry... entries) {
+    for (TabListEntry entry : entries) {
+      addEntry(entry);
+    }
+  }
+
+  /**
    * Removes the {@link TabListEntry} from the tab list with the {@link GameProfile} identified with
    * the specified {@link UUID}.
    *

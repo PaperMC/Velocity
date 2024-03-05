@@ -17,22 +17,21 @@
 
 package com.velocitypowered.proxy.connection.client;
 
+import com.velocitypowered.api.network.ProtocolState;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.util.VelocityInboundConnection;
-import com.velocitypowered.proxy.protocol.packet.Disconnect;
-import com.velocitypowered.proxy.protocol.packet.Handshake;
+import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
+import com.velocitypowered.proxy.protocol.packet.HandshakePacket;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import java.net.InetSocketAddress;
 import java.util.Locale;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.kyori.adventure.translation.GlobalTranslator;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * Implements {@link InboundConnection} for a newly-established connection.
@@ -40,14 +39,15 @@ import org.apache.logging.log4j.Logger;
 public final class InitialInboundConnection implements VelocityInboundConnection,
     MinecraftConnectionAssociation {
 
-  private static final Logger logger = LogManager.getLogger(InitialInboundConnection.class);
+  private static final ComponentLogger logger = ComponentLogger
+      .logger(InitialInboundConnection.class);
 
   private final MinecraftConnection connection;
   private final String cleanedAddress;
-  private final Handshake handshake;
+  private final HandshakePacket handshake;
 
   InitialInboundConnection(MinecraftConnection connection, String cleanedAddress,
-      Handshake handshake) {
+                           HandshakePacket handshake) {
     this.connection = connection;
     this.cleanedAddress = cleanedAddress;
     this.handshake = handshake;
@@ -75,12 +75,22 @@ public final class InitialInboundConnection implements VelocityInboundConnection
 
   @Override
   public String toString() {
-    return "[initial connection] " + connection.getRemoteAddress().toString();
+    final boolean isPlayerAddressLoggingEnabled = connection.server.getConfiguration()
+        .isPlayerAddressLoggingEnabled();
+    final String playerIp =
+        isPlayerAddressLoggingEnabled
+            ? connection.getRemoteAddress().toString() : "<ip address withheld>";
+    return "[initial connection] " + playerIp;
   }
 
   @Override
   public MinecraftConnection getConnection() {
     return connection;
+  }
+
+  @Override
+  public ProtocolState getProtocolState() {
+    return connection.getState().toProtocolState();
   }
 
   /**
@@ -92,10 +102,9 @@ public final class InitialInboundConnection implements VelocityInboundConnection
     Component translated = GlobalTranslator.render(reason, ClosestLocaleMatcher.INSTANCE
         .lookupClosest(Locale.getDefault()));
     if (connection.server.getConfiguration().isLogPlayerConnections()) {
-      logger.info("{} has disconnected: {}", this,
-          LegacyComponentSerializer.legacySection().serialize(translated));
+      logger.info(Component.text(this + " has disconnected: ").append(translated));
     }
-    connection.closeWith(Disconnect.create(translated, getProtocolVersion()));
+    connection.closeWith(DisconnectPacket.create(translated, getProtocolVersion(), connection.getState()));
   }
 
   /**
@@ -106,6 +115,6 @@ public final class InitialInboundConnection implements VelocityInboundConnection
   public void disconnectQuietly(Component reason) {
     Component translated = GlobalTranslator.render(reason, ClosestLocaleMatcher.INSTANCE
         .lookupClosest(Locale.getDefault()));
-    connection.closeWith(Disconnect.create(translated, getProtocolVersion()));
+    connection.closeWith(DisconnectPacket.create(translated, getProtocolVersion(), connection.getState()));
   }
 }

@@ -17,9 +17,6 @@
 
 package com.velocitypowered.proxy.network;
 
-import static org.asynchttpclient.Dsl.asyncHttpClient;
-import static org.asynchttpclient.Dsl.config;
-
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.proxy.ListenerBoundEvent;
 import com.velocitypowered.api.event.proxy.ListenerCloseEvent;
@@ -35,18 +32,13 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
-import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import java.net.InetSocketAddress;
+import java.net.http.HttpClient;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.asynchttpclient.AsyncHttpClient;
-import org.asynchttpclient.RequestBuilder;
-import org.asynchttpclient.filter.FilterContext;
-import org.asynchttpclient.filter.FilterContext.FilterContextBuilder;
-import org.asynchttpclient.filter.RequestFilter;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -70,10 +62,9 @@ public final class ConnectionManager {
   public final BackendChannelInitializerHolder backendChannelInitializer;
 
   private final SeparatePoolInetNameResolver resolver;
-  private final AsyncHttpClient httpClient;
 
   /**
-   * Initalizes the {@code ConnectionManager}.
+   * Initializes the {@code ConnectionManager}.
    *
    * @param server a reference to the Velocity server
    */
@@ -87,20 +78,6 @@ public final class ConnectionManager {
     this.backendChannelInitializer = new BackendChannelInitializerHolder(
         new BackendChannelInitializer(this.server));
     this.resolver = new SeparatePoolInetNameResolver(GlobalEventExecutor.INSTANCE);
-    this.httpClient = asyncHttpClient(config()
-        .setEventLoopGroup(this.workerGroup)
-        .setUserAgent(server.getVersion().getName() + "/" + server.getVersion().getVersion())
-        .addRequestFilter(new RequestFilter() {
-          @Override
-          public <T> FilterContext<T> filter(FilterContext<T> ctx) {
-            return new FilterContextBuilder<>(ctx)
-                .request(new RequestBuilder(ctx.getRequest())
-                    .setNameResolver(resolver)
-                    .build())
-                .build();
-          }
-        })
-        .build());
   }
 
   public void logChannelInformation() {
@@ -123,8 +100,8 @@ public final class ConnectionManager {
         .childOption(ChannelOption.IP_TOS, 0x18)
         .localAddress(address);
 
-    if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
-      bootstrap.option(EpollChannelOption.TCP_FASTOPEN, 3);
+    if (server.getConfiguration().useTcpFastOpen()) {
+      bootstrap.option(ChannelOption.TCP_FASTOPEN, 3);
     }
 
     bootstrap.bind()
@@ -186,8 +163,8 @@ public final class ConnectionManager {
             this.server.getConfiguration().getConnectTimeout())
         .group(group == null ? this.workerGroup : group)
         .resolver(this.resolver.asGroup());
-    if (transportType == TransportType.EPOLL && server.getConfiguration().useTcpFastOpen()) {
-      bootstrap.option(EpollChannelOption.TCP_FASTOPEN_CONNECT, true);
+    if (server.getConfiguration().useTcpFastOpen()) {
+      bootstrap.option(ChannelOption.TCP_FASTOPEN_CONNECT, true);
     }
     return bootstrap;
   }
@@ -212,9 +189,11 @@ public final class ConnectionManager {
   }
 
   /**
-   * Closes all endpoints.
+   * Closes all the currently registered endpoints.
+   *
+   * @param interrupt should closing forward interruptions
    */
-  public void shutdown() {
+  public void closeEndpoints(boolean interrupt) {
     for (final Map.Entry<InetSocketAddress, Endpoint> entry : this.endpoints.entrySet()) {
       final InetSocketAddress address = entry.getKey();
       final Endpoint endpoint = entry.getValue();
@@ -223,14 +202,26 @@ public final class ConnectionManager {
       // should have a chance to be notified before the server stops accepting connections.
       server.getEventManager().fire(new ListenerCloseEvent(address, endpoint.getType())).join();
 
-      try {
-        LOGGER.info("Closing endpoint {}", address);
-        endpoint.getChannel().close().sync();
-      } catch (final InterruptedException e) {
-        LOGGER.info("Interrupted whilst closing endpoint", e);
-        Thread.currentThread().interrupt();
+      LOGGER.info("Closing endpoint {}", address);
+      if (interrupt) {
+        try {
+          endpoint.getChannel().close().sync();
+        } catch (final InterruptedException e) {
+          LOGGER.info("Interrupted whilst closing endpoint", e);
+          Thread.currentThread().interrupt();
+        }
+      } else {
+        endpoint.getChannel().close().syncUninterruptibly();
       }
     }
+    this.endpoints.clear();
+  }
+
+  /**
+   * Closes all endpoints.
+   */
+  public void shutdown() {
+    this.closeEndpoints(true);
 
     this.resolver.shutdown();
   }
@@ -243,8 +234,11 @@ public final class ConnectionManager {
     return this.serverChannelInitializer;
   }
 
-  public AsyncHttpClient getHttpClient() {
-    return httpClient;
+  @SuppressWarnings("checkstyle:MissingJavadocMethod")
+  public HttpClient createHttpClient() {
+    return HttpClient.newBuilder()
+            .executor(this.workerGroup)
+            .build();
   }
 
   public BackendChannelInitializerHolder getBackendChannelInitializer() {

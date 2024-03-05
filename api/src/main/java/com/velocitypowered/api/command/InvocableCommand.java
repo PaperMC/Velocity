@@ -21,7 +21,8 @@ import java.util.concurrent.CompletableFuture;
  *
  * @param <I> the type of the command invocation object
  */
-public interface InvocableCommand<I extends CommandInvocation<?>> extends Command {
+public sealed interface InvocableCommand<I extends CommandInvocation<?>> extends Command
+        permits RawCommand, SimpleCommand {
 
   /**
    * Executes the command for the specified invocation.

@@ -10,6 +10,7 @@ package com.velocitypowered.api.network;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+import com.velocitypowered.api.util.Ordered;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -19,9 +20,29 @@ import java.util.Set;
 /**
  * Represents each Minecraft protocol version.
  */
-public enum ProtocolVersion {
-  UNKNOWN(-1, "Unknown"),
-  LEGACY(-2, "Legacy"),
+public enum ProtocolVersion implements Ordered<ProtocolVersion> {
+  UNKNOWN(-1, "Unknown") {
+    @Override
+    public boolean isUnknown() {
+      return true;
+    }
+
+    @Override
+    public boolean isSupported() {
+      return false;
+    }
+  },
+  LEGACY(-2, "Legacy") {
+    @Override
+    public boolean isLegacy() {
+      return true;
+    }
+
+    @Override
+    public boolean isSupported() {
+      return false;
+    }
+  },
   MINECRAFT_1_7_2(4,
       "1.7.2", "1.7.3", "1.7.4", "1.7.5"),
   MINECRAFT_1_7_6(5,
@@ -61,7 +82,10 @@ public enum ProtocolVersion {
   MINECRAFT_1_19(759, "1.19"),
   MINECRAFT_1_19_1(760, "1.19.1", "1.19.2"),
   MINECRAFT_1_19_3(761, "1.19.3"),
-  MINECRAFT_1_19_4(762, "1.19.4");
+  MINECRAFT_1_19_4(762, "1.19.4"),
+  MINECRAFT_1_20(763, "1.20", "1.20.1"),
+  MINECRAFT_1_20_2(764, "1.20.2"),
+  MINECRAFT_1_20_3(765, "1.20.3", "1.20.4");
 
   private static final int SNAPSHOT_BIT = 30;
 
@@ -114,7 +138,7 @@ public enum ProtocolVersion {
   static {
     Set<ProtocolVersion> versions = EnumSet.noneOf(ProtocolVersion.class);
     for (ProtocolVersion value : values()) {
-      if (!value.isUnknown() && !value.isLegacy()) {
+      if (value.isSupported()) {
         versions.add(value);
       }
     }
@@ -188,6 +212,35 @@ public enum ProtocolVersion {
   }
 
   /**
+   * Returns whether this {@link ProtocolVersion} is supported.
+   *
+   * @return if the protocol supported
+   */
+  public boolean isSupported() {
+    return true;
+  }
+
+  /**
+   * Returns whether the protocol is supported.
+   *
+   * @param protocol the protocol as an int
+   * @return if the protocol supported
+   */
+  public static boolean isSupported(int protocol) {
+    return getProtocolVersion(protocol).isSupported();
+  }
+
+  /**
+   * Returns whether the {@link ProtocolVersion} is supported.
+   *
+   * @param version the protocol version
+   * @return if the protocol supported
+   */
+  public static boolean isSupported(ProtocolVersion version) {
+    return version != null && version.isSupported();
+  }
+
+  /**
    * Gets the {@link ProtocolVersion} for the given protocol.
    *
    * @param protocol the protocol as an int
@@ -198,34 +251,12 @@ public enum ProtocolVersion {
   }
 
   /**
-   * Returns whether the protocol is supported.
-   *
-   * @param protocol the protocol as an int
-   * @return if the protocol supported
-   */
-  public static boolean isSupported(int protocol) {
-    ProtocolVersion version = ID_TO_PROTOCOL_CONSTANT.get(protocol);
-
-    return version != null && !version.isUnknown();
-  }
-
-  /**
-   * Returns whether the {@link ProtocolVersion} is supported.
-   *
-   * @param version the protocol version
-   * @return if the protocol supported
-   */
-  public static boolean isSupported(ProtocolVersion version) {
-    return version != null && !version.isUnknown();
-  }
-
-  /**
    * Returns whether this {@link ProtocolVersion} is unknown to the proxy.
    *
    * @return if the protocol is unknown
    */
   public boolean isUnknown() {
-    return this == UNKNOWN;
+    return false;
   }
 
   /**
@@ -234,7 +265,7 @@ public enum ProtocolVersion {
    * @return if the protocol is legacy
    */
   public boolean isLegacy() {
-    return this == LEGACY;
+    return false;
   }
 
   @Override

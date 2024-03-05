@@ -7,6 +7,7 @@
 
 package com.velocitypowered.api.proxy;
 
+import com.velocitypowered.api.network.ProtocolState;
 import com.velocitypowered.api.network.ProtocolVersion;
 import java.net.InetSocketAddress;
 import java.util.Optional;
@@ -43,4 +44,11 @@ public interface InboundConnection {
    * @return the protocol version the connection uses
    */
   ProtocolVersion getProtocolVersion();
+
+  /**
+   * Returns the current protocol state of this connection.
+   *
+   * @return the protocol state of the connection
+   */
+  ProtocolState getProtocolState();
 }

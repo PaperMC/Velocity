@@ -1,6 +1,7 @@
 plugins {
     `java-library`
     `maven-publish`
+    id("velocity-publish")
 }
 
 java {
@@ -17,6 +18,8 @@ java {
 }
 
 dependencies {
+    compileOnlyApi(libs.jspecify)
+
     api(libs.gson)
     api(libs.guava)
 
@@ -29,13 +32,20 @@ dependencies {
     api("net.kyori:adventure-text-serializer-legacy")
     api("net.kyori:adventure-text-serializer-plain")
     api("net.kyori:adventure-text-minimessage")
+    api("net.kyori:adventure-text-logger-slf4j")
+    api("net.kyori:adventure-text-serializer-ansi")
+
+    api(libs.snakeyaml)
 
     api(libs.slf4j)
     api(libs.guice)
     api(libs.checker.qual)
     api(libs.brigadier)
-    api(libs.bundles.configurate)
+    api(libs.bundles.configurate4)
     api(libs.caffeine)
+
+    compileOnly(libs.auto.service.annotations)
+    annotationProcessor(libs.auto.service)
 }
 
 tasks {
@@ -49,23 +59,25 @@ tasks {
 
         val o = options as StandardJavadocDocletOptions
         o.encoding = "UTF-8"
-        o.source = "8"
+        o.source = "17"
 
         o.links(
             "https://www.slf4j.org/apidocs/",
             "https://guava.dev/releases/${libs.guava.get().version}/api/docs/",
             "https://google.github.io/guice/api-docs/${libs.guice.get().version}/javadoc/",
-            "https://docs.oracle.com/en/java/javase/11/docs/api/",
+            "https://docs.oracle.com/en/java/javase/17/docs/api/",
             "https://jd.advntr.dev/api/${libs.adventure.bom.get().version}/",
             "https://javadoc.io/doc/com.github.ben-manes.caffeine/caffeine"
         )
 
+        o.tags(
+            "apiNote:a:API Note:",
+            "implSpec:a:Implementation Requirements:",
+            "implNote:a:Implementation Note:",
+            "sinceMinecraft:a:Since Minecraft:"
+        )
+
         // Disable the crazy super-strict doclint tool in Java 8
         o.addStringOption("Xdoclint:none", "-quiet")
-
-        // Remove "undefined" from search paths when generating javadoc for a non-modular project (JDK-8215291)
-        if (JavaVersion.current() >= JavaVersion.VERSION_1_9 && JavaVersion.current() < JavaVersion.VERSION_12) {
-            o.addBooleanOption("-no-module-directories", true)
-        }
     }
 }
