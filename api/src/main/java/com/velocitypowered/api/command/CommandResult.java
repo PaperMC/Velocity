@@ -8,7 +8,7 @@
 package com.velocitypowered.api.command;
 
 /**
- * The result of a command invocation attemp.
+ * The result of a command invocation attempt.
  */
 public enum CommandResult {
   /**

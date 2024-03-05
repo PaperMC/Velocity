@@ -10,6 +10,7 @@ package com.velocitypowered.api.event.command;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.command.CommandResult;
 import com.velocitypowered.api.command.CommandSource;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * This event is fired when velocity executed a command. This event is called after the event
@@ -17,6 +18,8 @@ import com.velocitypowered.api.command.CommandSource;
  *
  * <p>Commands can be cancelled or forwarded to backend servers in {@link CommandExecuteEvent}.
  * This will prevent firing this event.</p>
+ *
+ * @since 3.3.0
  */
 public final class PostCommandInvocationEvent {
 
@@ -31,8 +34,11 @@ public final class PostCommandInvocationEvent {
    * @param command the command being executed without first slash
    * @param result the result of this command
    */
-  public PostCommandInvocationEvent(CommandSource commandSource, String command,
-                                    CommandResult result) {
+  public PostCommandInvocationEvent(
+          final @NotNull CommandSource commandSource,
+          final @NotNull String command,
+          final @NotNull CommandResult result
+  ) {
     this.commandSource = Preconditions.checkNotNull(commandSource, "commandSource");
     this.command = Preconditions.checkNotNull(command, "command");
     this.result = Preconditions.checkNotNull(result, "result");
@@ -43,7 +49,7 @@ public final class PostCommandInvocationEvent {
    *
    * @return the source
    */
-  public CommandSource getCommandSource() {
+  public @NotNull CommandSource getCommandSource() {
     return commandSource;
   }
 
@@ -51,8 +57,9 @@ public final class PostCommandInvocationEvent {
    * Gets the original command line executed without the first slash.
    *
    * @return the original command
+   * @see CommandExecuteEvent#getCommand()
    */
-  public String getCommand() {
+  public @NotNull String getCommand() {
     return command;
   }
 
@@ -61,7 +68,7 @@ public final class PostCommandInvocationEvent {
    *
    * @return the execution result
    */
-  public CommandResult getResult() {
+  public @NotNull CommandResult getResult() {
     return result;
   }
 
