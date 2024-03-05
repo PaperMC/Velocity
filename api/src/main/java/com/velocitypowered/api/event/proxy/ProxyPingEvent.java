@@ -8,9 +8,11 @@
 package com.velocitypowered.api.event.proxy;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.proxy.server.ServerPing;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * This event is fired when a request for server information is sent by a remote client, or when the
@@ -20,10 +22,11 @@ import com.velocitypowered.api.proxy.server.ServerPing;
  * amount of ping packets a client can send.
  */
 @AwaitingEvent
-public final class ProxyPingEvent {
+public final class ProxyPingEvent implements ResultedEvent<ResultedEvent.GenericResult> {
 
   private final InboundConnection connection;
   private ServerPing ping;
+  private GenericResult result = GenericResult.allowed();
 
   public ProxyPingEvent(InboundConnection connection, ServerPing ping) {
     this.connection = Preconditions.checkNotNull(connection, "connection");
@@ -40,6 +43,16 @@ public final class ProxyPingEvent {
 
   public void setPing(ServerPing ping) {
     this.ping = Preconditions.checkNotNull(ping, "ping");
+  }
+
+  @Override
+  public GenericResult getResult() {
+    return this.result;
+  }
+
+  @Override
+  public void setResult(final @NotNull GenericResult result) {
+    this.result = Preconditions.checkNotNull(result, "result");
   }
 
   @Override
