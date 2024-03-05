@@ -21,6 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.connection.ConnectionHandshakeEvent;
 import com.velocitypowered.api.network.HandshakeIntent;
+import com.velocitypowered.api.network.ProtocolState;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
@@ -123,7 +124,9 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   }
 
   private void handleLogin(HandshakePacket handshake, InitialInboundConnection ic) {
-    if (!ProtocolVersion.isSupported(handshake.getProtocolVersion())) {
+    if (!handshake.getProtocolVersion().isSupported()) {
+      // Bump connection into correct protocol state so that we can send the disconnect packet.
+      connection.setState(StateRegistry.LOGIN);
       ic.disconnectQuietly(Component.translatable()
               .key("multiplayer.disconnect.outdated_client")
               .arguments(Component.text(ProtocolVersion.SUPPORTED_VERSION_STRING))
@@ -252,9 +255,9 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public String toString() {
-      boolean isPlayerAddressLoggingEnabled = connection.server.getConfiguration()
+      final boolean isPlayerAddressLoggingEnabled = connection.server.getConfiguration()
           .isPlayerAddressLoggingEnabled();
-      String playerIp =
+      final String playerIp =
           isPlayerAddressLoggingEnabled
               ? this.getRemoteAddress().toString() : "<ip address withheld>";
       return "[legacy connection] " + playerIp;
@@ -263,6 +266,11 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     @Override
     public MinecraftConnection getConnection() {
       return connection;
+    }
+
+    @Override
+    public ProtocolState getProtocolState() {
+      return connection.getState().toProtocolState();
     }
   }
 }
