@@ -121,7 +121,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   }
 
   @Override
-  public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+  public void channelInactive(ChannelHandlerContext ctx) {
     if (activeSessionHandler != null) {
       activeSessionHandler.disconnected();
     }

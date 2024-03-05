@@ -858,6 +858,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
             }
           }
           tryIndex = index;
+
+          String toTryName = emptiestServer.get().getServerInfo().getName();
+          if ((connectedServer != null && hasSameName(connectedServer.getServer(), toTryName))
+                  || (connectionInFlight != null && hasSameName(connectionInFlight.getServer(), toTryName))
+                  || (current != null && hasSameName(current, toTryName))) {
+            return Optional.empty();
+          }
+
           return emptiestServer;
         }
 
