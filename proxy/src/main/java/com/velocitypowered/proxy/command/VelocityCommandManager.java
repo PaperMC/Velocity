@@ -31,9 +31,10 @@ import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandMeta;
+import com.velocitypowered.api.command.CommandResult;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
-import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
+import com.velocitypowered.api.event.command.PostCommandInvocationEvent;
 import com.velocitypowered.proxy.command.registrar.BrigadierCommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.CommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.RawCommandRegistrar;
@@ -220,23 +221,30 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     final String normalizedInput = VelocityCommands.normalizeInput(cmdLine, true);
+    CommandResult result = CommandResult.EXCEPTION;
     try {
       // The parse can fail if the requirement predicates throw
       final ParseResults<CommandSource> parse = this.parse(normalizedInput, source);
-      return dispatcher.execute(parse) != BrigadierCommand.FORWARD;
+      boolean executed = dispatcher.execute(parse) != BrigadierCommand.FORWARD;
+      result = executed ? CommandResult.EXECUTED : CommandResult.FORWARDED;
+      return executed;
     } catch (final CommandSyntaxException e) {
       boolean isSyntaxError = !e.getType().equals(
           CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand());
       if (isSyntaxError) {
         source.sendMessage(Component.text(e.getMessage(), NamedTextColor.RED));
+        result = com.velocitypowered.api.command.CommandResult.SYNTAX_ERROR;
         // This is, of course, a lie, but the API will need to change...
         return true;
       } else {
+        result = CommandResult.FORWARDED;
         return false;
       }
     } catch (final Throwable e) {
       // Ugly, ugly swallowing of everything Throwable, because plugins are naughty.
       throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
+    } finally {
+      eventManager.fireAndForget(new PostCommandInvocationEvent(source, cmdLine, result));
     }
   }
 
@@ -246,7 +254,7 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     return callCommandEvent(source, cmdLine).thenApplyAsync(event -> {
-      CommandResult commandResult = event.getResult();
+      CommandExecuteEvent.CommandResult commandResult = event.getResult();
       if (commandResult.isForwardToServer() || !commandResult.isAllowed()) {
         return false;
       }
