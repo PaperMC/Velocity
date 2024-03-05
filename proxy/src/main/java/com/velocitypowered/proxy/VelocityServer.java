@@ -37,10 +37,15 @@ import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.command.VelocityCommandManager;
+import com.velocitypowered.proxy.command.builtin.AlertCommand;
 import com.velocitypowered.proxy.command.builtin.CallbackCommand;
+import com.velocitypowered.proxy.command.builtin.FindCommand;
 import com.velocitypowered.proxy.command.builtin.GlistCommand;
+import com.velocitypowered.proxy.command.builtin.HubCommand;
+import com.velocitypowered.proxy.command.builtin.PingCommand;
 import com.velocitypowered.proxy.command.builtin.SendCommand;
 import com.velocitypowered.proxy.command.builtin.ServerCommand;
+import com.velocitypowered.proxy.command.builtin.ShowAllCommand;
 import com.velocitypowered.proxy.command.builtin.ShutdownCommand;
 import com.velocitypowered.proxy.command.builtin.VelocityCommand;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
@@ -63,6 +68,7 @@ import com.velocitypowered.proxy.util.ResourceUtils;
 import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
+import com.velocitypowered.proxy.util.translation.VelocityTranslationRegistry;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -216,8 +222,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     logger.info("Booting up {} {}...", getVersion().getName(), getVersion().getVersion());
     console.setupStreams();
 
-    registerTranslations();
-
     serverKeyPair = EncryptionUtils.createRsaKeyPair(1024);
 
     cm.logChannelInformation();
@@ -228,10 +232,17 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     commandManager.register(ServerCommand.create(this));
     commandManager.register("shutdown", ShutdownCommand.command(this),
         "end", "stop");
+    new AlertCommand(this).register();
+    new FindCommand(this).register();
     new GlistCommand(this).register();
+    new PingCommand(this).register();
     new SendCommand(this).register();
+    new ShowAllCommand(this).register();
+    commandManager.register("hub", new HubCommand(this).register(), "lobby");
 
     this.doStartupConfigLoad();
+
+    registerTranslations();
 
     for (Map.Entry<String, String> entry : configuration.getServers().entrySet()) {
       servers.register(new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue())));
@@ -269,8 +280,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   private void registerTranslations() {
-    final TranslationRegistry translationRegistry = TranslationRegistry
-        .create(Key.key("velocity", "translations"));
+    final TranslationRegistry translationRegistry = new VelocityTranslationRegistry(
+            TranslationRegistry.create(Key.key("velocity", "translations")));
     translationRegistry.defaultLocale(Locale.US);
     try {
       ResourceUtils.visitResources(VelocityServer.class, path -> {

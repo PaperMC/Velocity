@@ -29,6 +29,7 @@ import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.config.migration.ConfigurationMigration;
 import com.velocitypowered.proxy.config.migration.ForwardingMigration;
 import com.velocitypowered.proxy.config.migration.KeyAuthenticationMigration;
+import com.velocitypowered.proxy.config.migration.MiniMessageTranslationsMigration;
 import com.velocitypowered.proxy.config.migration.MotdMigration;
 import com.velocitypowered.proxy.util.AddressUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -90,6 +91,10 @@ public class VelocityConfiguration implements ProxyConfig {
   private @Nullable Favicon favicon;
   @Expose
   private boolean forceKeyAuthentication = true; // Added in 1.19
+  @Expose
+  private boolean logOfflineConnections = false;
+  @Expose
+  private boolean disableForge = true;
 
   private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
       Query query, Metrics metrics) {
@@ -398,6 +403,18 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isLogPlayerConnections();
   }
 
+  public String getServerBrand() {
+    return advanced.getServerBrand();
+  }
+
+  public String getOudatedServerPing() {
+    return advanced.getOudatedVersionPing();
+  }
+
+  public boolean isEnableDynamicFallback() {
+    return servers.isEnableDynamicFallback();
+  }
+
   public boolean isForceKeyAuthentication() {
     return forceKeyAuthentication;
   }
@@ -419,6 +436,8 @@ public class VelocityConfiguration implements ProxyConfig {
         .add("favicon", favicon)
         .add("enablePlayerAddressLogging", enablePlayerAddressLogging)
         .add("forceKeyAuthentication", forceKeyAuthentication)
+        .add("logOfflineConnections", logOfflineConnections)
+        .add("disableForge", disableForge)
         .toString();
   }
 
@@ -456,7 +475,8 @@ public class VelocityConfiguration implements ProxyConfig {
       final ConfigurationMigration[] migrations = {
           new ForwardingMigration(),
           new KeyAuthenticationMigration(),
-          new MotdMigration()
+          new MotdMigration(),
+          new MiniMessageTranslationsMigration()
       };
 
       for (final ConfigurationMigration migration : migrations) {
@@ -558,6 +578,14 @@ public class VelocityConfiguration implements ProxyConfig {
     return onlineModeKickExistingPlayers;
   }
 
+  public boolean isLogOfflineConnections() {
+    return logOfflineConnections;
+  }
+
+  public boolean isDisableForge() {
+    return disableForge;
+  }
+
   private static class Servers {
 
     private Map<String, String> servers = ImmutableMap.of(
@@ -566,6 +594,8 @@ public class VelocityConfiguration implements ProxyConfig {
         "minigames", "127.0.0.1:30068"
     );
     private List<String> attemptConnectionOrder = ImmutableList.of("lobby");
+
+    private boolean enableDynamicFallback = true;
 
     private Servers() {
     }
@@ -577,7 +607,7 @@ public class VelocityConfiguration implements ProxyConfig {
           if (entry.getValue() instanceof String) {
             servers.put(cleanServerName(entry.getKey()), entry.getValue());
           } else {
-            if (!entry.getKey().equalsIgnoreCase("try")) {
+            if (!entry.getKey().equalsIgnoreCase("try") && !entry.getKey().equalsIgnoreCase("enable-dynamic-fallbacks")) {
               throw new IllegalArgumentException(
                   "Server entry " + entry.getKey() + " is not a string!");
             }
@@ -585,6 +615,7 @@ public class VelocityConfiguration implements ProxyConfig {
         }
         this.servers = ImmutableMap.copyOf(servers);
         this.attemptConnectionOrder = config.getOrElse("try", attemptConnectionOrder);
+        this.enableDynamicFallback = config.getOrElse("enable-dynamic-fallbacks", true);
       }
     }
 
@@ -603,6 +634,10 @@ public class VelocityConfiguration implements ProxyConfig {
 
     public List<String> getAttemptConnectionOrder() {
       return attemptConnectionOrder;
+    }
+
+    public boolean isEnableDynamicFallback() {
+      return enableDynamicFallback;
     }
 
     public void setAttemptConnectionOrder(List<String> attemptConnectionOrder) {
@@ -708,6 +743,10 @@ public class VelocityConfiguration implements ProxyConfig {
     private boolean logCommandExecutions = false;
     @Expose
     private boolean logPlayerConnections = true;
+    @Expose
+    private String serverBrand = "{0}";
+    @Expose
+    private String oudatedVersionPing = "{0} {1}";
 
     private Advanced() {
     }
@@ -732,6 +771,8 @@ public class VelocityConfiguration implements ProxyConfig {
         this.announceProxyCommands = config.getOrElse("announce-proxy-commands", true);
         this.logCommandExecutions = config.getOrElse("log-command-executions", false);
         this.logPlayerConnections = config.getOrElse("log-player-connections", true);
+        this.serverBrand = config.getOrElse("server-brand", "{0}");
+        this.oudatedVersionPing = config.getOrElse("outdated-version-ping", "{0} {1}");
       }
     }
 
@@ -791,6 +832,10 @@ public class VelocityConfiguration implements ProxyConfig {
       return logPlayerConnections;
     }
 
+    public String getServerBrand() {
+      return serverBrand;
+    }
+
     @Override
     public String toString() {
       return "Advanced{"
@@ -808,6 +853,10 @@ public class VelocityConfiguration implements ProxyConfig {
           + ", logCommandExecutions=" + logCommandExecutions
           + ", logPlayerConnections=" + logPlayerConnections
           + '}';
+    }
+
+    public String getOudatedVersionPing() {
+      return this.oudatedVersionPing;
     }
   }
 

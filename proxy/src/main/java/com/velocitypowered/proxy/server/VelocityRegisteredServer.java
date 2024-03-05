@@ -84,6 +84,10 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
     return ImmutableList.copyOf(players.values());
   }
 
+  public ConnectedPlayer getPlayer(UUID uuid) {
+    return players.get(uuid);
+  }
+
   @Override
   public CompletableFuture<ServerPing> ping(PingOptions pingOptions) {
     return ping(null, pingOptions);

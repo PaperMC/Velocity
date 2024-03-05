@@ -49,9 +49,9 @@ import java.net.http.HttpResponse;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Optional;
-import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
@@ -64,6 +64,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 public class InitialLoginSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(InitialLoginSessionHandler.class);
+  private static final SecureRandom random = new SecureRandom();
   private static final String MOJANG_HASJOINED_URL =
       System.getProperty("mojang.sessionserver",
               "https://sessionserver.mojang.com/session/minecraft/hasJoined")
@@ -287,7 +288,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
 
   private EncryptionRequestPacket generateEncryptionRequest() {
     byte[] verify = new byte[4];
-    ThreadLocalRandom.current().nextBytes(verify);
+    random.nextBytes(verify);
 
     EncryptionRequestPacket request = new EncryptionRequestPacket();
     request.setPublicKey(server.getServerKeyPair().getPublic().getEncoded());

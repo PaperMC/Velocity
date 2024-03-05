@@ -44,8 +44,6 @@ import net.kyori.adventure.nbt.ShortBinaryTag;
 import net.kyori.adventure.nbt.StringBinaryTag;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 import java.util.ArrayList;
@@ -53,8 +51,6 @@ import java.util.List;
 import java.util.Map;
 
 public class ComponentHolder {
-  private static final Logger logger = LogManager.getLogger(ComponentHolder.class);
-
   private final ProtocolVersion version;
   private @MonotonicNonNull Component component;
   private @MonotonicNonNull String json;
@@ -81,15 +77,8 @@ public class ComponentHolder {
         component = ProtocolUtils.getJsonChatSerializer(version).deserialize(json);
       } else if (binaryTag != null) {
         // TODO: replace this with adventure-text-serializer-nbt
-        try {
-          json = deserialize(binaryTag).toString();
-          component = ProtocolUtils.getJsonChatSerializer(version).deserialize(json);
-        } catch (Exception ex) {
-          logger.error(
-              "Error converting binary component to JSON component! "
-              + "Binary: " + binaryTag + " JSON: " + json, ex);
-          throw ex;
-        }
+        json = deserialize(binaryTag).toString();
+        component = ProtocolUtils.getJsonChatSerializer(version).deserialize(json);
       }
     }
     return component;

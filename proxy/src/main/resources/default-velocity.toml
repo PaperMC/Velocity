@@ -1,12 +1,12 @@
 # Config version. Do not change this
-config-version = "2.6"
+config-version = "2.7"
 
 # What port should the proxy be bound to? By default, we'll bind to all addresses on port 25577.
 bind = "0.0.0.0:25577"
 
 # What should be the MOTD? This gets displayed when the player adds your server to
 # their server list. Only MiniMessage format is accepted.
-motd = "<#09add3>A Velocity Server"
+motd = "<#ff3a4c>A Velocity Server"
 
 # What should we display for the maximum number of players? (Velocity does not support a cap
 # on the number of players online.)
@@ -47,6 +47,9 @@ forwarding-secret-file = "forwarding.secret"
 # instead for a nicer display in the server list.
 announce-forge = false
 
+# If true, disables handling of inbound Forge handshakes.
+disable-forge = true
+
 # If enabled (default is false) and the proxy is in online mode, Velocity will kick
 # any existing player who is online if a duplicate connection attempt is made.
 kick-existing-players = false
@@ -69,6 +72,9 @@ ping-passthrough = "DISABLED"
 # If not enabled (default is true) player IP addresses will be replaced by <ip address withheld> in logs
 enable-player-address-logging = true
 
+# If false, disables logging for offline player connections.
+log-offline-connections = false
+
 [servers]
 # Configure your servers here. Each key represents the server's name, and the value
 # represents the IP address of the server to connect to.
@@ -80,6 +86,9 @@ minigames = "127.0.0.1:30068"
 try = [
     "lobby"
 ]
+
+# Sends you to the least populated fallback server, instead of the first available fallback server.
+enable-dynamic-fallbacks = true
 
 [forced-hosts]
 # Configure your forced hosts here.
@@ -140,6 +149,12 @@ log-command-executions = false
 # Enables logging of player connections when connecting to the proxy, switching servers
 # and disconnecting from the proxy.
 log-player-connections = true
+
+# Modifies the server brand that displays in your debug menu.
+server-brand = "{0}"
+
+# Modifies the outdated server brand that displays in your server menu.
+outdated-server-ping = "{0} {1}"
 
 [query]
 # Whether to enable responding to GameSpy 4 query responses or not.

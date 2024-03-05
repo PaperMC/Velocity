@@ -131,13 +131,14 @@ public final class PluginMessageUtil {
    */
   public static PluginMessagePacket rewriteMinecraftBrand(PluginMessagePacket message,
                                                           ProxyVersion version,
-                                                          ProtocolVersion protocolVersion) {
+                                                          ProtocolVersion protocolVersion,
+                                                          String brand) {
     checkNotNull(message, "message");
     checkNotNull(version, "version");
     checkArgument(isMcBrand(message), "message is not a brand plugin message");
 
-    String currentBrand = readBrandMessage(message.content());
-    String rewrittenBrand = String.format("%s (%s)", currentBrand, version.getName());
+    String rewrittenBrand = String.format("%s", brand.equalsIgnoreCase("{0}")
+        ? readBrandMessage(message.content()) + " (" + version.getName() + ")" : brand);
 
     ByteBuf rewrittenBuf = Unpooled.buffer();
     if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {

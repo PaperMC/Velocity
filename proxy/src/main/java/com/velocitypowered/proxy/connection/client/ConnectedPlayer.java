@@ -82,7 +82,7 @@ import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import com.velocitypowered.proxy.util.DurationUtils;
-import com.velocitypowered.proxy.util.TranslatableMapper;
+import com.velocitypowered.proxy.util.translation.TranslatableMapper;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -837,6 +837,31 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       if (connOrder.isEmpty()) {
         return Optional.empty();
       } else {
+        if (server.getConfiguration().isEnableDynamicFallback()) {
+          Optional<RegisteredServer> emptiestServer = Optional.empty();
+          int index = -1;
+          for (String serverName : connOrder) {
+            RegisteredServer registeredServer = server.getServer(serverName).orElse(null);
+            if (registeredServer == null) {
+              logger.error(Component.text("Invalid server found in the config. Make sure all servers under 'try' are spelled correctly!"));
+              return emptiestServer;
+            }
+
+            if (emptiestServer.isEmpty()) {
+              index = connOrder.indexOf(serverName);
+              emptiestServer = Optional.of(registeredServer);
+            } else {
+              if (registeredServer.getPlayersConnected().size() < emptiestServer.get().getPlayersConnected().size()) {
+                index = connOrder.indexOf(serverName);
+                emptiestServer = Optional.of(registeredServer);
+              }
+            }
+          }
+          tryIndex = index;
+          return emptiestServer;
+        }
+
+
         serversToTry = connOrder;
       }
     }
@@ -934,7 +959,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     final boolean isPlayerAddressLoggingEnabled = server.getConfiguration()
         .isPlayerAddressLoggingEnabled();
     final String playerIp =
-        isPlayerAddressLoggingEnabled ? getRemoteAddress().toString() : "<ip address withheld>";
+        isPlayerAddressLoggingEnabled
+                ? (getRemoteAddress() != null
+                ? getRemoteAddress().toString() : "<ip address null>")
+                : "<ip address withheld>";
     return "[connected player] " + profile.getName() + " (" + playerIp + ")";
   }
 

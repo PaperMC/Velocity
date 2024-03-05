@@ -24,7 +24,7 @@ dependencies {
     api(libs.guava)
 
     // DEPRECATED: Will be removed in Velocity Polymer
-    api("com.moandjiezana.toml:toml4j:0.7.2")
+    api("io.hotmoka:toml4j:0.7.3")
 
     api(platform(libs.adventure.bom))
     api("net.kyori:adventure-api")

@@ -39,7 +39,7 @@ public class NativeVelocityCipher implements VelocityCipher {
       return new NativeVelocityCipher(false, key);
     }
   };
-  private final long ctx;
+  private long ctx;
   private boolean disposed = false;
 
   private NativeVelocityCipher(boolean encrypt, SecretKey key) throws GeneralSecurityException {
@@ -60,7 +60,9 @@ public class NativeVelocityCipher implements VelocityCipher {
   public void close() {
     if (!disposed) {
       OpenSslCipherImpl.free(ctx);
+      this.ctx = 0;
     }
+
     disposed = true;
   }
 

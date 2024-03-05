@@ -75,6 +75,17 @@ public class SendCommand {
               && context.getSource() instanceof Player) {
             builder.suggest("current");
           }
+
+          if (argument.isEmpty() || argument.startsWith("+")) {
+            for (final RegisteredServer server : server.getAllServers()) {
+              final String serverName = server.getServerInfo().getName();
+
+              if (serverName.regionMatches(true, 0, argument, 1, argument.length() - 1)) {
+                builder.suggest("+" + serverName);
+              }
+            }
+          }
+
           return builder.buildFuture();
         })
         .executes(this::usage);
@@ -124,7 +135,8 @@ public class SendCommand {
     final Optional<Player> maybePlayer = server.getPlayer(player);
     if (maybePlayer.isEmpty()
         && !Objects.equals(player, "all")
-        && !Objects.equals(player, "current")) {
+        && !Objects.equals(player, "current")
+        && !player.startsWith("+")) {
       context.getSource().sendMessage(
           CommandMessages.PLAYER_NOT_FOUND.arguments(Component.text(player))
       );
@@ -151,6 +163,23 @@ public class SendCommand {
         }
         return Command.SINGLE_SUCCESS;
       }
+      return 0;
+    }
+
+    if (player.startsWith("+")) {
+      for (RegisteredServer server : server.getAllServers()) {
+        String name = server.getServerInfo().getName();
+
+        if (name.regionMatches(true, 0, player, 1, player.length() - 1)) {
+          for (Player targetPlayer : server.getPlayersConnected()) {
+            targetPlayer.createConnectionRequest(targetServer).fireAndForget();
+          }
+
+          return Command.SINGLE_SUCCESS;
+        }
+      }
+
+      context.getSource().sendMessage(CommandMessages.SERVER_DOES_NOT_EXIST.arguments(Component.text(player)));
       return 0;
     }
 
