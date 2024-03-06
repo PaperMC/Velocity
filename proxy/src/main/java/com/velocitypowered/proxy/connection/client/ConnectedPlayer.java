@@ -211,7 +211,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     return attemptedServers;
   }
 
-
   public ChatBuilderFactory getChatBuilderFactory() {
     return chatBuilderFactory;
   }
