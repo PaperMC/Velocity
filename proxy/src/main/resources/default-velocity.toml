@@ -88,7 +88,8 @@ try = [
 ]
 
 # Sends you to the least populated fallback server, instead of the first available fallback server.
-enable-dynamic-fallbacks = true
+# Keep this false if you only have one fallback server.
+enable-dynamic-fallbacks = false
 
 [forced-hosts]
 # Configure your forced hosts here.
