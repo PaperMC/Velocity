@@ -85,6 +85,7 @@ import com.velocitypowered.proxy.util.DurationUtils;
 import com.velocitypowered.proxy.util.translation.TranslatableMapper;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -847,7 +848,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
           Optional<RegisteredServer> emptiestServer = Optional.empty();
           int index = 0;
           for (String serverName : connOrder) {
-            if(attemptedServers.contains(serverName)) continue;
+            if (attemptedServers.contains(serverName)) {
+              continue;
+            }
 
             attemptedServers.add(serverName);
             RegisteredServer registeredServer = server.getServer(serverName).orElse(null);
