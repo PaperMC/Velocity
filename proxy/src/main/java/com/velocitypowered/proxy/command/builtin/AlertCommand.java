@@ -24,22 +24,23 @@ import com.mojang.brigadier.context.CommandContext;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.permission.Tristate;
-import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.proxy.VelocityServer;
 import java.util.HashMap;
 import java.util.Map;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
  * Command that broadcasts the given message to all the servers on the proxy.
  */
 public class AlertCommand {
-  private final ProxyServer server;
-  private final Logger logger;
+  private final VelocityServer server;
+  private static final Logger logger = LogManager.getLogger(AlertCommand.class);
 
   private static final Map<String, String> colorMap = new HashMap<>();
 
@@ -63,7 +64,7 @@ public class AlertCommand {
     colorMap.put("&l", "<bold>");
   }
 
-  public AlertCommand(ProxyServer server, Logger logger) {
+  public AlertCommand(VelocityServer server) {
     this.server = server;
   }
 
@@ -103,8 +104,9 @@ public class AlertCommand {
       message = message.replace(s, colorMap.get(s));
     }
 
-    logger.log(Level.INFO, Component.translatable("velocity.command.alert.message", NamedTextColor.YELLOW,
-            MiniMessage.miniMessage().deserialize(message)));
+    if (!server.getConfiguration().isLogCommandExecutions()) {
+      logger.log(Level.INFO, "{} used /alert: {}", context.getSource().toString(), message);
+    }
 
     for (RegisteredServer s : server.getAllServers()) {
       s.sendMessage(Component.translatable("velocity.command.alert.message", NamedTextColor.YELLOW,
