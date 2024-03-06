@@ -31,12 +31,15 @@ import java.util.Map;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Command that broadcasts the given message to all the servers on the proxy.
  */
 public class AlertCommand {
   private final ProxyServer server;
+  private final Logger logger;
 
   private static final Map<String, String> colorMap = new HashMap<>();
 
@@ -60,7 +63,7 @@ public class AlertCommand {
     colorMap.put("&l", "<bold>");
   }
 
-  public AlertCommand(ProxyServer server) {
+  public AlertCommand(ProxyServer server, Logger logger) {
     this.server = server;
   }
 
@@ -100,8 +103,12 @@ public class AlertCommand {
       message = message.replace(s, colorMap.get(s));
     }
 
+    logger.log(Level.INFO, Component.translatable("velocity.command.alert.message", NamedTextColor.YELLOW,
+            MiniMessage.miniMessage().deserialize(message)));
+
     for (RegisteredServer s : server.getAllServers()) {
-      s.sendMessage(MiniMessage.miniMessage().deserialize(message));
+      s.sendMessage(Component.translatable("velocity.command.alert.message", NamedTextColor.YELLOW,
+              MiniMessage.miniMessage().deserialize(message)));
     }
 
     return Command.SINGLE_SUCCESS;
