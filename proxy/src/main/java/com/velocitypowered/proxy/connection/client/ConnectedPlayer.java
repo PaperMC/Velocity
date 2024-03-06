@@ -852,7 +852,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
               continue;
             }
 
-            attemptedServers.add(serverName);
             RegisteredServer registeredServer = server.getServer(serverName).orElse(null);
             if (registeredServer == null) {
               logger.error(Component.text("Invalid server found in the config. Make sure all servers under 'try' are spelled correctly!"));
@@ -875,6 +874,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
               }
             }
           }
+
+          emptiestServer.ifPresent(registeredServer -> attemptedServers.add(registeredServer.getServerInfo().getName()));
+
           tryIndex = index;
           return emptiestServer;
         }
