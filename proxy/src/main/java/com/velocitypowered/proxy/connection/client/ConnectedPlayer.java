@@ -879,7 +879,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
           return emptiestServer;
         }
 
-
         serversToTry = connOrder;
       }
     }
