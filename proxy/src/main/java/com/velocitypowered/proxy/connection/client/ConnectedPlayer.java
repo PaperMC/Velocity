@@ -171,6 +171,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private @Nullable ClientSettingsPacket clientSettingsPacket;
   private final ChatQueue chatQueue;
   private final ChatBuilderFactory chatBuilderFactory;
+  private final List<String> attemptedServers;
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
                   @Nullable InetSocketAddress virtualHost, boolean onlineMode,
@@ -182,6 +183,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     this.permissionFunction = PermissionFunction.ALWAYS_UNDEFINED;
     this.connectionPhase = connection.getType().getInitialClientPhase();
     this.onlineMode = onlineMode;
+    this.attemptedServers = new ArrayList<>();
 
     if (connection.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
       this.tabList = new VelocityTabList(this);
@@ -204,6 +206,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       bar.viewerDisconnected(this);
     }
   }
+
+  public List<String> getAttemptedServers() {
+    return attemptedServers;
+  }
+
 
   public ChatBuilderFactory getChatBuilderFactory() {
     return chatBuilderFactory;
@@ -839,8 +846,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       } else {
         if (server.getConfiguration().isEnableDynamicFallback()) {
           Optional<RegisteredServer> emptiestServer = Optional.empty();
-          int index = -1;
+          int index = 0;
           for (String serverName : connOrder) {
+            if(attemptedServers.contains(serverName)) continue;
+
+            attemptedServers.add(serverName);
             RegisteredServer registeredServer = server.getServer(serverName).orElse(null);
             if (registeredServer == null) {
               logger.error(Component.text("Invalid server found in the config. Make sure all servers under 'try' are spelled correctly!"));
