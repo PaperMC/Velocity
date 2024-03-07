@@ -403,6 +403,10 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isLogPlayerConnections();
   }
 
+  public boolean isAllowIllegalCharactersInChat() {
+    return advanced.allowIllegalCharactersInChat;
+  }
+
   public String getServerBrand() {
     return advanced.getServerBrand();
   }
@@ -744,6 +748,8 @@ public class VelocityConfiguration implements ProxyConfig {
     @Expose
     private boolean logPlayerConnections = true;
     @Expose
+    private boolean allowIllegalCharactersInChat = false;
+    @Expose
     private String serverBrand = "{0}";
     @Expose
     private String oudatedVersionPing = "{0} {1}";
@@ -771,6 +777,8 @@ public class VelocityConfiguration implements ProxyConfig {
         this.announceProxyCommands = config.getOrElse("announce-proxy-commands", true);
         this.logCommandExecutions = config.getOrElse("log-command-executions", false);
         this.logPlayerConnections = config.getOrElse("log-player-connections", true);
+        this.allowIllegalCharactersInChat = config
+                .getOrElse("allow-illegal-characters-in-chat", false);
         this.serverBrand = config.getOrElse("server-brand", "{0}");
         this.oudatedVersionPing = config.getOrElse("outdated-version-ping", "{0} {1}");
       }
@@ -832,6 +840,10 @@ public class VelocityConfiguration implements ProxyConfig {
       return logPlayerConnections;
     }
 
+    public boolean isAllowIllegalCharactersInChat() {
+      return allowIllegalCharactersInChat;
+    }
+
     public String getServerBrand() {
       return serverBrand;
     }
@@ -852,6 +864,7 @@ public class VelocityConfiguration implements ProxyConfig {
           + ", announceProxyCommands=" + announceProxyCommands
           + ", logCommandExecutions=" + logCommandExecutions
           + ", logPlayerConnections=" + logPlayerConnections
+          + ", allowIllegalCharactersInChat=" + allowIllegalCharactersInChat
           + '}';
     }
 
