@@ -57,7 +57,7 @@ netty-transport-native-iouring = { module = "io.netty.incubator:netty-incubator-
 netty-transport-native-kqueue = { module = "io.netty:netty-transport-native-kqueue", version.ref = "netty" }
 nightconfig = "com.electronwill.night-config:toml:3.6.7"
 slf4j = "org.slf4j:slf4j-api:2.0.12"
-snakeyaml = "org.yaml:snakeyaml:2.2"
+snakeyaml = "org.yaml:snakeyaml:1.33"
 spotbugs-annotations = "com.github.spotbugs:spotbugs-annotations:4.8.3"
 terminalconsoleappender = "net.minecrell:terminalconsoleappender:1.3.0"
 
