@@ -418,7 +418,7 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   public String getOutdatedServerPing() {
-    return advanced.getOudatedVersionPing();
+    return advanced.getOutdatedVersionPing();
   }
 
   public boolean isEnableDynamicFallback() {
@@ -772,7 +772,7 @@ public class VelocityConfiguration implements ProxyConfig {
     @Expose
     private String serverBrand = "{0}";
     @Expose
-    private String oudatedVersionPing = "{0} {1}";
+    private String outdatedVersionPing = "{0} {1}";
 
     private Advanced() {
     }
@@ -800,7 +800,7 @@ public class VelocityConfiguration implements ProxyConfig {
         this.allowIllegalCharactersInChat = config
                 .getOrElse("allow-illegal-characters-in-chat", false);
         this.serverBrand = config.getOrElse("server-brand", "{0}");
-        this.oudatedVersionPing = config.getOrElse("outdated-version-ping", "{0} {1}");
+        this.outdatedVersionPing = config.getOrElse("outdated-version-ping", "{0} {1}");
       }
     }
 
@@ -888,8 +888,8 @@ public class VelocityConfiguration implements ProxyConfig {
           + '}';
     }
 
-    public String getOudatedVersionPing() {
-      return this.oudatedVersionPing;
+    public String getOutdatedVersionPing() {
+      return this.outdatedVersionPing;
     }
   }
 
