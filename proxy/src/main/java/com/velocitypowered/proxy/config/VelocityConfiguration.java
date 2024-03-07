@@ -95,6 +95,8 @@ public class VelocityConfiguration implements ProxyConfig {
   private boolean logOfflineConnections = false;
   @Expose
   private boolean disableForge = true;
+  @Expose
+  private boolean enforceChatSigning = false;
 
   private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
       Query query, Metrics metrics) {
@@ -110,7 +112,8 @@ public class VelocityConfiguration implements ProxyConfig {
       PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
       boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough,
       boolean enablePlayerAddressLogging, Servers servers, ForcedHosts forcedHosts,
-      Advanced advanced, Query query, Metrics metrics, boolean forceKeyAuthentication) {
+      Advanced advanced, Query query, Metrics metrics, boolean forceKeyAuthentication,
+      boolean logOfflineConnections, boolean disableForge, boolean enforceChatSigning) {
     this.bind = bind;
     this.motd = motd;
     this.showMaxPlayers = showMaxPlayers;
@@ -128,6 +131,9 @@ public class VelocityConfiguration implements ProxyConfig {
     this.query = query;
     this.metrics = metrics;
     this.forceKeyAuthentication = forceKeyAuthentication;
+    this.logOfflineConnections = logOfflineConnections;
+    this.disableForge = disableForge;
+    this.enforceChatSigning = enforceChatSigning;
   }
 
   /**
@@ -442,6 +448,7 @@ public class VelocityConfiguration implements ProxyConfig {
         .add("forceKeyAuthentication", forceKeyAuthentication)
         .add("logOfflineConnections", logOfflineConnections)
         .add("disableForge", disableForge)
+        .add("enforceChatSigning", enforceChatSigning)
         .toString();
   }
 
@@ -531,6 +538,12 @@ public class VelocityConfiguration implements ProxyConfig {
       final boolean kickExisting = config.getOrElse("kick-existing-players", false);
       final boolean enablePlayerAddressLogging = config.getOrElse(
               "enable-player-address-logging", true);
+      final boolean logOfflineConnections = config.getOrElse(
+                   "log-offline-connections", false);
+      final boolean disableForge = config.getOrElse("disable-forge", true);
+      final boolean enforceChatSigning = config.getOrElse(
+          "enforce-chat-signing", false);
+
 
       // Throw an exception if the forwarding-secret file is empty and the proxy is using a
       // forwarding mode that requires it.
@@ -557,7 +570,10 @@ public class VelocityConfiguration implements ProxyConfig {
               new Advanced(advancedConfig),
               new Query(queryConfig),
               new Metrics(metricsConfig),
-              forceKeyAuthentication
+              forceKeyAuthentication,
+              logOfflineConnections,
+              disableForge,
+              enforceChatSigning
       );
     }
   }
@@ -588,6 +604,10 @@ public class VelocityConfiguration implements ProxyConfig {
 
   public boolean isDisableForge() {
     return disableForge;
+  }
+
+  public boolean enforceChatSigning() {
+    return enforceChatSigning;
   }
 
   private static class Servers {

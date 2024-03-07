@@ -18,10 +18,13 @@
 package com.velocitypowered.proxy.protocol.packet.chat.session;
 
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import com.velocitypowered.proxy.protocol.packet.chat.ChatAcknowledgementPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.CommandHandler;
 import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.text.Component;
 
 public class SessionCommandHandler implements CommandHandler<SessionPlayerCommandPacket> {
 
@@ -43,6 +46,21 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
     queueCommandResult(this.server, this.player, event -> {
       CommandExecuteEvent.CommandResult result = event.getResult();
       if (result == CommandExecuteEvent.CommandResult.denied()) {
+        if (server.getConfiguration().enforceChatSigning()) {
+          if (packet.isSigned()) {
+            logger.fatal("A plugin tried to deny a command with signable component(s). "
+                + "This is not supported. "
+                + "Disconnecting player " + player.getUsername() + ". Command packet: " + packet);
+            player.disconnect(Component.text(
+                "A proxy plugin caused an illegal protocol state. "
+                    + "Contact your network administrator."));
+          }
+          // We seemingly can't actually do this if signed args exist, if not, we can probs keep stuff happy
+          if (player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
+            return CompletableFuture.completedFuture(new ChatAcknowledgementPacket(packet.lastSeenMessages.getOffset()));
+          }
+        }
+
         return CompletableFuture.completedFuture(null);
       }
 
@@ -51,6 +69,16 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
         if (packet.isSigned() && commandToRun.equals(packet.command)) {
           return CompletableFuture.completedFuture(packet);
         } else {
+          if (server.getConfiguration().enforceChatSigning() && packet.isSigned()) {
+            logger.fatal("A plugin tried to change a command with signed component(s). "
+                + "This is not supported. "
+                + "Disconnecting player " + player.getUsername() + ". Command packet: " + packet);
+            player.disconnect(Component.text(
+                "A proxy plugin caused an illegal protocol state. "
+                    + "Contact your network administrator."));
+            return CompletableFuture.completedFuture(null);
+          }
+
           return CompletableFuture.completedFuture(this.player.getChatBuilderFactory()
               .builder()
               .setTimestamp(packet.timeStamp)
@@ -65,6 +93,16 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
           if (packet.isSigned() && commandToRun.equals(packet.command)) {
             return packet;
           } else {
+            if (server.getConfiguration().enforceChatSigning() && packet.isSigned()) {
+              logger.fatal("A plugin tried to change a command with signed component(s). "
+                  + "This is not supported. "
+                  + "Disconnecting player " + player.getUsername() + ". Command packet: " + packet);
+              player.disconnect(Component.text(
+                  "A proxy plugin caused an illegal protocol state. "
+                      + "Contact your network administrator."));
+              return null;
+            }
+
             return this.player.getChatBuilderFactory()
                 .builder()
                 .setTimestamp(packet.timeStamp)
@@ -72,6 +110,10 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
                 .message("/" + commandToRun)
                 .toServer();
           }
+        }
+        if (server.getConfiguration().enforceChatSigning() &&
+            player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
+          return new ChatAcknowledgementPacket(packet.lastSeenMessages.getOffset());
         }
         return null;
       });

@@ -26,6 +26,7 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -45,6 +46,22 @@ public class KeyedChatHandler implements
   @Override
   public Class<KeyedPlayerChatPacket> packetClass() {
     return KeyedPlayerChatPacket.class;
+  }
+
+  public static void invalidCancel(Logger logger, ConnectedPlayer player) {
+    logger.fatal("A plugin tried to cancel a signed chat message."
+        + " This is no longer possible in 1.19.1 and newer. "
+        + "Disconnecting player " + player.getUsername());
+    player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
+        + "Contact your network administrator."));
+  }
+
+  public static void invalidChange(Logger logger, ConnectedPlayer player) {
+    logger.fatal("A plugin tried to change a signed chat message. "
+        + "This is no longer possible in 1.19.1 and newer. "
+        + "Disconnecting player " + player.getUsername());
+    player.disconnect(Component.text("A proxy plugin caused an illegal protocol state. "
+        + "Contact your network administrator."));
   }
 
   @Override
@@ -88,14 +105,27 @@ public class KeyedChatHandler implements
     return pme -> {
       PlayerChatEvent.ChatResult chatResult = pme.getResult();
       if (!chatResult.isAllowed()) {
-          return null;
+        if (this.server.getConfiguration().enforceChatSigning() && playerKey.getKeyRevision().noLessThan(IdentifiedKey.Revision.LINKED_V2)) {
+          // Bad, very bad.
+          invalidCancel(logger, player);
+        }
+        return null;
       }
 
       if (chatResult.getMessage().map(str -> !str.equals(packet.getMessage())).orElse(false)) {
-          return player.getChatBuilderFactory().builder()
-              .message(chatResult.getMessage().get() /* always present at this point */)
-              .setTimestamp(packet.getExpiry())
-              .toServer();
+        if (this.server.getConfiguration().enforceChatSigning()) {
+          if (playerKey.getKeyRevision().noLessThan(IdentifiedKey.Revision.LINKED_V2)) {
+            // Bad, very bad.
+            invalidChange(logger, player);
+          } else {
+            logger.warn("A plugin changed a signed chat message. The server may not accept it.");
+          }
+        }
+
+        return player.getChatBuilderFactory().builder()
+            .message(chatResult.getMessage().get() /* always present at this point */)
+            .setTimestamp(packet.getExpiry())
+            .toServer();
       }
       return packet;
     };

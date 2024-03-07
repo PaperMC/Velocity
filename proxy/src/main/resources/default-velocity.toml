@@ -15,6 +15,9 @@ show-max-players = 500
 # Should we authenticate players with Mojang? By default, this is on.
 online-mode = true
 
+# Whether chat signing should be enforced. If disabled, backend servers MUST disable chat signing.
+enforce-chat-signing = false
+
 # Should the proxy enforce the new public key security standard? By default, this is on.
 force-key-authentication = true
 
