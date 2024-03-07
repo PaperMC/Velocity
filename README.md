@@ -24,7 +24,8 @@ Velocity-CTD is licensed under the GPLv3 license.
 
 * Configurable `/alert` command sends messages across your entire network.
 * Configurable `/find` command that locates yourself and other users.
-* `/hub` with `/lobby` alias that sends you to the or a fallback server.
+* `/hub` with `/lobby` alias that sends you to the or a fallback server,
+  which synchronizes with the activation and deactivation of dynamic fallbacks.
 * Configurable `/ping` command that displays your and other users' ping.
 * The `/send` supports sending users from `{SERVER_FROM}` to `{SERVER_TO}`.
 * Configurable `/showall` command that displays all users connected to a specific
