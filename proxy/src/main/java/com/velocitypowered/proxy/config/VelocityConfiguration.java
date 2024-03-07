@@ -410,7 +410,7 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   public boolean isAllowIllegalCharactersInChat() {
-    return advanced.allowIllegalCharactersInChat;
+    return advanced.allowIllegalCharactersInChat();
   }
 
   public String getServerBrand() {
