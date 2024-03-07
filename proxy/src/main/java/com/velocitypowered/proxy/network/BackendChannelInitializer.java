@@ -49,7 +49,7 @@ public class BackendChannelInitializer extends ChannelInitializer<Channel> {
   }
 
   @Override
-  protected void initChannel(Channel ch) {
+  protected void initChannel(Channel ch) throws Exception {
     ch.pipeline()
         .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
         .addLast(READ_TIMEOUT,

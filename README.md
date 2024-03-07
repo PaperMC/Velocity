@@ -24,6 +24,8 @@ Velocity-CTD is licensed under the GPLv3 license.
 
 * Configurable `/alert` command sends messages across your entire network.
 * Configurable `/find` command that locates yourself and other users.
+* `/hub` with `/lobby` alias that sends you to the or a fallback server,
+  which synchronizes with the activation and deactivation of dynamic fallbacks.
 * Configurable `/ping` command that displays your and other users' ping.
 * The `/send` supports sending users from `{SERVER_FROM}` to `{SERVER_TO}`.
 * Configurable `/showall` command that displays all users connected to a specific
@@ -31,6 +33,10 @@ Velocity-CTD is licensed under the GPLv3 license.
 * Fallback servers allow users to be sent to the least populated server,
   which will cycle for even distribution.
 * Configurable server brand and server pinger message.
+* Removal of unsigned message kick/disconnection events for plugins with improper
+  compatibility.
+* Other miscellaneous optimizations and tweaks that will only continue to be
+  implemented as this fork matures.
 * Preliminary MiniMessage support to permit full configurability of all Velocity
   messages.
 * Removal of all language files except `messages.properties` to preserve

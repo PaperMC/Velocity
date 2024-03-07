@@ -147,7 +147,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   private boolean validateChat(String message) {
-    if (CharacterUtil.containsIllegalCharacters(message)) {
+    if (!server.getConfiguration().isAllowIllegalCharactersInChat()
+            && CharacterUtil.containsIllegalCharacters(message)) {
       player.disconnect(
           Component.translatable("velocity.error.illegal-chat-characters", NamedTextColor.RED));
       return false;
