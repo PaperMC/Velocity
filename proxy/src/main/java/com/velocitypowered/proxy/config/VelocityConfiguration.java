@@ -417,7 +417,7 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.getServerBrand();
   }
 
-  public String getOudatedServerPing() {
+  public String getOutdatedServerPing() {
     return advanced.getOudatedVersionPing();
   }
 
