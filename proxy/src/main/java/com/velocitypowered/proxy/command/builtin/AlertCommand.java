@@ -104,5 +104,4 @@ public class AlertCommand {
 
     return Command.SINGLE_SUCCESS;
   }
-
 }

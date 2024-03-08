@@ -59,7 +59,6 @@ public class PingCommand {
                       builder.suggest(playerName);
                     }
                   }
-
                   return builder.buildFuture();
                 })
                 .executes(context -> {
@@ -72,7 +71,6 @@ public class PingCommand {
                     );
                     return 0;
                   }
-
                   return this.getPing(context, maybePlayer.get());
                 })
         )
@@ -96,7 +94,6 @@ public class PingCommand {
           Component.translatable("velocity.command.ping.unknown", NamedTextColor.RED)
               .arguments(Component.text(player.getUsername()))
       );
-
       return 0;
     }
 
@@ -120,7 +117,6 @@ public class PingCommand {
               .arguments(Component.text(player.getUsername()), Component.text(ping))
       );
     }
-
     return Command.SINGLE_SUCCESS;
   }
 }

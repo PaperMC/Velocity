@@ -876,11 +876,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
           }
 
           emptiestServer.ifPresent(registeredServer -> attemptedServers.add(registeredServer.getServerInfo().getName()));
-
           tryIndex = index;
           return emptiestServer;
         }
-
         serversToTry = connOrder;
       }
     }

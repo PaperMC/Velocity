@@ -50,7 +50,6 @@ public class HubCommand {
         .executes(this::lobby).build());
   }
 
-
   private int lobby(final CommandContext<CommandSource> context) {
     if (!(context.getSource() instanceof Player player)) {
       return 0;

@@ -71,7 +71,6 @@ public class FindCommand {
     server.getCommandManager().register(new BrigadierCommand(rootNode.build()));
   }
 
-
   private int usage(final CommandContext<CommandSource> context) {
     context.getSource().sendMessage(
         Component.translatable("velocity.command.find.usage", NamedTextColor.YELLOW)

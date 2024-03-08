@@ -62,7 +62,6 @@ public class NativeVelocityCipher implements VelocityCipher {
       OpenSslCipherImpl.free(ctx);
       this.ctx = 0;
     }
-
     disposed = true;
   }
 

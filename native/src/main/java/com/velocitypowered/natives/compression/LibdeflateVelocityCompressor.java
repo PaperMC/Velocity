@@ -92,11 +92,9 @@ public class LibdeflateVelocityCompressor implements VelocityCompressor {
     if (!disposed) {
       NativeZlibInflate.free(inflateCtx);
       this.inflateCtx = 0;
-
       NativeZlibDeflate.free(deflateCtx);
       this.deflateCtx = 0;
     }
-
     disposed = true;
   }
 

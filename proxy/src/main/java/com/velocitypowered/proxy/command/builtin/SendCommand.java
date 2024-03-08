@@ -174,11 +174,9 @@ public class SendCommand {
           for (Player targetPlayer : server.getPlayersConnected()) {
             targetPlayer.createConnectionRequest(targetServer).fireAndForget();
           }
-
           return Command.SINGLE_SUCCESS;
         }
       }
-
       context.getSource().sendMessage(CommandMessages.SERVER_DOES_NOT_EXIST.arguments(Component.text(player)));
       return 0;
     }
