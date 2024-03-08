@@ -59,7 +59,6 @@ public class SessionChatHandler implements ChatHandler<SessionPlayerChatPacket> 
                 if (server.getConfiguration().enforceChatSigning() && packet.isSigned()) {
                   invalidCancel(logger, player);
                 }
-
                 return null;
               }
 
@@ -69,7 +68,6 @@ public class SessionChatHandler implements ChatHandler<SessionPlayerChatPacket> 
                   invalidChange(logger, player);
                   return null;
                 }
-
                 return this.player.getChatBuilderFactory().builder().message(packet.message)
                     .setTimestamp(packet.timestamp)
                     .toServer();

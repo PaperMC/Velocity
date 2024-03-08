@@ -60,7 +60,6 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
             return CompletableFuture.completedFuture(new ChatAcknowledgementPacket(packet.lastSeenMessages.getOffset()));
           }
         }
-
         return CompletableFuture.completedFuture(null);
       }
 

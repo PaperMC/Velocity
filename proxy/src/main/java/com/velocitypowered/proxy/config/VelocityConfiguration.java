@@ -544,7 +544,6 @@ public class VelocityConfiguration implements ProxyConfig {
       final boolean enforceChatSigning = config.getOrElse(
           "enforce-chat-signing", false);
 
-
       // Throw an exception if the forwarding-secret file is empty and the proxy is using a
       // forwarding mode that requires it.
       if (forwardingSecret.length == 0
