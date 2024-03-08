@@ -86,12 +86,17 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
 
   @Override
   public CompletableFuture<ServerPing> ping(PingOptions pingOptions) {
-    return ping(null, pingOptions);
+    return ping(null, pingOptions, "");
+  }
+
+  @Override
+  public CompletableFuture<ServerPing> ping(PingOptions pingOptions, String virtualHostString) {
+    return ping(null, pingOptions, virtualHostString);
   }
 
   @Override
   public CompletableFuture<ServerPing> ping() {
-    return ping(null, PingOptions.DEFAULT);
+    return ping(null, PingOptions.DEFAULT, "");
   }
 
   public CompletableFuture<ServerPing> ping(@Nullable EventLoop loop, PingOptions pingOptions) {
