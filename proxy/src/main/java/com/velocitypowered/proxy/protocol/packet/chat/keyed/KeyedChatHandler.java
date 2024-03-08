@@ -120,9 +120,10 @@ public class KeyedChatHandler implements
           } else {
             logger.warn("A plugin changed a signed chat message. The server may not accept it.");
             return player.getChatBuilderFactory().builder()
-                .message(chatResult.getMessage().get() /* always present at this point */)
-                .setTimestamp(packet.getExpiry())
-                .toServer();
+                    .message(chatResult.getMessage().get() /* always present at this point */)
+                    .setTimestamp(packet.getExpiry())
+                    .toServer();
+          }
         }
       }
       return packet;
