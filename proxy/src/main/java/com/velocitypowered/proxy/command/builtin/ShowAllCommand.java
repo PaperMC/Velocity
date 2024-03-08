@@ -70,7 +70,6 @@ public class ShowAllCommand {
     server.getCommandManager().register(new BrigadierCommand(rootNode.build()));
   }
 
-
   private int usage(final CommandContext<CommandSource> context) {
     context.getSource().sendMessage(
         Component.translatable("velocity.command.showall.usage", NamedTextColor.YELLOW)
