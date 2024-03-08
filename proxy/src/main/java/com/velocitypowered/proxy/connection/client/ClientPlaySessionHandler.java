@@ -322,7 +322,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           if (Strings.isNullOrEmpty(channel)) {
             continue;
           }
-
           try {
             channelIdentifiers.add(MinecraftChannelIdentifier.from(channel));
           } catch (IllegalArgumentException e) {
