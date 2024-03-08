@@ -844,7 +844,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       if (connOrder.isEmpty()) {
         return Optional.empty();
       } else {
-        if (server.getConfiguration().isEnableDynamicFallback()) {
+        if (server.getConfiguration().isEnableDynamicFallbacks()) {
           Optional<RegisteredServer> emptiestServer = Optional.empty();
           int index = 0;
           for (String serverName : connOrder) {
