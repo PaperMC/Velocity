@@ -113,17 +113,15 @@ public class KeyedChatHandler implements
       }
 
       if (chatResult.getMessage().map(str -> !str.equals(packet.getMessage())).orElse(false)) {
-        if (this.server.getConfiguration().enforceChatSigning()) {
-          if (playerKey.getKeyRevision().noLessThan(IdentifiedKey.Revision.LINKED_V2)) {
-            // Bad, very bad.
-            invalidChange(logger, player);
-          } else {
-            logger.warn("A plugin changed a signed chat message. The server may not accept it.");
-            return player.getChatBuilderFactory().builder()
-                    .message(chatResult.getMessage().get() /* always present at this point */)
-                    .setTimestamp(packet.getExpiry())
-                    .toServer();
-          }
+        if (this.server.getConfiguration().enforceChatSigning() && playerKey.getKeyRevision().noLessThan(IdentifiedKey.Revision.LINKED_V2)) {
+          // Bad, very bad.
+          invalidChange(logger, player);
+        } else {
+          logger.warn("A plugin changed a signed chat message. The server may not accept it.");
+          return player.getChatBuilderFactory().builder()
+              .message(chatResult.getMessage().get() /* always present at this point */)
+              .setTimestamp(packet.getExpiry())
+              .toServer();
         }
       }
       return packet;

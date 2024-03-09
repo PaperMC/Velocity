@@ -46,19 +46,17 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
     queueCommandResult(this.server, this.player, event -> {
       CommandExecuteEvent.CommandResult result = event.getResult();
       if (result == CommandExecuteEvent.CommandResult.denied()) {
-        if (server.getConfiguration().enforceChatSigning()) {
-          if (packet.isSigned()) {
-            logger.fatal("A plugin tried to deny a command with signable component(s). "
-                + "This is not supported. "
-                + "Disconnecting player " + player.getUsername() + ". Command packet: " + packet);
-            player.disconnect(Component.text(
-                "A proxy plugin caused an illegal protocol state. "
-                    + "Contact your network administrator."));
-          }
-          // We seemingly can't actually do this if signed args exist, if not, we can probs keep stuff happy
-          if (player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
-            return CompletableFuture.completedFuture(new ChatAcknowledgementPacket(packet.lastSeenMessages.getOffset()));
-          }
+        if (server.getConfiguration().enforceChatSigning() && packet.isSigned()) {
+          logger.fatal("A plugin tried to deny a command with signable component(s). "
+              + "This is not supported. "
+              + "Disconnecting player " + player.getUsername() + ". Command packet: " + packet);
+          player.disconnect(Component.text(
+              "A proxy plugin caused an illegal protocol state. "
+                  + "Contact your network administrator."));
+        }
+        // We seemingly can't actually do this if signed args exist, if not, we can probs keep stuff happy
+        if (player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
+          return CompletableFuture.completedFuture(new ChatAcknowledgementPacket(packet.lastSeenMessages.getOffset()));
         }
         return CompletableFuture.completedFuture(null);
       }
