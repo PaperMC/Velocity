@@ -421,8 +421,8 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.getOutdatedVersionPing();
   }
 
-  public boolean isEnableDynamicFallback() {
-    return servers.isEnableDynamicFallback();
+  public boolean isEnableDynamicFallbacks() {
+    return servers.isEnableDynamicFallbacks();
   }
 
   public boolean isForceKeyAuthentication() {
@@ -618,7 +618,7 @@ public class VelocityConfiguration implements ProxyConfig {
     );
     private List<String> attemptConnectionOrder = ImmutableList.of("lobby");
 
-    private boolean enableDynamicFallback = true;
+    private boolean enableDynamicFallbacks = false;
 
     private Servers() {
     }
@@ -638,7 +638,7 @@ public class VelocityConfiguration implements ProxyConfig {
         }
         this.servers = ImmutableMap.copyOf(servers);
         this.attemptConnectionOrder = config.getOrElse("try", attemptConnectionOrder);
-        this.enableDynamicFallback = config.getOrElse("enable-dynamic-fallbacks", true);
+        this.enableDynamicFallbacks = config.getOrElse("enable-dynamic-fallbacks", false);
       }
     }
 
@@ -659,8 +659,8 @@ public class VelocityConfiguration implements ProxyConfig {
       return attemptConnectionOrder;
     }
 
-    public boolean isEnableDynamicFallback() {
-      return enableDynamicFallback;
+    public boolean isEnableDynamicFallbacks() {
+      return enableDynamicFallbacks;
     }
 
     public void setAttemptConnectionOrder(List<String> attemptConnectionOrder) {
@@ -796,8 +796,7 @@ public class VelocityConfiguration implements ProxyConfig {
         this.announceProxyCommands = config.getOrElse("announce-proxy-commands", true);
         this.logCommandExecutions = config.getOrElse("log-command-executions", false);
         this.logPlayerConnections = config.getOrElse("log-player-connections", true);
-        this.allowIllegalCharactersInChat = config
-                .getOrElse("allow-illegal-characters-in-chat", false);
+        this.allowIllegalCharactersInChat = config.getOrElse("allow-illegal-characters-in-chat", false);
         this.serverBrand = config.getOrElse("server-brand", "{0}");
         this.outdatedVersionPing = config.getOrElse("outdated-version-ping", "{0} {1}");
       }
