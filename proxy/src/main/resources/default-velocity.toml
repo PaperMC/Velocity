@@ -154,7 +154,8 @@ log-command-executions = false
 # and disconnecting from the proxy.
 log-player-connections = true
 
-# Enables the execution of illegal characters in the chat, like "§"
+# Enables the execution of illegal characters in chat and only allows
+# or denies illegal characters that are executed through the proxy.
 allow-illegal-characters-in-chat = false
 
 # Modifies the server brand that displays in your debug menu.
