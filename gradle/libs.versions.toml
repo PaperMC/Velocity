@@ -2,7 +2,7 @@
 configurate3 = "3.7.3"
 configurate4 = "4.1.2"
 flare = "2.0.1"
-log4j = "2.23.0"
+log4j = "2.23.1"
 netty = "4.1.107.Final"
 netty-io_uring = "0.0.25.Final"
 
