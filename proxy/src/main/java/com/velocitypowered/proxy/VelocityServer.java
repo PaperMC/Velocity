@@ -63,6 +63,7 @@ import com.velocitypowered.proxy.util.ResourceUtils;
 import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
+import com.velocitypowered.proxy.util.translation.VelocityTranslationRegistry;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -216,8 +217,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     logger.info("Booting up {} {}...", getVersion().getName(), getVersion().getVersion());
     console.setupStreams();
 
-    registerTranslations();
-
     serverKeyPair = EncryptionUtils.createRsaKeyPair(1024);
 
     cm.logChannelInformation();
@@ -232,6 +231,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     new SendCommand(this).register();
 
     this.doStartupConfigLoad();
+
+    registerTranslations();
 
     for (Map.Entry<String, String> entry : configuration.getServers().entrySet()) {
       servers.register(new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue())));
@@ -269,8 +270,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   private void registerTranslations() {
-    final TranslationRegistry translationRegistry = TranslationRegistry
-        .create(Key.key("velocity", "translations"));
+    final TranslationRegistry translationRegistry = new VelocityTranslationRegistry(
+            TranslationRegistry.create(Key.key("velocity", "translations")));
     translationRegistry.defaultLocale(Locale.US);
     try {
       ResourceUtils.visitResources(VelocityServer.class, path -> {

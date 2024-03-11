@@ -82,7 +82,7 @@ import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import com.velocitypowered.proxy.util.DurationUtils;
-import com.velocitypowered.proxy.util.TranslatableMapper;
+import com.velocitypowered.proxy.util.translation.TranslatableMapper;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
 import java.util.Collection;

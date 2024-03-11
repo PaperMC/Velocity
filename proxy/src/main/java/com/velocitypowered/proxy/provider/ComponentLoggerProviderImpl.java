@@ -18,7 +18,7 @@
 package com.velocitypowered.proxy.provider;
 
 import com.google.auto.service.AutoService;
-import com.velocitypowered.proxy.util.TranslatableMapper;
+import com.velocitypowered.proxy.util.translation.TranslatableMapper;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.kyori.adventure.text.logger.slf4j.ComponentLoggerProvider;
 import net.kyori.adventure.text.serializer.ansi.ANSIComponentSerializer;
