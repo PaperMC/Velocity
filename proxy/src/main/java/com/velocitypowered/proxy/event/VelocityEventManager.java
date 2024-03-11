@@ -380,7 +380,7 @@ public class VelocityEventManager implements EventManager {
       final UntargetedEventHandler untargetedHandler = untargetedMethodHandlers.get(info.method);
       assert untargetedHandler != null;
       if (info.eventType == null) {
-        throw new VerifyException("Event type is not present and there are no errors");
+        throw new VerifyException("Event type is not present and there are no errors.");
       }
 
       final EventHandler<Object> handler = untargetedHandler.buildHandler(listener);
