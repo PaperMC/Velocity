@@ -45,10 +45,10 @@ public class HubCommand {
    */
   public BrigadierCommand register() {
     return new BrigadierCommand(BrigadierCommand
-        .literalArgumentBuilder("hub")
-        .requires(source ->
-            source.getPermissionValue("velocity.command.hub") == Tristate.TRUE)
-        .executes(this::lobby).build());
+            .literalArgumentBuilder("hub")
+            .requires(source ->
+                    source.getPermissionValue("velocity.command.hub") == Tristate.TRUE)
+            .executes(this::lobby).build());
   }
 
   private int lobby(final CommandContext<CommandSource> context) {
@@ -69,7 +69,9 @@ public class HubCommand {
 
     if (registeredServer instanceof VelocityRegisteredServer velocityRegisteredServer) {
       ConnectedPlayer p = velocityRegisteredServer.getPlayer(player.getUniqueId());
-      if (p == null) return 0;
+      if (p == null) {
+        return 0;
+      }
 
       RegisteredServer serverToTry = p.getNextServerToTry().orElse(null);
       if (serverToTry == null) {
