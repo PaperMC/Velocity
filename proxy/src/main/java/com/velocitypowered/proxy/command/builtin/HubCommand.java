@@ -69,7 +69,7 @@ public class HubCommand {
 
     if (registeredServer instanceof VelocityRegisteredServer velocityRegisteredServer) {
       ConnectedPlayer p = velocityRegisteredServer.getPlayer(player.getUniqueId());
-      if(p == null) return 0;
+      if (p == null) return 0;
 
       RegisteredServer serverToTry = p.getNextServerToTry().orElse(null);
       if (serverToTry == null) {
