@@ -26,6 +26,7 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import net.kyori.adventure.text.Component;
 
@@ -67,7 +68,10 @@ public class HubCommand {
     }
 
     if (registeredServer instanceof VelocityRegisteredServer velocityRegisteredServer) {
-      RegisteredServer serverToTry = velocityRegisteredServer.getPlayer(player.getUniqueId()).getNextServerToTry().orElse(null);
+      ConnectedPlayer p = velocityRegisteredServer.getPlayer(player.getUniqueId());
+      if(p == null) return 0;
+
+      RegisteredServer serverToTry = p.getNextServerToTry().orElse(null);
       if (serverToTry == null) {
         return 0;
       }
