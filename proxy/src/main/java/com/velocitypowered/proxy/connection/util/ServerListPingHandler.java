@@ -143,7 +143,7 @@ public class ServerListPingHandler {
    */
   public CompletableFuture<ServerPing> getInitialPing(VelocityInboundConnection connection) {
     VelocityConfiguration configuration = server.getConfiguration();
-    ProtocolVersion shownVersion = ProtocolVersion.isSupported(connection.getProtocolVersion())
+    ProtocolVersion shownVersion = connection.getProtocolVersion().isSupported()
         ? connection.getProtocolVersion() : ProtocolVersion.MAXIMUM_VERSION;
     PingPassthroughMode passthroughMode = configuration.getPingPassthrough();
 

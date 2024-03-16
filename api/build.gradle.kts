@@ -73,7 +73,8 @@ tasks {
         o.tags(
             "apiNote:a:API Note:",
             "implSpec:a:Implementation Requirements:",
-            "implNote:a:Implementation Note:"
+            "implNote:a:Implementation Note:",
+            "sinceMinecraft:a:Since Minecraft:"
         )
 
         // Disable the crazy super-strict doclint tool in Java 8
