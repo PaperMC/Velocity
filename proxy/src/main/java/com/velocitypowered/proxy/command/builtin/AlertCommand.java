@@ -32,7 +32,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 /**
- * Implements Velocity's {@code /broadcast} command.
+ * Implements Velocity's {@code /alert} command.
  */
 public class AlertCommand {
 
