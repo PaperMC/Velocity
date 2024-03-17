@@ -50,7 +50,8 @@ wrapper script (`./gradlew`) as our CI builds using it.
 
 It is sufficient to run `./gradlew build` to run the full build cycle.
 
-You can find new releases of Velocity-CTD in our [releases](https://github.com/GemstoneGG/Velocity-CTD/releases) tab, where our latest updates will be compiled and ready for use.
+You can find new releases of Velocity-CTD in our [releases](https://github.com/GemstoneGG/Velocity-CTD/releases) tab,
+where our latest updates will be compiled and ready for use.
 
 ## Running
 
