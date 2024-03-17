@@ -3,7 +3,7 @@
 
 name: Java CI with Gradle
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   build-17:
@@ -19,3 +19,12 @@ jobs:
         cache: 'gradle'
     - name: Build with Gradle
       run: ./gradlew build
+
+    - name: Upload Velocity
+      uses: marvinpinto/action-automatic-releases@master
+      with:
+        title: "Velocity-CTD"
+        automatic_release_tag: "build"
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        files: "*/build/libs/*.jar"
+        prerelease: true
