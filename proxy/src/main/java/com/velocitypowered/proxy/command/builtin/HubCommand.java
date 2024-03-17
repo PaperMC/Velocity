@@ -62,9 +62,9 @@ public class HubCommand {
     }
 
     RegisteredServer registeredServer = connection.getServer();
-    if (registeredServer == null} {
+    if (registeredServer == null) {
       return 0;
-    }  
+    }
 
     if (server.getConfiguration().getAttemptConnectionOrder().contains(registeredServer.getServerInfo().getName())) {
       player.sendMessage(Component.translatable("velocity.command.hub.fallback-connected"));
