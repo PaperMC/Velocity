@@ -34,9 +34,10 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 /**
- * Command to find what server a player is connected to.
+ * Implements Velocity's {@code /find} command.
  */
 public class FindCommand {
+
   private final ProxyServer server;
 
   public FindCommand(ProxyServer server) {
@@ -44,7 +45,7 @@ public class FindCommand {
   }
 
   /**
-   * Register the command.
+   * Registers the command.
    */
   public void register() {
     final LiteralArgumentBuilder<CommandSource> rootNode = BrigadierCommand
@@ -88,7 +89,7 @@ public class FindCommand {
       return 0;
     }
 
-    // can't be null, already checking if it's empty before
+    // Can't be null, already checking if it's empty before
     Player p = maybePlayer.get();
     ServerConnection connection = p.getCurrentServer().orElse(null);
     if (connection == null) {

@@ -31,9 +31,10 @@ import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import net.kyori.adventure.text.Component;
 
 /**
- * Sends the server to the least populated fallback server.
+ * Implements Velocity's {@code /hub} command.
  */
 public class HubCommand {
+
   private final ProxyServer server;
 
   public HubCommand(ProxyServer server) {
@@ -41,7 +42,7 @@ public class HubCommand {
   }
 
   /**
-   * Register the command.
+   * Registers the command.
    */
   public BrigadierCommand register() {
     return new BrigadierCommand(BrigadierCommand

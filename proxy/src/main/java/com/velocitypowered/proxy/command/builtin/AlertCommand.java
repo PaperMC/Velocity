@@ -32,9 +32,10 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 /**
- * Command that broadcasts the given message to all the servers on the proxy.
+ * Implements Velocity's {@code /broadcast} command.
  */
 public class AlertCommand {
+
   private final ProxyServer server;
 
   private static final Map<String, String> colorMap = new HashMap<>();
@@ -56,7 +57,12 @@ public class AlertCommand {
     colorMap.put("&d", "<light_purple>");
     colorMap.put("&e", "<yellow>");
     colorMap.put("&f", "<white>");
+    colorMap.put("&k", "<obfuscated>");
     colorMap.put("&l", "<bold>");
+    colorMap.put("&m", "<strikethrough>");
+    colorMap.put("&n", "<underlined>");
+    colorMap.put("&o", "<italic>");
+    colorMap.put("&r", "<reset>");
   }
 
   public AlertCommand(ProxyServer server) {
@@ -64,7 +70,7 @@ public class AlertCommand {
   }
 
   /**
-   * Register the command.
+   * Registers the command.
    */
   public void register() {
     final LiteralArgumentBuilder<CommandSource> rootNode = BrigadierCommand

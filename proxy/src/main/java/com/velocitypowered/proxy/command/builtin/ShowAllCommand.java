@@ -33,9 +33,10 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 /**
- * Command to list all players that are currently connected to a server.
+ * Implements Velocity's {@code /showall} command.
  */
 public class ShowAllCommand {
+
   private final ProxyServer server;
 
   public ShowAllCommand(ProxyServer server) {

@@ -31,9 +31,10 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 /**
- * Implements a {@code /ping} command to return the ping of a given player (in ms).
+ * Implements Velocity's {@code /ping} command.
  */
 public class PingCommand {
+
   private final ProxyServer server;
 
   public PingCommand(ProxyServer server) {
