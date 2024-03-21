@@ -26,5 +26,5 @@ jobs:
         title: "Velocity-CTD"
         automatic_release_tag: "Latest Releases"
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        files: "*/build/libs/*.jar"
+        files: "*/Latest Releases/libs/*.jar"
         prerelease: true
