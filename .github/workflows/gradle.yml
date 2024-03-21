@@ -24,7 +24,7 @@ jobs:
       uses: marvinpinto/action-automatic-releases@master
       with:
         title: "Velocity-CTD"
-        automatic_release_tag: "build"
+        automatic_release_tag: "Latest Releases"
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         files: "*/build/libs/*.jar"
         prerelease: true
