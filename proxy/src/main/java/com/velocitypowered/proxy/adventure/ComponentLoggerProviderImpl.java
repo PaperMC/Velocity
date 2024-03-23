@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.provider;
+package com.velocitypowered.proxy.adventure;
 
 import com.google.auto.service.AutoService;
 import com.velocitypowered.proxy.util.TranslatableMapper;
