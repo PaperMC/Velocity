@@ -33,6 +33,7 @@ import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.plugin.PluginContainer;
+import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.proxy.event.UntargetedEventHandler.EventTaskHandler;
 import com.velocitypowered.proxy.event.UntargetedEventHandler.VoidHandler;
@@ -621,8 +622,9 @@ public class VelocityEventManager implements EventManager {
 
   private static void logHandlerException(
       final HandlerRegistration registration, final Throwable t) {
-    logger.error("Couldn't pass {} to {}", registration.eventType.getSimpleName(),
-        registration.plugin.getDescription().getId(), t);
+    final PluginDescription pluginDescription = registration.plugin.getDescription();
+    logger.error("Couldn't pass {} to {} {}", registration.eventType.getSimpleName(),
+            pluginDescription.getId(), pluginDescription.getVersion().orElse(""), t);
   }
 
   public boolean shutdown() throws InterruptedException {
