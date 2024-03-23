@@ -14,7 +14,7 @@ spotless = "com.diffplug.spotless:6.25.0"
 [libraries]
 adventure-bom = "net.kyori:adventure-bom:4.16.0"
 adventure-facet = "net.kyori:adventure-platform-facet:4.3.2"
-asm = "org.ow2.asm:asm:9.6"
+asm = "org.ow2.asm:asm:9.7"
 auto-service = "com.google.auto.service:auto-service:1.1.1"
 auto-service-annotations = "com.google.auto.service:auto-service-annotations:1.1.1"
 brigadier = "com.velocitypowered:velocity-brigadier:1.0.0-SNAPSHOT"
