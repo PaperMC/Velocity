@@ -18,30 +18,26 @@
 package com.velocitypowered.proxy.config.migration;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
-import java.io.IOException;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Configuration Migration interface.
+ * Migrate TCP Fast Open to be enabled by default.
  */
-public sealed interface ConfigurationMigration
-        permits ForwardingMigration, KeyAuthenticationMigration, MotdMigration, TcpFastOpenMigration {
-  boolean shouldMigrate(CommentedFileConfig config);
+public final class TcpFastOpenMigration implements ConfigurationMigration {
+  @Override
+  public boolean shouldMigrate(final CommentedFileConfig config) {
+    return configVersion(config) < 2.7;
+  }
 
-  void migrate(CommentedFileConfig config, Logger logger) throws IOException;
-
-  /**
-   * Gets the configuration version.
-   *
-   * @param config the configuration.
-   * @return configuration version
-   */
-  default double configVersion(CommentedFileConfig config) {
-    final String stringVersion = config.getOrElse("config-version", "1.0");
-    try {
-      return Double.parseDouble(stringVersion);
-    } catch (Exception e) {
-      return 1.0;
+  @Override
+  public void migrate(final CommentedFileConfig config, final Logger logger) {
+    if (!config.getOrElse("advanced.tcp-fast-open", false)) {
+      config.set("advanced.tcp-fast-open", true);
     }
+
+    config.setComment("advanced.tcp-fast-open", """
+            Enables TCP fast open support on the proxy.
+            Disabled automatically if not supported by the operating system.""");
+    config.set("config-version", "2.7");
   }
 }
