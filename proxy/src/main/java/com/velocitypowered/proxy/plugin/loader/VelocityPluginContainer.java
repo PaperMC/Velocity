@@ -32,6 +32,7 @@ public class VelocityPluginContainer implements PluginContainer {
   private final PluginDescription description;
   private Object instance;
   private volatile ExecutorService service;
+  private boolean unregisteredMainClassListener = false;
 
   public VelocityPluginContainer(PluginDescription description) {
     this.description = description;
@@ -74,5 +75,13 @@ public class VelocityPluginContainer implements PluginContainer {
 
   public boolean hasExecutorService() {
     return this.service != null;
+  }
+
+  public void unregisteredMainClassListener(final boolean unregistered) {
+    this.unregisteredMainClassListener = unregistered;
+  }
+
+  public boolean unregisteredMainClassListener() {
+    return this.unregisteredMainClassListener;
   }
 }
