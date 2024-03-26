@@ -8,6 +8,7 @@
 package com.velocitypowered.api.event.connection;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.network.HandshakeIntent;
 import com.velocitypowered.api.proxy.InboundConnection;
 
 /**
@@ -18,19 +19,26 @@ import com.velocitypowered.api.proxy.InboundConnection;
 public final class ConnectionHandshakeEvent {
 
   private final InboundConnection connection;
+  private final HandshakeIntent intent;
 
-  public ConnectionHandshakeEvent(InboundConnection connection) {
+  public ConnectionHandshakeEvent(InboundConnection connection, HandshakeIntent intent) {
     this.connection = Preconditions.checkNotNull(connection, "connection");
+    this.intent = Preconditions.checkNotNull(intent, "intent");
   }
 
   public InboundConnection getConnection() {
     return connection;
   }
 
+  public HandshakeIntent getIntent() {
+    return this.intent;
+  }
+
   @Override
   public String toString() {
     return "ConnectionHandshakeEvent{"
         + "connection=" + connection
+        + ", intent=" + intent
         + '}';
   }
 }

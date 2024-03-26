@@ -32,7 +32,7 @@ public class ServerDataPacket implements MinecraftPacket {
 
   private @Nullable ComponentHolder description;
   private @Nullable Favicon favicon;
-  private boolean secureChatEnforced; // Added in 1.19.1
+  private boolean secureChatEnforced; // Added in 1.19.1 - Removed in 1.20.5
 
   public ServerDataPacket() {
   }
@@ -63,7 +63,8 @@ public class ServerDataPacket implements MinecraftPacket {
     if (protocolVersion.lessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
       buf.readBoolean();
     }
-    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_19_1)) {
+    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_19_1)
+            && protocolVersion.lessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
       this.secureChatEnforced = buf.readBoolean();
     }
   }
@@ -94,7 +95,8 @@ public class ServerDataPacket implements MinecraftPacket {
     if (protocolVersion.lessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
       buf.writeBoolean(false);
     }
-    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_19_1)) {
+    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_19_1)
+            && protocolVersion.lessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
       buf.writeBoolean(this.secureChatEnforced);
     }
   }
@@ -114,5 +116,9 @@ public class ServerDataPacket implements MinecraftPacket {
 
   public boolean isSecureChatEnforced() {
     return secureChatEnforced;
+  }
+
+  public void setSecureChatEnforced(boolean secureChatEnforced) {
+    this.secureChatEnforced = secureChatEnforced;
   }
 }

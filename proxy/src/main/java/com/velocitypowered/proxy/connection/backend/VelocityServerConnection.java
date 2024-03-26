@@ -21,6 +21,7 @@ import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConst
 import static com.velocitypowered.proxy.network.Connections.HANDLER;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.network.HandshakeIntent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
@@ -167,7 +168,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
                 .getHostString();
 
     HandshakePacket handshake = new HandshakePacket();
-    handshake.setNextStatus(StateRegistry.LOGIN_ID);
+    handshake.setIntent(HandshakeIntent.LOGIN);
     handshake.setProtocolVersion(protocolVersion);
     if (forwardingMode == PlayerInfoForwarding.LEGACY) {
       handshake.setServerAddress(createLegacyForwardingAddress());

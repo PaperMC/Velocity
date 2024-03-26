@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.protocol.packet;
 
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN;
 
+import com.velocitypowered.api.network.HandshakeIntent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
@@ -33,6 +34,7 @@ public class HandshakePacket implements MinecraftPacket {
   private ProtocolVersion protocolVersion;
   private String serverAddress = "";
   private int port;
+  private HandshakeIntent intent;
   private int nextStatus;
 
   public ProtocolVersion getProtocolVersion() {
@@ -60,11 +62,16 @@ public class HandshakePacket implements MinecraftPacket {
   }
 
   public int getNextStatus() {
-    return nextStatus;
+    return this.nextStatus;
   }
 
-  public void setNextStatus(int nextStatus) {
-    this.nextStatus = nextStatus;
+  public void setIntent(HandshakeIntent intent) {
+    this.intent = intent;
+    this.nextStatus = intent.id();
+  }
+
+  public HandshakeIntent getIntent() {
+    return this.intent;
   }
 
   @Override
@@ -84,6 +91,7 @@ public class HandshakePacket implements MinecraftPacket {
     this.serverAddress = ProtocolUtils.readString(buf, MAXIMUM_HOSTNAME_LENGTH);
     this.port = buf.readUnsignedShort();
     this.nextStatus = ProtocolUtils.readVarInt(buf);
+    this.intent = HandshakeIntent.getById(nextStatus);
   }
 
   @Override
