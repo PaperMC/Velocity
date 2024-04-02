@@ -209,6 +209,10 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
           if (serverConn.getConnection() != null) {
             serverConn.getConnection().write(new ResourcePackResponsePacket(
                     packet.getId(), packet.getHash(), PlayerResourcePackStatusEvent.Status.ACCEPTED));
+            serverConn.getConnection().write(new ResourcePackResponsePacket(
+                packet.getId(), packet.getHash(), PlayerResourcePackStatusEvent.Status.DOWNLOADED));
+            serverConn.getConnection().write(new ResourcePackResponsePacket(
+                packet.getId(), packet.getHash(), PlayerResourcePackStatusEvent.Status.SUCCESSFUL));
           }
           if (modifiedPack) {
             logger.warn("A plugin has tried to modify a ResourcePack provided by the backend server "
