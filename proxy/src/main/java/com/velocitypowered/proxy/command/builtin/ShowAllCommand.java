@@ -90,17 +90,19 @@ public class ShowAllCommand {
 
     // can't be null, already checking if it's empty before
     RegisteredServer server = maybeServer.orElse(null);
+    int playersConnected = server.getPlayersConnected().size();
 
     context.getSource().sendMessage(
         Component.translatable("velocity.command.showall.header", NamedTextColor.YELLOW)
+                .arguments(Component.text(playersConnected), Component.text(server.getServerInfo().getName()))
     );
 
     StringBuilder builder = new StringBuilder();
 
-    for (int i = 0; i < server.getPlayersConnected().size(); i++) {
+    for (int i = 0; i < playersConnected; i++) {
       Player p = server.getPlayersConnected().stream().toList().get(i);
       builder.append(p.getUsername());
-      if (i + 1 != server.getPlayersConnected().size()) {
+      if (i + 1 != playersConnected) {
         builder.append(", ");
       }
     }
