@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.connection.client;
 
 import static com.velocitypowered.api.proxy.ConnectionRequestBuilder.Status.ALREADY_CONNECTED;
 import static com.velocitypowered.proxy.connection.util.ConnectionRequestResults.plainResult;
+import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import com.google.common.base.Preconditions;
@@ -44,6 +45,7 @@ import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.crypto.KeyIdentifiable;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.messages.PluginMessageEncoder;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -75,6 +77,7 @@ import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderFactory
 import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChatPacket;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
+import com.velocitypowered.proxy.protocol.util.ByteBufDataOutput;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import com.velocitypowered.proxy.tablist.InternalTabList;
 import com.velocitypowered.proxy.tablist.KeyedVelocityTabList;
@@ -83,6 +86,7 @@ import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import com.velocitypowered.proxy.util.DurationUtils;
 import com.velocitypowered.proxy.util.TranslatableMapper;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -947,10 +951,30 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   public boolean sendPluginMessage(@NotNull ChannelIdentifier identifier, byte @NotNull [] data) {
     Preconditions.checkNotNull(identifier, "identifier");
     Preconditions.checkNotNull(data, "data");
-    PluginMessagePacket message = new PluginMessagePacket(identifier.getId(),
+    final PluginMessagePacket message = new PluginMessagePacket(identifier.getId(),
             Unpooled.wrappedBuffer(data));
     connection.write(message);
     return true;
+  }
+
+  @Override
+  public boolean sendPluginMessage(
+          final @NotNull ChannelIdentifier identifier,
+          final @NotNull PluginMessageEncoder dataEncoder
+  ) {
+    requireNonNull(identifier);
+    requireNonNull(dataEncoder);
+    final ByteBuf buf = Unpooled.buffer();
+    final ByteBufDataOutput dataOutput = new ByteBufDataOutput(buf);
+    dataEncoder.encode(dataOutput);
+    if (buf.isReadable()) {
+      final PluginMessagePacket message = new PluginMessagePacket(identifier.getId(), buf);
+      connection.write(message);
+      return true;
+    } else {
+      buf.release();
+      return false;
+    }
   }
 
   @Override
