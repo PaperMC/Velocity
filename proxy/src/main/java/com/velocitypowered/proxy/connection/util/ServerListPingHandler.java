@@ -129,6 +129,28 @@ public class ServerListPingHandler {
           }
           return fallback;
         });
+      case ALLBUTVERSION:
+        return pingResponses.thenApply(responses -> {
+          // Find the first non-fallback. If it includes a modlist, add it too.
+          for (ServerPing response : responses) {
+            if (response == fallback) {
+              continue;
+            }
+
+            if (response.getDescriptionComponent() == null) {
+              continue;
+            }
+
+            return new ServerPing(
+                fallback.getVersion(),
+                response.getPlayers().orElse(null),
+                response.getDescriptionComponent(),
+                response.getFavicon().orElse(null),
+                response.getModinfo().orElse(null)
+            );
+          }
+          return fallback;
+        });
       // Not possible, but covered for completeness.
       default:
         return CompletableFuture.completedFuture(fallback);

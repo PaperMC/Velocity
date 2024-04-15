@@ -24,5 +24,6 @@ public enum PingPassthroughMode {
   DISABLED,
   MODS,
   DESCRIPTION,
+  ALLBUTVERSION,
   ALL
 }
