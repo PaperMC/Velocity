@@ -115,7 +115,7 @@ public class ServerListPingHandler {
         }
 
         Favicon favicon;
-        if (mode.favicon == true) {
+        if (mode.favicon) {
           favicon = response.getFavicon().orElse(null);
         } else {
           favicon = fallback.getFavicon().orElse(null);
