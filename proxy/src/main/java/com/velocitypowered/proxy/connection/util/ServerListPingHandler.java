@@ -152,7 +152,7 @@ public class ServerListPingHandler {
         ? connection.getProtocolVersion() : ProtocolVersion.MAXIMUM_VERSION;
     PingPassthroughMode passthroughMode = configuration.getPingPassthrough();
 
-    if (passthroughMode.enabled() == false) {
+    if (!passthroughMode.enabled()) {
       return CompletableFuture.completedFuture(constructLocalPing(shownVersion));
     } else {
       String virtualHostStr = connection.getVirtualHost().map(InetSocketAddress::getHostString)
