@@ -101,7 +101,7 @@ public class ServerListPingHandler {
         }
 
         ServerPing.Players players;
-        if (mode.players == true) {
+        if (mode.players) {
           players = response.getPlayers().orElse(null);
         } else {
           players = fallback.getPlayers().orElse(null);
