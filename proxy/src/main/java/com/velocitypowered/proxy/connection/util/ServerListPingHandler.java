@@ -146,7 +146,7 @@ public class ServerListPingHandler {
                 response.getPlayers().orElse(null),
                 response.getDescriptionComponent(),
                 response.getFavicon().orElse(null),
-                response.getModinfo().orElse(null)
+                response.getModinfo().orElse(null) 
             );
           }
           return fallback;
