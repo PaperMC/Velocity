@@ -64,7 +64,11 @@ kick-existing-players = false
 #                  description and mod list.
 # - "all":         Uses the backend server's response as the proxy response. The Velocity
 #                  configuration is used if no servers could be contacted.
-ping-passthrough = "DISABLED"
+ping-passthrough-version = false
+ping-passthrough-players = false
+ping-passthrough-description = false
+ping-passthrough-favicon = false
+ping-passthrough-modinfo = false
 
 # If enabled (default is false), then a sample of the online players on the proxy will be visible
 # when hovering over the player count in the server list.
