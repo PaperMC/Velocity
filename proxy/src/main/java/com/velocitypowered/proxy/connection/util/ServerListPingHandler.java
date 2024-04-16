@@ -94,7 +94,7 @@ public class ServerListPingHandler {
         }
 
         ServerPing.Version version;
-        if (mode.version == true) {
+        if (mode.version) {
           version = response.getVersion();
         } else {
           version = fallback.getVersion();
