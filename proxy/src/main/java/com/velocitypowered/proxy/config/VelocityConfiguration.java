@@ -76,7 +76,7 @@ public class VelocityConfiguration implements ProxyConfig {
   @Expose
   private boolean onlineModeKickExistingPlayers = false;
   @Expose
-  private PingPassthroughMode pingPassthrough = PingPassthroughMode.DISABLED;
+  private PingPassthroughMode pingPassthrough = new PingPassthroughMode(false, false, false, false, false);
   private final Servers servers;
   private final ForcedHosts forcedHosts;
   @Expose
@@ -494,9 +494,14 @@ public class VelocityConfiguration implements ProxyConfig {
       final CommentedConfig metricsConfig = config.get("metrics");
       final PlayerInfoForwarding forwardingMode = config.getEnumOrElse(
               "player-info-forwarding-mode", PlayerInfoForwarding.NONE);
-      final PingPassthroughMode pingPassthroughMode = config.getEnumOrElse("ping-passthrough",
-              PingPassthroughMode.DISABLED);
-
+      // final PingPassthroughMode pingPassthroughMode = config.getEnumOrElse("ping-passthrough",
+      //        PingPassthroughMode.DISABLED);
+      final PingPassthroughMode pingPassthrough = new PingPassthroughMode(
+              config.getOrElse("ping-passthrough-version", false),
+              config.getOrElse("ping-passthrough-players", false),
+              config.getOrElse("ping-passthrough-description", false),
+              config.getOrElse("ping-passthrough-favicon", false),
+              config.getOrElse("ping-passthrough-modinfo", false));
       final String bind = config.getOrElse("bind", "0.0.0.0:25577");
       final int maxPlayers = config.getIntOrElse("show-max-players", 500);
       final boolean onlineMode = config.getOrElse("online-mode", true);
@@ -526,7 +531,7 @@ public class VelocityConfiguration implements ProxyConfig {
               forwardingMode,
               forwardingSecret,
               kickExisting,
-              pingPassthroughMode,
+              pingPassthrough,
               enablePlayerAddressLogging,
               new Servers(serversConfig),
               new ForcedHosts(forcedHostsConfig),

@@ -64,7 +64,11 @@ kick-existing-players = false
 #                  description and mod list.
 # - "all":         Uses the backend server's response as the proxy response. The Velocity
 #                  configuration is used if no servers could be contacted.
-ping-passthrough = "DISABLED"
+ping-passthrough-version = false
+ping-passthrough-players = false
+ping-passthrough-description = false
+ping-passthrough-favicon = false
+ping-passthrough-modinfo = false
 
 # If not enabled (default is true) player IP addresses will be replaced by <ip address withheld> in logs
 enable-player-address-logging = true
