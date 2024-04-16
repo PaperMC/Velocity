@@ -108,7 +108,7 @@ public class ServerListPingHandler {
         }
 
         net.kyori.adventure.text.Component description;
-        if (mode.description == true) {
+        if (mode.description) {
           description = response.getDescriptionComponent();
         } else {
           description = fallback.getDescriptionComponent();
