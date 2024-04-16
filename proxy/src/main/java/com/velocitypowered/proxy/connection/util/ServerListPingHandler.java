@@ -122,7 +122,7 @@ public class ServerListPingHandler {
         }
 
         ModInfo modinfo;
-        if (mode.modinfo == true) {
+        if (mode.modinfo) {
           modinfo = response.getModinfo().orElse(null);
         } else {
           modinfo = fallback.getModinfo().orElse(null);
