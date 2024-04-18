@@ -454,7 +454,7 @@ public enum StateRegistry {
           map(0x41, MINECRAFT_1_19_4, true),
           map(0x43, MINECRAFT_1_20_2, true),
           map(0x45, MINECRAFT_1_20_3, true),
-          map(0x46, MINECRAFT_1_20_5, true));
+          map(0x47, MINECRAFT_1_20_5, true));
       clientbound.register(
           RemoveResourcePackPacket.class,
           RemoveResourcePackPacket::new,
