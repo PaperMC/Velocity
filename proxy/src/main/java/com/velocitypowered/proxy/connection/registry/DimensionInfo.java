@@ -42,11 +42,9 @@ public final class DimensionInfo {
    */
   public DimensionInfo(String registryIdentifier, @Nullable String levelName,
                        boolean isFlat, boolean isDebugType, ProtocolVersion protocolVersion) {
-    this.registryIdentifier = Preconditions.checkNotNull(
-        registryIdentifier, "registryIdentifier cannot be null");
+    this.registryIdentifier = Preconditions.checkNotNull(registryIdentifier, "registryIdentifier cannot be null");
     if (protocolVersion.lessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
-      Preconditions.checkArgument(registryIdentifier.length() > 0,
-              "registryIdentifier cannot be empty");
+      Preconditions.checkArgument(!registryIdentifier.isEmpty(), "registryIdentifier cannot be empty");
     }
     this.levelName = levelName;
     this.isFlat = isFlat;

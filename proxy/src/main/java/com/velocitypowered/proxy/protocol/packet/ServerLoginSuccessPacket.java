@@ -90,6 +90,9 @@ public class ServerLoginSuccessPacket implements MinecraftPacket {
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
       properties = ProtocolUtils.readProperties(buf);
     }
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
+      buf.readBoolean();
+    }
   }
 
   @Override
@@ -117,6 +120,9 @@ public class ServerLoginSuccessPacket implements MinecraftPacket {
       } else {
         ProtocolUtils.writeProperties(buf, properties);
       }
+    }
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
+      buf.writeBoolean(false);
     }
   }
 
