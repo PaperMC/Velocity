@@ -89,6 +89,7 @@ import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerCommandPa
 import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChatPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChatPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommandPacket;
+import com.velocitypowered.proxy.protocol.packet.chat.session.UnsignedPlayerCommandPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ActiveFeaturesPacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.RegistrySyncPacket;
@@ -247,6 +248,8 @@ public enum StateRegistry {
       serverbound.register(SessionPlayerCommandPacket.class, SessionPlayerCommandPacket::new,
           map(0x04, MINECRAFT_1_19_3, false),
           map(0x05, MINECRAFT_1_20_5, false));
+      serverbound.register(UnsignedPlayerCommandPacket.class, UnsignedPlayerCommandPacket::new,
+          map(0x04, MINECRAFT_1_20_5, false));
       serverbound.register(
           SessionPlayerChatPacket.class,
           SessionPlayerChatPacket::new,
