@@ -11,12 +11,13 @@ import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.Player;
 import org.jetbrains.annotations.NotNull;
 
-// TODO: Protocol State API
 /**
  * This event is executed when the player is about to finish the Configuration state.
  * <p>Velocity will wait for this event to finish the configuration phase on the client.</p>
  *
- * @param player The player who is about to complete the configuration phase
+ * @param player The player who is about to complete the configuration phase.
+ * @since 3.3.0
+ * @sinceMinecraft 1.20.2
  */
 @AwaitingEvent
 public record PlayerFinishConfigurationEvent(@NotNull Player player) {
