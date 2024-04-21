@@ -90,12 +90,21 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
 
   @Override
   public CompletableFuture<ServerPing> ping(PingOptions pingOptions) {
-    return ping(null, pingOptions);
+    return ping(null, pingOptions, "");
+  }
+
+  @Override
+  public CompletableFuture<ServerPing> ping(PingOptions pingOptions, String virtualHostString) {
+    return ping(null, pingOptions, virtualHostString);
   }
 
   @Override
   public CompletableFuture<ServerPing> ping() {
-    return ping(null, PingOptions.DEFAULT);
+    return ping(null, PingOptions.DEFAULT, "");
+  }
+
+  public CompletableFuture<ServerPing> ping(@Nullable EventLoop loop, PingOptions pingOptions) {
+    return ping(loop, pingOptions, "");
   }
 
   /**
@@ -106,7 +115,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
    * @param pingOptions the options to apply to this ping
    * @return the server list ping response
    */
-  public CompletableFuture<ServerPing> ping(@Nullable EventLoop loop, PingOptions pingOptions) {
+  public CompletableFuture<ServerPing> ping(@Nullable EventLoop loop, PingOptions pingOptions, String virtualHostString) {
     if (server == null) {
       throw new IllegalStateException("No Velocity proxy instance available");
     }
@@ -129,7 +138,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
       if (future.isSuccess()) {
         MinecraftConnection conn = future.channel().pipeline().get(MinecraftConnection.class);
         PingSessionHandler handler = new PingSessionHandler(pingFuture,
-            VelocityRegisteredServer.this, conn, pingOptions.getProtocolVersion());
+            VelocityRegisteredServer.this, conn, pingOptions.getProtocolVersion(), virtualHostString);
         conn.setActiveSessionHandler(StateRegistry.HANDSHAKE, handler);
       } else {
         pingFuture.completeExceptionally(future.cause());

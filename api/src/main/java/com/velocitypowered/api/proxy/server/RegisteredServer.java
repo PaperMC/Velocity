@@ -50,4 +50,14 @@ public interface RegisteredServer extends ChannelMessageSink, Audience {
    * @since 3.2.0
    */
   CompletableFuture<ServerPing> ping(PingOptions pingOptions);
+
+  /**
+   * Attempts to ping the remote server with the given virtualhost and return the server list ping
+   * result according to the options provided.
+   *
+   * @param pingOptions the options provided for pinging the server
+   * @param virtualHostString the virtual hostname to pass to the server for the ping
+   * @return the server ping result from the server
+   */
+  CompletableFuture<ServerPing> ping(PingOptions pingOptions, String virtualHostString);
 }
