@@ -1,5 +1,5 @@
 # Config version. Do not change this
-config-version = "2.6"
+config-version = "2.7"
 
 # What port should the proxy be bound to? By default, we'll bind to all addresses on port 25577.
 bind = "0.0.0.0:25577"
@@ -42,7 +42,7 @@ forwarding-secret-file = "forwarding.secret"
 
 # Announce whether or not your server supports Forge. If you run a modded server, we
 # suggest turning this on.
-# 
+#
 # If your network runs one modpack consistently, consider using ping-passthrough = "mods"
 # instead for a nicer display in the server list.
 announce-forge = false
@@ -116,8 +116,9 @@ read-timeout = 30000
 # don't enable it.
 haproxy-protocol = false
 
-# Enables TCP fast open support on the proxy. Requires the proxy to run on Linux.
-tcp-fast-open = false
+# Enables TCP fast open support on the proxy.
+# Disabled automatically if not supported by the operating system.
+tcp-fast-open = true
 
 # Enables BungeeCord plugin messaging channel support on Velocity.
 bungee-plugin-message-channel = true

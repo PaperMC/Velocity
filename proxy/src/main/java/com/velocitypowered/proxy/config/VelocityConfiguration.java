@@ -30,6 +30,7 @@ import com.velocitypowered.proxy.config.migration.ConfigurationMigration;
 import com.velocitypowered.proxy.config.migration.ForwardingMigration;
 import com.velocitypowered.proxy.config.migration.KeyAuthenticationMigration;
 import com.velocitypowered.proxy.config.migration.MotdMigration;
+import com.velocitypowered.proxy.config.migration.TcpFastOpenMigration;
 import com.velocitypowered.proxy.util.AddressUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
@@ -456,7 +457,8 @@ public class VelocityConfiguration implements ProxyConfig {
       final ConfigurationMigration[] migrations = {
           new ForwardingMigration(),
           new KeyAuthenticationMigration(),
-          new MotdMigration()
+          new MotdMigration(),
+          new TcpFastOpenMigration()
       };
 
       for (final ConfigurationMigration migration : migrations) {
@@ -695,7 +697,7 @@ public class VelocityConfiguration implements ProxyConfig {
     @Expose
     private boolean proxyProtocol = false;
     @Expose
-    private boolean tcpFastOpen = false;
+    private boolean tcpFastOpen = true;
     @Expose
     private boolean bungeePluginMessageChannel = true;
     @Expose
@@ -724,7 +726,7 @@ public class VelocityConfiguration implements ProxyConfig {
         } else {
           this.proxyProtocol = config.getOrElse("proxy-protocol", false);
         }
-        this.tcpFastOpen = config.getOrElse("tcp-fast-open", false);
+        this.tcpFastOpen = config.getOrElse("tcp-fast-open", true);
         this.bungeePluginMessageChannel = config.getOrElse("bungee-plugin-message-channel", true);
         this.showPingRequests = config.getOrElse("show-ping-requests", false);
         this.failoverOnUnexpectedServerDisconnect = config
