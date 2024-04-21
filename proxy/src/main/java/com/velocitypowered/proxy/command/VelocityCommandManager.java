@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.Message;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
@@ -33,6 +34,7 @@ import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.CommandResult;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.VelocityBrigadierMessage;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.PostCommandInvocationEvent;
 import com.velocitypowered.proxy.command.registrar.BrigadierCommandRegistrar;
@@ -57,7 +59,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
 /**
- * Impelements Velocity's command handler.
+ * Implements Velocity's command handler.
  */
 public class VelocityCommandManager implements CommandManager {
 
@@ -232,7 +234,12 @@ public class VelocityCommandManager implements CommandManager {
       boolean isSyntaxError = !e.getType().equals(
           CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand());
       if (isSyntaxError) {
-        source.sendMessage(Component.text(e.getMessage(), NamedTextColor.RED));
+        final Message message = e.getRawMessage();
+        if (message instanceof VelocityBrigadierMessage velocityMessage) {
+          source.sendMessage(velocityMessage.asComponent().applyFallbackStyle(NamedTextColor.RED));
+        } else {
+          source.sendMessage(Component.text(e.getMessage(), NamedTextColor.RED));
+        }
         result = com.velocitypowered.api.command.CommandResult.SYNTAX_ERROR;
         // This is, of course, a lie, but the API will need to change...
         return true;
