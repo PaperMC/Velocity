@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.connection.client;
 
+import com.velocitypowered.api.network.ProtocolState;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.LoginPhaseConnection;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
@@ -165,5 +166,10 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
   @Override
   public IdentifiedKey getIdentifiedKey() {
     return playerKey;
+  }
+
+  @Override
+  public ProtocolState getProtocolState() {
+    return delegate.getProtocolState();
   }
 }

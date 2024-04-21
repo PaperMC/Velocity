@@ -45,6 +45,7 @@ import static com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import static com.velocitypowered.proxy.protocol.ProtocolUtils.Direction.CLIENTBOUND;
 import static com.velocitypowered.proxy.protocol.ProtocolUtils.Direction.SERVERBOUND;
 
+import com.velocitypowered.api.network.ProtocolState;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.packet.AvailableCommandsPacket;
 import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
@@ -621,6 +622,21 @@ public enum StateRegistry {
   public StateRegistry.PacketRegistry.ProtocolRegistry getProtocolRegistry(Direction direction,
       ProtocolVersion version) {
     return (direction == SERVERBOUND ? serverbound : clientbound).getProtocolRegistry(version);
+  }
+
+  /**
+   * Gets the API representation of the StateRegistry.
+   *
+   * @return the API representation
+   */
+  public ProtocolState toProtocolState() {
+    return switch (this) {
+      case HANDSHAKE -> ProtocolState.HANDSHAKE;
+      case STATUS -> ProtocolState.STATUS;
+      case LOGIN -> ProtocolState.LOGIN;
+      case CONFIG -> ProtocolState.CONFIGURATION;
+      case PLAY -> ProtocolState.PLAY;
+    };
   }
 
   /**

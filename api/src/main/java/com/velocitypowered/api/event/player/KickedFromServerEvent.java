@@ -150,7 +150,7 @@ public final class KickedFromServerEvent implements
 
     @Override
     public String toString() {
-      return "KickedFromServerEvent#DisconnectPlater{isAllowed=%s,component=%s}"
+      return "KickedFromServerEvent#DisconnectPlayer{isAllowed=%s,component=%s}"
               .formatted(isAllowed(), component);
     }
   }

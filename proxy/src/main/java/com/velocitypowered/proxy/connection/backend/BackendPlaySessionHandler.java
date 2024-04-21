@@ -28,6 +28,7 @@ import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.ServerResourcePackSendEvent;
 import com.velocitypowered.api.event.proxy.ProxyPingEvent;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
@@ -209,6 +210,14 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
           if (serverConn.getConnection() != null) {
             serverConn.getConnection().write(new ResourcePackResponsePacket(
                     packet.getId(), packet.getHash(), PlayerResourcePackStatusEvent.Status.ACCEPTED));
+            if (serverConn.getConnection().getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
+              serverConn.getConnection().write(new ResourcePackResponsePacket(
+                  packet.getId(), packet.getHash(),
+                  PlayerResourcePackStatusEvent.Status.DOWNLOADED));
+            }
+            serverConn.getConnection().write(new ResourcePackResponsePacket(
+                packet.getId(), packet.getHash(),
+                PlayerResourcePackStatusEvent.Status.SUCCESSFUL));
           }
           if (modifiedPack) {
             logger.warn("A plugin has tried to modify a ResourcePack provided by the backend server "

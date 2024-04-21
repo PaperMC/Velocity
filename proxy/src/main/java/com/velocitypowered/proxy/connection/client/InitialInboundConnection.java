@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.connection.client;
 
+import com.velocitypowered.api.network.ProtocolState;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -85,6 +86,11 @@ public final class InitialInboundConnection implements VelocityInboundConnection
   @Override
   public MinecraftConnection getConnection() {
     return connection;
+  }
+
+  @Override
+  public ProtocolState getProtocolState() {
+    return connection.getState().toProtocolState();
   }
 
   /**
