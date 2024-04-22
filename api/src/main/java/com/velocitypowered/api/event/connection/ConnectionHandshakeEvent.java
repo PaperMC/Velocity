@@ -26,6 +26,19 @@ public final class ConnectionHandshakeEvent {
     this.intent = Preconditions.checkNotNull(intent, "intent");
   }
 
+  /**
+   * This method is only retained to avoid breaking plugins
+   * that have not yet updated their integration tests.
+   *
+   * @param connection the inbound connection
+   * @deprecated use {@link #ConnectionHandshakeEvent(InboundConnection, HandshakeIntent)}
+   */
+  @Deprecated(forRemoval = true)
+  public ConnectionHandshakeEvent(InboundConnection connection) {
+    this.connection = Preconditions.checkNotNull(connection, "connection");
+    this.intent = HandshakeIntent.LOGIN;
+  }
+
   public InboundConnection getConnection() {
     return connection;
   }
