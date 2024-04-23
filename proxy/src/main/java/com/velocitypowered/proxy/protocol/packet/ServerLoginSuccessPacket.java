@@ -23,8 +23,8 @@ import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.util.VelocityProperties;
 import io.netty.buffer.ByteBuf;
-
 import java.util.List;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -34,6 +34,8 @@ public class ServerLoginSuccessPacket implements MinecraftPacket {
   private @Nullable UUID uuid;
   private @Nullable String username;
   private @Nullable List<GameProfile.Property> properties;
+  private static final boolean strictErrorHandling = VelocityProperties
+          .readBoolean("velocity.strictErrorHandling", true);
 
   public UUID getUuid() {
     if (uuid == null) {
@@ -90,6 +92,9 @@ public class ServerLoginSuccessPacket implements MinecraftPacket {
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
       properties = ProtocolUtils.readProperties(buf);
     }
+    if (version == ProtocolVersion.MINECRAFT_1_20_5) {
+      buf.readBoolean();
+    }
   }
 
   @Override
@@ -117,6 +122,9 @@ public class ServerLoginSuccessPacket implements MinecraftPacket {
       } else {
         ProtocolUtils.writeProperties(buf, properties);
       }
+    }
+    if (version == ProtocolVersion.MINECRAFT_1_20_5) {
+      buf.writeBoolean(strictErrorHandling);
     }
   }
 

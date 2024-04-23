@@ -51,6 +51,7 @@ public class JoinGamePacket implements MinecraftPacket {
   private int simulationDistance; // 1.18+
   private @Nullable Pair<String, Long> lastDeathPosition; // 1.19+
   private int portalCooldown; // 1.20+
+  private boolean enforcesSecureChat; // 1.20.5+
 
   public int getEntityId() {
     return entityId;
@@ -180,6 +181,14 @@ public class JoinGamePacket implements MinecraftPacket {
     this.portalCooldown = portalCooldown;
   }
 
+  public boolean getEnforcesSecureChat() {
+    return this.enforcesSecureChat;
+  }
+
+  public void setEnforcesSecureChat(final boolean enforcesSecureChat) {
+    this.enforcesSecureChat = enforcesSecureChat;
+  }
+
   public CompoundBinaryTag getRegistry() {
     return registry;
   }
@@ -284,7 +293,7 @@ public class JoinGamePacket implements MinecraftPacket {
 
     boolean isDebug = buf.readBoolean();
     boolean isFlat = buf.readBoolean();
-    this.dimensionInfo = new DimensionInfo(dimensionIdentifier, levelName, isFlat, isDebug);
+    this.dimensionInfo = new DimensionInfo(dimensionIdentifier, levelName, isFlat, isDebug, version);
 
     // optional death location
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19) && buf.readBoolean()) {
@@ -296,6 +305,7 @@ public class JoinGamePacket implements MinecraftPacket {
     }
   }
 
+  @SuppressWarnings("checkstyle:VariableDeclarationUsageDistance")
   private void decode1202Up(ByteBuf buf, ProtocolVersion version) {
     this.entityId = buf.readInt();
     this.isHardcore = buf.readBoolean();
@@ -311,7 +321,12 @@ public class JoinGamePacket implements MinecraftPacket {
     this.showRespawnScreen = buf.readBoolean();
     this.doLimitedCrafting = buf.readBoolean();
 
-    String dimensionIdentifier = ProtocolUtils.readString(buf);
+    String dimensionKey = "";
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
+      dimension = ProtocolUtils.readVarInt(buf);
+    } else {
+      dimensionKey = ProtocolUtils.readString(buf);
+    }
     String levelName = ProtocolUtils.readString(buf);
     this.partialHashedSeed = buf.readLong();
 
@@ -320,7 +335,7 @@ public class JoinGamePacket implements MinecraftPacket {
 
     boolean isDebug = buf.readBoolean();
     boolean isFlat = buf.readBoolean();
-    this.dimensionInfo = new DimensionInfo(dimensionIdentifier, levelName, isFlat, isDebug);
+    this.dimensionInfo = new DimensionInfo(dimensionKey, levelName, isFlat, isDebug, version);
 
     // optional death location
     if (buf.readBoolean()) {
@@ -328,6 +343,9 @@ public class JoinGamePacket implements MinecraftPacket {
     }
 
     this.portalCooldown = ProtocolUtils.readVarInt(buf);
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
+      this.enforcesSecureChat = buf.readBoolean();
+    }
   }
 
   @Override
@@ -391,8 +409,7 @@ public class JoinGamePacket implements MinecraftPacket {
 
     ProtocolUtils.writeStringArray(buf, levelNames.toArray(String[]::new));
     ProtocolUtils.writeBinaryTag(buf, version, this.registry);
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16_2)
-        && version.lessThan(ProtocolVersion.MINECRAFT_1_19)) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16_2) && version.lessThan(ProtocolVersion.MINECRAFT_1_19)) {
       ProtocolUtils.writeBinaryTag(buf, version, currentDimensionData);
       ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
     } else {
@@ -449,7 +466,11 @@ public class JoinGamePacket implements MinecraftPacket {
     buf.writeBoolean(showRespawnScreen);
     buf.writeBoolean(doLimitedCrafting);
 
-    ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
+      ProtocolUtils.writeVarInt(buf, dimension);
+    } else {
+      ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
+    }
     ProtocolUtils.writeString(buf, dimensionInfo.getLevelName());
     buf.writeLong(partialHashedSeed);
 
@@ -469,6 +490,10 @@ public class JoinGamePacket implements MinecraftPacket {
     }
 
     ProtocolUtils.writeVarInt(buf, portalCooldown);
+
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
+      buf.writeBoolean(this.enforcesSecureChat);
+    }
   }
 
   @Override

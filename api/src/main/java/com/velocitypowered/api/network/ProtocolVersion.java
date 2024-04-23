@@ -85,7 +85,8 @@ public enum ProtocolVersion implements Ordered<ProtocolVersion> {
   MINECRAFT_1_19_4(762, "1.19.4"),
   MINECRAFT_1_20(763, "1.20", "1.20.1"),
   MINECRAFT_1_20_2(764, "1.20.2"),
-  MINECRAFT_1_20_3(765, "1.20.3", "1.20.4");
+  MINECRAFT_1_20_3(765, "1.20.3", "1.20.4"),
+  MINECRAFT_1_20_5(-1, 191, "1.20.5"); // Future Minecraft 1.20.5 | Protocol 766 | Release Candidate 3
 
   private static final int SNAPSHOT_BIT = 30;
 

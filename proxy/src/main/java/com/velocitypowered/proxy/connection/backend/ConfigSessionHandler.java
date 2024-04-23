@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.connection.backend;
 
+import com.velocitypowered.api.event.connection.PreTransferEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.ServerResourcePackSendEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -38,12 +39,14 @@ import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
 import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.TransferPacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.RegistrySyncPacket;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.TagsUpdatePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -221,6 +224,30 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(RegistrySyncPacket packet) {
     serverConn.getPlayer().getConnection().write(packet.retain());
+    return true;
+  }
+
+  @Override
+  public boolean handle(TransferPacket packet) {
+    final InetSocketAddress originalAddress = packet.address();
+    if (originalAddress == null) {
+      logger.error("""
+          Unexpected nullable address received in TransferPacket \
+          from Backend Server in Configuration State""");
+      return true;
+    }
+    this.server.getEventManager()
+            .fire(new PreTransferEvent(this.serverConn.getPlayer(), originalAddress))
+            .thenAcceptAsync(event -> {
+              if (event.getResult().isAllowed()) {
+                InetSocketAddress resultedAddress = event.getResult().address();
+                if (resultedAddress == null) {
+                  resultedAddress = originalAddress;
+                }
+                serverConn.getPlayer().getConnection().write(new TransferPacket(
+                        resultedAddress.getHostName(), resultedAddress.getPort()));
+              }
+            }, serverConn.ensureConnected().eventLoop());
     return true;
   }
 

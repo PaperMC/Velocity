@@ -108,7 +108,7 @@ public class SessionCommandHandler implements CommandHandler<SessionPlayerComman
                 .toServer();
           }
         }
-        if (player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
+        if (player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19_3) && packet.lastSeenMessages != null) {
           return new ChatAcknowledgementPacket(packet.lastSeenMessages.getOffset());
         }
         return null;
