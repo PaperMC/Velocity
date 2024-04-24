@@ -262,9 +262,9 @@ public class ArgumentPropertyRegistry {
     empty(id("minecraft:uuid", mapSet(MINECRAFT_1_20_5, 53), mapSet(MINECRAFT_1_20_3, 48), mapSet(MINECRAFT_1_19_4, 48),
         mapSet(MINECRAFT_1_19, 47))); // added in 1.16
 
-    empty(id("minecraft:loot_table", mapSet(MINECRAFT_1_20_5, 50)), RegistryIdArgumentSerializer.REGISTRY_ID);
-    empty(id("minecraft:loot_predicate", mapSet(MINECRAFT_1_20_5, 51)), RegistryIdArgumentSerializer.REGISTRY_ID);
-    empty(id("minecraft:loot_modifier", mapSet(MINECRAFT_1_20_5, 52)), RegistryIdArgumentSerializer.REGISTRY_ID);
+    empty(id("minecraft:loot_table", mapSet(MINECRAFT_1_20_5, 50)));
+    empty(id("minecraft:loot_predicate", mapSet(MINECRAFT_1_20_5, 51)));
+    empty(id("minecraft:loot_modifier", mapSet(MINECRAFT_1_20_5, 52)));
 
     // Crossstitch support
     register(id("crossstitch:mod_argument", mapSet(MINECRAFT_1_19, -256)), ModArgumentProperty.class, MOD);
