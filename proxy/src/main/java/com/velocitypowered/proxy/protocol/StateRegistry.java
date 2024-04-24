@@ -92,6 +92,7 @@ import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerComma
 import com.velocitypowered.proxy.protocol.packet.chat.session.UnsignedPlayerCommandPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ActiveFeaturesPacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
+import com.velocitypowered.proxy.protocol.packet.config.KnownPacksPacket;
 import com.velocitypowered.proxy.protocol.packet.config.RegistrySyncPacket;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.TagsUpdatePacket;
@@ -165,6 +166,10 @@ public enum StateRegistry {
           ResourcePackResponsePacket::new,
           map(0x05, MINECRAFT_1_20_2, false),
           map(0x06, MINECRAFT_1_20_5, false));
+      serverbound.register(
+          KnownPacksPacket.class,
+          KnownPacksPacket::new,
+          map(0x07, MINECRAFT_1_20_5, false));
 
       clientbound.register(
           PluginMessagePacket.class, PluginMessagePacket::new,
@@ -207,6 +212,8 @@ public enum StateRegistry {
           map(0x08, MINECRAFT_1_20_2, false),
           map(0x09, MINECRAFT_1_20_3, false),
           map(0x0D, MINECRAFT_1_20_5, false));
+      clientbound.register(KnownPacksPacket.class, KnownPacksPacket::new,
+          map(0x0E, MINECRAFT_1_20_5, false));
     }
   },
   PLAY {
