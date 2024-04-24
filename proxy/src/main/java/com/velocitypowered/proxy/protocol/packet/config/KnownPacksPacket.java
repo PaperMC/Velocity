@@ -21,9 +21,14 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 
 public class KnownPacksPacket implements MinecraftPacket {
+
+    private static final int MAX_LENGTH_PACKS = Integer.getInteger("velocity.max-known-packs", 64);
+    private static final QuietDecoderException TOO_MANY_PACKS =
+        new QuietDecoderException("too many known packs");
 
     private KnownPack[] packs;
 
@@ -31,6 +36,10 @@ public class KnownPacksPacket implements MinecraftPacket {
     public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
                        ProtocolVersion protocolVersion) {
         final int packCount = ProtocolUtils.readVarInt(buf);
+        if (packCount > MAX_LENGTH_PACKS) {
+          throw TOO_MANY_PACKS;
+        }
+
         final KnownPack[] packs = new KnownPack[packCount];
 
         for (int i = 0; i < packCount; i++) {
