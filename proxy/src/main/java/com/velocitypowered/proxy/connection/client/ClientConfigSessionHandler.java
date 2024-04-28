@@ -33,6 +33,7 @@ import com.velocitypowered.proxy.protocol.packet.PingIdentifyPacket;
 import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
+import com.velocitypowered.proxy.protocol.packet.config.KnownPacksPacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -128,6 +129,15 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
     if (player.getConnectionInFlight() != null) {
       player.getConnectionInFlight().ensureConnected().write(packet);
     }
+    return true;
+  }
+
+  @Override
+  public boolean handle(KnownPacksPacket packet) {
+    if (player.getConnectionInFlight() != null) {
+      player.getConnectionInFlight().ensureConnected().write(packet);
+    }
+
     return true;
   }
 

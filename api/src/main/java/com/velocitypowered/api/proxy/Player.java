@@ -20,6 +20,7 @@ import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
+import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -426,4 +427,13 @@ public interface Player extends
   @Override
   default void openBook(@NotNull Book book) {
   }
+
+  /**
+   * Transfers a Player to a host.
+   *
+   * @param address the host address
+   * @throws IllegalArgumentException if the player is from a version lower than 1.20.5
+   * @since 3.3.0
+   */
+  void transferToHost(@NotNull InetSocketAddress address);
 }

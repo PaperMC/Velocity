@@ -8,6 +8,7 @@ plugins {
 
 application {
     mainClass.set("com.velocitypowered.proxy.Velocity")
+    applicationDefaultJvmArgs += listOf("-Dvelocity.packet-decode-logging=true");
 }
 
 tasks {

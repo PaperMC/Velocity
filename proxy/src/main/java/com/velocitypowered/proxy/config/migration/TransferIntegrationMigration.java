@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Velocity Contributors
+ * Copyright (C) 2024 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,33 +18,23 @@
 package com.velocitypowered.proxy.config.migration;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
-import java.io.IOException;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Configuration Migration interface.
+ * Creation of the configuration option "accepts-transfers".
  */
-public sealed interface ConfigurationMigration
-        permits ForwardingMigration,
-                KeyAuthenticationMigration,
-                MotdMigration,
-                TransferIntegrationMigration {
-  boolean shouldMigrate(CommentedFileConfig config);
+public final class TransferIntegrationMigration implements ConfigurationMigration {
+  @Override
+  public boolean shouldMigrate(final CommentedFileConfig config) {
+    return configVersion(config) < 2.7;
+  }
 
-  void migrate(CommentedFileConfig config, Logger logger) throws IOException;
-
-  /**
-   * Gets the configuration version.
-   *
-   * @param config the configuration.
-   * @return configuration version
-   */
-  default double configVersion(CommentedFileConfig config) {
-    final String stringVersion = config.getOrElse("config-version", "1.0");
-    try {
-      return Double.parseDouble(stringVersion);
-    } catch (Exception e) {
-      return 1.0;
-    }
+  @Override
+  public void migrate(final CommentedFileConfig config, final Logger logger) {
+    config.set("advanced.accepts-transfers", false);
+    config.setComment("advanced.accepts-transfers", """
+            Allows players transferred from other hosts via the
+            Transfer packet (Minecraft 1.20.5) to be received.""");
+    config.set("config-version", "2.7");
   }
 }

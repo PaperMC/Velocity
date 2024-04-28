@@ -46,6 +46,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -165,7 +166,8 @@ public final class VelocityCommand {
       final Component copyright = Component
           .translatable("velocity.command.version-copyright",
               Component.text(version.getVendor()),
-              Component.text(version.getName()));
+                  Component.text(version.getName()),
+                  Component.text(LocalDate.now().getYear()));
       source.sendMessage(velocity);
       source.sendMessage(copyright);
 
