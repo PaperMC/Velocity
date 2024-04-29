@@ -110,7 +110,8 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(KeepAlivePacket packet) {
-    serverConn.ensureConnected().write(packet);
+    serverConn.getPendingPings().put(packet.getRandomId(), System.nanoTime());
+    serverConn.getPlayer().getConnection().write(packet);
     return true;
   }
 
@@ -173,29 +174,23 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   public boolean handle(FinishedUpdatePacket packet) {
     final MinecraftConnection smc = serverConn.ensureConnected();
     final ConnectedPlayer player = serverConn.getPlayer();
-    final ClientConfigSessionHandler configHandler =
-        (ClientConfigSessionHandler) player.getConnection().getActiveSessionHandler();
+    final ClientConfigSessionHandler configHandler = (ClientConfigSessionHandler) player.getConnection().getActiveSessionHandler();
 
-    smc.setAutoReading(false);
-    // Even when not auto reading messages are still decoded. Decode them with the correct state
     smc.getChannel().pipeline().get(MinecraftDecoder.class).setState(StateRegistry.PLAY);
     //noinspection DataFlowIssue
     configHandler.handleBackendFinishUpdate(serverConn).thenRunAsync(() -> {
+      smc.write(FinishedUpdatePacket.INSTANCE);
       if (serverConn == player.getConnectedServer()) {
         smc.setActiveSessionHandler(StateRegistry.PLAY);
-        player.sendPlayerListHeaderAndFooter(
-            player.getPlayerListHeader(), player.getPlayerListFooter());
+        player.sendPlayerListHeaderAndFooter(player.getPlayerListHeader(), player.getPlayerListFooter());
         // The client cleared the tab list. TODO: Restore changes done via TabList API
         player.getTabList().clearAllSilent();
       } else {
-        smc.setActiveSessionHandler(StateRegistry.PLAY,
-            new TransitionSessionHandler(server, serverConn, resultFuture));
+        smc.setActiveSessionHandler(StateRegistry.PLAY, new TransitionSessionHandler(server, serverConn, resultFuture));
       }
-      if (player.resourcePackHandler().getFirstAppliedPack() == null
-              && resourcePackToApply != null) {
+      if (player.resourcePackHandler().getFirstAppliedPack() == null && resourcePackToApply != null) {
         player.resourcePackHandler().queueResourcePack(resourcePackToApply);
       }
-      smc.setAutoReading(true);
     }, smc.eventLoop());
     return true;
   }

@@ -42,8 +42,10 @@ import org.jetbrains.annotations.NotNull;
  */
 public class PlayPacketQueueHandler extends ChannelDuplexHandler {
 
-  private final StateRegistry.PacketRegistry.ProtocolRegistry registry;
-  private final Queue<MinecraftPacket> queue = PlatformDependent.newMpscQueue();
+  private final StateRegistry.PacketRegistry.ProtocolRegistry outboundRegistry;
+  private final StateRegistry.PacketRegistry.ProtocolRegistry inboundRegistry;
+  private final Queue<MinecraftPacket> outboundQueue = PlatformDependent.newMpscQueue();
+  private final Queue<MinecraftPacket> inboundQueue = PlatformDependent.newMpscQueue();
 
   /**
    * Provides registries for client &amp; server bound packets.
@@ -51,13 +53,37 @@ public class PlayPacketQueueHandler extends ChannelDuplexHandler {
    * @param version the protocol version
    */
   public PlayPacketQueueHandler(ProtocolVersion version, ProtocolUtils.Direction direction) {
-    this.registry =
-        StateRegistry.CONFIG.getProtocolRegistry(direction, version);
+    if (direction == ProtocolUtils.Direction.CLIENTBOUND) {
+      this.outboundRegistry = StateRegistry.CONFIG.getProtocolRegistry(ProtocolUtils.Direction.CLIENTBOUND, version);
+      this.inboundRegistry = StateRegistry.CONFIG.getProtocolRegistry(ProtocolUtils.Direction.SERVERBOUND, version);
+    } else if (direction == ProtocolUtils.Direction.SERVERBOUND) {
+      this.outboundRegistry = StateRegistry.CONFIG.getProtocolRegistry(ProtocolUtils.Direction.SERVERBOUND, version);
+      this.inboundRegistry = StateRegistry.CONFIG.getProtocolRegistry(ProtocolUtils.Direction.CLIENTBOUND, version);
+    } else {
+      throw new AssertionError();
+    }
   }
 
   @Override
-  public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
-      throws Exception {
+  public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+    if (!(msg instanceof final MinecraftPacket packet)) {
+      ctx.fireChannelRead(msg);
+      return;
+    }
+
+    // If the packet exists in the CONFIG state, we want to always
+    // ensure that it gets handled by the current handler
+    if (this.inboundRegistry.containsPacket(packet)) {
+      ctx.fireChannelRead(msg);
+      return;
+    }
+
+    // Otherwise, queue the packet
+    this.inboundQueue.offer(packet);
+  }
+
+  @Override
+  public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
     if (!(msg instanceof final MinecraftPacket packet)) {
       ctx.write(msg, promise);
       return;
@@ -65,13 +91,13 @@ public class PlayPacketQueueHandler extends ChannelDuplexHandler {
 
     // If the packet exists in the CONFIG state, we want to always
     // ensure that it gets sent out to the client
-    if (this.registry.containsPacket(packet)) {
+    if (this.outboundRegistry.containsPacket(packet)) {
       ctx.write(msg, promise);
       return;
     }
 
     // Otherwise, queue the packet
-    this.queue.offer(packet);
+    this.outboundQueue.offer(packet);
   }
 
   @Override
@@ -87,13 +113,9 @@ public class PlayPacketQueueHandler extends ChannelDuplexHandler {
   }
 
   private void releaseQueue(ChannelHandlerContext ctx, boolean active) {
-    if (this.queue.isEmpty()) {
-      return;
-    }
-
     // Send out all the queued packets
     MinecraftPacket packet;
-    while ((packet = this.queue.poll()) != null) {
+    while ((packet = this.outboundQueue.poll()) != null) {
       if (active) {
         ctx.write(packet, ctx.voidPromise());
       } else {
@@ -101,8 +123,18 @@ public class PlayPacketQueueHandler extends ChannelDuplexHandler {
       }
     }
 
+    // Handle all the queued packets
+    while ((packet = this.inboundQueue.poll()) != null) {
+      if (active) {
+        ctx.fireChannelRead(packet);
+      } else {
+        ReferenceCountUtil.release(packet);
+      }
+    }
+
     if (active) {
       ctx.flush();
+      ctx.read();
     }
   }
 }
