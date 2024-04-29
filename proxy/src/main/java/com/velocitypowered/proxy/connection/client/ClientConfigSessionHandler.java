@@ -210,10 +210,10 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
       smc.write(brandPacket);
     }
 
-    server.getEventManager().fire(new PlayerFinishConfigurationEvent(player)).thenAcceptAsync(event -> {
+    server.getEventManager().fire(new PlayerFinishConfigurationEvent(player, serverConn)).thenAcceptAsync(event -> {
       player.getConnection().write(FinishedUpdatePacket.INSTANCE);
       player.getConnection().getChannel().pipeline().get(MinecraftEncoder.class).setState(StateRegistry.PLAY);
-      server.getEventManager().fireAndForget(new PlayerFinishedConfigurationEvent(player));
+      server.getEventManager().fireAndForget(new PlayerFinishedConfigurationEvent(player, serverConn));
     }, player.getConnection().eventLoop());
 
     return configSwitchFuture;

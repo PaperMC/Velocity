@@ -1159,7 +1159,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
               .get(MinecraftEncoder.class).setState(StateRegistry.CONFIG);
       // Make sure we don't send any play packets to the player after update start
       connection.addPlayPacketQueueHandler();
-      server.getEventManager().fireAndForget(new PlayerEnterConfigurationEvent(this));
+      server.getEventManager().fireAndForget(new PlayerEnterConfigurationEvent(this, connectionInFlight));
     }, connection.eventLoop()).exceptionally((ex) -> {
       logger.error("Error switching player connection to config state", ex);
       return null;

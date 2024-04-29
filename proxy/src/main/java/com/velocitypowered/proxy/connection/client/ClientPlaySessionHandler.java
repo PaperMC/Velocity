@@ -403,8 +403,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   public boolean handle(FinishedUpdatePacket packet) {
     // Complete client switch
     player.getConnection().setActiveSessionHandler(StateRegistry.CONFIG);
-    server.getEventManager().fireAndForget(new PlayerEnterConfigurationEvent(player));
     VelocityServerConnection serverConnection = player.getConnectedServer();
+    server.getEventManager().fireAndForget(new PlayerEnterConfigurationEvent(player, serverConnection));
     if (serverConnection != null) {
       MinecraftConnection smc = serverConnection.ensureConnected();
       CompletableFuture.runAsync(() -> {
