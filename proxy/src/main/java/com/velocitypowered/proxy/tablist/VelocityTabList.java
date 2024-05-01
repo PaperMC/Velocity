@@ -166,7 +166,9 @@ public class VelocityTabList implements InternalTabList {
       return entry;
     });
 
-    this.connection.write(new UpsertPlayerInfoPacket(actions, List.of(playerInfoEntry)));
+    if (!actions.isEmpty()) {
+      this.connection.write(new UpsertPlayerInfoPacket(actions, List.of(playerInfoEntry)));
+    }
   }
 
   @Override
