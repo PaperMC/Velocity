@@ -22,6 +22,8 @@ import com.velocitypowered.proxy.protocol.packet.AvailableCommandsPacket;
 import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
 import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
+import com.velocitypowered.proxy.protocol.packet.CookieRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.CookieResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionResponsePacket;
@@ -49,6 +51,7 @@ import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusPingPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.StoreCookiePacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TransferPacket;
@@ -337,6 +340,18 @@ public interface MinecraftSessionHandler {
   }
 
   default boolean handle(KnownPacksPacket packet) {
+    return false;
+  }
+
+  default boolean handle(StoreCookiePacket packet) {
+    return false;
+  }
+
+  default boolean handle(CookieRequestPacket packet) {
+    return false;
+  }
+
+  default boolean handle(CookieResponsePacket packet) {
     return false;
   }
 }

@@ -28,6 +28,7 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
+import com.velocitypowered.proxy.protocol.packet.CookieResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
 import com.velocitypowered.proxy.protocol.packet.PingIdentifyPacket;
 import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
@@ -139,6 +140,20 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
     }
 
     return true;
+  }
+
+  @Override
+  public boolean handle(CookieResponsePacket packet) {
+    final CompletableFuture<byte[]> future = player.getRequestedCookies().get(packet.getKey());
+
+    if (future != null) {
+      player.getRequestedCookies().remove(packet.getKey());
+      future.complete(packet.getPayload());
+    }
+
+    // If the key is not in the requestedCookies map, the cookie was not requested by Velocity,
+    // but by a server. Therefore, we don't handle the packet in that case.
+    return future != null;
   }
 
   @Override

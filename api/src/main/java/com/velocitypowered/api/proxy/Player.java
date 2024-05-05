@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
 import net.kyori.adventure.identity.Identified;
 import net.kyori.adventure.inventory.Book;
@@ -436,4 +437,28 @@ public interface Player extends
    * @since 3.3.0
    */
   void transferToHost(@NotNull InetSocketAddress address);
+
+  /**
+   * Stores a cookie with arbitrary data on the player's client.
+   *
+   * @param key the identifier of the cookie
+   * @param data the data of the cookie
+   * @throws IllegalArgumentException if the player is from a version lower than 1.20.5
+   * @since 3.3.0
+   * @sinceMinecraft 1.20.5
+   */
+  void storeCookie(Key key, byte[] data);
+
+  /**
+   * Retrieves a previously stored cookie from the player's client.
+   *
+   * @param key the identifier of the cookie
+   * @return a {@link CompletableFuture} eventually completed with a byte array once the
+   *     cookie response is received. If the cookie is not stored on the client,
+   *     the {@link CompletableFuture} will complete with a null value.
+   * @throws IllegalArgumentException if the player is from a version lower than 1.20.5
+   * @since 3.3.0
+   * @sinceMinecraft 1.20.5
+   */
+  CompletableFuture<byte[]> retrieveCookie(Key key);
 }

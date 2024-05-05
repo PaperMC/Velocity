@@ -65,11 +65,13 @@ import com.velocitypowered.proxy.connection.util.VelocityInboundConnection;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
+import com.velocitypowered.proxy.protocol.packet.CookieRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.HeaderAndFooterPacket;
 import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
 import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.RemoveResourcePackPacket;
+import com.velocitypowered.proxy.protocol.packet.StoreCookiePacket;
 import com.velocitypowered.proxy.protocol.packet.TransferPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatType;
@@ -96,15 +98,18 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.permission.PermissionChecker;
 import net.kyori.adventure.platform.facet.FacetPointers;
 import net.kyori.adventure.platform.facet.FacetPointers.Type;
@@ -177,6 +182,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private @Nullable ClientSettingsPacket clientSettingsPacket;
   private final ChatQueue chatQueue;
   private final ChatBuilderFactory chatBuilderFactory;
+  private final Map<Key, CompletableFuture<byte[]>> requestedCookies = new ConcurrentHashMap<>();
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
                   @Nullable InetSocketAddress virtualHost, boolean onlineMode,
@@ -221,6 +227,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   public BundleDelimiterHandler getBundleHandler() {
     return this.bundleHandler;
+  }
+
+  public Map<Key, CompletableFuture<byte[]>> getRequestedCookies() {
+    return requestedCookies;
   }
 
   @Override
@@ -1006,6 +1016,29 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
                 resultedAddress.getHostName(), resultedAddress.getPort()));
       }
     });
+  }
+
+  @Override
+  public void storeCookie(final Key key, final byte[] data) {
+    Preconditions.checkNotNull(data);
+    Preconditions.checkArgument(
+        this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_5),
+        "Player version must be at least 1.20.5 to be able to store cookies");
+
+    connection.write(new StoreCookiePacket(key, data));
+  }
+
+  @Override
+  public CompletableFuture<byte[]> retrieveCookie(final Key key) {
+    Preconditions.checkArgument(
+        this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_5),
+        "Player version must be at least 1.20.5 to be able to retrieve cookies");
+
+    final CompletableFuture<byte[]> future = new CompletableFuture<>();
+    requestedCookies.put(key, future);
+    connection.write(new CookieRequestPacket(key));
+
+    return future;
   }
 
   @Override

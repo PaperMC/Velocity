@@ -39,6 +39,7 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.packet.CookieResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.LoginAcknowledgedPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
 import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
@@ -186,6 +187,20 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
           });
     }
     return true;
+  }
+
+  @Override
+  public boolean handle(CookieResponsePacket packet) {
+    final CompletableFuture<byte[]> future = connectedPlayer.getRequestedCookies().get(packet.getKey());
+
+    if (future != null) {
+      connectedPlayer.getRequestedCookies().remove(packet.getKey());
+      future.complete(packet.getPayload());
+    }
+
+    // If the key is not in the requestedCookies map, the cookie was not requested by Velocity,
+    // but by a server. Therefore, we don't handle the packet in that case.
+    return future != null;
   }
 
   private void completeLoginProtocolPhaseAndInitialize(ConnectedPlayer player) {
