@@ -120,6 +120,8 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
       // but at this time the backend server may not be ready
     } else if (serverConn != null) {
       serverConn.ensureConnected().write(packet.retain());
+    } else {
+      player.getConnection().write(packet.retain());
     }
     return true;
   }
