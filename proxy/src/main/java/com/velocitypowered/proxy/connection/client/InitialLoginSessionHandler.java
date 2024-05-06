@@ -93,23 +93,31 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
     this.currentState = LoginState.LOGIN_PACKET_RECEIVED;
     IdentifiedKey playerKey = packet.getPlayerKey();
     if (playerKey != null) {
-      if (playerKey.hasExpired()) {
+      if (forceKeyAuthentication && playerKey.hasExpired()) {
         inbound.disconnect(
             Component.translatable("multiplayer.disconnect.invalid_public_key_signature"));
         return true;
       }
 
       boolean isKeyValid;
-      if (playerKey.getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
-          && playerKey instanceof final IdentifiedKeyImpl keyImpl) {
-        isKeyValid = keyImpl.internalAddHolder(packet.getHolderUuid());
+      if (!playerKey.hasExpired()) {
+        if (playerKey.getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
+            && playerKey instanceof final IdentifiedKeyImpl keyImpl) {
+          isKeyValid = keyImpl.internalAddHolder(packet.getHolderUuid());
+        } else {
+          isKeyValid = playerKey.isSignatureValid();
+        }
       } else {
-        isKeyValid = playerKey.isSignatureValid();
+        isKeyValid = false;
       }
 
       if (!isKeyValid) {
-        inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_public_key"));
-        return true;
+        if (forceKeyAuthentication) {
+          inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_public_key"));
+          return true;
+        } else {
+          playerKey = null;
+        }
       }
     } else if (mcConnection.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19)
         && forceKeyAuthentication
