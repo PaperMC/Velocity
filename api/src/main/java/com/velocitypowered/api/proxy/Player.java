@@ -8,6 +8,7 @@
 package com.velocitypowered.api.proxy;
 
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.event.player.CookieReceiveEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.proxy.crypto.KeyIdentifiable;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
@@ -26,7 +27,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
 import net.kyori.adventure.identity.Identified;
 import net.kyori.adventure.inventory.Book;
@@ -450,15 +450,15 @@ public interface Player extends
   void storeCookie(Key key, byte[] data);
 
   /**
-   * Retrieves a previously stored cookie from the player's client.
+   * Requests a previously stored cookie from the player's client.
+   * Calling this method causes the client to send the cookie to the proxy.
+   * To retrieve the actual data of the requested cookie, you have to use the
+   * {@link CookieReceiveEvent}.
    *
    * @param key the identifier of the cookie
-   * @return a {@link CompletableFuture} eventually completed with a byte array once the
-   *     cookie response is received. If the cookie is not stored on the client,
-   *     the {@link CompletableFuture} will complete with a null value.
    * @throws IllegalArgumentException if the player is from a version lower than 1.20.5
    * @since 3.3.0
    * @sinceMinecraft 1.20.5
    */
-  CompletableFuture<byte[]> retrieveCookie(Key key);
+  void requestCookie(Key key);
 }

@@ -191,16 +191,8 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(CookieResponsePacket packet) {
-    final CompletableFuture<byte[]> future = connectedPlayer.getRequestedCookies().get(packet.getKey());
-
-    if (future != null) {
-      connectedPlayer.getRequestedCookies().remove(packet.getKey());
-      future.complete(packet.getPayload());
-    }
-
-    // If the key is not in the requestedCookies map, the cookie was not requested by Velocity,
-    // but by a server. Therefore, we don't handle the packet in that case.
-    return future != null;
+    // TODO: How to forward the packet to the server, if there is no server connection yet?
+    return true;
   }
 
   private void completeLoginProtocolPhaseAndInitialize(ConnectedPlayer player) {

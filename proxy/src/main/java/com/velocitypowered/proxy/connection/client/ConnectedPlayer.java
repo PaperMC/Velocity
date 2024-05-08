@@ -27,6 +27,8 @@ import com.google.gson.JsonObject;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus;
 import com.velocitypowered.api.event.connection.PreTransferEvent;
+import com.velocitypowered.api.event.player.CookieRequestEvent;
+import com.velocitypowered.api.event.player.CookieStoreEvent;
 import com.velocitypowered.api.event.player.KickedFromServerEvent;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.DisconnectPlayer;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.Notify;
@@ -98,13 +100,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.bossbar.BossBar;
@@ -182,7 +182,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private @Nullable ClientSettingsPacket clientSettingsPacket;
   private final ChatQueue chatQueue;
   private final ChatBuilderFactory chatBuilderFactory;
-  private final Map<Key, CompletableFuture<byte[]>> requestedCookies = new ConcurrentHashMap<>();
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
                   @Nullable InetSocketAddress virtualHost, boolean onlineMode,
@@ -227,10 +226,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   public BundleDelimiterHandler getBundleHandler() {
     return this.bundleHandler;
-  }
-
-  public Map<Key, CompletableFuture<byte[]>> getRequestedCookies() {
-    return requestedCookies;
   }
 
   @Override
@@ -1020,25 +1015,41 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   @Override
   public void storeCookie(final Key key, final byte[] data) {
+    Preconditions.checkNotNull(key);
     Preconditions.checkNotNull(data);
     Preconditions.checkArgument(
         this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_5),
         "Player version must be at least 1.20.5 to be able to store cookies");
 
-    connection.write(new StoreCookiePacket(key, data));
+    server.getEventManager().fire(new CookieStoreEvent(this, key, data))
+        .thenAcceptAsync(event -> {
+          if (event.getResult().isAllowed()) {
+            final Key resultedKey = event.getResult().getKey() == null
+                ? event.getOriginalKey() : event.getResult().getKey();
+            final byte[] resultedData = event.getResult().getData() == null
+                ? event.getOriginalData() : event.getResult().getData();
+
+            connection.write(new StoreCookiePacket(resultedKey, resultedData));
+          }
+        }, connection.eventLoop());
   }
 
   @Override
-  public CompletableFuture<byte[]> retrieveCookie(final Key key) {
+  public void requestCookie(final Key key) {
+    Preconditions.checkNotNull(key);
     Preconditions.checkArgument(
         this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_5),
         "Player version must be at least 1.20.5 to be able to retrieve cookies");
 
-    final CompletableFuture<byte[]> future = new CompletableFuture<>();
-    requestedCookies.put(key, future);
-    connection.write(new CookieRequestPacket(key));
+    server.getEventManager().fire(new CookieRequestEvent(this, key))
+        .thenAcceptAsync(event -> {
+          if (event.getResult().isAllowed()) {
+            final Key resultedKey = event.getResult().getKey() == null
+                ? event.getOriginalKey() : event.getResult().getKey();
 
-    return future;
+            connection.write(new CookieRequestPacket(resultedKey));
+          }
+        }, connection.eventLoop());
   }
 
   @Override

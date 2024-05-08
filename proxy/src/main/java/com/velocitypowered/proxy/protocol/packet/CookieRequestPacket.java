@@ -29,6 +29,10 @@ public class CookieRequestPacket implements MinecraftPacket {
 
   private Key key;
 
+  public Key getKey() {
+    return key;
+  }
+
   public CookieRequestPacket() {
   }
 

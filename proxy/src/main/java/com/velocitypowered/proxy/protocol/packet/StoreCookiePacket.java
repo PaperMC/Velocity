@@ -30,6 +30,14 @@ public class StoreCookiePacket implements MinecraftPacket {
   private Key key;
   private byte[] payload;
 
+  public Key getKey() {
+    return key;
+  }
+
+  public byte[] getPayload() {
+    return payload;
+  }
+
   public StoreCookiePacket() {
   }
 

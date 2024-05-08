@@ -39,6 +39,14 @@ public class CookieResponsePacket implements MinecraftPacket {
     return payload;
   }
 
+  public CookieResponsePacket() {
+  }
+
+  public CookieResponsePacket(final Key key, final byte @Nullable [] payload) {
+    this.key = key;
+    this.payload = payload;
+  }
+
   @Override
   public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
     this.key = ProtocolUtils.readKey(buf);

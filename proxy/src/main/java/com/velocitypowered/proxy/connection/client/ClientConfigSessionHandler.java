@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.connection.client;
 
+import com.velocitypowered.api.event.player.CookieReceiveEvent;
 import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -40,6 +41,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
@@ -144,16 +146,24 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(CookieResponsePacket packet) {
-    final CompletableFuture<byte[]> future = player.getRequestedCookies().get(packet.getKey());
+    server.getEventManager()
+        .fire(new CookieReceiveEvent(player, packet.getKey(), packet.getPayload()))
+        .thenAcceptAsync(event -> {
+          if (event.getResult().isAllowed()) {
+            final VelocityServerConnection serverConnection = player.getConnectedServer();
+            if (serverConnection != null) {
+              final Key resultedKey = event.getResult().getKey() == null
+                  ? event.getOriginalKey() : event.getResult().getKey();
+              final byte[] resultedData = event.getResult().getData() == null
+                  ? event.getOriginalData() : event.getResult().getData();
 
-    if (future != null) {
-      player.getRequestedCookies().remove(packet.getKey());
-      future.complete(packet.getPayload());
-    }
+              serverConnection.ensureConnected()
+                  .write(new CookieResponsePacket(resultedKey, resultedData));
+            }
+          }
+        }, player.getConnection().eventLoop());
 
-    // If the key is not in the requestedCookies map, the cookie was not requested by Velocity,
-    // but by a server. Therefore, we don't handle the packet in that case.
-    return future != null;
+    return true;
   }
 
   @Override
