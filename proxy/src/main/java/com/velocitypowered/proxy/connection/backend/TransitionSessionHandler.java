@@ -137,7 +137,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           smc.setActiveSessionHandler(StateRegistry.PLAY,
               new BackendPlaySessionHandler(server, serverConn));
 
-          // Now set the connected server. 
+          // Now set the connected server.
           serverConn.getPlayer().setConnectedServer(serverConn);
 
           // Clean up disabling auto-read while the connected event was being processed.
