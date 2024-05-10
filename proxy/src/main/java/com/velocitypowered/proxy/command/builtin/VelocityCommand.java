@@ -74,7 +74,7 @@ public final class VelocityCommand {
   @SuppressWarnings("checkstyle:MissingJavadocMethod")
   public static BrigadierCommand create(final VelocityServer server) {
     final LiteralCommandNode<CommandSource> dump = BrigadierCommand.literalArgumentBuilder("dump")
-        .requires(source -> source.getPermissionValue("velocity.command.plugins") == Tristate.TRUE)
+        .requires(source -> source.getPermissionValue("velocity.command.dump") == Tristate.TRUE)
         .executes(new Dump(server))
         .build();
     final LiteralCommandNode<CommandSource> heap = BrigadierCommand.literalArgumentBuilder("heap")
