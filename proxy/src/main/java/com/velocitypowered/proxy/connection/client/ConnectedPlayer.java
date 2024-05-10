@@ -1021,6 +1021,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
         this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_5),
         "Player version must be at least 1.20.5 to be able to store cookies");
 
+    if (connection.getState() != StateRegistry.PLAY
+        && connection.getState() != StateRegistry.CONFIG) {
+      throw new IllegalStateException("Can only store cookie in CONFIGURATION or PLAY protocol");
+    }
+
     server.getEventManager().fire(new CookieStoreEvent(this, key, data))
         .thenAcceptAsync(event -> {
           if (event.getResult().isAllowed()) {

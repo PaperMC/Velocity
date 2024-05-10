@@ -18,7 +18,6 @@
 package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.event.player.CookieRequestEvent;
-import com.velocitypowered.api.event.player.CookieStoreEvent;
 import com.velocitypowered.api.event.player.ServerLoginPluginMessageEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
@@ -181,21 +180,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(StoreCookiePacket packet) {
-    server.getEventManager()
-        .fire(new CookieStoreEvent(serverConn.getPlayer(), packet.getKey(), packet.getPayload()))
-        .thenAcceptAsync(event -> {
-          if (event.getResult().isAllowed()) {
-            final Key resultedKey = event.getResult().getKey() == null
-                ? event.getOriginalKey() : event.getResult().getKey();
-            final byte[] resultedData = event.getResult().getData() == null
-                ? event.getOriginalData() : event.getResult().getData();
-
-            serverConn.getPlayer().getConnection()
-                .write(new StoreCookiePacket(resultedKey, resultedData));
-          }
-        }, serverConn.ensureConnected().eventLoop());
-
-    return true;
+    throw new IllegalStateException("Can only store cookie in CONFIGURATION or PLAY protocol");
   }
 
   @Override

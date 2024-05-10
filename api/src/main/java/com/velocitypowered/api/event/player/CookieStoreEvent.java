@@ -13,7 +13,6 @@ import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.Player;
 import java.util.Arrays;
 import net.kyori.adventure.key.Key;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * This event is fired when a cookie should be stored on a player's client. This process can be
@@ -61,7 +60,7 @@ public final class CookieStoreEvent implements ResultedEvent<CookieStoreEvent.Fo
     return originalKey;
   }
 
-  public byte @Nullable [] getOriginalData() {
+  public byte[] getOriginalData() {
     return originalData;
   }
 

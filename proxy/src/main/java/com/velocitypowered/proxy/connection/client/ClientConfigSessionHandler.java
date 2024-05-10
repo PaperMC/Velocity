@@ -150,7 +150,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
         .fire(new CookieReceiveEvent(player, packet.getKey(), packet.getPayload()))
         .thenAcceptAsync(event -> {
           if (event.getResult().isAllowed()) {
-            final VelocityServerConnection serverConnection = player.getConnectedServer();
+            final VelocityServerConnection serverConnection = player.getConnectionInFlight();
             if (serverConnection != null) {
               final Key resultedKey = event.getResult().getKey() == null
                   ? event.getOriginalKey() : event.getResult().getKey();
