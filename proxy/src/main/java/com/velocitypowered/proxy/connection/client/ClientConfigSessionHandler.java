@@ -128,17 +128,20 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   public boolean handle(PingIdentifyPacket packet) {
     if (player.getConnectionInFlight() != null) {
       player.getConnectionInFlight().ensureConnected().write(packet);
+      return true;
     }
-    return true;
+
+    return false;
   }
 
   @Override
   public boolean handle(KnownPacksPacket packet) {
     if (player.getConnectionInFlight() != null) {
       player.getConnectionInFlight().ensureConnected().write(packet);
+      return true;
     }
 
-    return true;
+    return false;
   }
 
   @Override
