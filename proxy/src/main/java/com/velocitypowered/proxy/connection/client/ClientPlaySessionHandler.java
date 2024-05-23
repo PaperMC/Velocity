@@ -630,7 +630,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     String commandLabel = command.substring(0, commandEndPosition);
-    if (!server.getCommandManager().hasCommand(commandLabel)) {
+    if (!server.getCommandManager().hasCommand(commandLabel, player)) {
       if (player.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_13)) {
         // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
         // additional tab completion support.
