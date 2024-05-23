@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.server;
 
+import com.velocitypowered.api.network.HandshakeIntent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
@@ -54,7 +55,7 @@ public class PingSessionHandler implements MinecraftSessionHandler {
   @Override
   public void activated() {
     HandshakePacket handshake = new HandshakePacket();
-    handshake.setNextStatus(StateRegistry.STATUS_ID);
+    handshake.setIntent(HandshakeIntent.STATUS);
     handshake.setServerAddress(server.getServerInfo().getAddress().getHostString());
     handshake.setPort(server.getServerInfo().getAddress().getPort());
     handshake.setProtocolVersion(version);

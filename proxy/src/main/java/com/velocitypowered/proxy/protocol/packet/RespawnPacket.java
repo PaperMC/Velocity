@@ -160,15 +160,19 @@ public class RespawnPacket implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    String dimensionIdentifier = null;
+    String dimensionKey = "";
     String levelName = null;
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16)) {
       if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16_2)
           && version.lessThan(ProtocolVersion.MINECRAFT_1_19)) {
         this.currentDimensionData = ProtocolUtils.readCompoundTag(buf, version, BinaryTagIO.reader());
-        dimensionIdentifier = ProtocolUtils.readString(buf);
+        dimensionKey = ProtocolUtils.readString(buf);
       } else {
-        dimensionIdentifier = ProtocolUtils.readString(buf);
+        if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
+          dimension = ProtocolUtils.readVarInt(buf);
+        } else {
+          dimensionKey = ProtocolUtils.readString(buf);
+        }
         levelName = ProtocolUtils.readString(buf);
       }
     } else {
@@ -185,7 +189,7 @@ public class RespawnPacket implements MinecraftPacket {
       this.previousGamemode = buf.readByte();
       boolean isDebug = buf.readBoolean();
       boolean isFlat = buf.readBoolean();
-      this.dimensionInfo = new DimensionInfo(dimensionIdentifier, levelName, isFlat, isDebug);
+      this.dimensionInfo = new DimensionInfo(dimensionKey, levelName, isFlat, isDebug, version);
       if (version.lessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
         this.dataToKeep = (byte) (buf.readBoolean() ? 1 : 0);
       } else if (version.lessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
@@ -213,7 +217,11 @@ public class RespawnPacket implements MinecraftPacket {
         ProtocolUtils.writeBinaryTag(buf, version, currentDimensionData);
         ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
       } else {
-        ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
+        if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
+          ProtocolUtils.writeVarInt(buf, dimension);
+        } else {
+          ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
+        }
         ProtocolUtils.writeString(buf, dimensionInfo.getLevelName());
       }
     } else {

@@ -16,14 +16,15 @@ package com.velocitypowered.api.network;
 public enum ProtocolState {
   /**
    * Initial connection State.
-   * <p>This status can be caused by a STATUS, LOGIN or TRANSFER intent.</p>
+   * <p>This status can be caused by a {@link HandshakeIntent#STATUS},
+   * {@link HandshakeIntent#LOGIN} or {@link HandshakeIntent#TRANSFER} intent.</p>
    * If the intent is LOGIN or TRANSFER, the next state will be {@link #LOGIN},
    * otherwise, it will go to the {@link #STATUS} state.
    */
   HANDSHAKE,
   /**
    * Ping State of a connection.
-   * <p>Connections with the STATUS HandshakeIntent will pass through this state
+   * <p>Connections with the {@link HandshakeIntent#STATUS} intent will pass through this state
    * and be disconnected after it requests the ping from the server
    * and the server responds with the respective ping.</p>
    */

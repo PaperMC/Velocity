@@ -1,5 +1,5 @@
 # Config version. Do not change this
-config-version = "2.6"
+config-version = "2.7"
 
 # What port should the proxy be bound to? By default, we'll bind to all addresses on port 25577.
 bind = "0.0.0.0:25577"
@@ -140,6 +140,10 @@ log-command-executions = false
 # Enables logging of player connections when connecting to the proxy, switching servers
 # and disconnecting from the proxy.
 log-player-connections = true
+
+# Allows players transferred from other hosts via the
+# Transfer packet (Minecraft 1.20.5) to be received.
+accepts-transfers = false
 
 [query]
 # Whether to enable responding to GameSpy 4 query responses or not.

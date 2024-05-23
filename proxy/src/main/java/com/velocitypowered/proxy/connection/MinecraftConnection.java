@@ -194,8 +194,9 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
           boolean isQuietDecoderException = cause instanceof QuietDecoderException;
           boolean willLog = !isQuietDecoderException && !frontlineHandler;
           if (willLog) {
-            logger.error("{}: exception encountered in {}", association, activeSessionHandler,
-                cause);
+            logger.atError().withThrowable(cause)
+                .log("{}: exception encountered in {}", association,
+                    activeSessionHandler);
           } else {
             knownDisconnect = true;
           }
@@ -225,7 +226,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * Writes and immediately flushes a message to the connection.
    *
    * @param msg the message to write
-   *
    * @return A {@link ChannelFuture} that will complete when packet is successfully sent
    */
   @Nullable
@@ -369,12 +369,12 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     this.state = state;
     // If the connection is LEGACY (<1.6), the decoder and encoder are not set.
     final MinecraftEncoder minecraftEncoder = this.channel.pipeline()
-            .get(MinecraftEncoder.class);
+        .get(MinecraftEncoder.class);
     if (minecraftEncoder != null) {
       minecraftEncoder.setState(state);
     }
     final MinecraftDecoder minecraftDecoder = this.channel.pipeline()
-            .get(MinecraftDecoder.class);
+        .get(MinecraftDecoder.class);
     if (minecraftDecoder != null) {
       minecraftDecoder.setState(state);
     }
