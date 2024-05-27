@@ -40,7 +40,7 @@ import com.velocitypowered.proxy.protocol.packet.LoginPluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
 import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
-import com.velocitypowered.proxy.protocol.packet.StoreCookiePacket;
+import com.velocitypowered.proxy.protocol.packet.CookieStorePacket;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
@@ -179,7 +179,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(StoreCookiePacket packet) {
+  public boolean handle(CookieStorePacket packet) {
     throw new IllegalStateException("Can only store cookie in CONFIGURATION or PLAY protocol");
   }
 

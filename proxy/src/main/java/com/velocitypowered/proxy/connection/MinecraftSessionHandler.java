@@ -51,7 +51,7 @@ import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusPingPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusResponsePacket;
-import com.velocitypowered.proxy.protocol.packet.StoreCookiePacket;
+import com.velocitypowered.proxy.protocol.packet.CookieStorePacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TransferPacket;
@@ -343,7 +343,7 @@ public interface MinecraftSessionHandler {
     return false;
   }
 
-  default boolean handle(StoreCookiePacket packet) {
+  default boolean handle(CookieStorePacket packet) {
     return false;
   }
 

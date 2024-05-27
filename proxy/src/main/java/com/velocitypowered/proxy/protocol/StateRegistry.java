@@ -79,7 +79,7 @@ import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusPingPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusResponsePacket;
-import com.velocitypowered.proxy.protocol.packet.StoreCookiePacket;
+import com.velocitypowered.proxy.protocol.packet.CookieStorePacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TransferPacket;
@@ -212,7 +212,7 @@ public enum StateRegistry {
           map(0x07, MINECRAFT_1_20_3, false),
           map(0x09, MINECRAFT_1_20_5, false));
       clientbound.register(
-          StoreCookiePacket.class, StoreCookiePacket::new,
+          CookieStorePacket.class, CookieStorePacket::new,
           map(0x0A, MINECRAFT_1_20_5, false));
       clientbound.register(TransferPacket.class, TransferPacket::new,
           map(0x0B, MINECRAFT_1_20_5, false));
@@ -614,7 +614,7 @@ public enum StateRegistry {
           map(0x3C, MINECRAFT_1_20_2, false),
           map(0x3E, MINECRAFT_1_20_5, false));
       clientbound.register(
-          StoreCookiePacket.class, StoreCookiePacket::new,
+          CookieStorePacket.class, CookieStorePacket::new,
           map(0x6B, MINECRAFT_1_20_5, false));
       clientbound.register(
           SystemChatPacket.class,

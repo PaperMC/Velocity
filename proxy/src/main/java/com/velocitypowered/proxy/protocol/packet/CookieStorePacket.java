@@ -25,7 +25,7 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 
-public class StoreCookiePacket implements MinecraftPacket {
+public class CookieStorePacket implements MinecraftPacket {
 
   private Key key;
   private byte[] payload;
@@ -38,10 +38,10 @@ public class StoreCookiePacket implements MinecraftPacket {
     return payload;
   }
 
-  public StoreCookiePacket() {
+  public CookieStorePacket() {
   }
 
-  public StoreCookiePacket(final Key key, final byte[] payload) {
+  public CookieStorePacket(final Key key, final byte[] payload) {
     this.key = key;
     this.payload = payload;
   }

@@ -60,7 +60,7 @@ import com.velocitypowered.proxy.protocol.packet.RemoveResourcePackPacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.ServerDataPacket;
-import com.velocitypowered.proxy.protocol.packet.StoreCookiePacket;
+import com.velocitypowered.proxy.protocol.packet.CookieStorePacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TransferPacket;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfoPacket;
@@ -396,7 +396,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(StoreCookiePacket packet) {
+  public boolean handle(CookieStorePacket packet) {
     server.getEventManager()
         .fire(new CookieStoreEvent(serverConn.getPlayer(), packet.getKey(), packet.getPayload()))
         .thenAcceptAsync(event -> {
@@ -406,7 +406,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
             final byte[] resultedData = event.getResult().getData() == null
                 ? event.getOriginalData() : event.getResult().getData();
 
-            playerConnection.write(new StoreCookiePacket(resultedKey, resultedData));
+            playerConnection.write(new CookieStorePacket(resultedKey, resultedData));
           }
         }, playerConnection.eventLoop());
 
