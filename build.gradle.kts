@@ -2,6 +2,7 @@ plugins {
     `java-library`
     id("velocity-checkstyle") apply false
     id("velocity-spotless") apply false
+    alias(libs.plugins.ideaExt)
 }
 
 subprojects {
@@ -9,6 +10,7 @@ subprojects {
 
     apply(plugin = "velocity-checkstyle")
     apply(plugin = "velocity-spotless")
+    apply(plugin = "org.jetbrains.gradle.plugin.idea-ext")
 
     java {
         toolchain {
@@ -25,6 +27,22 @@ subprojects {
             useJUnitPlatform()
             reports {
                 junitXml.required.set(true)
+            }
+        }
+    }
+
+    idea {
+        if (project != null) {
+            (project as ExtensionAware).extensions["settings"].run {
+                (this as ExtensionAware).extensions.getByType(org.jetbrains.gradle.ext.ActionDelegationConfig::class).run {
+                    delegateBuildRunToGradle = false
+                    testRunner = org.jetbrains.gradle.ext.ActionDelegationConfig.TestRunner.PLATFORM
+                }
+                extensions.getByType(org.jetbrains.gradle.ext.IdeaCompilerConfiguration::class).run {
+                    addNotNullAssertions = false
+                    useReleaseOption = JavaVersion.current().isJava10Compatible
+                    parallelCompilation = true
+                }
             }
         }
     }

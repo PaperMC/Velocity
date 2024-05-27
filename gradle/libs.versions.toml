@@ -4,11 +4,13 @@ configurate4 = "4.1.2"
 flare = "2.0.1"
 log4j = "2.22.1"
 netty = "4.1.106.Final"
+ideaExt = "1.1.8"
 
 [plugins]
 indra-publishing = "net.kyori.indra.publishing:2.0.6"
 shadow = "io.github.goooler.shadow:8.1.5"
 spotless = "com.diffplug.spotless:6.25.0"
+ideaExt = { id = "org.jetbrains.gradle.plugin.idea-ext", version.ref = "ideaExt" }
 
 [libraries]
 adventure-bom = "net.kyori:adventure-bom:4.16.0"

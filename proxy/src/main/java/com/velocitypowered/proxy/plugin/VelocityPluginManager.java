@@ -37,12 +37,16 @@ import com.velocitypowered.proxy.plugin.loader.java.JavaPluginLoader;
 import com.velocitypowered.proxy.plugin.util.PluginDependencyUtils;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
@@ -88,6 +92,26 @@ public class VelocityPluginManager implements PluginManager {
 
     List<PluginDescription> found = new ArrayList<>();
     JavaPluginLoader loader = new JavaPluginLoader(server, directory);
+
+    Enumeration<URL> resources = ClassLoader.getSystemClassLoader().getResources("velocity-plugin.json");
+    while (resources.hasMoreElements()) {
+      URL url = resources.nextElement();
+
+      URI uri;
+      try {
+        uri = url.toURI();
+      } catch (URISyntaxException e) {
+        logger.error("Malformed URI {}", url, e);
+        continue;
+      }
+
+      Path path = Path.of(uri);
+      try {
+        found.add(loader.loadCandidate(path.getParent()));
+      } catch (Throwable e) {
+        logger.error("Unable to load plugin {}", path, e);
+      }
+    }
 
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory,
         p -> p.toFile().isFile() && p.toString().endsWith(".jar"))) {
