@@ -36,6 +36,7 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_19_4;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_20_2;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_20_3;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_20_5;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_21;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_7_2;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9;
@@ -91,9 +92,11 @@ import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChatP
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommandPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.session.UnsignedPlayerCommandPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ActiveFeaturesPacket;
+import com.velocitypowered.proxy.protocol.packet.config.CustomReportDetailsPacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.KnownPacksPacket;
 import com.velocitypowered.proxy.protocol.packet.config.RegistrySyncPacket;
+import com.velocitypowered.proxy.protocol.packet.config.ServerLinksPacket;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.TagsUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.title.LegacyTitlePacket;
@@ -214,6 +217,10 @@ public enum StateRegistry {
           map(0x0D, MINECRAFT_1_20_5, false));
       clientbound.register(KnownPacksPacket.class, KnownPacksPacket::new,
           map(0x0E, MINECRAFT_1_20_5, false));
+      clientbound.register(CustomReportDetailsPacket.class, CustomReportDetailsPacket::new,
+          map(0x0F, MINECRAFT_1_21, false));
+      clientbound.register(ServerLinksPacket.class, ServerLinksPacket::new,
+          map(0x10, MINECRAFT_1_21, false));
     }
   },
   PLAY {
@@ -638,6 +645,10 @@ public enum StateRegistry {
           TransferPacket::new,
           map(0x73, MINECRAFT_1_20_5, false)
       );
+      clientbound.register(CustomReportDetailsPacket.class, CustomReportDetailsPacket::new,
+              map(0x7A, MINECRAFT_1_21, false));
+      clientbound.register(ServerLinksPacket.class, ServerLinksPacket::new,
+              map(0x7B, MINECRAFT_1_21, false));
     }
   },
   LOGIN {
