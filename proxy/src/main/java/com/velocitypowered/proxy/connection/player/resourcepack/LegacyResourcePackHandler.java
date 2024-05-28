@@ -109,7 +109,7 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
             break;
           }
           onResourcePackResponse(new ResourcePackResponseBundle(queued.getId(),
-                  new String(queued.getHash()),
+                  queued.getHash() == null ? "" : new String(queued.getHash()),
                   PlayerResourcePackStatusEvent.Status.DECLINED));
           queued = null;
         }
@@ -172,6 +172,10 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
 
   @Override
   public boolean hasPackAppliedByHash(final byte[] hash) {
+    if (hash == null) {
+      return false;
+    }
+
     return this.appliedResourcePack != null
             && Arrays.equals(this.appliedResourcePack.getHash(), hash);
   }
