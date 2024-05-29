@@ -51,7 +51,7 @@ public record ServerBuildInfoImpl(
   private static final String ATTRIBUTE_GIT_COMMIT = "Git-Commit";
   private static final String ATTRIBUTE_VERSION = "Implementation-Version";
 
-  private static final String BRAND_PAPER_NAME = "Velocity";
+  private static final String BRAND_VELOCITY_NAME = "Velocity";
 
   private static final String BUILD_DEV = "DEV";
 
@@ -65,7 +65,7 @@ public record ServerBuildInfoImpl(
                     .map(Key::key)
                     .orElse(BRAND_VELOCITY_ID),
             getManifestAttribute(manifest, ATTRIBUTE_BRAND_NAME)
-                    .orElse(BRAND_PAPER_NAME),
+                    .orElse(BRAND_VELOCITY_NAME),
             getManifestAttribute(manifest, ATTRIBUTE_VERSION)
                     .orElse("Unknown"),
             getManifestAttribute(manifest, ATTRIBUTE_BUILD_NUMBER)

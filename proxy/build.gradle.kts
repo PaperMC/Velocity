@@ -1,6 +1,4 @@
 import com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer
-import net.kyori.indra.git.IndraGitExtension
-import java.time.Instant
 
 plugins {
     application
@@ -15,10 +13,9 @@ application {
 
 tasks {
     runShadow {
-        systemProperty("terminal.jline", false)
-        systemProperty("terminal.ansi", true)
         workingDir = project.file("run").also(File::mkdirs)
     }
+
     withType<Checkstyle> {
         exclude("**/com/velocitypowered/proxy/protocol/packet/**")
     }
