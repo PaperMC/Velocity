@@ -33,6 +33,7 @@ import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.ProxyVersion;
+import com.velocitypowered.api.util.ServerBuildInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.util.InformationUtils;
 import java.io.BufferedWriter;
@@ -154,13 +155,15 @@ public final class VelocityCommand {
     public int run(final CommandContext<CommandSource> context) {
       final CommandSource source = context.getSource();
       final ProxyVersion version = server.getVersion();
+      final ServerBuildInfo build = ServerBuildInfo.buildInfo();
+
 
       final Component velocity = Component.text()
           .content(version.getName() + " ")
           .decoration(TextDecoration.BOLD, true)
           .color(VELOCITY_COLOR)
           .append(Component.text()
-                  .content(version.getVersion())
+                  .content(build.asString(ServerBuildInfo.StringRepresentation.VERSION_FULL))
                   .decoration(TextDecoration.BOLD, false))
           .build();
       final Component copyright = Component

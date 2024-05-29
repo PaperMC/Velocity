@@ -36,6 +36,7 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ProxyVersion;
+import com.velocitypowered.api.util.ServerBuildInfo;
 import com.velocitypowered.proxy.command.VelocityCommandManager;
 import com.velocitypowered.proxy.command.builtin.CallbackCommand;
 import com.velocitypowered.proxy.command.builtin.GlistCommand;
@@ -211,7 +212,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   @EnsuresNonNull({"serverKeyPair", "servers", "pluginManager", "eventManager", "scheduler",
       "console", "cm", "configuration"})
   void start() {
-    logger.info("Booting up {} {}...", getVersion().getName(), getVersion().getVersion());
+    final ServerBuildInfo buildInfo = ServerBuildInfo.buildInfo();
+    logger.info("Booting up {} {}...", getVersion().getName(), buildInfo.asString(ServerBuildInfo.StringRepresentation.VERSION_FULL));
     console.setupStreams();
 
     registerTranslations();

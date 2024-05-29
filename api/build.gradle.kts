@@ -54,6 +54,11 @@ tasks {
             attributes["Automatic-Module-Name"] = "com.velocitypowered.api"
         }
     }
+    // TEMP
+    withType<Checkstyle> {
+        exclude("**/com/velocitypowered/api/util/ServerBuildInfo.java")
+    }
+
     withType<Javadoc> {
         exclude("com/velocitypowered/api/plugin/ap/**")
 
