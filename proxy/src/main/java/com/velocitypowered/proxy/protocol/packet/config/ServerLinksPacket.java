@@ -30,6 +30,13 @@ public class ServerLinksPacket implements MinecraftPacket {
 
     private List<ServerLink> serverLinks;
 
+    public ServerLinksPacket() {
+    }
+
+    public ServerLinksPacket(List<ServerLink> serverLinks) {
+        this.serverLinks = serverLinks;
+    }
+
     @Override
     public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
         int linksCount = ProtocolUtils.readVarInt(buf);
@@ -52,6 +59,10 @@ public class ServerLinksPacket implements MinecraftPacket {
     @Override
     public boolean handle(MinecraftSessionHandler handler) {
         return handler.handle(this);
+    }
+
+    public List<ServerLink> getServerLinks() {
+        return serverLinks;
     }
 
     public record ServerLink(int id, ComponentHolder displayName, String url) {

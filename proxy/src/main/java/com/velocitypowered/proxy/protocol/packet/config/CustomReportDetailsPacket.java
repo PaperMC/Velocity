@@ -29,6 +29,13 @@ public class CustomReportDetailsPacket implements MinecraftPacket {
 
     private Map<String, String> details;
 
+    public CustomReportDetailsPacket() {
+    }
+
+    public CustomReportDetailsPacket(Map<String, String> details) {
+        this.details = details;
+    }
+
     @Override
     public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
         int detailsCount = ProtocolUtils.readVarInt(buf);
@@ -52,5 +59,9 @@ public class CustomReportDetailsPacket implements MinecraftPacket {
     @Override
     public boolean handle(MinecraftSessionHandler handler) {
         return handler.handle(this);
+    }
+
+    public Map<String, String> getDetails() {
+        return details;
     }
 }
