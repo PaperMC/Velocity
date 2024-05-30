@@ -93,11 +93,11 @@ public record ServerBuildInfoImpl(
   public @NotNull String asString(final @NotNull StringRepresentation representation) {
     final StringBuilder sb = new StringBuilder();
     sb.append(this.velocityVersionName);
-    if (this.buildNumber.isPresent()) {
-      sb.append('-'); // eh
-      sb.append(this.buildNumber.getAsInt());
-    } else if (!this.velocityVersionName.contains("-SNAPSHOT")) {
-      sb.append('-'); // eh
+    sb.append('-');
+    final OptionalInt buildNumber = this.buildNumber;
+    if (buildNumber.isPresent()) {
+      sb.append(buildNumber.getAsInt());
+    } else {
       sb.append(BUILD_DEV);
     }
     final boolean hasGitBranch = this.gitBranch.isPresent();

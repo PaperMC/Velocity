@@ -29,6 +29,7 @@ public interface ServerBuildInfo {
   *
   * @return the {@code ServerBuildInfo}
   */
+  // TODO: This works but, I have no clue if this is correct codewise
   static <T extends ServerBuildInfo> @NotNull T buildInfo() {
     //<editor-fold defaultstate="collapsed" desc="Holder">
     /**

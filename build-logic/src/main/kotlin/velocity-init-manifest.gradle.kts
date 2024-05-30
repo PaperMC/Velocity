@@ -14,6 +14,7 @@ tasks.withType<Jar> {
         val gitHash = indraGit.commit()?.name?.substring(0, 8) ?: "unknown"
         val gitBranch = indraGit.branchName() ?: "unknown"
         val velocityVersion = project.version.toString()
+        val velocityVersionButWithoutTheDashSnapshot = velocityVersion.replace("-SNAPSHOT", "")
         val implementationVersion = "$velocityVersion-${buildNumber ?: "DEV"}-$gitHash"
         val velocityHumanVersion: String =
             if (project.version.toString().endsWith("-SNAPSHOT")) {
@@ -29,13 +30,12 @@ tasks.withType<Jar> {
         attributes["Implementation-Vendor"] = "Velocity Contributors"
         attributes["Multi-Release"] = "true"
         attributes["Specification-Version"] = velocityHumanVersion
-        attributes["Implementation-Version"] = velocityVersion
+        attributes["Implementation-Version"] = velocityVersionButWithoutTheDashSnapshot
         attributes["Brand-Id"] = "papermc:velocity"
         attributes["Brand-Name"] = "Velocity"
         attributes["Build-Number"] = (buildNumber ?: "")
         attributes["Build-Time"] = Instant.now().toString()
         attributes["Git-Branch"] = gitBranch
         attributes["Git-Commit"] = gitHash
-        attributes["Full-Version"] = implementationVersion
     }
 }
