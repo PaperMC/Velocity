@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.OptionalInt;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.util.Services;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -100,7 +101,11 @@ public interface ServerBuildInfo {
   * @param representation the type of representation
   * @return a string
   */
+  // This *could* be a PlainTextSerializer string of asComponent()?
   @NotNull String asString(final @NotNull StringRepresentation representation);
+
+  @NotNull
+  default Component asComponent(final @NotNull StringRepresentation representation) { return Component.empty(); }
 
   /**
   * String representation types.

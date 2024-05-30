@@ -163,7 +163,7 @@ public final class VelocityCommand {
           .decoration(TextDecoration.BOLD, true)
           .color(VELOCITY_COLOR)
           .append(Component.text()
-                  .content(build.asString(ServerBuildInfo.StringRepresentation.VERSION_FULL))
+                  .append(build.asComponent(ServerBuildInfo.StringRepresentation.VERSION_FULL))
                   .decoration(TextDecoration.BOLD, false))
           .build();
       final Component copyright = Component
