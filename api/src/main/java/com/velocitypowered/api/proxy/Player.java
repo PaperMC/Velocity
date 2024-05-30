@@ -8,6 +8,7 @@
 package com.velocitypowered.api.proxy;
 
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.event.player.CookieReceiveEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.proxy.crypto.KeyIdentifiable;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
@@ -436,4 +437,28 @@ public interface Player extends
    * @since 3.3.0
    */
   void transferToHost(@NotNull InetSocketAddress address);
+
+  /**
+   * Stores a cookie with arbitrary data on the player's client.
+   *
+   * @param key the identifier of the cookie
+   * @param data the data of the cookie
+   * @throws IllegalArgumentException if the player is from a version lower than 1.20.5
+   * @since 3.3.0
+   * @sinceMinecraft 1.20.5
+   */
+  void storeCookie(Key key, byte[] data);
+
+  /**
+   * Requests a previously stored cookie from the player's client.
+   * Calling this method causes the client to send the cookie to the proxy.
+   * To retrieve the actual data of the requested cookie, you have to use the
+   * {@link CookieReceiveEvent}.
+   *
+   * @param key the identifier of the cookie
+   * @throws IllegalArgumentException if the player is from a version lower than 1.20.5
+   * @since 3.3.0
+   * @sinceMinecraft 1.20.5
+   */
+  void requestCookie(Key key);
 }

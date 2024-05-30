@@ -469,11 +469,11 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     boolean queryPortChanged = newConfiguration.getQueryPort() != configuration.getQueryPort();
     boolean queryAlreadyEnabled = configuration.isQueryEnabled();
     boolean queryEnabled = newConfiguration.isQueryEnabled();
-    if ((!queryEnabled && queryAlreadyEnabled) || queryPortChanged) {
+    if (queryAlreadyEnabled && (!queryEnabled || queryPortChanged)) {
       this.cm.close(new InetSocketAddress(
           configuration.getBind().getHostString(), configuration.getQueryPort()));
     }
-    if (queryEnabled && queryPortChanged) {
+    if (queryEnabled && (!queryAlreadyEnabled || queryPortChanged)) {
       this.cm.queryBind(newConfiguration.getBind().getHostString(),
           newConfiguration.getQueryPort());
     }
