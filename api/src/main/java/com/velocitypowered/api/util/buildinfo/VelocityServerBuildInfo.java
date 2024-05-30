@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Information about the current server build.
  *
- * @apiNote to be seperated later
+ * @apiNote to be separated later
  */
 @SuppressWarnings({"checkstyle", "CheckStyle"}) // Temporarily
 @ApiStatus.NonExtendable

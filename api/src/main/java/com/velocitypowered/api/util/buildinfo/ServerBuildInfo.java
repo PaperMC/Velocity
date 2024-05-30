@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Information about the current server build.
  *
- * @apiNote to be seperated later
+ * @apiNote to be separated later
  */
 @SuppressWarnings({"checkstyle", "CheckStyle"}) // Temporarily
 @ApiStatus.NonExtendable
@@ -29,7 +29,7 @@ public interface ServerBuildInfo {
   *
   * @return the {@code ServerBuildInfo}
   */
-  static @NotNull ServerBuildInfo buildInfo() {
+  static <T extends ServerBuildInfo> @NotNull T buildInfo() {
     //<editor-fold defaultstate="collapsed" desc="Holder">
     /**
      * This is a holder, it holds the serverbuildinfo :).
@@ -39,7 +39,7 @@ public interface ServerBuildInfo {
     }
     //</editor-fold>
 
-    return Holder.INSTANCE.orElseThrow();
+    return (T) Holder.INSTANCE.orElseThrow();
   }
 
   /**

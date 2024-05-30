@@ -7,17 +7,23 @@
 
 package com.velocitypowered.api.util.buildinfo;
 
+import net.kyori.adventure.key.Key;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * Information about the current server build.
  *
- * @apiNote to be seperated later
+ * @apiNote to be separated later
  */
 @SuppressWarnings({"checkstyle", "CheckStyle"}) // Temporarily
 @ApiStatus.NonExtendable
 public interface PaperServerBuildInfo extends ServerBuildInfo {
+
+    /**
+     * The brand id for Paper.
+     */
+    Key BRAND_PAPER_ID = Key.key("papermc", "paper");
 
     /**
      * Gets the Minecraft version id.
