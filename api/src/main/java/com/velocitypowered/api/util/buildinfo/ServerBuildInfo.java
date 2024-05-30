@@ -5,7 +5,7 @@
  * reference the LICENSE file in the api top-level directory.
  */
 
-package com.velocitypowered.api.util;
+package com.velocitypowered.api.util.buildinfo;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -17,14 +17,12 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Information about the current server build.
+ *
+ * @apiNote to be seperated later
  */
 @SuppressWarnings({"checkstyle", "CheckStyle"}) // Temporarily
 @ApiStatus.NonExtendable
 public interface ServerBuildInfo {
-  /**
-  * The brand id for Velocity.
-  */
-  Key BRAND_VELOCITY_ID = Key.key("papermc", "velocity");
 
   /**
   * Gets the {@code ServerBuildInfo}.
@@ -67,21 +65,6 @@ public interface ServerBuildInfo {
   */
   @NotNull String brandName();
 
-
-//  /**
-//  * Gets the Velocity version id.
-//  *
-//  * @return the Velocity version id (e.g. "3.3.0-SNAPSHOT", "3.3.0", "3.0.0")
-//  */
-//  @NotNull String velocityVersionId();
-
-  /**
-  * Gets the Velocity version name.
-  *
-  * @return the Velocity version name (e.g. "3.3.0 Snapshot", "3.3.0", "3.0.0")
-  */
-  @NotNull String velocityVersionName();
-
   /**
   * Gets the build number.
   *
@@ -123,11 +106,11 @@ public interface ServerBuildInfo {
   */
   enum StringRepresentation {
       /**
-      * A simple version string, in format {@code <velocityVersionName>-<buildNumber>-<gitCommit>}.
+      * A simple version string, in format {@code <versionName>-<buildNumber>-<gitCommit>}.
       */
       VERSION_SIMPLE,
       /**
-      * A simple version string, in format {@code <velocityVersionName>-<buildNumber>-<gitBranch>@<gitCommit> (<buildTime>)}.
+      * A simple version string, in format {@code <versionName>-<buildNumber>-<gitBranch>@<gitCommit> (<buildTime>)}.
       */
       VERSION_FULL,
   }

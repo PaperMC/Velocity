@@ -15,12 +15,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.util;
+package com.velocitypowered.proxy.util.buildinfo;
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.Strings;
-import com.velocitypowered.api.util.ServerBuildInfo;
+import com.velocitypowered.api.util.buildinfo.ServerBuildInfo;
+import com.velocitypowered.api.util.buildinfo.VelocityServerBuildInfo;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.util.JarManifests;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -36,13 +38,13 @@ import org.jetbrains.annotations.NotNull;
 public record ServerBuildInfoImpl(
         Key brandId,
         String brandName,
-        /*String velocityVersionId,*/
+        String velocityVersionId,
         String velocityVersionName,
         OptionalInt buildNumber,
         Instant buildTime,
         Optional<String> gitBranch,
         Optional<String> gitCommit
-) implements ServerBuildInfo {
+) implements VelocityServerBuildInfo {
   private static final String ATTRIBUTE_BRAND_ID = "Brand-Id";
   private static final String ATTRIBUTE_BRAND_NAME = "Brand-Name";
   private static final String ATTRIBUTE_BUILD_TIME = "Build-Time";
@@ -67,7 +69,9 @@ public record ServerBuildInfoImpl(
             getManifestAttribute(manifest, ATTRIBUTE_BRAND_NAME)
                     .orElse(BRAND_VELOCITY_NAME),
             getManifestAttribute(manifest, ATTRIBUTE_VERSION)
-                    .orElse("Unknown"),
+                    .orElse("VersionId"),
+            getManifestAttribute(manifest, ATTRIBUTE_VERSION)
+                    .orElse("VersionName"),
             getManifestAttribute(manifest, ATTRIBUTE_BUILD_NUMBER)
                     .map(Integer::parseInt)
                     .map(OptionalInt::of)

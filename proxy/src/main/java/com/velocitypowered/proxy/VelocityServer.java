@@ -36,7 +36,7 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ProxyVersion;
-import com.velocitypowered.api.util.ServerBuildInfo;
+import com.velocitypowered.api.util.buildinfo.ServerBuildInfo;
 import com.velocitypowered.proxy.command.VelocityCommandManager;
 import com.velocitypowered.proxy.command.builtin.CallbackCommand;
 import com.velocitypowered.proxy.command.builtin.GlistCommand;

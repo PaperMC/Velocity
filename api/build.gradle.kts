@@ -56,7 +56,7 @@ tasks {
     }
     // TEMP
     withType<Checkstyle> {
-        exclude("**/com/velocitypowered/api/util/ServerBuildInfo.java")
+        exclude("**/com/velocitypowered/api/util/buildinfo/*ServerBuildInfo.java")
     }
 
     withType<Javadoc> {
