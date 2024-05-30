@@ -62,11 +62,11 @@ import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChatPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChatPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommandPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ActiveFeaturesPacket;
-import com.velocitypowered.proxy.protocol.packet.config.CustomReportDetailsPacket;
+import com.velocitypowered.proxy.protocol.packet.config.ClientboundCustomReportDetailsPacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.KnownPacksPacket;
 import com.velocitypowered.proxy.protocol.packet.config.RegistrySyncPacket;
-import com.velocitypowered.proxy.protocol.packet.config.ServerLinksPacket;
+import com.velocitypowered.proxy.protocol.packet.config.ClientboundServerLinksPacket;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.TagsUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.title.LegacyTitlePacket;
@@ -342,11 +342,11 @@ public interface MinecraftSessionHandler {
     return false;
   }
 
-  default boolean handle(CustomReportDetailsPacket packet) {
+  default boolean handle(ClientboundCustomReportDetailsPacket packet) {
     return false;
   }
 
-  default boolean handle(ServerLinksPacket packet) {
+  default boolean handle(ClientboundServerLinksPacket packet) {
     return false;
   }
 }

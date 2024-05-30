@@ -26,14 +26,14 @@ import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ServerLinksPacket implements MinecraftPacket {
+public class ClientboundServerLinksPacket implements MinecraftPacket {
 
     private List<ServerLink> serverLinks;
 
-    public ServerLinksPacket() {
+    public ClientboundServerLinksPacket() {
     }
 
-    public ServerLinksPacket(List<ServerLink> serverLinks) {
+    public ClientboundServerLinksPacket(List<ServerLink> serverLinks) {
         this.serverLinks = serverLinks;
     }
 

@@ -25,14 +25,14 @@ import io.netty.buffer.ByteBuf;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CustomReportDetailsPacket implements MinecraftPacket {
+public class ClientboundCustomReportDetailsPacket implements MinecraftPacket {
 
     private Map<String, String> details;
 
-    public CustomReportDetailsPacket() {
+    public ClientboundCustomReportDetailsPacket() {
     }
 
-    public CustomReportDetailsPacket(Map<String, String> details) {
+    public ClientboundCustomReportDetailsPacket(Map<String, String> details) {
         this.details = details;
     }
 

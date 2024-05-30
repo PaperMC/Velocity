@@ -40,10 +40,10 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TransferPacket;
-import com.velocitypowered.proxy.protocol.packet.config.CustomReportDetailsPacket;
+import com.velocitypowered.proxy.protocol.packet.config.ClientboundCustomReportDetailsPacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.RegistrySyncPacket;
-import com.velocitypowered.proxy.protocol.packet.config.ServerLinksPacket;
+import com.velocitypowered.proxy.protocol.packet.config.ClientboundServerLinksPacket;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.TagsUpdatePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
@@ -114,13 +114,13 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(CustomReportDetailsPacket packet) {
+  public boolean handle(ClientboundCustomReportDetailsPacket packet) {
     serverConn.getPlayer().getConnection().write(packet);
     return true;
   }
 
   @Override
-  public boolean handle(ServerLinksPacket packet) {
+  public boolean handle(ClientboundServerLinksPacket packet) {
     serverConn.getPlayer().getConnection().write(packet);
     return true;
   }

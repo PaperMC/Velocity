@@ -92,11 +92,11 @@ import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChatP
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommandPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.session.UnsignedPlayerCommandPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ActiveFeaturesPacket;
-import com.velocitypowered.proxy.protocol.packet.config.CustomReportDetailsPacket;
+import com.velocitypowered.proxy.protocol.packet.config.ClientboundCustomReportDetailsPacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.KnownPacksPacket;
 import com.velocitypowered.proxy.protocol.packet.config.RegistrySyncPacket;
-import com.velocitypowered.proxy.protocol.packet.config.ServerLinksPacket;
+import com.velocitypowered.proxy.protocol.packet.config.ClientboundServerLinksPacket;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.TagsUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.title.LegacyTitlePacket;
@@ -217,9 +217,9 @@ public enum StateRegistry {
           map(0x0D, MINECRAFT_1_20_5, false));
       clientbound.register(KnownPacksPacket.class, KnownPacksPacket::new,
           map(0x0E, MINECRAFT_1_20_5, false));
-      clientbound.register(CustomReportDetailsPacket.class, CustomReportDetailsPacket::new,
+      clientbound.register(ClientboundCustomReportDetailsPacket.class, ClientboundCustomReportDetailsPacket::new,
           map(0x0F, MINECRAFT_1_21, false));
-      clientbound.register(ServerLinksPacket.class, ServerLinksPacket::new,
+      clientbound.register(ClientboundServerLinksPacket.class, ClientboundServerLinksPacket::new,
           map(0x10, MINECRAFT_1_21, false));
     }
   },
@@ -645,9 +645,9 @@ public enum StateRegistry {
           TransferPacket::new,
           map(0x73, MINECRAFT_1_20_5, false)
       );
-      clientbound.register(CustomReportDetailsPacket.class, CustomReportDetailsPacket::new,
+      clientbound.register(ClientboundCustomReportDetailsPacket.class, ClientboundCustomReportDetailsPacket::new,
               map(0x7A, MINECRAFT_1_21, false));
-      clientbound.register(ServerLinksPacket.class, ServerLinksPacket::new,
+      clientbound.register(ClientboundServerLinksPacket.class, ClientboundServerLinksPacket::new,
               map(0x7B, MINECRAFT_1_21, false));
     }
   },
