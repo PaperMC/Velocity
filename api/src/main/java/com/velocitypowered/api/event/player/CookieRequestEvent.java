@@ -14,9 +14,9 @@ import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.key.Key;
 
 /**
- * This event is fired when a cookie is requested from a client either by a proxy plugin or
+ * This event is fired when a cookie from a client is requested either by a proxy plugin or
  * by a backend server. Velocity will wait on this event to finish firing before discarding the
- * received cookie (if handled) or forwarding it to the backend server.
+ * cookie request (if handled) or forwarding it to the client.
  */
 @AwaitingEvent
 public final class CookieRequestEvent implements ResultedEvent<CookieRequestEvent.ForwardResult> {
@@ -113,7 +113,7 @@ public final class CookieRequestEvent implements ResultedEvent<CookieRequestEven
     }
 
     /**
-     * Allows the cookie response to be forwarded to the client, but silently replaces the
+     * Allows the cookie request to be forwarded to the client, but silently replaces the
      * identifier of the cookie with another.
      *
      * @param key the identifier to use instead
