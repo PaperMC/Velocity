@@ -27,6 +27,8 @@ import com.google.gson.JsonObject;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus;
 import com.velocitypowered.api.event.connection.PreTransferEvent;
+import com.velocitypowered.api.event.player.CookieRequestEvent;
+import com.velocitypowered.api.event.player.CookieStoreEvent;
 import com.velocitypowered.api.event.player.KickedFromServerEvent;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.DisconnectPlayer;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.Notify;
@@ -65,6 +67,8 @@ import com.velocitypowered.proxy.connection.util.VelocityInboundConnection;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.HeaderAndFooterPacket;
 import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
@@ -105,6 +109,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.permission.PermissionChecker;
 import net.kyori.adventure.platform.facet.FacetPointers;
 import net.kyori.adventure.platform.facet.FacetPointers.Type;
@@ -1006,6 +1011,50 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
                 resultedAddress.getHostName(), resultedAddress.getPort()));
       }
     });
+  }
+
+  @Override
+  public void storeCookie(final Key key, final byte[] data) {
+    Preconditions.checkNotNull(key);
+    Preconditions.checkNotNull(data);
+    Preconditions.checkArgument(
+        this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_5),
+        "Player version must be at least 1.20.5 to be able to store cookies");
+
+    if (connection.getState() != StateRegistry.PLAY
+        && connection.getState() != StateRegistry.CONFIG) {
+      throw new IllegalStateException("Can only store cookie in CONFIGURATION or PLAY protocol");
+    }
+
+    server.getEventManager().fire(new CookieStoreEvent(this, key, data))
+        .thenAcceptAsync(event -> {
+          if (event.getResult().isAllowed()) {
+            final Key resultedKey = event.getResult().getKey() == null
+                ? event.getOriginalKey() : event.getResult().getKey();
+            final byte[] resultedData = event.getResult().getData() == null
+                ? event.getOriginalData() : event.getResult().getData();
+
+            connection.write(new ClientboundStoreCookiePacket(resultedKey, resultedData));
+          }
+        }, connection.eventLoop());
+  }
+
+  @Override
+  public void requestCookie(final Key key) {
+    Preconditions.checkNotNull(key);
+    Preconditions.checkArgument(
+        this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_5),
+        "Player version must be at least 1.20.5 to be able to retrieve cookies");
+
+    server.getEventManager().fire(new CookieRequestEvent(this, key))
+        .thenAcceptAsync(event -> {
+          if (event.getResult().isAllowed()) {
+            final Key resultedKey = event.getResult().getKey() == null
+                ? event.getOriginalKey() : event.getResult().getKey();
+
+            connection.write(new ClientboundCookieRequestPacket(resultedKey));
+          }
+        }, connection.eventLoop());
   }
 
   @Override

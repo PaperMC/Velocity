@@ -18,6 +18,8 @@
 package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.event.connection.PreTransferEvent;
+import com.velocitypowered.api.event.player.CookieRequestEvent;
+import com.velocitypowered.api.event.player.CookieStoreEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.ServerResourcePackSendEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -34,6 +36,8 @@ import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
+import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
 import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
@@ -48,6 +52,7 @@ import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.key.Key;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -248,6 +253,40 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
                         resultedAddress.getHostName(), resultedAddress.getPort()));
               }
             }, serverConn.ensureConnected().eventLoop());
+    return true;
+  }
+
+  @Override
+  public boolean handle(ClientboundStoreCookiePacket packet) {
+    server.getEventManager()
+        .fire(new CookieStoreEvent(serverConn.getPlayer(), packet.getKey(), packet.getPayload()))
+        .thenAcceptAsync(event -> {
+          if (event.getResult().isAllowed()) {
+            final Key resultedKey = event.getResult().getKey() == null
+                ? event.getOriginalKey() : event.getResult().getKey();
+            final byte[] resultedData = event.getResult().getData() == null
+                ? event.getOriginalData() : event.getResult().getData();
+
+            serverConn.getPlayer().getConnection()
+                .write(new ClientboundStoreCookiePacket(resultedKey, resultedData));
+          }
+        }, serverConn.ensureConnected().eventLoop());
+
+    return true;
+  }
+
+  @Override
+  public boolean handle(ClientboundCookieRequestPacket packet) {
+    server.getEventManager().fire(new CookieRequestEvent(serverConn.getPlayer(), packet.getKey()))
+        .thenAcceptAsync(event -> {
+          if (event.getResult().isAllowed()) {
+            final Key resultedKey = event.getResult().getKey() == null
+                ? event.getOriginalKey() : event.getResult().getKey();
+
+            serverConn.getPlayer().getConnection().write(new ClientboundCookieRequestPacket(resultedKey));
+          }
+        }, serverConn.ensureConnected().eventLoop());
+
     return true;
   }
 

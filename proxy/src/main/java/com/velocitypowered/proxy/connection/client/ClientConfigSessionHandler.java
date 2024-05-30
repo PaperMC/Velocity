@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.connection.client;
 
+import com.velocitypowered.api.event.player.CookieReceiveEvent;
 import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -32,6 +33,7 @@ import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
 import com.velocitypowered.proxy.protocol.packet.PingIdentifyPacket;
 import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.KnownPacksPacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
@@ -39,6 +41,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
@@ -142,6 +145,28 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
     }
 
     return false;
+  }
+
+  @Override
+  public boolean handle(ServerboundCookieResponsePacket packet) {
+    server.getEventManager()
+        .fire(new CookieReceiveEvent(player, packet.getKey(), packet.getPayload()))
+        .thenAcceptAsync(event -> {
+          if (event.getResult().isAllowed()) {
+            final VelocityServerConnection serverConnection = player.getConnectionInFlight();
+            if (serverConnection != null) {
+              final Key resultedKey = event.getResult().getKey() == null
+                  ? event.getOriginalKey() : event.getResult().getKey();
+              final byte[] resultedData = event.getResult().getData() == null
+                  ? event.getOriginalData() : event.getResult().getData();
+
+              serverConnection.ensureConnected()
+                  .write(new ServerboundCookieResponsePacket(resultedKey, resultedData));
+            }
+          }
+        }, player.getConnection().eventLoop());
+
+    return true;
   }
 
   @Override
