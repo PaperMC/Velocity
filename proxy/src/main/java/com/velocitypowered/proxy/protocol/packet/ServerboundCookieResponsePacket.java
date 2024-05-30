@@ -26,7 +26,7 @@ import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class CookieResponsePacket implements MinecraftPacket {
+public class ServerboundCookieResponsePacket implements MinecraftPacket {
 
   private Key key;
   private byte @Nullable [] payload;
@@ -39,10 +39,10 @@ public class CookieResponsePacket implements MinecraftPacket {
     return payload;
   }
 
-  public CookieResponsePacket() {
+  public ServerboundCookieResponsePacket() {
   }
 
-  public CookieResponsePacket(final Key key, final byte @Nullable [] payload) {
+  public ServerboundCookieResponsePacket(final Key key, final byte @Nullable [] payload) {
     this.key = key;
     this.payload = payload;
   }

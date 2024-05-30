@@ -67,8 +67,8 @@ import com.velocitypowered.proxy.connection.util.VelocityInboundConnection;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
-import com.velocitypowered.proxy.protocol.packet.CookieRequestPacket;
-import com.velocitypowered.proxy.protocol.packet.CookieStorePacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.HeaderAndFooterPacket;
 import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
@@ -1034,7 +1034,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
             final byte[] resultedData = event.getResult().getData() == null
                 ? event.getOriginalData() : event.getResult().getData();
 
-            connection.write(new CookieStorePacket(resultedKey, resultedData));
+            connection.write(new ClientboundStoreCookiePacket(resultedKey, resultedData));
           }
         }, connection.eventLoop());
   }
@@ -1052,7 +1052,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
             final Key resultedKey = event.getResult().getKey() == null
                 ? event.getOriginalKey() : event.getResult().getKey();
 
-            connection.write(new CookieRequestPacket(resultedKey));
+            connection.write(new ClientboundCookieRequestPacket(resultedKey));
           }
         }, connection.eventLoop());
   }

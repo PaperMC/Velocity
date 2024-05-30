@@ -52,9 +52,8 @@ import com.velocitypowered.proxy.protocol.packet.AvailableCommandsPacket;
 import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
 import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
-import com.velocitypowered.proxy.protocol.packet.CookieRequestPacket;
-import com.velocitypowered.proxy.protocol.packet.CookieResponsePacket;
-import com.velocitypowered.proxy.protocol.packet.CookieStorePacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionResponsePacket;
@@ -76,6 +75,7 @@ import com.velocitypowered.proxy.protocol.packet.RespawnPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerDataPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusPingPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusRequestPacket;
@@ -150,7 +150,7 @@ public enum StateRegistry {
           ClientSettingsPacket.class, ClientSettingsPacket::new,
           map(0x00, MINECRAFT_1_20_2, false));
       serverbound.register(
-          CookieResponsePacket.class, CookieResponsePacket::new,
+          ServerboundCookieResponsePacket.class, ServerboundCookieResponsePacket::new,
           map(0x01, MINECRAFT_1_20_5, false));
       serverbound.register(
           PluginMessagePacket.class, PluginMessagePacket::new,
@@ -178,7 +178,7 @@ public enum StateRegistry {
           map(0x07, MINECRAFT_1_20_5, false));
 
       clientbound.register(
-          CookieRequestPacket.class, CookieRequestPacket::new,
+          ClientboundCookieRequestPacket.class, ClientboundCookieRequestPacket::new,
           map(0x00, MINECRAFT_1_20_5, false));
       clientbound.register(
           PluginMessagePacket.class, PluginMessagePacket::new,
@@ -212,7 +212,7 @@ public enum StateRegistry {
           map(0x07, MINECRAFT_1_20_3, false),
           map(0x09, MINECRAFT_1_20_5, false));
       clientbound.register(
-          CookieStorePacket.class, CookieStorePacket::new,
+          ClientboundStoreCookiePacket.class, ClientboundStoreCookiePacket::new,
           map(0x0A, MINECRAFT_1_20_5, false));
       clientbound.register(TransferPacket.class, TransferPacket::new,
           map(0x0B, MINECRAFT_1_20_5, false));
@@ -289,7 +289,7 @@ public enum StateRegistry {
           map(0x09, MINECRAFT_1_20_2, false),
           map(0x0A, MINECRAFT_1_20_5, false));
       serverbound.register(
-          CookieResponsePacket.class, CookieResponsePacket::new,
+          ServerboundCookieResponsePacket.class, ServerboundCookieResponsePacket::new,
           map(0x11, MINECRAFT_1_20_5, false));
       serverbound.register(
           PluginMessagePacket.class,
@@ -390,7 +390,7 @@ public enum StateRegistry {
           map(0x10, MINECRAFT_1_19_4, false),
           map(0x11, MINECRAFT_1_20_2, false));
       clientbound.register(
-          CookieRequestPacket.class, CookieRequestPacket::new,
+          ClientboundCookieRequestPacket.class, ClientboundCookieRequestPacket::new,
           map(0x16, MINECRAFT_1_20_5, false));
       clientbound.register(
           PluginMessagePacket.class,
@@ -614,7 +614,7 @@ public enum StateRegistry {
           map(0x3C, MINECRAFT_1_20_2, false),
           map(0x3E, MINECRAFT_1_20_5, false));
       clientbound.register(
-          CookieStorePacket.class, CookieStorePacket::new,
+          ClientboundStoreCookiePacket.class, ClientboundStoreCookiePacket::new,
           map(0x6B, MINECRAFT_1_20_5, false));
       clientbound.register(
           SystemChatPacket.class,
@@ -676,7 +676,7 @@ public enum StateRegistry {
           LoginAcknowledgedPacket.class, LoginAcknowledgedPacket::new,
           map(0x03, MINECRAFT_1_20_2, false));
       serverbound.register(
-          CookieResponsePacket.class, CookieResponsePacket::new,
+          ServerboundCookieResponsePacket.class, ServerboundCookieResponsePacket::new,
           map(0x04, MINECRAFT_1_20_5, false));
 
       clientbound.register(
@@ -696,7 +696,7 @@ public enum StateRegistry {
           LoginPluginMessagePacket::new,
           map(0x04, MINECRAFT_1_13, false));
       clientbound.register(
-          CookieRequestPacket.class, CookieRequestPacket::new,
+          ClientboundCookieRequestPacket.class, ClientboundCookieRequestPacket::new,
           map(0x05, MINECRAFT_1_20_5, false));
     }
   };
