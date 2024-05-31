@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.util.Services;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -102,10 +103,11 @@ public interface ServerBuildInfo {
   * @return a string
   */
   // This *could* be a PlainTextSerializer string of asComponent()?
-  @NotNull String asString(final @NotNull StringRepresentation representation);
+  @NotNull default String asString(final @NotNull StringRepresentation representation) {
+    return PlainTextComponentSerializer.plainText().serialize(asComponent(representation));
+  }
 
-  @NotNull
-  default Component asComponent(final @NotNull StringRepresentation representation) { return Component.empty(); }
+  @NotNull Component asComponent(final @NotNull StringRepresentation representation);
 
   /**
   * String representation types.

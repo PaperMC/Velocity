@@ -37,7 +37,7 @@ import net.kyori.adventure.text.event.ClickEvent;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * This is internal it does not need a javadoc CHECKSTYLE.
+ * Information about the current proxy build.
  */
 @AutoService(ServerBuildInfo.class)
 public record ServerBuildInfoImpl(
@@ -92,40 +92,6 @@ public record ServerBuildInfoImpl(
   @Override
   public boolean isBrandCompatible(final @NotNull Key brandId) {
     return brandId.equals(this.brandId);
-  }
-
-  @Override
-  public @NotNull String asString(final @NotNull StringRepresentation representation) {
-    final StringBuilder sb = new StringBuilder();
-    sb.append(this.velocityVersionName);
-    sb.append('-');
-    final OptionalInt buildNumber = this.buildNumber;
-    if (buildNumber.isPresent()) {
-      sb.append(buildNumber.getAsInt());
-    } else {
-      sb.append(BUILD_DEV);
-    }
-    final boolean hasGitBranch = this.gitBranch.isPresent();
-    final boolean hasGitCommit = this.gitCommit.isPresent();
-    if (hasGitBranch || hasGitCommit) {
-      sb.append('-');
-    }
-    if (hasGitBranch && representation == StringRepresentation.VERSION_FULL) {
-      sb.append(this.gitBranch.get());
-      if (hasGitCommit) {
-        sb.append('@');
-      }
-    }
-    if (hasGitCommit) {
-      sb.append(this.gitCommit.get());
-    }
-    if (representation == StringRepresentation.VERSION_FULL) {
-      sb.append(' ');
-      sb.append('(');
-      sb.append(this.buildTime.truncatedTo(ChronoUnit.SECONDS));
-      sb.append(')');
-    }
-    return sb.toString();
   }
 
   @Override

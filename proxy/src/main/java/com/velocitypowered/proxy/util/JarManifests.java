@@ -29,8 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * This is the jar manifest class.
- * It does manifest stuff.
+ * Internal class that is able to do {@link Manifest} stuff.
  */
 @ApiStatus.Internal
 public final class JarManifests {
@@ -40,9 +39,9 @@ public final class JarManifests {
   private static final Map<ClassLoader, Manifest> MANIFESTS = Collections.synchronizedMap(new WeakHashMap<>());
 
   /**
-   * Manifest. It gets a manifest from a jar.
+   * Gets the {@link Manifest} from a class.
    *
-   * @param clazz the CLASS.
+   * @param clazz the class to get the {@link Manifest} from.
    * @return the manifest or null.
   */
   public static @Nullable Manifest manifest(final @NotNull Class<?> clazz) {
