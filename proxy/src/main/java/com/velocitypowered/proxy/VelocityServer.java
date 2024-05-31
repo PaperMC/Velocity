@@ -183,7 +183,9 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
   @Override
   public ProxyVersion getVersion() {
+    // TODO: this can likely also be changed to ServerBuildInfo
     Package pkg = VelocityServer.class.getPackage();
+    final ServerBuildInfo buildInfo = ServerBuildInfo.buildInfo();
     String implName;
     String implVersion;
     String implVendor;
@@ -197,7 +199,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       implVendor = "Velocity Contributors";
     }
 
-    return new ProxyVersion(implName, implVendor, implVersion);
+    return new ProxyVersion(buildInfo.brandName(), implVendor, implVersion);
   }
 
   @Override
