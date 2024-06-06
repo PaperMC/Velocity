@@ -55,6 +55,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -105,6 +107,9 @@ public class VelocityEventManager implements EventManager {
   private final List<CustomHandlerAdapter<?>> handlerAdapters = new ArrayList<>();
   private final EventTypeTracker eventTypeTracker = new EventTypeTracker();
 
+  private final ConcurrentMap<Thread, Long> runningEventExecutions = new ConcurrentHashMap<>();
+  private final EventWatchdogThread eventWatchdogThread = new EventWatchdogThread(runningEventExecutions);
+
   /**
    * Initializes the Velocity event manager.
    *
@@ -115,6 +120,7 @@ public class VelocityEventManager implements EventManager {
     this.asyncExecutor = Executors
         .newFixedThreadPool(Runtime.getRuntime().availableProcessors(), new ThreadFactoryBuilder()
             .setNameFormat("Velocity Async Event Executor - #%d").setDaemon(true).build());
+    this.eventWatchdogThread.start();
   }
 
   /**
@@ -592,6 +598,10 @@ public class VelocityEventManager implements EventManager {
 
   private <E> void fire(final @Nullable CompletableFuture<E> future, final E event,
       final int offset, final boolean currentlyAsync, final HandlerRegistration[] registrations) {
+    final long executionStart = System.nanoTime();
+    if (currentlyAsync) {
+      runningEventExecutions.put(Thread.currentThread(), executionStart);
+    }
     for (int i = offset; i < registrations.length; i++) {
       final HandlerRegistration registration = registrations[i];
       try {
@@ -618,6 +628,15 @@ public class VelocityEventManager implements EventManager {
     if (future != null) {
       future.complete(event);
     }
+    if (currentlyAsync) {
+      runningEventExecutions.remove(Thread.currentThread());
+    } else {
+      final long executionTime = System.nanoTime() - executionStart;
+      // warn if the event took over 50ms to process when running synchronously
+      if (executionTime >= 50000000L) {
+        logger.warn("Synchronous event {} took too long to process ({} ms)", event.getClass().getName(), executionTime / 1000000L);
+      }
+    }
   }
 
   private static void logHandlerException(
@@ -627,7 +646,11 @@ public class VelocityEventManager implements EventManager {
             pluginDescription.getId(), pluginDescription.getVersion().orElse(""), t);
   }
 
+  /**
+   * Shutdowns async executor and event watchdog thread.
+   */
   public boolean shutdown() throws InterruptedException {
+    eventWatchdogThread.interrupt();
     asyncExecutor.shutdown();
     return asyncExecutor.awaitTermination(10, TimeUnit.SECONDS);
   }
