@@ -347,8 +347,19 @@ public class VelocityCommandManager implements CommandManager {
 
   @Override
   public boolean hasCommand(final String alias) {
+    return getCommand(alias) != null;
+  }
+
+  @Override
+  public boolean hasCommand(String alias, CommandSource source) {
+    Preconditions.checkNotNull(source, "source");
+    CommandNode<CommandSource> command = getCommand(alias);
+    return command != null && command.canUse(source);
+  }
+
+  CommandNode<CommandSource> getCommand(final String alias) {
     Preconditions.checkNotNull(alias, "alias");
-    return dispatcher.getRoot().getChild(alias.toLowerCase(Locale.ENGLISH)) != null;
+    return dispatcher.getRoot().getChild(alias.toLowerCase(Locale.ENGLISH));
   }
 
   @VisibleForTesting // this constitutes unsafe publication
