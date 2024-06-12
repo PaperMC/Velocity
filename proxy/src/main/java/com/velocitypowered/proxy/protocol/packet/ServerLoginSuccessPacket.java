@@ -92,7 +92,7 @@ public class ServerLoginSuccessPacket implements MinecraftPacket {
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
       properties = ProtocolUtils.readProperties(buf);
     }
-    if (version == ProtocolVersion.MINECRAFT_1_20_5) {
+    if (version == ProtocolVersion.MINECRAFT_1_20_5 || version == ProtocolVersion.MINECRAFT_1_21) {
       buf.readBoolean();
     }
   }
@@ -123,7 +123,7 @@ public class ServerLoginSuccessPacket implements MinecraftPacket {
         ProtocolUtils.writeProperties(buf, properties);
       }
     }
-    if (version == ProtocolVersion.MINECRAFT_1_20_5) {
+    if (version == ProtocolVersion.MINECRAFT_1_20_5 || version == ProtocolVersion.MINECRAFT_1_21) {
       buf.writeBoolean(strictErrorHandling);
     }
   }
