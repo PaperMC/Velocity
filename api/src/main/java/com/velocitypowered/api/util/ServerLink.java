@@ -26,7 +26,7 @@ public final class ServerLink {
   /**
    * Construct a server link with a custom component label.
    *
-   * @param label the label to display
+   * @param label a custom component label to display
    * @param link  the URL to open when clicked
    */
   public ServerLink(Component label, String link) throws IllegalArgumentException {
@@ -37,7 +37,7 @@ public final class ServerLink {
   /**
    * Construct a server link with a built-in type.
    *
-   * @param type the {@link Type type} of link
+   * @param type the {@link Type built-in type} of link
    * @param link the URL to open when clicked
    */
   public ServerLink(Type type, String link) throws IllegalArgumentException {
@@ -55,21 +55,21 @@ public final class ServerLink {
   }
 
   /**
-   * Get the link URL.
-   *
-   * @return the link URL
-   */
-  public String getLink() {
-    return link;
-  }
-
-  /**
    * Get the custom component label of the server link.
    *
    * @return the custom component label of the server link
    */
   public Optional<Component> getCustomLabel() {
     return Optional.ofNullable(label);
+  }
+
+  /**
+   * Get the link URL.
+   *
+   * @return the link URL
+   */
+  public String getLink() {
+    return link;
   }
 
   /**
