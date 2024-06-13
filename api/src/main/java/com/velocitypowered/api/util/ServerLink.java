@@ -50,7 +50,7 @@ public final class ServerLink {
    * @param link the URL to open when clicked
    */
   public static ServerLink serverLink(Type type, String link) {
-      return new ServerLink(type, link);
+    return new ServerLink(type, link);
   }
 
   /**
