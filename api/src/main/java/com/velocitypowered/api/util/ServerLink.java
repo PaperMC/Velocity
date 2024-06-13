@@ -7,6 +7,8 @@
 
 package com.velocitypowered.api.util;
 
+import com.google.common.base.Preconditions;
+import java.net.URI;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.Nullable;
@@ -27,9 +29,9 @@ public final class ServerLink {
    * @param label the label to display
    * @param link  the URL to open when clicked
    */
-  public ServerLink(Component label, String link) {
-    this.label = label;
-    this.link = link;
+  public ServerLink(Component label, String link) throws IllegalArgumentException {
+    this.label = Preconditions.checkNotNull(label, "label");
+    this.link = URI.create(link).toString();
   }
 
   /**
@@ -38,9 +40,9 @@ public final class ServerLink {
    * @param type the {@link Type type} of link
    * @param link the URL to open when clicked
    */
-  public ServerLink(Type type, String link) {
-    this.type = type;
-    this.link = link;
+  public ServerLink(Type type, String link) throws IllegalArgumentException {
+    this.type = Preconditions.checkNotNull(type, "type");
+    this.link = URI.create(link).toString();
   }
 
   /**
