@@ -465,6 +465,7 @@ public interface Player extends
 
   /**
    * Send the player a list of custom links to display in their client's pause menu.
+   * <p>Note that later packets sent by the backend server may override links sent by the proxy.
    *
    * @param links an ordered list of {@link ServerLink}s to send to the player
    * @throws IllegalArgumentException if the player is from a version lower than 1.21

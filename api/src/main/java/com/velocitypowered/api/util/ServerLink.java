@@ -21,7 +21,17 @@ public final class ServerLink {
 
   private @Nullable Type type;
   private @Nullable Component label;
-  private final String link;
+  private final URI url;
+
+  private ServerLink(Component label, String url) {
+    this.label = Preconditions.checkNotNull(label, "label");
+    this.url = URI.create(url);
+  }
+
+  private ServerLink(Type type, String url) {
+    this.type = Preconditions.checkNotNull(type, "type");
+    this.url = URI.create(url);
+  }
 
   /**
    * Construct a server link with a custom component label.
@@ -29,9 +39,8 @@ public final class ServerLink {
    * @param label a custom component label to display
    * @param link  the URL to open when clicked
    */
-  public ServerLink(Component label, String link) {
-    this.label = Preconditions.checkNotNull(label, "label");
-    this.link = URI.create(link).toString();
+  public static ServerLink serverLink(Component label, String link) {
+    return new ServerLink(label, link);
   }
 
   /**
@@ -40,9 +49,8 @@ public final class ServerLink {
    * @param type the {@link Type built-in type} of link
    * @param link the URL to open when clicked
    */
-  public ServerLink(Type type, String link) {
-    this.type = Preconditions.checkNotNull(type, "type");
-    this.link = URI.create(link).toString();
+  public static ServerLink serverLink(Type type, String link) {
+      return new ServerLink(type, link);
   }
 
   /**
@@ -64,12 +72,12 @@ public final class ServerLink {
   }
 
   /**
-   * Get the link URL.
+   * Get the link {@link URI}.
    *
-   * @return the link URL
+   * @return the link {@link URI}
    */
-  public String getLink() {
-    return link;
+  public URI getUrl() {
+    return url;
   }
 
   /**

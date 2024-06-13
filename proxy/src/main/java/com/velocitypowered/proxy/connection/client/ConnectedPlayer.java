@@ -1073,10 +1073,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     }
 
     connection.write(new ClientboundServerLinksPacket(ImmutableList.copyOf(links).stream()
-        .map(l -> new ClientboundServerLinksPacket.ServerLink(
-            l.getBuiltInType().map(Enum::ordinal).orElse(-1),
-            l.getCustomLabel().map(c -> new ComponentHolder(getProtocolVersion(), c)).orElse(null),
-            l.getLink())).toList()));
+        .map(l -> new ClientboundServerLinksPacket.ServerLink(l, getProtocolVersion())).toList()));
   }
 
   @Override
