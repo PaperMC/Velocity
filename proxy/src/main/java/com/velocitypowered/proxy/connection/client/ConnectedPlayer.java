@@ -1061,8 +1061,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public void setServerLinks(List<ServerLink> links) {
-    Preconditions.checkNotNull(links);
+  public void setServerLinks(final @NotNull List<ServerLink> links) {
+    Preconditions.checkNotNull(links, "links");
     Preconditions.checkArgument(
         this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21),
         "Player version must be at least 1.21 to be able to set server links");

@@ -471,5 +471,5 @@ public interface Player extends
    * @since 3.3.0
    * @sinceMinecraft 1.21
    */
-  void setServerLinks(List<ServerLink> links);
+  void setServerLinks(@NotNull List<ServerLink> links);
 }
