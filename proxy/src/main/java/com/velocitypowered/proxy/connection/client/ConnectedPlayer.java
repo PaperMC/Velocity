@@ -1060,7 +1060,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
         }, connection.eventLoop());
   }
 
-
   @Override
   public void setServerLinks(List<ServerLink> links) {
     Preconditions.checkNotNull(links);
