@@ -29,7 +29,7 @@ public final class ServerLink {
    * @param label a custom component label to display
    * @param link  the URL to open when clicked
    */
-  public ServerLink(Component label, String link) throws IllegalArgumentException {
+  public ServerLink(Component label, String link) {
     this.label = Preconditions.checkNotNull(label, "label");
     this.link = URI.create(link).toString();
   }
@@ -40,7 +40,7 @@ public final class ServerLink {
    * @param type the {@link Type built-in type} of link
    * @param link the URL to open when clicked
    */
-  public ServerLink(Type type, String link) throws IllegalArgumentException {
+  public ServerLink(Type type, String link) {
     this.type = Preconditions.checkNotNull(type, "type");
     this.link = URI.create(link).toString();
   }
