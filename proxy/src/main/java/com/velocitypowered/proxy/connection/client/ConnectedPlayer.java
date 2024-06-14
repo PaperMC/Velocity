@@ -23,7 +23,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus;
@@ -1072,7 +1071,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       throw new IllegalStateException("Can only send server links in CONFIGURATION or PLAY protocol");
     }
 
-    connection.write(new ClientboundServerLinksPacket(ImmutableList.copyOf(links).stream()
+    connection.write(new ClientboundServerLinksPacket(List.copyOf(links).stream()
         .map(l -> new ClientboundServerLinksPacket.ServerLink(l, getProtocolVersion())).toList()));
   }
 
