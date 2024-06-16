@@ -15,14 +15,14 @@ Velocity is licensed under the GPLv3 license.
 * High performance: handle thousands of players on one proxy.
 * A new, refreshing API built from the ground up to be flexible and powerful
   whilst avoiding design mistakes and suboptimal designs from other proxies.
-* First-class support for Paper, Sponge, Fabric and Forge. (Other implementations
+* First-class support for Paper, Sponge, Fabric, and Forge. (Other implementations
   may work, but we make every endeavor to support these server implementations
   specifically.)
   
 ## Building
 
 Velocity is built with [Gradle](https://gradle.org). We recommend using the
-wrapper script (`./gradlew`) as our CI builds using it.
+wrapper script (`./gradlew`) as our CI builds use it.
 
 It is sufficient to run `./gradlew build` to run the full build cycle.
 
