@@ -37,6 +37,7 @@ import com.velocitypowered.api.event.player.KickedFromServerEvent.ServerKickResu
 import com.velocitypowered.api.event.player.PlayerModInfoEvent;
 import com.velocitypowered.api.event.player.PlayerSettingsChangedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
+import com.velocitypowered.api.event.player.configuration.PlayerEnterConfigurationEvent;
 import com.velocitypowered.api.network.ProtocolState;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.permission.PermissionFunction;
@@ -59,8 +60,9 @@ import com.velocitypowered.proxy.adventure.VelocityBossBarImplementation;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
-import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
-import com.velocitypowered.proxy.connection.player.resourcepack.ResourcePackHandler;
+import com.velocitypowered.proxy.connection.player.bundle.BundleDelimiterHandler;
+import com.velocitypowered.proxy.connection.player.resourcepack.VelocityResourcePackInfo;
+import com.velocitypowered.proxy.connection.player.resourcepack.handler.ResourcePackHandler;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.connection.util.VelocityInboundConnection;
@@ -806,7 +808,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
             }, connection.eventLoop());
       } else if (event.getResult() instanceof final Notify res) {
         if (event.kickedDuringServerConnect() && previousConnection != null) {
-          sendMessage(Identity.nil(), res.getMessageComponent());
+          sendMessage(res.getMessageComponent());
         } else {
           disconnect(res.getMessageComponent());
         }
@@ -1224,11 +1226,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     CompletableFuture.runAsync(() -> {
       connection.write(StartUpdatePacket.INSTANCE);
       connection.getChannel().pipeline()
-          .get(MinecraftEncoder.class).setState(StateRegistry.CONFIG);
+              .get(MinecraftEncoder.class).setState(StateRegistry.CONFIG);
       // Make sure we don't send any play packets to the player after update start
       connection.addPlayPacketQueueHandler();
+      server.getEventManager().fireAndForget(new PlayerEnterConfigurationEvent(this, connectionInFlight));
     }, connection.eventLoop()).exceptionally((ex) -> {
-      logger.error("Error switching player connection to config state:", ex);
+      logger.error("Error switching player connection to config state", ex);
       return null;
     });
   }
@@ -1363,24 +1366,20 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
         }
 
         switch (status.getStatus()) {
-          case ALREADY_CONNECTED:
-            sendMessage(Identity.nil(), ConnectionMessages.ALREADY_CONNECTED);
-            break;
-          case CONNECTION_IN_PROGRESS:
-            sendMessage(Identity.nil(), ConnectionMessages.IN_PROGRESS);
-            break;
-          case CONNECTION_CANCELLED:
+          case ALREADY_CONNECTED -> sendMessage(ConnectionMessages.ALREADY_CONNECTED);
+          case CONNECTION_IN_PROGRESS -> sendMessage(ConnectionMessages.IN_PROGRESS);
+          case CONNECTION_CANCELLED -> {
             // Ignored; the plugin probably already handled this.
-            break;
-          case SERVER_DISCONNECTED:
-            Component reason = status.getReasonComponent()
-                .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
+          }
+          case SERVER_DISCONNECTED -> {
+            final Component reason = status.getReasonComponent()
+                    .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
             handleConnectionException(toConnect,
-                DisconnectPacket.create(reason, getProtocolVersion(), connection.getState()), status.isSafe());
-            break;
-          default:
+                    DisconnectPacket.create(reason, getProtocolVersion(), connection.getState()), status.isSafe());
+          }
+          default -> {
             // The only remaining value is successful (no need to do anything!)
-            break;
+          }
         }
       }, connection.eventLoop()).thenApply(Result::isSuccessful);
     }
