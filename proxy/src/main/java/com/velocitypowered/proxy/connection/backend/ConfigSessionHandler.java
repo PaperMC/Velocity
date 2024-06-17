@@ -18,6 +18,8 @@
 package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.event.connection.PreTransferEvent;
+import com.velocitypowered.api.event.player.CookieRequestEvent;
+import com.velocitypowered.api.event.player.CookieStoreEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.ServerResourcePackSendEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -27,19 +29,23 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientConfigSessionHandler;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
+import com.velocitypowered.proxy.connection.player.resourcepack.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
+import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
 import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TransferPacket;
+import com.velocitypowered.proxy.protocol.packet.config.ClientboundCustomReportDetailsPacket;
+import com.velocitypowered.proxy.protocol.packet.config.ClientboundServerLinksPacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.RegistrySyncPacket;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
@@ -48,6 +54,7 @@ import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.key.Key;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -112,8 +119,21 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
+  public boolean handle(ClientboundCustomReportDetailsPacket packet) {
+    serverConn.getPlayer().getConnection().write(packet);
+    return true;
+  }
+
+  @Override
+  public boolean handle(ClientboundServerLinksPacket packet) {
+    serverConn.getPlayer().getConnection().write(packet);
+    return true;
+  }
+
+  @Override
   public boolean handle(KeepAlivePacket packet) {
-    serverConn.ensureConnected().write(packet);
+    serverConn.getPendingPings().put(packet.getRandomId(), System.nanoTime());
+    serverConn.getPlayer().getConnection().write(packet);
     return true;
   }
 
@@ -174,30 +194,25 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(FinishedUpdatePacket packet) {
-    MinecraftConnection smc = serverConn.ensureConnected();
-    ConnectedPlayer player = serverConn.getPlayer();
-    ClientConfigSessionHandler configHandler =
-        (ClientConfigSessionHandler) player.getConnection().getActiveSessionHandler();
+    final MinecraftConnection smc = serverConn.ensureConnected();
+    final ConnectedPlayer player = serverConn.getPlayer();
+    final ClientConfigSessionHandler configHandler = (ClientConfigSessionHandler) player.getConnection().getActiveSessionHandler();
 
-    smc.setAutoReading(false);
-    // Even when not auto reading messages are still decoded. Decode them with the correct state
     smc.getChannel().pipeline().get(MinecraftDecoder.class).setState(StateRegistry.PLAY);
-    configHandler.handleBackendFinishUpdate(serverConn).thenAcceptAsync((unused) -> {
+    //noinspection DataFlowIssue
+    configHandler.handleBackendFinishUpdate(serverConn).thenRunAsync(() -> {
+      smc.write(FinishedUpdatePacket.INSTANCE);
       if (serverConn == player.getConnectedServer()) {
         smc.setActiveSessionHandler(StateRegistry.PLAY);
-        player.sendPlayerListHeaderAndFooter(
-            player.getPlayerListHeader(), player.getPlayerListFooter());
+        player.sendPlayerListHeaderAndFooter(player.getPlayerListHeader(), player.getPlayerListFooter());
         // The client cleared the tab list. TODO: Restore changes done via TabList API
         player.getTabList().clearAllSilent();
       } else {
-        smc.setActiveSessionHandler(StateRegistry.PLAY,
-            new TransitionSessionHandler(server, serverConn, resultFuture));
+        smc.setActiveSessionHandler(StateRegistry.PLAY, new TransitionSessionHandler(server, serverConn, resultFuture));
       }
-      if (player.resourcePackHandler().getFirstAppliedPack() == null
-              && resourcePackToApply != null) {
+      if (player.resourcePackHandler().getFirstAppliedPack() == null && resourcePackToApply != null) {
         player.resourcePackHandler().queueResourcePack(resourcePackToApply);
       }
-      smc.setAutoReading(true);
     }, smc.eventLoop());
     return true;
   }
@@ -248,6 +263,40 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
                         resultedAddress.getHostName(), resultedAddress.getPort()));
               }
             }, serverConn.ensureConnected().eventLoop());
+    return true;
+  }
+
+  @Override
+  public boolean handle(ClientboundStoreCookiePacket packet) {
+    server.getEventManager()
+        .fire(new CookieStoreEvent(serverConn.getPlayer(), packet.getKey(), packet.getPayload()))
+        .thenAcceptAsync(event -> {
+          if (event.getResult().isAllowed()) {
+            final Key resultedKey = event.getResult().getKey() == null
+                ? event.getOriginalKey() : event.getResult().getKey();
+            final byte[] resultedData = event.getResult().getData() == null
+                ? event.getOriginalData() : event.getResult().getData();
+
+            serverConn.getPlayer().getConnection()
+                .write(new ClientboundStoreCookiePacket(resultedKey, resultedData));
+          }
+        }, serverConn.ensureConnected().eventLoop());
+
+    return true;
+  }
+
+  @Override
+  public boolean handle(ClientboundCookieRequestPacket packet) {
+    server.getEventManager().fire(new CookieRequestEvent(serverConn.getPlayer(), packet.getKey()))
+        .thenAcceptAsync(event -> {
+          if (event.getResult().isAllowed()) {
+            final Key resultedKey = event.getResult().getKey() == null
+                ? event.getOriginalKey() : event.getResult().getKey();
+
+            serverConn.getPlayer().getConnection().write(new ClientboundCookieRequestPacket(resultedKey));
+          }
+        }, serverConn.ensureConnected().eventLoop());
+
     return true;
   }
 

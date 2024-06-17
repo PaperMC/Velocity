@@ -23,9 +23,11 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.velocitypowered.api.command.VelocityBrigadierMessage;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
+import com.velocitypowered.api.event.player.CookieReceiveEvent;
 import com.velocitypowered.api.event.player.PlayerChannelRegisterEvent;
 import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
 import com.velocitypowered.api.event.player.TabCompleteEvent;
+import com.velocitypowered.api.event.player.configuration.PlayerEnterConfigurationEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
@@ -48,6 +50,7 @@ import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
 import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.RespawnPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponsePacket.Offer;
@@ -83,6 +86,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
@@ -403,6 +407,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // Complete client switch
     player.getConnection().setActiveSessionHandler(StateRegistry.CONFIG);
     VelocityServerConnection serverConnection = player.getConnectedServer();
+    server.getEventManager().fireAndForget(new PlayerEnterConfigurationEvent(player, serverConnection));
     if (serverConnection != null) {
       MinecraftConnection smc = serverConnection.ensureConnected();
       CompletableFuture.runAsync(() -> {
@@ -415,6 +420,28 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       });
     }
     configSwitchFuture.complete(null);
+    return true;
+  }
+
+  @Override
+  public boolean handle(ServerboundCookieResponsePacket packet) {
+    server.getEventManager()
+        .fire(new CookieReceiveEvent(player, packet.getKey(), packet.getPayload()))
+        .thenAcceptAsync(event -> {
+          if (event.getResult().isAllowed()) {
+            final VelocityServerConnection serverConnection = player.getConnectedServer();
+            if (serverConnection != null) {
+              final Key resultedKey = event.getResult().getKey() == null
+                  ? event.getOriginalKey() : event.getResult().getKey();
+              final byte[] resultedData = event.getResult().getData() == null
+                  ? event.getOriginalData() : event.getResult().getData();
+
+              serverConnection.ensureConnected()
+                  .write(new ServerboundCookieResponsePacket(resultedKey, resultedData));
+            }
+          }
+        }, player.getConnection().eventLoop());
+
     return true;
   }
 
@@ -487,7 +514,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
    * @return a future that completes when the switch is complete
    */
   public CompletableFuture<Void> doSwitch() {
-    VelocityServerConnection existingConnection = player.getConnectedServer();
+    final VelocityServerConnection existingConnection = player.getConnectedServer();
 
     if (existingConnection != null) {
       // Shut down the existing server connection.
@@ -630,7 +657,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     String commandLabel = command.substring(0, commandEndPosition);
-    if (!server.getCommandManager().hasCommand(commandLabel)) {
+    if (!server.getCommandManager().hasCommand(commandLabel, player)) {
       if (player.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_13)) {
         // Outstanding tab completes are recorded for use with 1.12 clients and below to provide
         // additional tab completion support.

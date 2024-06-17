@@ -8,9 +8,11 @@
 package com.velocitypowered.api.event.proxy;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.proxy.server.ServerPing;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * This event is fired when a request for server information is sent by a remote client, or when the
@@ -20,26 +22,69 @@ import com.velocitypowered.api.proxy.server.ServerPing;
  * amount of ping packets a client can send.
  */
 @AwaitingEvent
-public final class ProxyPingEvent {
+public final class ProxyPingEvent implements ResultedEvent<ResultedEvent.GenericResult> {
 
   private final InboundConnection connection;
   private ServerPing ping;
+  private GenericResult result = GenericResult.allowed();
 
-  public ProxyPingEvent(InboundConnection connection, ServerPing ping) {
+  public ProxyPingEvent(final InboundConnection connection, final ServerPing ping) {
     this.connection = Preconditions.checkNotNull(connection, "connection");
     this.ping = Preconditions.checkNotNull(ping, "ping");
   }
 
+  /**
+   * Obtain the connection to which the corresponding ServerPing will be sent.
+   *
+   * @return the connection that has sent the ServerPing request
+   */
   public InboundConnection getConnection() {
-    return connection;
+    return this.connection;
   }
 
+  /**
+   * Get the ServerPing to send to the connection.
+   *
+   * @return the ServerPing to send
+   */
   public ServerPing getPing() {
-    return ping;
+    return this.ping;
   }
 
-  public void setPing(ServerPing ping) {
+  /**
+   * Sets the ServerPing to send to the connection.
+   *
+   * @param ping sets the ServerPing to send
+   */
+  public void setPing(final @NotNull ServerPing ping) {
     this.ping = Preconditions.checkNotNull(ping, "ping");
+  }
+
+  /**
+   * Gets whether to avoid sending a ping response to the connection.
+   *
+   * @return if a ping response to the connection will be avoided
+   * @apiNote For the ProxyPingEvent executed to obtain the MOTD for the ServerData
+   *     sent to players of versions higher than 1.19.1,
+   *     the cancellation of this event will have no effect.
+   */
+  @Override
+  public GenericResult getResult() {
+    return this.result;
+  }
+
+  /**
+   * Sets whether to avoid sending a ping response to the connection.
+   * This will automatically close the connection.
+   *
+   * @param result if a ping response to the connection will be avoided
+   * @apiNote For the ProxyPingEvent executed to obtain the MOTD for the ServerData
+   *     sent to players of versions higher than 1.19.1,
+   *     the cancellation of this event will have no effect.
+   */
+  @Override
+  public void setResult(final @NotNull GenericResult result) {
+    this.result = Preconditions.checkNotNull(result, "result");
   }
 
   @Override
