@@ -33,6 +33,7 @@ import com.velocitypowered.natives.encryption.VelocityCipher;
 import com.velocitypowered.natives.encryption.VelocityCipherFactory;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.connection.client.InitialLoginSessionHandler;
 import com.velocitypowered.proxy.connection.client.StatusSessionHandler;
@@ -390,6 +391,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
       if (this.channel.pipeline().get(Connections.PLAY_PACKET_QUEUE_INBOUND) != null) {
         this.channel.pipeline().remove(Connections.PLAY_PACKET_QUEUE_INBOUND);
       }
+    }
+
+    if (this.association instanceof ConnectedPlayer player) {
+      player.updateState(state);
     }
   }
 

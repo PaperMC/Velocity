@@ -23,6 +23,8 @@ import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.gson.JsonObject;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus;
@@ -102,12 +104,15 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
 import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.identity.Identity;
@@ -130,6 +135,7 @@ import net.kyori.adventure.translation.GlobalTranslator;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -184,6 +190,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private @Nullable ClientSettingsPacket clientSettingsPacket;
   private final ChatQueue chatQueue;
   private final ChatBuilderFactory chatBuilderFactory;
+  private final Map<StateRegistry, Queue<Consumer<Player>>> stateListeners = Maps.newHashMap();
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
                   @Nullable InetSocketAddress virtualHost, boolean onlineMode,
@@ -598,12 +605,40 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     return tabList;
   }
 
+  /**
+   * Updates the state for listeners that cannot be ran at the current connection phase.
+   */
+  @Internal
+  public void updateState(@NotNull StateRegistry state) {
+    final Queue<Consumer<Player>> queue = this.stateListeners.get(state);
+
+    if (queue == null) {
+      return;
+    }
+
+    for (final Consumer<Player> consumer : queue) {
+      consumer.accept(this);
+    }
+  }
+
   @Override
   public void disconnect(Component reason) {
-    if (connection.eventLoop().inEventLoop()) {
-      disconnect0(reason, false);
+    if (this.connection.eventLoop().inEventLoop()) {
+      this.disconnect0(reason, false);
     } else {
-      connection.eventLoop().execute(() -> disconnect0(reason, false));
+      final boolean duringLogin = this.connection.getState() == StateRegistry.LOGIN;
+
+      if (duringLogin) {
+        this.stateListeners.computeIfAbsent(StateRegistry.PLAY, key -> Lists.newLinkedList())
+                .add(player -> {
+                  if (player != null) {
+                    player.disconnect(reason);
+                  }
+                });
+        return;
+      }
+
+      this.connection.eventLoop().execute(() -> this.disconnect0(reason, duringLogin));
     }
   }
 
