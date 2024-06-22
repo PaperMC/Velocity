@@ -676,10 +676,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           for (Suggestion suggestion : suggestions.getList()) {
             String offer = suggestion.getText();
             ComponentHolder tooltip = null;
-            if (suggestion.getTooltip() != null
-                && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
-              tooltip = new ComponentHolder(player.getProtocolVersion(),
-                  ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent());
+            if (suggestion.getTooltip() != null) {
+              if (suggestion.getTooltip() instanceof VelocityBrigadierMessage velocityMessage) {
+                tooltip = new ComponentHolder(player.getProtocolVersion(),
+                        velocityMessage.asComponent());
+              } else {
+                tooltip = new ComponentHolder(player.getProtocolVersion(),
+                        Component.text(suggestion.getTooltip().getString()));
+              }
             }
             offers.add(new Offer(offer, tooltip));
           }
