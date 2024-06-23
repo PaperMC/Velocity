@@ -28,9 +28,7 @@ body:
       label: Plugin List
       description: |
         All plugins running on your proxy and the backend server you're experiencing this issue on.
-        <details>
         Use `/velocity plugins` to list plugins on Velocity and `/plugins` to list plugins on your backend server.
-        </details>
     validations:
       required: true
 
@@ -42,9 +40,9 @@ body:
         <details>
         <summary>Example</summary>
         ```
-        [17:44:10 INFO]: Velocity 3.3.0-SNAPSHOT (git-9d25d309-b400)
-        [17:44:10 INFO]: Copyright 2018-2023 Velocity Contributors. Velocity is licensed under the terms of the GNU General Public License v3.
-        [17:44:10 INFO]: velocitypowered.com - GitHub
+        [17:44:10 INFO]: Velocity 3.3.0-SNAPSHOT (git-9d25d309-b400)  
+        [17:44:10 INFO]: Copyright 2018-2023 Velocity Contributors. Velocity is licensed under the terms of the GNU General Public License v3.  
+        [17:44:10 INFO]: velocitypowered.com - GitHub  
         ```
         </details>
     validations:
