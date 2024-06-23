@@ -16,6 +16,8 @@ body:
       description: |
         Please describe why do you need this feature.
         Do you think it could be useful? Is it due to another problem?
+    validations:
+      required: true
 
   - type: textarea
     attributes:
@@ -23,6 +25,8 @@ body:
       description: |
         Are there any alternative solutions to implementing a new feature?
         What have you tried instead?
+    validations:
+      required: true
 
   - type: textarea
     attributes:
