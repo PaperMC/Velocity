@@ -37,8 +37,10 @@ body:
       label: Velocity Version
       description: |
         The full, unmodified output of running `/velocity info`.
+        *"Latest"* is not a version. We require you to paste the text, not a screenshot.
         <details>
         <summary>Example</summary>
+        
         ```
         [17:44:10 INFO]: Velocity 3.3.0-SNAPSHOT (git-9d25d309-b400)  
         [17:44:10 INFO]: Copyright 2018-2023 Velocity Contributors. Velocity is licensed under the terms of the GNU General Public License v3.  
