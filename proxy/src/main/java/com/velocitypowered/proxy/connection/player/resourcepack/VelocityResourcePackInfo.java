@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.connection.player;
+package com.velocitypowered.proxy.connection.player.resourcepack;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;

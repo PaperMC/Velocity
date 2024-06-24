@@ -47,7 +47,8 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftCompressorAndLengthEnco
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
-import com.velocitypowered.proxy.protocol.netty.PlayPacketQueueHandler;
+import com.velocitypowered.proxy.protocol.netty.PlayPacketQueueInboundHandler;
+import com.velocitypowered.proxy.protocol.netty.PlayPacketQueueOutboundHandler;
 import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
@@ -148,13 +149,11 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         return;
       }
 
-      if (msg instanceof MinecraftPacket) {
-        MinecraftPacket pkt = (MinecraftPacket) msg;
+      if (msg instanceof MinecraftPacket pkt) {
         if (!pkt.handle(activeSessionHandler)) {
           activeSessionHandler.handleGeneric((MinecraftPacket) msg);
         }
-      } else if (msg instanceof HAProxyMessage) {
-        HAProxyMessage proxyMessage = (HAProxyMessage) msg;
+      } else if (msg instanceof HAProxyMessage proxyMessage) {
         this.remoteAddress = new InetSocketAddress(proxyMessage.sourceAddress(),
             proxyMessage.sourcePort());
       } else if (msg instanceof ByteBuf) {
@@ -383,9 +382,14 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     if (state == StateRegistry.CONFIG) {
       // Activate the play packet queue
       addPlayPacketQueueHandler();
-    } else if (this.channel.pipeline().get(Connections.PLAY_PACKET_QUEUE) != null) {
+    } else {
       // Remove the queue
-      this.channel.pipeline().remove(Connections.PLAY_PACKET_QUEUE);
+      if (this.channel.pipeline().get(Connections.PLAY_PACKET_QUEUE_OUTBOUND) != null) {
+        this.channel.pipeline().remove(Connections.PLAY_PACKET_QUEUE_OUTBOUND);
+      }
+      if (this.channel.pipeline().get(Connections.PLAY_PACKET_QUEUE_INBOUND) != null) {
+        this.channel.pipeline().remove(Connections.PLAY_PACKET_QUEUE_INBOUND);
+      }
     }
   }
 
@@ -393,10 +397,13 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * Adds the play packet queue handler.
    */
   public void addPlayPacketQueueHandler() {
-    if (this.channel.pipeline().get(Connections.PLAY_PACKET_QUEUE) == null) {
-      this.channel.pipeline().addAfter(Connections.MINECRAFT_ENCODER, Connections.PLAY_PACKET_QUEUE,
-          new PlayPacketQueueHandler(this.protocolVersion,
-              channel.pipeline().get(MinecraftEncoder.class).getDirection()));
+    if (this.channel.pipeline().get(Connections.PLAY_PACKET_QUEUE_OUTBOUND) == null) {
+      this.channel.pipeline().addAfter(Connections.MINECRAFT_ENCODER, Connections.PLAY_PACKET_QUEUE_OUTBOUND,
+           new PlayPacketQueueOutboundHandler(this.protocolVersion, channel.pipeline().get(MinecraftEncoder.class).getDirection()));
+    }
+    if (this.channel.pipeline().get(Connections.PLAY_PACKET_QUEUE_INBOUND) == null) {
+      this.channel.pipeline().addAfter(Connections.MINECRAFT_DECODER, Connections.PLAY_PACKET_QUEUE_INBOUND,
+           new PlayPacketQueueInboundHandler(this.protocolVersion, channel.pipeline().get(MinecraftDecoder.class).getDirection()));
     }
   }
 

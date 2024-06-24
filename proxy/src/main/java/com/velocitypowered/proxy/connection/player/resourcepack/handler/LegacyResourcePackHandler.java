@@ -15,13 +15,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.connection.player.resourcepack;
+package com.velocitypowered.proxy.connection.player.resourcepack.handler;
 
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import com.velocitypowered.proxy.connection.player.resourcepack.ResourcePackResponseBundle;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collection;

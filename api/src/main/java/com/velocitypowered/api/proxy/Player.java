@@ -21,6 +21,7 @@ import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
+import com.velocitypowered.api.util.ServerLink;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.List;
@@ -461,4 +462,16 @@ public interface Player extends
    * @sinceMinecraft 1.20.5
    */
   void requestCookie(Key key);
+
+  /**
+   * Send the player a list of custom links to display in their client's pause menu.
+   *
+   * <p>Note that later packets sent by the backend server may override links sent by the proxy.
+   *
+   * @param links an ordered list of {@link ServerLink}s to send to the player
+   * @throws IllegalArgumentException if the player is from a version lower than 1.21
+   * @since 3.3.0
+   * @sinceMinecraft 1.21
+   */
+  void setServerLinks(@NotNull List<ServerLink> links);
 }
