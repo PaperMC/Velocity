@@ -15,13 +15,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.connection.player.resourcepack;
+package com.velocitypowered.proxy.connection.player.resourcepack.handler;
 
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import com.velocitypowered.proxy.connection.player.resourcepack.ResourcePackResponseBundle;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collection;
@@ -109,7 +110,7 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
             break;
           }
           onResourcePackResponse(new ResourcePackResponseBundle(queued.getId(),
-                  new String(queued.getHash()),
+                  queued.getHash() == null ? "" : new String(queued.getHash()),
                   PlayerResourcePackStatusEvent.Status.DECLINED));
           queued = null;
         }
@@ -172,6 +173,10 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
 
   @Override
   public boolean hasPackAppliedByHash(final byte[] hash) {
+    if (hash == null) {
+      return false;
+    }
+
     return this.appliedResourcePack != null
             && Arrays.equals(this.appliedResourcePack.getHash(), hash);
   }

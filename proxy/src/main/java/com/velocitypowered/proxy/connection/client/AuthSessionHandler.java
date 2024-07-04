@@ -24,6 +24,7 @@ import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
+import com.velocitypowered.api.event.player.CookieReceiveEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -41,6 +42,7 @@ import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.LoginAcknowledgedPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
 import io.netty.buffer.ByteBuf;
 import java.util.Objects;
@@ -185,6 +187,24 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
             return null;
           });
     }
+    return true;
+  }
+
+  @Override
+  public boolean handle(ServerboundCookieResponsePacket packet) {
+    server.getEventManager()
+        .fire(new CookieReceiveEvent(connectedPlayer, packet.getKey(), packet.getPayload()))
+        .thenAcceptAsync(event -> {
+          if (event.getResult().isAllowed()) {
+            // The received cookie must have been requested by a proxy plugin in login phase,
+            // because if a backend server requests a cookie in login phase, the client is already
+            // in config phase. Therefore, the only way, we receive a CookieResponsePacket from a
+            // client in login phase is when a proxy plugin requested a cookie in login phase.
+            throw new IllegalStateException(
+                "A cookie was requested by a proxy plugin in login phase but the response wasn't handled");
+          }
+        }, mcConnection.eventLoop());
+
     return true;
   }
 

@@ -8,17 +8,21 @@
 package com.velocitypowered.api.proxy;
 
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.event.player.CookieReceiveEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.proxy.crypto.KeyIdentifiable;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
+import com.velocitypowered.api.proxy.messages.PluginMessageEncoder;
 import com.velocitypowered.api.proxy.player.PlayerSettings;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
+import com.velocitypowered.api.util.ServerLink;
+import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -282,16 +286,42 @@ public interface Player extends
   @NotNull Collection<ResourcePackInfo> getPendingResourcePacks();
 
   /**
-   * <strong>Note that this method does not send a plugin message to the server the player
+   * {@inheritDoc}
+   *
+   * <p><strong>Note that this method does not send a plugin message to the server the player
    * is connected to.</strong> You should only use this method if you are trying to communicate
-   * with a mod that is installed on the player's client. To send a plugin message to the server
+   * with a mod that is installed on the player's client.</p>
+   *
+   * <p>To send a plugin message to the server
    * from the player, you should use the equivalent method on the instance returned by
    * {@link #getCurrentServer()}.
    *
-   * @inheritDoc
+   * <pre>
+   *    final ChannelIdentifier identifier;
+   *    final Player player;
+   *    player.getCurrentServer()
+   *          .map(ServerConnection::getServer)
+   *          .ifPresent((RegisteredServer server) -> {
+   *            server.sendPluginMessage(identifier, data);
+   *          });
+   *  </pre>
+   *
    */
   @Override
-  boolean sendPluginMessage(@NotNull ChannelIdentifier identifier, byte @NotNull[] data);
+  boolean sendPluginMessage(@NotNull ChannelIdentifier identifier, byte @NotNull [] data);
+
+  /**
+   * {@inheritDoc}
+   * <p><strong>Note that this method does not send a plugin message to the server the player
+   * is connected to.</strong> You should only use this method if you are trying to communicate
+   * with a mod that is installed on the player's client.</p>
+   *
+   * <p>To send a plugin message to the server
+   * from the player, you should use the equivalent method on the instance returned by
+   * {@link #getCurrentServer()}.
+   */
+  @Override
+  boolean sendPluginMessage(@NotNull ChannelIdentifier identifier, @NotNull PluginMessageEncoder dataEncoder);
 
   @Override
   default @NotNull Key key() {
@@ -399,4 +429,49 @@ public interface Player extends
   @Override
   default void openBook(@NotNull Book book) {
   }
+
+  /**
+   * Transfers a Player to a host.
+   *
+   * @param address the host address
+   * @throws IllegalArgumentException if the player is from a version lower than 1.20.5
+   * @since 3.3.0
+   */
+  void transferToHost(@NotNull InetSocketAddress address);
+
+  /**
+   * Stores a cookie with arbitrary data on the player's client.
+   *
+   * @param key the identifier of the cookie
+   * @param data the data of the cookie
+   * @throws IllegalArgumentException if the player is from a version lower than 1.20.5
+   * @since 3.3.0
+   * @sinceMinecraft 1.20.5
+   */
+  void storeCookie(Key key, byte[] data);
+
+  /**
+   * Requests a previously stored cookie from the player's client.
+   * Calling this method causes the client to send the cookie to the proxy.
+   * To retrieve the actual data of the requested cookie, you have to use the
+   * {@link CookieReceiveEvent}.
+   *
+   * @param key the identifier of the cookie
+   * @throws IllegalArgumentException if the player is from a version lower than 1.20.5
+   * @since 3.3.0
+   * @sinceMinecraft 1.20.5
+   */
+  void requestCookie(Key key);
+
+  /**
+   * Send the player a list of custom links to display in their client's pause menu.
+   *
+   * <p>Note that later packets sent by the backend server may override links sent by the proxy.
+   *
+   * @param links an ordered list of {@link ServerLink}s to send to the player
+   * @throws IllegalArgumentException if the player is from a version lower than 1.21
+   * @since 3.3.0
+   * @sinceMinecraft 1.21
+   */
+  void setServerLinks(@NotNull List<ServerLink> links);
 }

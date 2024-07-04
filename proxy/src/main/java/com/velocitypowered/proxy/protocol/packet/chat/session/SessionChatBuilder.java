@@ -42,13 +42,19 @@ public class SessionChatBuilder extends ChatBuilderV2 {
   @Override
   public MinecraftPacket toServer() {
     if (message.startsWith("/")) {
-      SessionPlayerCommandPacket command = new SessionPlayerCommandPacket();
-      command.command = message.substring(1);
-      command.salt = 0L;
-      command.timeStamp = timestamp;
-      command.argumentSignatures = new SessionPlayerCommandPacket.ArgumentSignatures();
-      command.lastSeenMessages = new LastSeenMessages();
-      return command;
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
+        UnsignedPlayerCommandPacket command = new UnsignedPlayerCommandPacket();
+        command.command = message.substring(1);
+        return command;
+      } else {
+        SessionPlayerCommandPacket command = new SessionPlayerCommandPacket();
+        command.command = message.substring(1);
+        command.salt = 0L;
+        command.timeStamp = timestamp;
+        command.argumentSignatures = new SessionPlayerCommandPacket.ArgumentSignatures();
+        command.lastSeenMessages = new LastSeenMessages();
+        return command;
+      }
     } else {
       SessionPlayerChatPacket chat = new SessionPlayerChatPacket();
       chat.message = message;

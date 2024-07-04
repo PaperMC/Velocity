@@ -1,0 +1,48 @@
+name: Feature Request
+description: Request for a feature to be implemented into Velocity.
+labels: ["type: feature"]
+body:
+  - type: textarea
+    attributes:
+      label: Requested Feature
+      description: |
+        Please describe as best as you can what you'd like to be added to Velocity.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Why is this needed?
+      description: |
+        Please describe why do you need this feature.
+        Do you think it could be useful? Is it due to another problem?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Alternative Solutions
+      description: |
+        Are there any alternative solutions to implementing a new feature?
+        What have you tried instead?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Additional Information
+      description: Anything else you want to add.
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        Before submitting this request, please ensure the following:
+        
+        1. You are running the latest version of Velocity from [our downloads page](https://papermc.io/downloads/velocity).
+        2. You searched for and ensured there isn't already an open issue regarding this.
+        3. The feature you're requesting has to be implemented on Velocity and not on the backend server.
+        
+        If you are unsure whether your problem can already be fixed in another way, feel free to ask in the `#velocity-help` channel on our
+        [Discord](https://discord.gg/papermc).

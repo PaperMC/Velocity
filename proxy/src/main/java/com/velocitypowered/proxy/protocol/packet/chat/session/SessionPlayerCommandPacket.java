@@ -37,8 +37,7 @@ public class SessionPlayerCommandPacket implements MinecraftPacket {
   protected LastSeenMessages lastSeenMessages;
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
-      ProtocolVersion protocolVersion) {
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     this.command = ProtocolUtils.readString(buf, 256);
     this.timeStamp = Instant.ofEpochMilli(buf.readLong());
     this.salt = buf.readLong();
@@ -47,8 +46,7 @@ public class SessionPlayerCommandPacket implements MinecraftPacket {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction,
-      ProtocolVersion protocolVersion) {
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     ProtocolUtils.writeString(buf, this.command);
     buf.writeLong(this.timeStamp.toEpochMilli());
     buf.writeLong(this.salt);

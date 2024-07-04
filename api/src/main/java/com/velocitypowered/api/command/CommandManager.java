@@ -10,6 +10,7 @@ package com.velocitypowered.api.command;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -126,4 +127,15 @@ public interface CommandManager {
    * @return true if the alias is registered; false otherwise
    */
   boolean hasCommand(String alias);
+
+  /**
+   * Returns whether the given alias is registered on this manager
+   * and can be used by the given {@link CommandSource}.
+   * See {@link com.mojang.brigadier.builder.ArgumentBuilder#requires(Predicate)}
+   *
+   * @param alias the command alias to check
+   * @param source the command source
+   * @return true if the alias is registered and usable; false otherwise
+   */
+  boolean hasCommand(String alias, CommandSource source);
 }

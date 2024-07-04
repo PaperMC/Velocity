@@ -137,11 +137,13 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           smc.setActiveSessionHandler(StateRegistry.PLAY,
               new BackendPlaySessionHandler(server, serverConn));
 
-          // Clean up disabling auto-read while the connected event was being processed.
-          smc.setAutoReading(true);
-
           // Now set the connected server.
           serverConn.getPlayer().setConnectedServer(serverConn);
+
+          // Clean up disabling auto-read while the connected event was being processed.
+          // Do this after setting the connection, so no incoming packets are processed before
+          // the API knows which server the player is connected to.
+          smc.setAutoReading(true);
 
           // Send client settings. In 1.20.2+ this is done in the config state.
           if (smc.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_2)

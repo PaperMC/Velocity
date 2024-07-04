@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.connection.client;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.connection.ConnectionHandshakeEvent;
+import com.velocitypowered.api.network.HandshakeIntent;
 import com.velocitypowered.api.network.ProtocolState;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
@@ -93,6 +94,11 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     } else {
       final InitialInboundConnection ic = new InitialInboundConnection(connection,
               cleanVhost(handshake.getServerAddress()), handshake);
+      if (handshake.getIntent() == HandshakeIntent.TRANSFER
+              && !server.getConfiguration().isAcceptTransfers()) {
+        ic.disconnect(Component.translatable("multiplayer.disconnect.transfers_disabled"));
+        return true;
+      }
       connection.setProtocolVersion(handshake.getProtocolVersion());
       connection.setAssociation(ic);
 
@@ -112,7 +118,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   private static @Nullable StateRegistry getStateForProtocol(int status) {
     return switch (status) {
       case StateRegistry.STATUS_ID -> StateRegistry.STATUS;
-      case StateRegistry.LOGIN_ID -> StateRegistry.LOGIN;
+      case StateRegistry.LOGIN_ID, StateRegistry.TRANSFER_ID -> StateRegistry.LOGIN;
       default -> null;
     };
   }
@@ -150,7 +156,8 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     }
 
     final LoginInboundConnection lic = new LoginInboundConnection(ic);
-    server.getEventManager().fireAndForget(new ConnectionHandshakeEvent(lic));
+    server.getEventManager().fireAndForget(
+            new ConnectionHandshakeEvent(lic, handshake.getIntent()));
     connection.setActiveSessionHandler(StateRegistry.LOGIN,
         new InitialLoginSessionHandler(server, connection, lic));
   }

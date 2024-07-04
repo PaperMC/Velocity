@@ -40,7 +40,7 @@ import org.jetbrains.annotations.NotNull;
  * <p>This handler will queue up any packets that are sent to the client during this time, and send
  * them once the client has (re)entered the PLAY state.
  */
-public class PlayPacketQueueHandler extends ChannelDuplexHandler {
+public class PlayPacketQueueOutboundHandler extends ChannelDuplexHandler {
 
   private final StateRegistry.PacketRegistry.ProtocolRegistry registry;
   private final Queue<MinecraftPacket> queue = PlatformDependent.newMpscQueue();
@@ -50,28 +50,26 @@ public class PlayPacketQueueHandler extends ChannelDuplexHandler {
    *
    * @param version the protocol version
    */
-  public PlayPacketQueueHandler(ProtocolVersion version, ProtocolUtils.Direction direction) {
-    this.registry =
-        StateRegistry.CONFIG.getProtocolRegistry(direction, version);
+  public PlayPacketQueueOutboundHandler(ProtocolVersion version, ProtocolUtils.Direction direction) {
+    this.registry = StateRegistry.CONFIG.getProtocolRegistry(direction, version);
   }
 
   @Override
-  public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
-      throws Exception {
-    if (!(msg instanceof MinecraftPacket)) {
+  public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+    if (!(msg instanceof final MinecraftPacket packet)) {
       ctx.write(msg, promise);
       return;
     }
 
     // If the packet exists in the CONFIG state, we want to always
     // ensure that it gets sent out to the client
-    if (this.registry.containsPacket(((MinecraftPacket) msg))) {
+    if (this.registry.containsPacket(packet)) {
       ctx.write(msg, promise);
       return;
     }
 
     // Otherwise, queue the packet
-    this.queue.offer((MinecraftPacket) msg);
+    this.queue.offer(packet);
   }
 
   @Override
@@ -87,10 +85,6 @@ public class PlayPacketQueueHandler extends ChannelDuplexHandler {
   }
 
   private void releaseQueue(ChannelHandlerContext ctx, boolean active) {
-    if (this.queue.isEmpty()) {
-      return;
-    }
-
     // Send out all the queued packets
     MinecraftPacket packet;
     while ((packet = this.queue.poll()) != null) {
