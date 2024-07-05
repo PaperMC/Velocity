@@ -27,7 +27,7 @@ import com.velocitypowered.api.event.player.CookieReceiveEvent;
 import com.velocitypowered.api.event.player.PlayerChannelRegisterEvent;
 import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
 import com.velocitypowered.api.event.player.TabCompleteEvent;
-import com.velocitypowered.api.event.player.configuration.PlayerEnterConfigurationEvent;
+import com.velocitypowered.api.event.player.configuration.PlayerEnteredConfigurationEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
@@ -408,7 +408,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // Complete client switch
     player.getConnection().setActiveSessionHandler(StateRegistry.CONFIG);
     VelocityServerConnection serverConnection = player.getConnectedServer();
-    server.getEventManager().fireAndForget(new PlayerEnterConfigurationEvent(player, serverConnection));
+    server.getEventManager().fireAndForget(new PlayerEnteredConfigurationEvent(player, serverConnection));
     if (serverConnection != null) {
       MinecraftConnection smc = serverConnection.ensureConnected();
       CompletableFuture.runAsync(() -> {
@@ -541,7 +541,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       player.getTabList().clearAllSilent();
     }
 
-    player.switchToConfigState();
+    player.switchToConfigState(true);
 
     return configSwitchFuture;
   }

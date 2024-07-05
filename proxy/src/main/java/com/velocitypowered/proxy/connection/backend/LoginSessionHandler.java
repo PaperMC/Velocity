@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.event.player.CookieRequestEvent;
 import com.velocitypowered.api.event.player.ServerLoginPluginMessageEvent;
+import com.velocitypowered.api.event.player.configuration.PlayerEnteredConfigurationEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
@@ -169,6 +170,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       if (player.getConnection().getActiveSessionHandler() instanceof ClientPlaySessionHandler clientPlaySessionHandler) {
         smc.setAutoReading(false);
         clientPlaySessionHandler.doSwitch().thenAcceptAsync((unused) -> smc.setAutoReading(true), smc.eventLoop());
+      } else {
+        // Initial login - the player is already in configuration state.
+        server.getEventManager().fireAndForget(new PlayerEnteredConfigurationEvent(player, serverConn));
       }
     }
 
