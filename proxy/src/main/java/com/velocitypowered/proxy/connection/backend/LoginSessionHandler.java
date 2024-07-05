@@ -143,10 +143,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ServerLoginSuccessPacket packet) {
-    if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
-        && !informationForwarded) {
-      resultFuture.complete(ConnectionRequestResults.forDisconnect(MODERN_IP_FORWARDING_FAILURE,
-          serverConn.getServer()));
+    if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && !informationForwarded) {
+      resultFuture.complete(ConnectionRequestResults.forDisconnect(MODERN_IP_FORWARDING_FAILURE, serverConn.getServer()));
       serverConn.disconnect();
       return true;
     }
@@ -157,12 +155,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     // Move into the PLAY phase.
     MinecraftConnection smc = serverConn.ensureConnected();
     if (smc.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
-      smc.setActiveSessionHandler(StateRegistry.PLAY,
-          new TransitionSessionHandler(server, serverConn, resultFuture));
+      smc.setActiveSessionHandler(StateRegistry.PLAY, new TransitionSessionHandler(server, serverConn, resultFuture));
     } else {
       smc.write(new LoginAcknowledgedPacket());
-      smc.setActiveSessionHandler(StateRegistry.CONFIG,
-          new ConfigSessionHandler(server, serverConn, resultFuture));
+      smc.setActiveSessionHandler(StateRegistry.CONFIG, new ConfigSessionHandler(server, serverConn, resultFuture));
       ConnectedPlayer player = serverConn.getPlayer();
       if (player.getClientSettingsPacket() != null) {
         smc.write(player.getClientSettingsPacket());

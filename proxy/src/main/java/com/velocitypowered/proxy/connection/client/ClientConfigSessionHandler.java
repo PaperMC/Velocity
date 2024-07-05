@@ -106,8 +106,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(FinishedUpdatePacket packet) {
-    player.getConnection()
-        .setActiveSessionHandler(StateRegistry.PLAY, new ClientPlaySessionHandler(server, player));
+    player.getConnection().setActiveSessionHandler(StateRegistry.PLAY, new ClientPlaySessionHandler(server, player));
 
     configSwitchFuture.complete(null);
     return true;
