@@ -32,6 +32,8 @@ import com.velocitypowered.proxy.plugin.loader.PluginLoader;
 import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
 import com.velocitypowered.proxy.plugin.loader.VelocityPluginDescription;
 import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
@@ -141,29 +143,44 @@ public class JavaPluginLoader implements PluginLoader {
   private Optional<SerializedPluginDescription> getSerializedPluginInfo(Path source)
       throws Exception {
     boolean foundBungeeBukkitPluginFile = false;
-    try (JarInputStream in = new JarInputStream(
-        new BufferedInputStream(Files.newInputStream(source)))) {
-      JarEntry entry;
-      while ((entry = in.getNextJarEntry()) != null) {
-        if (entry.getName().equals("velocity-plugin.json")) {
-          try (Reader pluginInfoReader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
-            return Optional.of(VelocityServer.GENERAL_GSON.fromJson(pluginInfoReader,
-                SerializedPluginDescription.class));
+    if (source.getFileName().endsWith(".jar")) {
+      try (JarInputStream in = new JarInputStream(
+              new BufferedInputStream(Files.newInputStream(source)))) {
+        JarEntry entry;
+        while ((entry = in.getNextJarEntry()) != null) {
+          if (entry.getName().equals("velocity-plugin.json")) {
+            return Optional.of(readPluginInfo(in));
+          }
+
+          if (entry.getName().equals("plugin.yml") || entry.getName().equals("bungee.yml")) {
+            foundBungeeBukkitPluginFile = true;
           }
         }
 
-        if (entry.getName().equals("plugin.yml") || entry.getName().equals("bungee.yml")) {
-          foundBungeeBukkitPluginFile = true;
+        if (foundBungeeBukkitPluginFile) {
+          throw new InvalidPluginException("The plugin file " + source.getFileName() + " appears to "
+                  + "be a Bukkit or BungeeCord plugin. Velocity does not support Bukkit or BungeeCord "
+                  + "plugins.");
+        }
+
+        return Optional.empty();
+      }
+    } else {
+      Path velocityPluginPath = source.resolve("velocity-plugin.json");
+      if (Files.exists(velocityPluginPath)) {
+        try (BufferedInputStream in = new BufferedInputStream(Files.newInputStream(velocityPluginPath))) {
+          return Optional.of(readPluginInfo(in));
         }
       }
 
-      if (foundBungeeBukkitPluginFile) {
-        throw new InvalidPluginException("The plugin file " + source.getFileName() + " appears to "
-            + "be a Bukkit or BungeeCord plugin. Velocity does not support Bukkit or BungeeCord "
-            + "plugins.");
-      }
-
       return Optional.empty();
+    }
+  }
+
+  private SerializedPluginDescription readPluginInfo(InputStream in) throws IOException {
+    try (Reader pluginInfoReader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
+      return VelocityServer.GENERAL_GSON.fromJson(pluginInfoReader,
+              SerializedPluginDescription.class);
     }
   }
 
