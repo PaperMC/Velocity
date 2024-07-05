@@ -13,15 +13,14 @@ import com.velocitypowered.api.proxy.ServerConnection;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * This event is executed when a player is about to enter the configuration state.
- * It is <b>not</b> called for the initial configuration of a player after login.
- * <p>Velocity will wait for this event before asking the client to enter configuration state.</p>
+ * This event is executed when a player entered the configuration state and can be configured by Velocity.
+ * <p>Velocity will wait for this event before continuing/ending the configuration state.</p>
  *
- * @param player The player who is about to enter configuration state.
- * @param server The server that wants to reconfigure the player.
+ * @param player The player who can be configured.
+ * @param server The server that is currently configuring the player.
  * @since 3.3.0
  * @sinceMinecraft 1.20.2
  */
 @AwaitingEvent
-public record PlayerEnterConfigurationEvent(@NotNull Player player, ServerConnection server) {
+public record PlayerConfigurationEvent(@NotNull Player player, ServerConnection server) {
 }

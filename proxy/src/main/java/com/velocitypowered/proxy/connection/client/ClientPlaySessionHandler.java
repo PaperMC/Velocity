@@ -86,7 +86,6 @@ import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.TimeUnit;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -178,17 +177,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(KeepAlivePacket packet) {
-    final VelocityServerConnection serverConnection = player.getConnectedServer();
-    if (serverConnection != null) {
-      final Long sentTime = serverConnection.getPendingPings().remove(packet.getRandomId());
-      if (sentTime != null) {
-        final MinecraftConnection smc = serverConnection.getConnection();
-        if (smc != null) {
-          player.setPing(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - sentTime));
-          smc.write(packet);
-        }
-      }
-    }
+    player.forwardKeepAlive(packet);
     return true;
   }
 
@@ -541,7 +530,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       player.getTabList().clearAllSilent();
     }
 
-    player.switchToConfigState(true);
+    player.switchToConfigState();
 
     return configSwitchFuture;
   }
