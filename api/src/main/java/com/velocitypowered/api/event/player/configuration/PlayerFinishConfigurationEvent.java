@@ -20,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
  * state it is recommended to use the {@link PlayerConfigurationEvent}.</p>
  *
  * @param player The player who is about to finish the configuration phase.
- * @param server The server that has (re-)configuring the player.
+ * @param server The server that has (re-)configured the player.
  * @since 3.3.0
  * @sinceMinecraft 1.20.2
  */
