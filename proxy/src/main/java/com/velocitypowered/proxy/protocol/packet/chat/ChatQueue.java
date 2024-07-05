@@ -23,7 +23,9 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import io.netty.channel.ChannelFuture;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import java.time.Instant;
+import java.util.BitSet;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 /**
@@ -32,9 +34,10 @@ import java.util.function.Function;
  */
 public class ChatQueue {
 
-  private final Object internalLock;
+  private final Object internalLock = new Object();
   private final ConnectedPlayer player;
-  private CompletableFuture<WrappedPacket> packetFuture;
+  private final ChatState chatState = new ChatState();
+  private CompletableFuture<Void> head = CompletableFuture.completedFuture(null);
 
   /**
    * Instantiates a {@link ChatQueue} for a specific {@link ConnectedPlayer}.
@@ -43,8 +46,19 @@ public class ChatQueue {
    */
   public ChatQueue(ConnectedPlayer player) {
     this.player = player;
-    this.packetFuture = CompletableFuture.completedFuture(new WrappedPacket(Instant.EPOCH, null));
-    this.internalLock = new Object();
+  }
+
+  private void queueTask(Task task) {
+    synchronized (internalLock) {
+      MinecraftConnection smc = player.ensureAndGetCurrentServer().ensureConnected();
+      head = head.thenCompose(v -> {
+        try {
+          return task.update(chatState, smc).exceptionally(ignored -> null);
+        } catch (Throwable ignored) {
+          return CompletableFuture.completedFuture(null);
+        }
+      });
+    }
   }
 
   /**
@@ -52,121 +66,115 @@ public class ChatQueue {
    * packets. This maintains order on the server-level for the client insertions of commands
    * and messages. All entries are locked through an internal object lock.
    *
-   * @param nextPacket the {@link CompletableFuture} which will provide the next-processed packet.
-   * @param timestamp  the {@link Instant} timestamp of this packet so we can allow piggybacking.
+   * @param nextPacket       a function mapping {@link LastSeenMessages} state to a {@link CompletableFuture} that will
+   *                         provide the next-processed packet. This should include the fixed {@link LastSeenMessages}.
+   * @param timestamp        the new {@link Instant} timestamp of this packet to update the internal chat state.
+   * @param lastSeenMessages the new {@link LastSeenMessages} last seen messages to update the internal chat state.
    */
-  public void queuePacket(CompletableFuture<MinecraftPacket> nextPacket, Instant timestamp) {
-    synchronized (internalLock) { // wait for the lock to resolve - we don't want to drop packets
-      MinecraftConnection smc = player.ensureAndGetCurrentServer().ensureConnected();
-
-      CompletableFuture<WrappedPacket> nextInLine = WrappedPacket.wrap(timestamp, nextPacket);
-      this.packetFuture = awaitChat(smc, this.packetFuture,
-          nextInLine); // we await chat, binding `this.packetFuture` -> `nextInLine`
-    }
+  public void queuePacket(Function<LastSeenMessages, CompletableFuture<MinecraftPacket>> nextPacket, @Nullable Instant timestamp, @Nullable LastSeenMessages lastSeenMessages) {
+    queueTask((chatState, smc) -> {
+      LastSeenMessages newLastSeenMessages = chatState.updateFromMessage(timestamp, lastSeenMessages);
+      return nextPacket.apply(newLastSeenMessages).thenCompose(packet -> writePacket(packet, smc));
+    });
   }
 
   /**
-   * Hijacks the latest sent packet's timestamp to provide an in-order packet without polling the
+   * Hijacks the latest sent packet's chat state to provide an in-order packet without polling the
    * physical, or prior packets sent through the stream.
    *
-   * @param packet        the {@link MinecraftPacket} to send.
-   * @param instantMapper the {@link InstantPacketMapper} which maps the prior timestamp and current
-   *                      packet to a new packet.
-   * @param <K>           the type of base to expect when mapping the packet.
-   * @param <V>           the type of packet for instantMapper type-checking.
+   * @param packetFunction a function that maps the prior {@link ChatState} into a new packet.
+   * @param <T>            the type of packet to send.
    */
-  public <K, V extends MinecraftPacket> void hijack(K packet,
-      InstantPacketMapper<K, V> instantMapper) {
-    synchronized (internalLock) {
-      CompletableFuture<K> trueFuture = CompletableFuture.completedFuture(packet);
-      MinecraftConnection smc = player.ensureAndGetCurrentServer().ensureConnected();
-
-      this.packetFuture = hijackCurrentPacket(smc, this.packetFuture, trueFuture, instantMapper);
-    }
+  public <T extends MinecraftPacket> void queuePacket(Function<ChatState, T> packetFunction) {
+    queueTask((chatState, smc) -> {
+      T packet = packetFunction.apply(chatState);
+      return writePacket(packet, smc);
+    });
   }
 
-  private static Function<WrappedPacket, WrappedPacket> writePacket(MinecraftConnection connection) {
-    return wrappedPacket -> {
-      if (!connection.isClosed()) {
-        ChannelFuture future = wrappedPacket.write(connection);
+  public void handleAcknowledgement(int offset) {
+    queueTask((chatState, smc) -> {
+      int ackCountToForward = chatState.accumulateAckCount(offset);
+      if (ackCountToForward > 0) {
+        return writePacket(new ChatAcknowledgementPacket(ackCountToForward), smc);
+      }
+      return CompletableFuture.completedFuture(null);
+    });
+  }
+
+  private static <T extends MinecraftPacket> CompletableFuture<Void> writePacket(T packet, MinecraftConnection smc) {
+    return CompletableFuture.runAsync(() -> {
+      if (!smc.isClosed()) {
+        ChannelFuture future = smc.write(packet);
         if (future != null) {
           future.awaitUninterruptibly();
         }
       }
-
-      return wrappedPacket;
-    };
+    }, smc.eventLoop());
   }
 
-  private static <T extends MinecraftPacket> CompletableFuture<WrappedPacket> awaitChat(
-      MinecraftConnection connection,
-      CompletableFuture<WrappedPacket> binder,
-      CompletableFuture<WrappedPacket> future
-  ) {
-    // the binder will run -> then the future will get the `write packet` caller
-    return binder.thenCompose(ignored -> future.thenApply(writePacket(connection)));
-  }
-
-  private static <K, V extends MinecraftPacket> CompletableFuture<WrappedPacket> hijackCurrentPacket(
-      MinecraftConnection connection,
-      CompletableFuture<WrappedPacket> binder,
-      CompletableFuture<K> future,
-      InstantPacketMapper<K, V> packetMapper
-  ) {
-    CompletableFuture<WrappedPacket> awaitedFuture = new CompletableFuture<>();
-    // the binder will complete -> then the future will get the `write packet` caller
-    binder.whenComplete((previous, ignored) -> {
-      // map the new packet into a better "designed" packet with the hijacked packet's timestamp
-      WrappedPacket.wrap(previous.timestamp,
-              future.thenApply(item -> packetMapper.map(previous.timestamp, item)))
-          .thenApplyAsync(writePacket(connection), connection.eventLoop())
-          .whenComplete(
-              (packet, throwable) -> awaitedFuture.complete(throwable != null ? null : packet));
-    });
-    return awaitedFuture;
+  private interface Task {
+    CompletableFuture<Void> update(ChatState chatState, MinecraftConnection smc);
   }
 
   /**
-   * Provides an {@link Instant} based timestamp mapper from an existing object to create a packet.
+   * Tracks the last Secure Chat state that we received from the client. This is important to always have a valid 'last
+   * seen' state that is consistent with future and past updates from the client (which may be signed). This state is
+   * used to construct 'spoofed' command packets from the proxy to the server.
+   * <ul>
+   *     <li>If we last forwarded a chat or command packet from the client, we have a known 'last seen' that we can
+   *     reuse.</li>
+   *     <li>If we last forwarded a {@link ChatAcknowledgementPacket}, the previous 'last seen' cannot be reused. We
+   *     cannot predict an up-to-date 'last seen', as we do not know which messages the client actually saw.</li>
+   *     <li>Therefore, we need to hold back any acknowledgement packets so that we can continue to reuse the last valid
+   *     'last seen' state.</li>
+   *     <li>However, there is a limit to the number of messages that can remain unacknowledged on the server.</li>
+   *     <li>To address this, we know that if the client has moved its 'last seen' window far enough, we can fill in the
+   *     gap with dummy 'last seen', and it will never be checked.</li>
+   * </ul>
    *
-   * @param <K> The base object type to map.
-   * @param <V> The resulting packet type.
+   * Note that this is effectively unused for 1.20.5+ clients, as commands without any signature do not send 'last seen'
+   * updates.
    */
-  public interface InstantPacketMapper<K, V extends MinecraftPacket> {
+  public static class ChatState {
+    private static final int MINIMUM_DELAYED_ACK_COUNT = LastSeenMessages.WINDOW_SIZE;
+    private static final BitSet DUMMY_LAST_SEEN_MESSAGES = new BitSet();
 
-    /**
-     * Maps a value into a packet with it and a timestamp.
-     *
-     * @param nextInstant   the {@link Instant} timestamp to use for tracking.
-     * @param currentObject the current item to map to the packet.
-     * @return The resulting packet from the mapping.
-     */
-    V map(Instant nextInstant, K currentObject);
-  }
+    public volatile Instant lastTimestamp = Instant.EPOCH;
+    private volatile BitSet lastSeenMessages = new BitSet();
+    private final AtomicInteger delayedAckCount = new AtomicInteger();
 
-  private static class WrappedPacket {
-
-    private final Instant timestamp;
-    private final MinecraftPacket packet;
-
-    private WrappedPacket(Instant timestamp, MinecraftPacket packet) {
-      this.timestamp = timestamp;
-      this.packet = packet;
+    private ChatState() {
     }
 
     @Nullable
-    public ChannelFuture write(MinecraftConnection connection) {
-      if (packet != null) {
-        return connection.write(packet);
+    public LastSeenMessages updateFromMessage(@Nullable Instant timestamp, @Nullable LastSeenMessages lastSeenMessages) {
+      if (timestamp != null) {
+        this.lastTimestamp = timestamp;
+      }
+      if (lastSeenMessages != null) {
+        // We held back some acknowledged messages, so flush that out now that we have a known 'last seen' state again
+        int delayedAckCount = this.delayedAckCount.getAndSet(0);
+        this.lastSeenMessages = lastSeenMessages.getAcknowledged();
+        return lastSeenMessages.offset(delayedAckCount);
       }
       return null;
     }
 
-    private static CompletableFuture<WrappedPacket> wrap(Instant timestamp,
-        CompletableFuture<MinecraftPacket> nextPacket) {
-      return nextPacket
-          .thenApply(pkt -> new WrappedPacket(timestamp, pkt))
-          .exceptionally(ignored -> new WrappedPacket(timestamp, null));
+    public int accumulateAckCount(int ackCount) {
+      int delayedAckCount = this.delayedAckCount.addAndGet(ackCount);
+      int ackCountToForward = delayedAckCount - MINIMUM_DELAYED_ACK_COUNT;
+      if (ackCountToForward >= LastSeenMessages.WINDOW_SIZE) {
+        // Because we only forward acknowledgements above the window size, we don't have to shift the previous 'last seen' state
+        this.lastSeenMessages = DUMMY_LAST_SEEN_MESSAGES;
+        this.delayedAckCount.set(MINIMUM_DELAYED_ACK_COUNT);
+        return ackCountToForward;
+      }
+      return 0;
+    }
+
+    public LastSeenMessages createLastSeen() {
+      return new LastSeenMessages(0, lastSeenMessages);
     }
   }
 }

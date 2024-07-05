@@ -24,13 +24,19 @@ import java.util.BitSet;
 
 public class LastSeenMessages {
 
-  private static final int DIV_FLOOR = -Math.floorDiv(-20, 8);
+  public static final int WINDOW_SIZE = 20;
+  private static final int DIV_FLOOR = -Math.floorDiv(-WINDOW_SIZE, 8);
   private int offset;
   private BitSet acknowledged;
 
   public LastSeenMessages() {
     this.offset = 0;
     this.acknowledged = new BitSet();
+  }
+
+  public LastSeenMessages(int offset, BitSet acknowledged) {
+    this.offset = offset;
+    this.acknowledged = acknowledged;
   }
 
   public LastSeenMessages(ByteBuf buf) {
@@ -46,12 +52,16 @@ public class LastSeenMessages {
     buf.writeBytes(Arrays.copyOf(acknowledged.toByteArray(), DIV_FLOOR));
   }
 
-  public boolean isEmpty() {
-    return acknowledged.isEmpty();
-  }
-
   public int getOffset() {
     return this.offset;
+  }
+
+  public BitSet getAcknowledged() {
+    return acknowledged;
+  }
+
+  public LastSeenMessages offset(final int offset) {
+    return new LastSeenMessages(this.offset + offset, acknowledged);
   }
 
   @Override

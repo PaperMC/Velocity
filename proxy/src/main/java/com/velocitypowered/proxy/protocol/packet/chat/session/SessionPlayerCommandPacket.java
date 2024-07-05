@@ -25,6 +25,8 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.chat.LastSeenMessages;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.time.Instant;
 import java.util.List;
 
@@ -63,8 +65,7 @@ public class SessionPlayerCommandPacket implements MinecraftPacket {
   }
 
   public boolean isSigned() {
-    if (salt == 0) return false;
-    return !lastSeenMessages.isEmpty() || !argumentSignatures.isEmpty();
+    return !argumentSignatures.isEmpty();
   }
 
   @Override
@@ -81,6 +82,21 @@ public class SessionPlayerCommandPacket implements MinecraftPacket {
             ", argumentSignatures=" + argumentSignatures +
             ", lastSeenMessages=" + lastSeenMessages +
             '}';
+  }
+
+  public SessionPlayerCommandPacket withLastSeenMessages(@Nullable LastSeenMessages lastSeenMessages) {
+    if (lastSeenMessages == null) {
+      UnsignedPlayerCommandPacket packet = new UnsignedPlayerCommandPacket();
+      packet.command = command;
+      return packet;
+    }
+    SessionPlayerCommandPacket packet = new SessionPlayerCommandPacket();
+    packet.command = command;
+    packet.timeStamp = timeStamp;
+    packet.salt = salt;
+    packet.argumentSignatures = argumentSignatures;
+    packet.lastSeenMessages = lastSeenMessages;
+    return packet;
   }
 
   public static class ArgumentSignatures {

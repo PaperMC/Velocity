@@ -42,7 +42,7 @@ public class LegacyCommandHandler implements CommandHandler<LegacyChatPacket> {
   @Override
   public void handlePlayerCommandInternal(LegacyChatPacket packet) {
     String command = packet.getMessage().substring(1);
-    queueCommandResult(this.server, this.player, event -> {
+    queueCommandResult(this.server, this.player, (event, newLastSeenMessages) -> {
       CommandExecuteEvent.CommandResult result = event.getResult();
       if (result == CommandExecuteEvent.CommandResult.denied()) {
         return CompletableFuture.completedFuture(null);
@@ -62,6 +62,6 @@ public class LegacyCommandHandler implements CommandHandler<LegacyChatPacket> {
         }
         return null;
       });
-    }, command, Instant.now());
+    }, command, Instant.now(), null);
   }
 }

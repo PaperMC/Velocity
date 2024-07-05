@@ -54,4 +54,8 @@ public class ChatAcknowledgementPacket implements MinecraftPacket {
                 "offset=" + offset +
                 '}';
     }
+
+    public int offset() {
+        return offset;
+    }
 }

@@ -19,7 +19,9 @@ package com.velocitypowered.proxy.protocol.packet.chat.session;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.packet.chat.LastSeenMessages;
 import io.netty.buffer.ByteBuf;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class UnsignedPlayerCommandPacket extends SessionPlayerCommandPacket {
 
@@ -31,6 +33,11 @@ public class UnsignedPlayerCommandPacket extends SessionPlayerCommandPacket {
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     ProtocolUtils.writeString(buf, this.command);
+  }
+
+  @Override
+  public SessionPlayerCommandPacket withLastSeenMessages(@Nullable LastSeenMessages lastSeenMessages) {
+    return this;
   }
 
   public boolean isSigned() {

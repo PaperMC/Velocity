@@ -29,6 +29,8 @@ import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.concurrent.CompletableFuture;
+
 public class SessionChatHandler implements ChatHandler<SessionPlayerChatPacket> {
 
   private static final Logger logger = LogManager.getLogger(SessionChatHandler.class);
@@ -51,8 +53,9 @@ public class SessionChatHandler implements ChatHandler<SessionPlayerChatPacket> 
     ChatQueue chatQueue = this.player.getChatQueue();
     EventManager eventManager = this.server.getEventManager();
     PlayerChatEvent toSend = new PlayerChatEvent(player, packet.getMessage());
+    CompletableFuture<PlayerChatEvent> eventFuture = eventManager.fire(toSend);
     chatQueue.queuePacket(
-        eventManager.fire(toSend)
+        newLastSeenMessages -> eventFuture
             .thenApply(pme -> {
               PlayerChatEvent.ChatResult chatResult = pme.getResult();
               if (!chatResult.isAllowed()) {
@@ -70,15 +73,17 @@ public class SessionChatHandler implements ChatHandler<SessionPlayerChatPacket> 
                 }
                 return this.player.getChatBuilderFactory().builder().message(packet.message)
                     .setTimestamp(packet.timestamp)
+                    .setLastSeenMessages(newLastSeenMessages)
                     .toServer();
               }
-              return packet;
+              return packet.withLastSeenMessages(newLastSeenMessages);
             })
             .exceptionally((ex) -> {
               logger.error("Exception while handling player chat for {}", player, ex);
               return null;
             }),
-        packet.getTimestamp()
+        packet.getTimestamp(),
+        packet.getLastSeenMessages()
     );
   }
 }
