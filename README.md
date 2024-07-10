@@ -8,6 +8,11 @@ and flexibility.
 
 Velocity is licensed under the GPLv3 license.
 
+## Information about Velocity fork for Beanium
+
+Information about the changes made in this fork (for the BeaniumMC),
+can be found in [BEANIUM.md](/BEANIUM.md).
+
 ## Goals
 
 * A codebase that is easy to dive into and consistently follows best practices
