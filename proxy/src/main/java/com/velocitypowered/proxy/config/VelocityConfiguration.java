@@ -84,7 +84,6 @@ public class VelocityConfiguration implements ProxyConfig {
   private final Advanced advanced;
   @Expose
   private final Query query;
-  private final Metrics metrics;
   @Expose
   private boolean enablePlayerAddressLogging = true;
   private net.kyori.adventure.text.@MonotonicNonNull Component motdAsComponent;
@@ -92,13 +91,11 @@ public class VelocityConfiguration implements ProxyConfig {
   @Expose
   private boolean forceKeyAuthentication = true; // Added in 1.19
 
-  private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
-      Query query, Metrics metrics) {
+  private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced, Query query) {
     this.servers = servers;
     this.forcedHosts = forcedHosts;
     this.advanced = advanced;
     this.query = query;
-    this.metrics = metrics;
   }
 
   private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
@@ -106,7 +103,7 @@ public class VelocityConfiguration implements ProxyConfig {
       PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
       boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough,
       boolean enablePlayerAddressLogging, Servers servers, ForcedHosts forcedHosts,
-      Advanced advanced, Query query, Metrics metrics, boolean forceKeyAuthentication) {
+      Advanced advanced, Query query, boolean forceKeyAuthentication) {
     this.bind = bind;
     this.motd = motd;
     this.showMaxPlayers = showMaxPlayers;
@@ -122,7 +119,6 @@ public class VelocityConfiguration implements ProxyConfig {
     this.forcedHosts = forcedHosts;
     this.advanced = advanced;
     this.query = query;
-    this.metrics = metrics;
     this.forceKeyAuthentication = forceKeyAuthentication;
   }
 
@@ -363,10 +359,6 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isTcpFastOpen();
   }
 
-  public Metrics getMetrics() {
-    return metrics;
-  }
-
   public PingPassthroughMode getPingPassthrough() {
     return pingPassthrough;
   }
@@ -538,7 +530,6 @@ public class VelocityConfiguration implements ProxyConfig {
               new ForcedHosts(forcedHostsConfig),
               new Advanced(advancedConfig),
               new Query(queryConfig),
-              new Metrics(metricsConfig),
               forceKeyAuthentication
       );
     }
@@ -879,24 +870,6 @@ public class VelocityConfiguration implements ProxyConfig {
           + ", queryMap='" + queryMap + '\''
           + ", showPlugins=" + showPlugins
           + '}';
-    }
-  }
-
-  /**
-   * Configuration for metrics.
-   */
-  public static class Metrics {
-
-    private boolean enabled = true;
-
-    private Metrics(CommentedConfig toml) {
-      if (toml != null) {
-        this.enabled = toml.getOrElse("enabled", true);
-      }
-    }
-
-    public boolean isEnabled() {
-      return enabled;
     }
   }
 }

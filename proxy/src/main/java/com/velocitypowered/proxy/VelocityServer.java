@@ -92,6 +92,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import net.beanium.proxy.BeaniumConstants;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.audience.ForwardingAudience;
 import net.kyori.adventure.key.Key;
@@ -186,12 +187,15 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     String implName;
     String implVersion;
     String implVendor;
+
+    implName = BeaniumConstants.BRAND_NAME;
+
     if (pkg != null) {
-      implName = MoreObjects.firstNonNull(pkg.getImplementationTitle(), "Velocity");
+      //implName = MoreObjects.firstNonNull(pkg.getImplementationTitle(), "Velocity");
       implVersion = MoreObjects.firstNonNull(pkg.getImplementationVersion(), "<unknown>");
       implVendor = MoreObjects.firstNonNull(pkg.getImplementationVendor(), "Velocity Contributors");
     } else {
-      implName = "Velocity";
+      //implName = "Velocity";
       implVersion = "<unknown>";
       implVendor = "Velocity Contributors";
     }
@@ -262,8 +266,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     if (configuration.isQueryEnabled()) {
       this.cm.queryBind(configuration.getBind().getHostString(), configuration.getQueryPort());
     }
-
-    Metrics.VelocityMetrics.startMetrics(this, configuration.getMetrics());
   }
 
   private void registerTranslations() {
