@@ -23,46 +23,46 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @AwaitingEvent
 public class ServerResourcePackRemoveEvent implements ResultedEvent<ResultedEvent.GenericResult> {
 
-    private GenericResult result;
-    private final @MonotonicNonNull UUID packId;
-    private final ServerConnection serverConnection;
+  private GenericResult result;
+  private final @MonotonicNonNull UUID packId;
+  private final ServerConnection serverConnection;
 
-    /**
-     * Instantiates this event.
-     */
-    public ServerResourcePackRemoveEvent(UUID packId, ServerConnection serverConnection) {
-        this.result = ResultedEvent.GenericResult.allowed();
-        this.packId = packId;
-        this.serverConnection = serverConnection;
-    }
+  /**
+   * Instantiates this event.
+   */
+  public ServerResourcePackRemoveEvent(UUID packId, ServerConnection serverConnection) {
+    this.result = ResultedEvent.GenericResult.allowed();
+    this.packId = packId;
+    this.serverConnection = serverConnection;
+  }
 
-    /**
-     * Returns the id of the resource pack, if it's null all the resource packs
-     * from player will be cleared.
-     *
-     * @return the id
-     */
-    @Nullable
-    public UUID getPackId() {
-        return packId;
-    }
+  /**
+   * Returns the id of the resource pack, if it's null all the resource packs
+   * from player will be cleared.
+   *
+   * @return the id
+   */
+  @Nullable
+  public UUID getPackId() {
+    return packId;
+  }
 
-    /**
-     * Returns the server that tries to remove a resource pack from player or clear all of them.
-     *
-     * @return the server connection
-     */
-    public ServerConnection getServerConnection() {
-        return serverConnection;
-    }
+  /**
+   * Returns the server that tries to remove a resource pack from player or clear all of them.
+   *
+   * @return the server connection
+   */
+  public ServerConnection getServerConnection() {
+    return serverConnection;
+  }
 
-    @Override
-    public GenericResult getResult() {
-        return this.result;
-    }
+  @Override
+  public GenericResult getResult() {
+    return this.result;
+  }
 
-    @Override
-    public void setResult(GenericResult result) {
-        this.result = Preconditions.checkNotNull(result, "result");
-    }
+  @Override
+  public void setResult(GenericResult result) {
+    this.result = Preconditions.checkNotNull(result, "result");
+  }
 }
