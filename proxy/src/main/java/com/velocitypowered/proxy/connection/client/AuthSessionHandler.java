@@ -178,14 +178,14 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
       inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_player_data"));
     } else {
       loginState = State.ACKNOWLEDGED;
-      mcConnection.setActiveSessionHandler(StateRegistry.CONFIG,
-          new ClientConfigSessionHandler(server, connectedPlayer));
+      mcConnection.setActiveSessionHandler(StateRegistry.CONFIG, new ClientConfigSessionHandler(server, connectedPlayer));
 
-      server.getEventManager().fire(new PostLoginEvent(connectedPlayer))
-          .thenCompose((ignored) -> connectToInitialServer(connectedPlayer)).exceptionally((ex) -> {
-            logger.error("Exception while connecting {} to initial server", connectedPlayer, ex);
-            return null;
-          });
+      server.getEventManager().fire(new PostLoginEvent(connectedPlayer)).thenCompose(ignored -> {
+        return connectToInitialServer(connectedPlayer);
+      }).exceptionally((ex) -> {
+        logger.error("Exception while connecting {} to initial server", connectedPlayer, ex);
+        return null;
+      });
     }
     return true;
   }
@@ -224,8 +224,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
         player.disconnect0(reason.get(), true);
       } else {
         if (!server.registerConnection(player)) {
-          player.disconnect0(Component.translatable("velocity.error.already-connected-proxy"),
-              true);
+          player.disconnect0(Component.translatable("velocity.error.already-connected-proxy"), true);
           return;
         }
 
@@ -238,13 +237,13 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
         loginState = State.SUCCESS_SENT;
         if (inbound.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
           loginState = State.ACKNOWLEDGED;
-          mcConnection.setActiveSessionHandler(StateRegistry.PLAY,
-              new InitialConnectSessionHandler(player, server));
-          server.getEventManager().fire(new PostLoginEvent(player))
-              .thenCompose((ignored) -> connectToInitialServer(player)).exceptionally((ex) -> {
-                logger.error("Exception while connecting {} to initial server", player, ex);
-                return null;
-              });
+          mcConnection.setActiveSessionHandler(StateRegistry.PLAY, new InitialConnectSessionHandler(player, server));
+          server.getEventManager().fire(new PostLoginEvent(player)).thenCompose((ignored) -> {
+            return connectToInitialServer(player);
+          }).exceptionally((ex) -> {
+            logger.error("Exception while connecting {} to initial server", player, ex);
+            return null;
+          });
         }
       }
     }, mcConnection.eventLoop()).exceptionally((ex) -> {
