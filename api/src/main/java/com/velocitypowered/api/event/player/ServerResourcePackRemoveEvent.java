@@ -7,6 +7,7 @@
 
 package com.velocitypowered.api.event.player;
 
+import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import java.util.UUID;
@@ -62,6 +63,6 @@ public class ServerResourcePackRemoveEvent implements ResultedEvent<ResultedEven
 
     @Override
     public void setResult(GenericResult result) {
-        this.result = result;
+        this.result = Preconditions.checkNotNull(result, "result");
     }
 }
