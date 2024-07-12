@@ -21,6 +21,7 @@ import com.velocitypowered.api.event.connection.PreTransferEvent;
 import com.velocitypowered.api.event.player.CookieRequestEvent;
 import com.velocitypowered.api.event.player.CookieStoreEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
+import com.velocitypowered.api.event.player.ServerResourcePackRemoveEvent;
 import com.velocitypowered.api.event.player.ServerResourcePackSendEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
@@ -30,6 +31,7 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientConfigSessionHandler;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.player.resourcepack.VelocityResourcePackInfo;
+import com.velocitypowered.proxy.connection.player.resourcepack.handler.ResourcePackHandler;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
@@ -41,6 +43,7 @@ import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
 import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
+import com.velocitypowered.proxy.protocol.packet.RemoveResourcePackPacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TransferPacket;
@@ -189,6 +192,33 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
       return null;
     });
 
+    return true;
+  }
+
+  @Override
+  public boolean handle(RemoveResourcePackPacket packet) {
+    final MinecraftConnection playerConnection = this.serverConn.getPlayer().getConnection();
+
+    final ServerResourcePackRemoveEvent event = new ServerResourcePackRemoveEvent(
+            packet.getId(), this.serverConn);
+    server.getEventManager().fire(event).thenAcceptAsync(serverResourcePackRemoveEvent -> {
+      if (playerConnection.isClosed()) {
+        return;
+      }
+      if (serverResourcePackRemoveEvent.getResult().isAllowed()) {
+        final ConnectedPlayer player = serverConn.getPlayer();
+        final ResourcePackHandler handler = player.resourcePackHandler();
+        if (packet.getId() != null) {
+          handler.remove(packet.getId());
+        } else {
+          handler.clearAppliedResourcePacks();
+        }
+        playerConnection.write(packet);
+      }
+    }, playerConnection.eventLoop()).exceptionally((ex) -> {
+      logger.error("Exception while handling resource pack remove for {}", playerConnection, ex);
+      return null;
+    });
     return true;
   }
 

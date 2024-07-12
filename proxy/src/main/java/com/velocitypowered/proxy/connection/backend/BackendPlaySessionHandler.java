@@ -29,6 +29,7 @@ import com.velocitypowered.api.event.connection.PreTransferEvent;
 import com.velocitypowered.api.event.player.CookieRequestEvent;
 import com.velocitypowered.api.event.player.CookieStoreEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
+import com.velocitypowered.api.event.player.ServerResourcePackRemoveEvent;
 import com.velocitypowered.api.event.player.ServerResourcePackSendEvent;
 import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -258,14 +259,26 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(RemoveResourcePackPacket packet) {
-    final ConnectedPlayer player = serverConn.getPlayer();
-    final ResourcePackHandler handler = player.resourcePackHandler();
-    if (packet.getId() != null) {
-      handler.remove(packet.getId());
-    } else {
-      handler.clearAppliedResourcePacks();
-    }
-    playerConnection.write(packet);
+    final ServerResourcePackRemoveEvent event = new ServerResourcePackRemoveEvent(
+            packet.getId(), this.serverConn);
+    server.getEventManager().fire(event).thenAcceptAsync(serverResourcePackRemoveEvent -> {
+      if (playerConnection.isClosed()) {
+        return;
+      }
+      if (serverResourcePackRemoveEvent.getResult().isAllowed()) {
+        final ConnectedPlayer player = serverConn.getPlayer();
+        final ResourcePackHandler handler = player.resourcePackHandler();
+        if (packet.getId() != null) {
+          handler.remove(packet.getId());
+        } else {
+          handler.clearAppliedResourcePacks();
+        }
+        playerConnection.write(packet);
+      }
+    }, playerConnection.eventLoop()).exceptionally((ex) -> {
+      logger.error("Exception while handling resource pack remove for {}", playerConnection, ex);
+      return null;
+    });
     return true;
   }
 
