@@ -260,6 +260,13 @@ public class BungeeCordMessageResponder {
     });
   }
 
+  private void processKickRaw(ByteBufDataInput in) {
+    proxy.getPlayer(in.readUTF()).ifPresent(player -> {
+      String kickReason = in.readUTF();
+      player.disconnect(GsonComponentSerializer.gson().deserialize(kickReason));
+    });
+  }
+
   private void processForwardToPlayer(ByteBufDataInput in) {
     Optional<Player> player = proxy.getPlayer(in.readUTF());
     if (player.isPresent()) {
@@ -371,6 +378,9 @@ public class BungeeCordMessageResponder {
         break;
       case "KickPlayer":
         this.processKick(in);
+        break;
+      case "KickPlayerRaw":
+        this.processKickRaw(in);
         break;
       default:
         // Do nothing, unknown command

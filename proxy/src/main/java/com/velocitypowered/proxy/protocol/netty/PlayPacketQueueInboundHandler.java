@@ -24,7 +24,7 @@ import com.velocitypowered.proxy.protocol.StateRegistry;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.ReferenceCountUtil;
-import io.netty.util.internal.PlatformDependent;
+import java.util.ArrayDeque;
 import java.util.Queue;
 import org.jetbrains.annotations.NotNull;
 
@@ -42,7 +42,7 @@ import org.jetbrains.annotations.NotNull;
 public class PlayPacketQueueInboundHandler extends ChannelDuplexHandler {
 
   private final StateRegistry.PacketRegistry.ProtocolRegistry registry;
-  private final Queue<Object> queue = PlatformDependent.newMpscQueue();
+  private final Queue<Object> queue = new ArrayDeque<>();
 
   /**
    * Provides registries for client &amp; server bound packets.

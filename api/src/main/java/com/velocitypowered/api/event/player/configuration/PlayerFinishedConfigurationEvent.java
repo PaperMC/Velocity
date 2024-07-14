@@ -13,11 +13,11 @@ import com.velocitypowered.api.proxy.ServerConnection;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Event executed when a player of version 1.20.2 or higher finishes the Configuration state.
+ * This event is executed when a player has finished the configuration state.
  * <p>From this moment on, the {@link Player#getProtocolState()} method
  * will return {@link ProtocolState#PLAY}.</p>
  *
- * @param player The player who has completed the Configuration state
+ * @param player The player who has finished the configuration state.
  * @param server The server that has (re-)configured the player.
  * @since 3.3.0
  * @sinceMinecraft 1.20.2

@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.connection.backend;
 
 import com.velocitypowered.api.event.player.CookieRequestEvent;
 import com.velocitypowered.api.event.player.ServerLoginPluginMessageEvent;
+import com.velocitypowered.api.event.player.configuration.PlayerEnteredConfigurationEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
@@ -144,8 +145,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   public boolean handle(ServerLoginSuccessPacket packet) {
     if (server.getConfiguration().getServerPlayerInfoForwardingMode(serverConn.getServerInfo().getName()) == PlayerInfoForwarding.MODERN
         && !informationForwarded) {
-      resultFuture.complete(ConnectionRequestResults.forDisconnect(MODERN_IP_FORWARDING_FAILURE,
-          serverConn.getServer()));
+      resultFuture.complete(ConnectionRequestResults.forDisconnect(MODERN_IP_FORWARDING_FAILURE, serverConn.getServer()));
       serverConn.disconnect();
       return true;
     }
@@ -156,12 +156,10 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     // Move into the PLAY phase.
     MinecraftConnection smc = serverConn.ensureConnected();
     if (smc.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
-      smc.setActiveSessionHandler(StateRegistry.PLAY,
-          new TransitionSessionHandler(server, serverConn, resultFuture));
+      smc.setActiveSessionHandler(StateRegistry.PLAY, new TransitionSessionHandler(server, serverConn, resultFuture));
     } else {
       smc.write(new LoginAcknowledgedPacket());
-      smc.setActiveSessionHandler(StateRegistry.CONFIG,
-          new ConfigSessionHandler(server, serverConn, resultFuture));
+      smc.setActiveSessionHandler(StateRegistry.CONFIG, new ConfigSessionHandler(server, serverConn, resultFuture));
       ConnectedPlayer player = serverConn.getPlayer();
       if (player.getClientSettingsPacket() != null) {
         smc.write(player.getClientSettingsPacket());
@@ -169,6 +167,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       if (player.getConnection().getActiveSessionHandler() instanceof ClientPlaySessionHandler clientPlaySessionHandler) {
         smc.setAutoReading(false);
         clientPlaySessionHandler.doSwitch().thenAcceptAsync((unused) -> smc.setAutoReading(true), smc.eventLoop());
+      } else {
+        // Initial login - the player is already in configuration state.
+        server.getEventManager().fireAndForget(new PlayerEnteredConfigurationEvent(player, serverConn));
       }
     }
 

@@ -43,13 +43,13 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -86,35 +86,48 @@ public class VelocityPluginManager implements PluginManager {
     checkNotNull(directory, "directory");
     checkArgument(directory.toFile().isDirectory(), "provided path isn't a directory");
 
-    List<PluginDescription> found = new ArrayList<>();
+    Map<String, PluginDescription> foundCandidates = new LinkedHashMap<>();
     JavaPluginLoader loader = new JavaPluginLoader(server, directory);
 
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory,
         p -> p.toFile().isFile() && p.toString().endsWith(".jar"))) {
       for (Path path : stream) {
         try {
-          found.add(loader.loadCandidate(path));
+          PluginDescription candidate = loader.loadCandidate(path);
+
+          // If we found a duplicate candidate (with the same ID), don't load it.
+          PluginDescription maybeExistingCandidate = foundCandidates.putIfAbsent(
+              candidate.getId(), candidate);
+
+          if (maybeExistingCandidate != null) {
+            logger.error("Refusing to load plugin at path {} since we already "
+                    + "loaded a plugin with the same ID {} from {}",
+                candidate.getSource().map(Objects::toString).orElse("<UNKNOWN>"),
+                candidate.getId(),
+                maybeExistingCandidate.getSource().map(Objects::toString).orElse("<UNKNOWN>"));
+          }
         } catch (Throwable e) {
           logger.error("Unable to load plugin {}", path, e);
         }
       }
     }
 
-    if (found.isEmpty()) {
+    if (foundCandidates.isEmpty()) {
       // No plugins found
       return;
     }
 
-    List<PluginDescription> sortedPlugins = PluginDependencyUtils.sortCandidates(found);
+    List<PluginDescription> sortedPlugins = PluginDependencyUtils.sortCandidates(
+        new ArrayList<>(foundCandidates.values()));
 
-    Set<String> loadedPluginsById = new HashSet<>();
+    Map<String, PluginDescription> loadedCandidates = new HashMap<>();
     Map<PluginContainer, Module> pluginContainers = new LinkedHashMap<>();
     // Now load the plugins
     pluginLoad:
     for (PluginDescription candidate : sortedPlugins) {
       // Verify dependencies
       for (PluginDependency dependency : candidate.getDependencies()) {
-        if (!dependency.isOptional() && !loadedPluginsById.contains(dependency.getId())) {
+        if (!dependency.isOptional() && !loadedCandidates.containsKey(dependency.getId())) {
           logger.error("Can't load plugin {} due to missing dependency {}", candidate.getId(),
               dependency.getId());
           continue pluginLoad;
@@ -125,7 +138,7 @@ public class VelocityPluginManager implements PluginManager {
         PluginDescription realPlugin = loader.createPluginFromCandidate(candidate);
         VelocityPluginContainer container = new VelocityPluginContainer(realPlugin);
         pluginContainers.put(container, loader.createModule(container));
-        loadedPluginsById.add(realPlugin.getId());
+        loadedCandidates.put(realPlugin.getId(), realPlugin);
       } catch (Throwable e) {
         logger.error("Can't create module for plugin {}", candidate.getId(), e);
       }
