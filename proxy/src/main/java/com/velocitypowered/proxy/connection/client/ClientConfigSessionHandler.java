@@ -80,6 +80,11 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
+  public void deactivated() {
+    configurationFuture = null;
+  }
+
+  @Override
   public boolean handle(final KeepAlivePacket packet) {
     player.forwardKeepAlive(packet);
     return true;
