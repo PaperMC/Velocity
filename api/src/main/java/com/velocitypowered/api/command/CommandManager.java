@@ -44,7 +44,7 @@ public interface CommandManager {
    * @param otherAliases additional aliases
    * @throws IllegalArgumentException if one of the given aliases is already registered, or
    *         the given command does not implement a registrable {@link Command} subinterface
-   * @see Command for a list of registrable {@link Command} subinterfaces
+   * @see Command for a list of registrable Command subinterfaces
    */
   default void register(String alias, Command command, String... otherAliases) {
     register(metaBuilder(alias).aliases(otherAliases).build(), command);
@@ -65,7 +65,7 @@ public interface CommandManager {
    * @param command the command to register
    * @throws IllegalArgumentException if one of the given aliases is already registered, or
    *         the given command does not implement a registrable {@link Command} subinterface
-   * @see Command for a list of registrable {@link Command} subinterfaces
+   * @see Command for a list of registrable Command subinterfaces
    */
   void register(CommandMeta meta, Command command);
 
