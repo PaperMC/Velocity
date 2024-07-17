@@ -790,11 +790,23 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
               if (!e.getResult().isAllowed()) {
                 return;
               }
-              response.getOffers().clear();
-              for (String s : e.getSuggestions()) {
-                response.getOffers().add(new Offer(s));
-              }
-              player.getConnection().write(response);
+              // Retain call to TabCompleteEvent
+              server.getEventManager().fire(new TabCompleteEvent(player, request.getCommand(), offers))
+                      .thenAcceptAsync(ce -> {
+                        response.getOffers().clear();
+                        for (String s : e.isSuggestionsModified() ? e.getSuggestions() : ce.getSuggestions()) {
+                          response.getOffers().add(new Offer(s));
+                        }
+                        player.getConnection().write(response);
+                      }, player.getConnection().eventLoop()).exceptionally((cex) -> {
+                        logger.error(
+                                "Exception while finishing regular tab completion,"
+                                        + " with request {} and response{}.",
+                                request, response, cex);
+                        logger.warn("*** IMPORTANT WARNING: TabCompleteEvent is deprecated, please"
+                                + " use TabCompletionResponseEvent instead.");
+                        return null;
+                      });
             }, player.getConnection().eventLoop()).exceptionally((ex) -> {
               logger.error(
                       "Exception while finishing regular tab completion,"

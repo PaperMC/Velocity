@@ -20,9 +20,6 @@ import java.util.List;
  * Velocity will wait for this event to finish firing before sending the tab complete results to
  * the client. Be sure to be as fast as possible, since the client will freeze while it waits for
  * the tab complete results.
- *
- * @deprecated This event is deprecated and no longer called, we strongly advise you to
- *     use PlayerTabCompleteEvent and TabCompletionResponseEvent,java instead.
  */
 @AwaitingEvent
 @Deprecated

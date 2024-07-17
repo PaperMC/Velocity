@@ -29,6 +29,7 @@ public class TabCompletionResponseEvent implements ResultedEvent<ResultedEvent.G
     private final String partialMessage;
     private List<String> suggestions;
     private GenericResult result;
+    private boolean isSuggestionsModified = false;
 
     /**
      * Constructs a new TabCompleteEvent instance.
@@ -75,6 +76,14 @@ public class TabCompletionResponseEvent implements ResultedEvent<ResultedEvent.G
      */
     public void setSuggestions(List<String> suggestions) {
         this.suggestions = Preconditions.checkNotNull(suggestions, "suggestions");
+        isSuggestionsModified = true;
+    }
+
+    /**
+     * Get if the suggestions list is modified.
+     */
+    public boolean isSuggestionsModified() {
+        return isSuggestionsModified;
     }
 
     @Override
