@@ -7,6 +7,7 @@
 
 package com.velocitypowered.api.event.proxy.server;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
@@ -18,6 +19,7 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
  *
  *  @see com.velocitypowered.api.proxy.ProxyServer#unregisterServer(ServerInfo)
  */
+@Beta
 public class ServerUnregisteredEvent {
 
   private final RegisteredServer unregisteredServer;
