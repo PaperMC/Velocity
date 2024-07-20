@@ -69,6 +69,7 @@ import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.connection.util.VelocityInboundConnection;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
+import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
@@ -1276,6 +1277,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   public void switchToConfigState() {
     server.getEventManager().fire(new PlayerEnterConfigurationEvent(this, getConnectionInFlightOrConnectedServer()))
         .completeOnTimeout(null, 5, TimeUnit.SECONDS).thenRunAsync(() -> {
+          if (bundleHandler.isInBundleSession()) {
+            bundleHandler.toggleBundleSession();
+            connection.write(BundleDelimiterPacket.INSTANCE);
+          }
           connection.write(StartUpdatePacket.INSTANCE);
           connection.getChannel().pipeline().get(MinecraftEncoder.class).setState(StateRegistry.CONFIG);
           // Make sure we don't send any play packets to the player after update start
