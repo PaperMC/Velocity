@@ -18,7 +18,7 @@ tasks {
 
     jar {
         manifest {
-            attributes["Implementation-Title"] = "Beanium Velocity"
+            attributes["Implementation-Title"] = "BeaniumVelocity"
             attributes["Implementation-Vendor"] = "Velocity Contributors"
             attributes["Multi-Release"] = "true"
         }

@@ -5,5 +5,5 @@ package net.beanium.proxy;
  */
 public final class BeaniumConstants {
 
-  public static final String BRAND_NAME = "Beanium Velocity";
+  public static final String BRAND_NAME = "BeaniumVelocity";
 }
