@@ -36,6 +36,7 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_19_4;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_20_2;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_20_3;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_20_5;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_21;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_7_2;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9;
@@ -52,6 +53,8 @@ import com.velocitypowered.proxy.protocol.packet.AvailableCommandsPacket;
 import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
 import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionResponsePacket;
@@ -73,6 +76,7 @@ import com.velocitypowered.proxy.protocol.packet.RespawnPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerDataPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusPingPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusRequestPacket;
@@ -91,6 +95,8 @@ import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChatP
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommandPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.session.UnsignedPlayerCommandPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ActiveFeaturesPacket;
+import com.velocitypowered.proxy.protocol.packet.config.ClientboundCustomReportDetailsPacket;
+import com.velocitypowered.proxy.protocol.packet.config.ClientboundServerLinksPacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.KnownPacksPacket;
 import com.velocitypowered.proxy.protocol.packet.config.RegistrySyncPacket;
@@ -213,6 +219,9 @@ public enum StateRegistry {
         m.readWrite(0x07, MINECRAFT_1_20_3);
         m.readWrite(0x09, MINECRAFT_1_20_5);
       });
+      clientbound(ClientboundStoreCookiePacket.class, ClientboundStoreCookiePacket::new, m -> {
+        m.readWrite(0x0A, MINECRAFT_1_20_5);
+      });
       clientbound(TransferPacket.class, TransferPacket::new, m -> {
         m.readWrite(0x0B, MINECRAFT_1_20_5);
       });
@@ -228,6 +237,12 @@ public enum StateRegistry {
       });
       clientbound(KnownPacksPacket.class, KnownPacksPacket::new, m -> {
         m.readWrite(0x0E, MINECRAFT_1_20_5);
+      });
+      clientbound(ClientboundCustomReportDetailsPacket.class, ClientboundCustomReportDetailsPacket::new, m -> {
+        m.readWrite(0x0F, MINECRAFT_1_21);
+      });
+      clientbound(ClientboundServerLinksPacket.class, ClientboundServerLinksPacket::new, m -> {
+        m.readWrite(0x10, MINECRAFT_1_21);
       });
     }
   },
@@ -291,6 +306,9 @@ public enum StateRegistry {
         m.readWrite(0x08, MINECRAFT_1_19_4);
         m.readWrite(0x09, MINECRAFT_1_20_2);
         m.readWrite(0x0A, MINECRAFT_1_20_5);
+      });
+      serverbound(ServerboundCookieResponsePacket.class, ServerboundCookieResponsePacket::new, m -> {
+        m.readWrite(0x11, MINECRAFT_1_20_5);
       });
       serverbound(PluginMessagePacket.class, PluginMessagePacket::new, m -> {
         m.readWrite(0x17, MINECRAFT_1_7_2);
@@ -384,6 +402,9 @@ public enum StateRegistry {
         m.readWrite(0x0E, MINECRAFT_1_19_3);
         m.readWrite(0x10, MINECRAFT_1_19_4);
         m.readWrite(0x11, MINECRAFT_1_20_2);
+      });
+      clientbound(ClientboundCookieRequestPacket.class, ClientboundCookieRequestPacket::new, m -> {
+        m.readWrite(0x16, MINECRAFT_1_20_5);
       });
       clientbound(PluginMessagePacket.class, PluginMessagePacket::new, m -> {
         m.readWrite(0x3F, MINECRAFT_1_7_2);
@@ -593,6 +614,9 @@ public enum StateRegistry {
         m.readWrite(0x3C, MINECRAFT_1_20_2);
         m.readWrite(0x3E, MINECRAFT_1_20_5);
       });
+      clientbound(ClientboundStoreCookiePacket.class, ClientboundStoreCookiePacket::new, m -> {
+        m.writeOnly(0x6B, MINECRAFT_1_20_5);
+      });
       clientbound(SystemChatPacket.class, SystemChatPacket::new, m -> {
         m.writeOnly(0x5F, MINECRAFT_1_19);
         m.writeOnly(0x62, MINECRAFT_1_19_1);
@@ -629,6 +653,12 @@ public enum StateRegistry {
       clientbound(TransferPacket.class, TransferPacket::new, m -> {
         m.readWrite(0x73, MINECRAFT_1_20_5);
       });
+      clientbound(ClientboundCustomReportDetailsPacket.class, ClientboundCustomReportDetailsPacket::new, m -> {
+        m.readWrite(0x7A, MINECRAFT_1_21);
+      });
+      clientbound(ClientboundServerLinksPacket.class, ClientboundServerLinksPacket::new, m -> {
+        m.readWrite(0x7B, MINECRAFT_1_21);
+      });
     }
   },
   LOGIN {
@@ -644,6 +674,9 @@ public enum StateRegistry {
       });
       serverbound(LoginAcknowledgedPacket.class, LoginAcknowledgedPacket::new, m -> {
         m.readWrite(0x03, MINECRAFT_1_20_2);
+      });
+      serverbound(ServerboundCookieResponsePacket.class, ServerboundCookieResponsePacket::new, m -> {
+        m.readWrite(0x04, MINECRAFT_1_20_5);
       });
 
       clientbound(DisconnectPacket.class, () -> new DisconnectPacket(this), m -> {
@@ -661,6 +694,9 @@ public enum StateRegistry {
       clientbound(LoginPluginMessagePacket.class, LoginPluginMessagePacket::new, m -> {
         m.readWrite(0x04, MINECRAFT_1_13);
       });
+      clientbound(ClientboundCookieRequestPacket.class, ClientboundCookieRequestPacket::new, m -> {
+        m.readWrite(0x05, MINECRAFT_1_20_5);
+      });
     }
   };
 
@@ -670,11 +706,11 @@ public enum StateRegistry {
   protected final PacketRegistry clientbound = new PacketRegistry(CLIENTBOUND, this);
   protected final PacketRegistry serverbound = new PacketRegistry(SERVERBOUND, this);
 
-  <P extends MinecraftPacket>  void clientbound(Class<P> clazz, Supplier<P> factory, Consumer<PacketMapper> mapper) {
+  <P extends MinecraftPacket> void clientbound(Class<P> clazz, Supplier<P> factory, Consumer<PacketMapper> mapper) {
     this.clientbound.register(clazz, factory, mapper);
   }
 
-  <P extends MinecraftPacket>  void serverbound(Class<P> clazz, Supplier<P> factory, Consumer<PacketMapper> mapper) {
+  <P extends MinecraftPacket> void serverbound(Class<P> clazz, Supplier<P> factory, Consumer<PacketMapper> mapper) {
     this.serverbound.register(clazz, factory, mapper);
   }
 
