@@ -181,7 +181,8 @@ public class VelocityConfiguration implements ProxyConfig {
     }
 
     if (requireForwardingSecret && (forwardingSecret == null || forwardingSecret.length == 0)) {
-      logger.error("You don't have a forwarding secret set. This is required for security.");
+      logger.error("You don't have a forwarding secret set. This is required for security. "
+          + "See https://docs.papermc.io/velocity/player-information-forwarding for more details.");
       valid = false;
     }
 
