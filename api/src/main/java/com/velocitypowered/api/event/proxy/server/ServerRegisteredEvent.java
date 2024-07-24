@@ -25,7 +25,7 @@ import org.jetbrains.annotations.NotNull;
  */
 @Beta
 public record ServerRegisteredEvent(@NotNull RegisteredServer registeredServer) {
-    public ServerRegisteredEvent {
-        Preconditions.checkNotNull(registeredServer, "registeredServer");
-    }
+  public ServerRegisteredEvent {
+    Preconditions.checkNotNull(registeredServer, "registeredServer");
+  }
 }
