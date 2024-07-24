@@ -8,9 +8,9 @@
 package com.velocitypowered.api.event.proxy.server;
 
 import com.google.common.annotations.Beta;
-import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * This event is fired by the proxy after a backend server is registered to the server map.
@@ -18,24 +18,10 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
  * replaced due to configuration reload.
  *
  *  @see com.velocitypowered.api.proxy.ProxyServer#registerServer(ServerInfo)
+ *
+ * @param registeredServer A registeredServer that just has been registered.
+ * @since 3.3.0
  */
 @Beta
-public final class ServerRegisteredEvent {
-
-  private final RegisteredServer registeredServer;
-
-  public ServerRegisteredEvent(RegisteredServer registeredServer) {
-    this.registeredServer = Preconditions.checkNotNull(registeredServer, "registeredServer");
-  }
-
-  public RegisteredServer getRegisteredServer() {
-    return registeredServer;
-  }
-
-  @Override
-  public String toString() {
-    return "ServerRegisteredEvent{"
-         + "registeredServer=" + registeredServer
-         + '}';
-  }
+public record ServerRegisteredEvent(@NotNull RegisteredServer registeredServer) {
 }

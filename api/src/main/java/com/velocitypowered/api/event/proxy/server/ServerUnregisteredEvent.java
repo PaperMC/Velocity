@@ -8,9 +8,9 @@
 package com.velocitypowered.api.event.proxy.server;
 
 import com.google.common.annotations.Beta;
-import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * This event is fired by the proxy after a backend server is unregistered from the server map.
@@ -18,24 +18,10 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
  * or when a server is replaced due to configuration reload.
  *
  *  @see com.velocitypowered.api.proxy.ProxyServer#unregisterServer(ServerInfo)
+ *
+ * @param unregisteredServer A registeredServer that just has been unregistered.
+ * @since 3.3.0
  */
 @Beta
-public class ServerUnregisteredEvent {
-
-  private final RegisteredServer unregisteredServer;
-
-  public ServerUnregisteredEvent(RegisteredServer unregisteredServer) {
-    this.unregisteredServer = Preconditions.checkNotNull(unregisteredServer, "unregisteredServer");
-  }
-
-  public RegisteredServer getUnregisteredServer() {
-    return unregisteredServer;
-  }
-
-  @Override
-  public String toString() {
-    return "ServerUnRegisteredEvent{"
-         + "unregisteredServer=" + unregisteredServer
-         + '}';
-  }
+public record ServerUnregisteredEvent(@NotNull RegisteredServer unregisteredServer) {
 }
