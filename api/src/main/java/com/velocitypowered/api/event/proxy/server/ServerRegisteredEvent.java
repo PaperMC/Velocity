@@ -20,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
  *
  *  @see com.velocitypowered.api.proxy.ProxyServer#registerServer(ServerInfo)
  *
- * @param registeredServer A registeredServer that just has been registered.
+ * @param registeredServer A {@link RegisteredServer} that has been registered.
  * @since 3.3.0
  */
 @Beta

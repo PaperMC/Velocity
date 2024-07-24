@@ -20,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
  *
  *  @see com.velocitypowered.api.proxy.ProxyServer#unregisterServer(ServerInfo)
  *
- * @param unregisteredServer A registeredServer that just has been unregistered.
+ * @param unregisteredServer A {@link RegisteredServer} that has been unregistered.
  * @since 3.3.0
  */
 @Beta
