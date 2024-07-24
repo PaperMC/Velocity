@@ -8,6 +8,7 @@
 package com.velocitypowered.api.event.proxy.server;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import org.jetbrains.annotations.NotNull;
@@ -24,4 +25,7 @@ import org.jetbrains.annotations.NotNull;
  */
 @Beta
 public record ServerRegisteredEvent(@NotNull RegisteredServer registeredServer) {
+    public ServerRegisteredEvent {
+        Preconditions.checkNotNull(registeredServer, "registeredServer");
+    }
 }
