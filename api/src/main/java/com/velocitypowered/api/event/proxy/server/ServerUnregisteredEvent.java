@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
  * Currently, it may occur when a server is unregistered dynamically at runtime
  * or when a server is replaced due to configuration reload.
  *
- *  @see com.velocitypowered.api.proxy.ProxyServer#unregisterServer(ServerInfo)
+ * @see com.velocitypowered.api.proxy.ProxyServer#unregisterServer(ServerInfo)
  *
  * @param unregisteredServer A {@link RegisteredServer} that has been unregistered.
  * @since 3.3.0
