@@ -71,9 +71,9 @@ public class TabCompleteEvent {
   @Override
   public String toString() {
     return "TabCompleteEvent{"
-            + "player=" + player
-            + ", partialMessage='" + partialMessage + '\''
-            + ", suggestions=" + suggestions
-            + '}';
+        + "player=" + player
+        + ", partialMessage='" + partialMessage + '\''
+        + ", suggestions=" + suggestions
+        + '}';
   }
 }
