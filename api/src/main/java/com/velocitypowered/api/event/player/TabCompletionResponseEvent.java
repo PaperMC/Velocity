@@ -22,6 +22,8 @@ import java.util.List;
  * Velocity will wait for this event to finish firing before sending the tab complete results to
  * the client. Be sure to be as fast as possible, since the client will freeze while it waits for
  * the tab complete results.
+ *
+ * @since 3.3.0
  */
 @AwaitingEvent
 public class TabCompletionResponseEvent implements ResultedEvent<ResultedEvent.GenericResult> {
@@ -89,11 +91,11 @@ public class TabCompletionResponseEvent implements ResultedEvent<ResultedEvent.G
     @Override
     public String toString() {
         return "TabCompletionResponseEvent{"
-                + "player=" + player
-                + ", partialMessage='" + partialMessage + '\''
-                + ", suggestions=" + suggestions
-                + ", result=" + result
-                + '}';
+            + "player=" + player
+            + ", partialMessage='" + partialMessage + '\''
+            + ", suggestions=" + suggestions
+            + ", result=" + result
+            + '}';
     }
 
     @Override
