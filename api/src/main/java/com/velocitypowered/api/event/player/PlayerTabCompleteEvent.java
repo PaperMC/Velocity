@@ -19,6 +19,8 @@ import com.velocitypowered.api.proxy.Player;
  * requests a Tab complete from the remote server. Velocity will wait for this
  * event to complete, and then decide what information to send to the remote
  * server based on the result of the trigger.
+ *
+ * @since 3.3.0
  */
 @AwaitingEvent
 public class PlayerTabCompleteEvent implements ResultedEvent<ResultedEvent.GenericResult> {
@@ -66,10 +68,10 @@ public class PlayerTabCompleteEvent implements ResultedEvent<ResultedEvent.Gener
     @Override
     public String toString() {
         return "PlayerTabCompleteEvent{"
-                + "player=" + player
-                + ", partialMessage='" + partialMessage + '\''
-                + ", result=" + result
-                + '}';
+            + "player=" + player
+            + ", partialMessage='" + partialMessage + '\''
+            + ", result=" + result
+            + '}';
     }
 
     @Override
