@@ -22,6 +22,7 @@ import java.util.List;
  * the tab complete results.
  */
 @AwaitingEvent
+@Deprecated(since = "3.3.0")
 public class TabCompleteEvent {
   private final Player player;
   private final String partialMessage;
