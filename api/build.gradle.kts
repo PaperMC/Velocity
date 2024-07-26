@@ -67,7 +67,9 @@ tasks {
             "https://google.github.io/guice/api-docs/${libs.guice.get().version}/javadoc/",
             "https://docs.oracle.com/en/java/javase/17/docs/api/",
             "https://jd.advntr.dev/api/${libs.adventure.bom.get().version}/",
-            "https://javadoc.io/doc/com.github.ben-manes.caffeine/caffeine/${libs.caffeine.get().version}/"
+            "https://jd.advntr.dev/text-minimessage/${libs.adventure.bom.get().version}/",
+            "https://jd.advntr.dev/key/${libs.adventure.bom.get().version}/",
+            "https://javadoc.io/doc/com.github.ben-manes.caffeine/caffeine/${libs.caffeine.get().version}/",
         )
 
         o.tags(
