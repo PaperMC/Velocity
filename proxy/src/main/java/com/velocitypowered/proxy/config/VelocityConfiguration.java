@@ -186,18 +186,20 @@ public class VelocityConfiguration implements ProxyConfig {
         valid = false;
       }
     }
-
-    for (Map.Entry<String, List<String>> entry : forcedHosts.getForcedHosts().entrySet()) {
-      if (entry.getValue().isEmpty()) {
-        logger.error("Forced host '{}' does not contain any servers", entry.getKey());
-        valid = false;
-        continue;
-      }
-
-      for (String server : entry.getValue()) {
-        if (!servers.getServers().containsKey(server)) {
-          logger.error("Server '{}' for forced host '{}' does not exist", server, entry.getKey());
+    final Map<String, List<String>> configuredForcedHosts = forcedHosts.getForcedHosts();
+    if (!configuredForcedHosts.isEmpty()) {
+      for (Map.Entry<String, List<String>> entry : configuredForcedHosts.entrySet()) {
+        if (entry.getValue().isEmpty()) {
+          logger.error("Forced host '{}' does not contain any servers", entry.getKey());
           valid = false;
+          continue;
+        }
+
+        for (String server : entry.getValue()) {
+          if (!servers.getServers().containsKey(server)) {
+            logger.error("Server '{}' for forced host '{}' does not exist", server, entry.getKey());
+            valid = false;
+          }
         }
       }
     }
@@ -638,11 +640,7 @@ public class VelocityConfiguration implements ProxyConfig {
 
   private static class ForcedHosts {
 
-    private Map<String, List<String>> forcedHosts = ImmutableMap.of(
-        "lobby.example.com", ImmutableList.of("lobby"),
-        "factions.example.com", ImmutableList.of("factions"),
-        "minigames.example.com", ImmutableList.of("minigames")
-    );
+    private Map<String, List<String>> forcedHosts = ImmutableMap.of();
 
     private ForcedHosts() {
     }
