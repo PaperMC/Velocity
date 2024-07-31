@@ -92,6 +92,10 @@ tasks {
         dependsOn(configurateBuildTask)
         from(zipTree(configurateBuildTask.map { it.outputs.files.singleFile }))
     }
+
+    runShadow {
+        workingDir = file("run").also(File::mkdirs)
+    }
 }
 
 dependencies {
