@@ -96,6 +96,9 @@ tasks {
     runShadow {
         workingDir = file("run").also(File::mkdirs)
     }
+    named<JavaExec>("run") {
+        workingDir = file("run").also(File::mkdirs)
+    }
 }
 
 dependencies {
