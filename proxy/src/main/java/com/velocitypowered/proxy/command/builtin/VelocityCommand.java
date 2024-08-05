@@ -379,7 +379,7 @@ public final class VelocityCommand {
                 this.heapGenerator.invoke(hotspotMbean, file.toString(), true);
               } catch (Throwable e1) {
                 // This should not occur
-                throw new RuntimeException(e);
+                throw new RuntimeException(e1);
               }
               src.sendMessage(Component.text("Heap dump saved to " + file, NamedTextColor.GREEN));
             };
