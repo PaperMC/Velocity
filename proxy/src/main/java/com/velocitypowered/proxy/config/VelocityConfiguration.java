@@ -60,7 +60,7 @@ public class VelocityConfiguration implements ProxyConfig {
   private static final Logger logger = LogManager.getLogger(VelocityConfiguration.class);
 
   @Expose
-  private String bind = "0.0.0.0:25577";
+  private String bind = "0.0.0.0:25565";
   @Expose
   private String motd = "<aqua>A Velocity Server";
   @Expose
@@ -503,7 +503,7 @@ public class VelocityConfiguration implements ProxyConfig {
       final PingPassthroughMode pingPassthroughMode = config.getEnumOrElse("ping-passthrough",
               PingPassthroughMode.DISABLED);
 
-      final String bind = config.getOrElse("bind", "0.0.0.0:25577");
+      final String bind = config.getOrElse("bind", "0.0.0.0:25565");
       final int maxPlayers = config.getIntOrElse("show-max-players", 500);
       final boolean onlineMode = config.getOrElse("online-mode", true);
       final boolean forceKeyAuthentication = config.getOrElse("force-key-authentication", true);
@@ -830,7 +830,7 @@ public class VelocityConfiguration implements ProxyConfig {
     @Expose
     private boolean queryEnabled = false;
     @Expose
-    private int queryPort = 25577;
+    private int queryPort = 25565;
     @Expose
     private String queryMap = "Velocity";
     @Expose
@@ -849,7 +849,7 @@ public class VelocityConfiguration implements ProxyConfig {
     private Query(CommentedConfig config) {
       if (config != null) {
         this.queryEnabled = config.getOrElse("enabled", false);
-        this.queryPort = config.getIntOrElse("port", 25577);
+        this.queryPort = config.getIntOrElse("port", 25565);
         this.queryMap = config.getOrElse("map", "Velocity");
         this.showPlugins = config.getOrElse("show-plugins", false);
       }
