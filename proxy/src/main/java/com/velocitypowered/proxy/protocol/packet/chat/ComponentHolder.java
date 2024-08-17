@@ -54,6 +54,7 @@ import java.util.Map;
 
 public class ComponentHolder {
   private static final Logger logger = LogManager.getLogger(ComponentHolder.class);
+  public static final int DEFAULT_MAX_STRING_SIZE = 262143;
 
   private final ProtocolVersion version;
   private @MonotonicNonNull Component component;
@@ -282,6 +283,8 @@ public class ComponentHolder {
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
       return new ComponentHolder(version,
           ProtocolUtils.readBinaryTag(buf, version, BinaryTagIO.reader()));
+    } else if (version.noLessThan(ProtocolVersion.MINECRAFT_1_13)) {
+      return new ComponentHolder(version, ProtocolUtils.readString(buf, DEFAULT_MAX_STRING_SIZE));
     } else {
       return new ComponentHolder(version, ProtocolUtils.readString(buf));
     }
