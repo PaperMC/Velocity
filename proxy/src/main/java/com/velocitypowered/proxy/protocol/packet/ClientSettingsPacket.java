@@ -36,7 +36,7 @@ public class ClientSettingsPacket implements MinecraftPacket {
   private int mainHand;
   private boolean textFilteringEnabled; // Added in 1.17
   private boolean clientListingAllowed; // Added in 1.18, overwrites server-list "anonymous" mode
-  private int particleStatus; // Added in 1.20.2
+  private int particleStatus; // Added in 1.21.2
 
   public ClientSettingsPacket() {
   }

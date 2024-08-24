@@ -189,7 +189,7 @@ public class UpsertPlayerInfoPacket implements MinecraftPacket {
         info.displayName.write(buf);
       }
     }),
-    UPDATE_LIST_ORDER((version, buf, info) -> { // red
+    UPDATE_LIST_ORDER((version, buf, info) -> { // read
       info.listOrder = ProtocolUtils.readVarInt(buf);
     }, (version, buf, info) -> { // write
       ProtocolUtils.writeVarInt(buf, info.listOrder);
