@@ -20,10 +20,19 @@ public final class ConnectionHandshakeEvent {
 
   private final InboundConnection connection;
   private final HandshakeIntent intent;
+  private final String extraDataInHandshake;
 
-  public ConnectionHandshakeEvent(InboundConnection connection, HandshakeIntent intent) {
+  /**
+   * Creates a new event.
+   *
+   * @param connection the inbound connection
+   * @param intent the intent of the handshake
+   * @param extraDataInHandshake the extra data in the handshake
+   */
+  public ConnectionHandshakeEvent(InboundConnection connection, HandshakeIntent intent, String extraDataInHandshake) {
     this.connection = Preconditions.checkNotNull(connection, "connection");
     this.intent = Preconditions.checkNotNull(intent, "intent");
+    this.extraDataInHandshake = Preconditions.checkNotNull(extraDataInHandshake, "extraDataInHandshake");
   }
 
   /**
@@ -31,12 +40,13 @@ public final class ConnectionHandshakeEvent {
    * that have not yet updated their integration tests.
    *
    * @param connection the inbound connection
-   * @deprecated use {@link #ConnectionHandshakeEvent(InboundConnection, HandshakeIntent)}
+   * @deprecated use {@link #ConnectionHandshakeEvent(InboundConnection, HandshakeIntent, String)}
    */
   @Deprecated(forRemoval = true)
   public ConnectionHandshakeEvent(InboundConnection connection) {
     this.connection = Preconditions.checkNotNull(connection, "connection");
     this.intent = HandshakeIntent.LOGIN;
+    this.extraDataInHandshake = "";
   }
 
   public InboundConnection getConnection() {
@@ -47,11 +57,15 @@ public final class ConnectionHandshakeEvent {
     return this.intent;
   }
 
+  public String getExtraDataInHandshake() {
+    return this.extraDataInHandshake;
+  }
+
   @Override
   public String toString() {
     return "ConnectionHandshakeEvent{"
-        + "connection=" + connection
-        + ", intent=" + intent
-        + '}';
+            + "connection=" + connection
+            + ", intent=" + intent
+            + '}';
   }
 }
