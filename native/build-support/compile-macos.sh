@@ -6,7 +6,7 @@ fi
 
 if [ ! -d libdeflate ]; then
   echo "Cloning libdeflate..."
-  git clone https://github.com/ebiggers/libdeflate.git
+  git clone --branch v1.21 --single-branch https://github.com/ebiggers/libdeflate.git
 fi
 
 echo "Compiling libdeflate..."
