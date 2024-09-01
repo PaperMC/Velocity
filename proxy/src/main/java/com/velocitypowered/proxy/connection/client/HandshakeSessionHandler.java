@@ -244,6 +244,11 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
+    public Optional<String> getRawVirtualHost() {
+      return getVirtualHost().map(InetSocketAddress::getHostName);
+    }
+
+    @Override
     public boolean isActive() {
       return !connection.isClosed();
     }
