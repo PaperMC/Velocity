@@ -53,3 +53,14 @@ Then, run the following command:
 ```
 
 This will build the native libraries for macOS aarch64. x86_64 has not been tested, but it should work.
+
+### On any other operating system?
+
+If your OS of choice is a Unix of some sort, you can use the individual Linux build scripts as a base:
+
+- `build-support/compile-linux-compress.sh`
+- `build-support/compile-linux-crypto.sh`
+
+You will need to have the necessary build tools installed (a C/C++ toolchain and `cmake`), and you will need to have OpenSSL installed. You will also need to adjust the script to your needs.
+
+If your OS of choice is Windows, you're on your own. It should be possible, but we don't provide any support for it.
