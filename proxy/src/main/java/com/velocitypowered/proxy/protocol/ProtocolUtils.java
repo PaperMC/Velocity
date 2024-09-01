@@ -104,6 +104,7 @@ public enum ProtocolUtils {
           .build();
 
   public static final int DEFAULT_MAX_STRING_SIZE = 65536; // 64KiB
+  private static final int MAXIMUM_VARINT_SIZE = 5;
   private static final BinaryTagType<? extends BinaryTag>[] BINARY_TAG_TYPES = new BinaryTagType[] {
       BinaryTagTypes.END, BinaryTagTypes.BYTE, BinaryTagTypes.SHORT, BinaryTagTypes.INT,
       BinaryTagTypes.LONG, BinaryTagTypes.FLOAT, BinaryTagTypes.DOUBLE,
@@ -127,49 +128,24 @@ public enum ProtocolUtils {
    * @return the decoded VarInt
    */
   public static int readVarInt(ByteBuf buf) {
-    int read = readVarIntSafely(buf);
-    if (read == Integer.MIN_VALUE) {
-      throw MinecraftDecoder.DEBUG ? new CorruptedFrameException("Bad VarInt decoded")
+    int readable = buf.readableBytes();
+    if (readable == 0) {
+      // special case for empty buffer
+      throw MinecraftDecoder.DEBUG ? new CorruptedFrameException("No bytes readable")
           : BAD_VARINT_CACHED;
     }
-    return read;
-  }
 
-  /**
-   * Reads a Minecraft-style VarInt from the specified {@code buf}. The difference between this
-   * method and {@link #readVarInt(ByteBuf)} is that this function returns a sentinel value if the
-   * varint is invalid.
-   *
-   * @param buf the buffer to read from
-   * @return the decoded VarInt, or {@code Integer.MIN_VALUE} if the varint is invalid
-   */
-  public static int readVarIntSafely(ByteBuf buf) {
-    int i = 0;
-    int maxRead = Math.min(5, buf.readableBytes());
-    for (int j = 0; j < maxRead; j++) {
-      int k = buf.readByte();
-      i |= (k & 0x7F) << j * 7;
-      if ((k & 0x80) != 128) {
-        return i;
-      }
+    // we can read at least one byte, and this should be a common case
+    int k = buf.readUnsignedByte();
+    if (k < 0x80) {
+      return k;
     }
-    return Integer.MIN_VALUE;
-  }
 
-  /**
-   * Reads a Minecraft-style VarInt from the specified {@code buf}. The difference between this
-   * method and {@link #readVarInt(ByteBuf)} is that this function returns a sentinel value if the
-   * varint is invalid.
-   *
-   * @param buf the buffer to read from
-   * @return the decoded VarInt
-   * @throws DecoderException if the varint is invalid
-   */
-  public static int readVarIntSafelyOrThrow(ByteBuf buf) {
-    int i = 0;
-    int maxRead = Math.min(5, buf.readableBytes());
-    for (int j = 0; j < maxRead; j++) {
-      int k = buf.readByte();
+    // in case decoding one byte was not enough, use a loop to decode up to the next 4 bytes
+    int maxRead = Math.min(MAXIMUM_VARINT_SIZE, readable);
+    int i = k & 0x7F;
+    for (int j = 1; j < maxRead; j++) {
+      k = buf.readByte();
       i |= (k & 0x7F) << j * 7;
       if ((k & 0x80) != 128) {
         return i;
@@ -210,6 +186,8 @@ public enum ProtocolUtils {
 
   private static void writeVarIntFull(ByteBuf buf, int value) {
     // See https://steinborn.me/posts/performance/how-fast-can-you-write-a-varint/
+
+    // This essentially is an unrolled version of the "traditional" VarInt encoding.
     if ((value & (0xFFFFFFFF << 7)) == 0) {
       buf.writeByte(value);
     } else if ((value & (0xFFFFFFFF << 14)) == 0) {

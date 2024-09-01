@@ -17,7 +17,7 @@
 
 package com.velocitypowered.proxy.protocol.netty;
 
-import com.velocitypowered.proxy.protocol.netty.VarintByteDecoder.DecodeResult;
+import com.velocitypowered.proxy.protocol.netty.TwentyOneBitVarintByteDecoder.DecodeResult;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -29,9 +29,9 @@ import java.util.List;
  */
 public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
 
-  private static final QuietDecoderException BAD_LENGTH_CACHED =
+  private static final QuietDecoderException BAD_PACKET_LENGTH =
       new QuietDecoderException("Bad packet length");
-  private static final QuietDecoderException VARINT_BIG_CACHED =
+  private static final QuietDecoderException VARINT_TOO_BIG =
       new QuietDecoderException("VarInt too big");
 
   @Override
@@ -41,41 +41,50 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       return;
     }
 
-    final VarintByteDecoder reader = new VarintByteDecoder();
+    final TwentyOneBitVarintByteDecoder reader = new TwentyOneBitVarintByteDecoder();
 
     int varintEnd = in.forEachByte(reader);
     if (varintEnd == -1) {
       // We tried to go beyond the end of the buffer. This is probably a good sign that the
       // buffer was too short to hold a proper varint.
       if (reader.getResult() == DecodeResult.RUN_OF_ZEROES) {
-        // Special case where the entire packet is just a run of zeroes. We ignore them all.
+        // If the packet is literally all zeroes, we can just ignore everything.
         in.clear();
       }
       return;
     }
 
-    if (reader.getResult() == DecodeResult.RUN_OF_ZEROES) {
-      // this will return to the point where the next varint starts
-      in.readerIndex(varintEnd);
-    } else if (reader.getResult() == DecodeResult.SUCCESS) {
-      int readVarint = reader.getReadVarint();
-      int bytesRead = reader.getBytesRead();
-      if (readVarint < 0) {
+    switch (reader.getResult()) {
+      case RUN_OF_ZEROES:
+        // We didn't decode anything useful, so we can just skip over the zeroes.
+        in.readerIndex(varintEnd);
+        break;
+      case TOO_SHORT:
+        // This case shouldn't happen (we check if we only have a partial varint above), but if it
+        // does, we just wait for more data.
+        break;
+      case TOO_BIG:
+        // Invalid varint, clear the buffer and close the connection (by throwing an exception).
         in.clear();
-        throw BAD_LENGTH_CACHED;
-      } else if (readVarint == 0) {
-        // skip over the empty packet(s) and ignore it
-        in.readerIndex(varintEnd + 1);
-      } else {
-        int minimumRead = bytesRead + readVarint;
-        if (in.isReadable(minimumRead)) {
-          out.add(in.retainedSlice(varintEnd + 1, readVarint));
-          in.skipBytes(minimumRead);
+        throw VARINT_TOO_BIG;
+      case SUCCESS:
+        // We decoded something. Do some sanity checks.
+        int len = reader.getReadVarint();
+        if (len < 0) {
+          // It's a negative length, which is invalid.
+          in.clear();
+          throw BAD_PACKET_LENGTH;
+        } else {
+          int varintLength = reader.getBytesRead();
+          if (in.isReadable(len + varintLength)) {
+            in.readerIndex(varintEnd + 1);
+            out.add(in.readRetainedSlice(len));
+          }
         }
-      }
-    } else if (reader.getResult() == DecodeResult.TOO_BIG) {
-      in.clear();
-      throw VARINT_BIG_CACHED;
+        break;
+      default:
+        // this should never happen
+        throw new AssertionError();
     }
   }
 }

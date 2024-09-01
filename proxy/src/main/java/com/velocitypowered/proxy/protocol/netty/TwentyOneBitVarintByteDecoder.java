@@ -19,7 +19,7 @@ package com.velocitypowered.proxy.protocol.netty;
 
 import io.netty.util.ByteProcessor;
 
-class VarintByteDecoder implements ByteProcessor {
+class TwentyOneBitVarintByteDecoder implements ByteProcessor {
 
   private int readVarint;
   private int bytesRead;
@@ -27,14 +27,18 @@ class VarintByteDecoder implements ByteProcessor {
 
   @Override
   public boolean process(byte k) {
+    // if we have a run of zeroes, we want to skip over them
     if (k == 0 && bytesRead == 0) {
-      // tentatively say it's invalid, but there's a possibility of redemption
       result = DecodeResult.RUN_OF_ZEROES;
       return true;
     }
     if (result == DecodeResult.RUN_OF_ZEROES) {
+      // if k is not zero, maybe we can decode a varint, but we don't track
+      // how many bytes we read, so break out now. `MinecraftVarintFrameDecoder`
+      // will skip over the zeroes and pick up where we left off.
       return false;
     }
+
     readVarint |= (k & 0x7F) << bytesRead++ * 7;
     if (bytesRead > 3) {
       result = DecodeResult.TOO_BIG;
