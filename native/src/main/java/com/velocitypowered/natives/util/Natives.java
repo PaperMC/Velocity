@@ -103,21 +103,21 @@ public class Natives {
               copyAndLoadNative("/linux_x86_64/velocity-cipher.so"), // Any local version
               "OpenSSL local (Linux x86_64)", NativeVelocityCipher.FACTORY),
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
-              copyAndLoadNative("/linux_x86_64/velocity-cipher-ossl30x.so"), // Debian "Bookworm"
-              "OpenSSL 3.0.x (Linux x86_64)", NativeVelocityCipher.FACTORY),
+              copyAndLoadNative("/linux_x86_64/velocity-cipher-ossl30x.so"), // Ubuntu 22.04
+              "OpenSSL 3.x.x (Linux x86_64)", NativeVelocityCipher.FACTORY),
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
-              copyAndLoadNative("/linux_x86_64/velocity-cipher-ossl11x.so"), // Debian 9
+              copyAndLoadNative("/linux_x86_64/velocity-cipher-ossl11x.so"), // Ubuntu 20.04
               "OpenSSL 1.1.x (Linux x86_64)", NativeVelocityCipher.FACTORY),
 
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64,
               copyAndLoadNative("/linux_aarch64/velocity-cipher.so"),
-              "OpenSSL (Linux aarch64)", NativeVelocityCipher.FACTORY), // Any local version
+              "OpenSSL local (Linux aarch64)", NativeVelocityCipher.FACTORY), // Any local version
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64,
               copyAndLoadNative("/linux_aarch64/velocity-cipher-ossl30x.so"),
-              "OpenSSL (Linux aarch64)", NativeVelocityCipher.FACTORY), // Fedora 36
+              "OpenSSL 3.x.x (Linux aarch64)", NativeVelocityCipher.FACTORY), // Ubuntu 22.04
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64,
               copyAndLoadNative("/linux_aarch64/velocity-cipher-ossl11x.so"),
-              "OpenSSL 1.1.x (Linux aarch64)", NativeVelocityCipher.FACTORY), // Debian 11
+              "OpenSSL 1.1.x (Linux aarch64)", NativeVelocityCipher.FACTORY), // Ubuntu 20.04
 
           new NativeCodeLoader.Variant<>(NativeConstraints.MACOS_AARCH64,
               copyAndLoadNative("/macos_arm64/velocity-cipher.dylib"),
