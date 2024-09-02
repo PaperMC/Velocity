@@ -17,7 +17,6 @@
 
 package com.velocitypowered.proxy.protocol.netty;
 
-import com.velocitypowered.proxy.protocol.netty.TwentyOneBitVarintByteDecoder.DecodeResult;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -35,56 +34,97 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       new QuietDecoderException("VarInt too big");
 
   @Override
-  protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
+  protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out)
+      throws Exception {
     if (!ctx.channel().isActive()) {
       in.clear();
       return;
     }
 
-    final TwentyOneBitVarintByteDecoder reader = new TwentyOneBitVarintByteDecoder();
-
-    int varintEnd = in.forEachByte(reader);
-    if (varintEnd == -1) {
-      // We tried to go beyond the end of the buffer. This is probably a good sign that the
-      // buffer was too short to hold a proper varint.
-      if (reader.getResult() == DecodeResult.RUN_OF_ZEROES) {
-        // If the packet is literally all zeroes, we can just ignore everything.
-        in.clear();
-      }
+    in.markReaderIndex();
+    int preIndex = in.readerIndex();
+    int length = readRawVarint32(in);
+    if (preIndex == in.readerIndex()) {
       return;
     }
-
-    switch (reader.getResult()) {
-      case RUN_OF_ZEROES:
-        // We didn't decode anything useful, so we can just skip over the zeroes.
-        in.readerIndex(varintEnd);
-        break;
-      case TOO_SHORT:
-        // This case shouldn't happen (we check if we only have a partial varint above), but if it
-        // does, we just wait for more data.
-        break;
-      case TOO_BIG:
-        // Invalid varint, clear the buffer and close the connection (by throwing an exception).
-        in.clear();
-        throw VARINT_TOO_BIG;
-      case SUCCESS:
-        // We decoded something. Do some sanity checks.
-        int len = reader.getReadVarint();
-        if (len < 0) {
-          // It's a negative length, which is invalid.
-          in.clear();
-          throw BAD_PACKET_LENGTH;
-        } else {
-          int varintLength = reader.getBytesRead();
-          if (in.isReadable(len + varintLength)) {
-            in.readerIndex(varintEnd + 1);
-            out.add(in.readRetainedSlice(len));
-          }
-        }
-        break;
-      default:
-        // this should never happen
-        throw new AssertionError();
+    if (length < 0) {
+      throw BAD_PACKET_LENGTH;
     }
+
+    // note that zero-length packets are ignored
+    if (length > 0) {
+      if (in.readableBytes() < length) {
+        in.resetReaderIndex();
+      } else {
+        out.add(in.readRetainedSlice(length));
+      }
+    }
+  }
+
+  /**
+   * Reads a VarInt from the buffer of up to 21 bits in size.
+   */
+  static int readRawVarint32(ByteBuf buffer) {
+    if (buffer.readableBytes() < 4) {
+      // note that this check is just because we use the buffer.getIntLE method to do a bulk
+      // read of the first 4 bytes, which is faster than reading each byte individually.
+      return readRawVarintSmallBuf(buffer);
+    }
+    int wholeOrMore = buffer.getIntLE(buffer.readerIndex());
+
+    // remember that this is little-endian, and we are constrained to 21-bit, so we must ignore
+    // the fourth byte in this int
+    int atStop = ~wholeOrMore & 0x808080;
+    if (atStop == 0) {
+      // there's a continuation beyond the third byte, so fail immediately
+      throw VARINT_TOO_BIG;
+    }
+
+    int bitsToKeep = Integer.numberOfTrailingZeros(atStop) + 1;
+    buffer.skipBytes(bitsToKeep >> 3);
+
+    // remove all bits we don't need to keep, a trick from
+    // https://github.com/netty/netty/pull/14050#issuecomment-2107750734:
+    //
+    // > The idea is that thisVarintMask has 0s above the first one of firstOneOnStop, and 1s at
+    // > and below it. For example if firstOneOnStop is 0x800080 (where the last 0x80 is the only
+    // > one that matters), then thisVarintMask is 0xFF.
+    //
+    // this is also documented in Hacker's Delight, section 2-1 "Manipulating Rightmost Bits"
+    int preservedBytes = wholeOrMore & (atStop ^ (atStop - 1));
+
+    // merge together using this trick: https://github.com/netty/netty/pull/14050#discussion_r1597896639
+    preservedBytes = (preservedBytes & 0x007F007F) | ((preservedBytes & 0x00007F00) >> 1);
+    preservedBytes = (preservedBytes & 0x00003FFF) | ((preservedBytes & 0x3FFF0000) >> 2);
+    return preservedBytes;
+  }
+
+  private static int readRawVarintSmallBuf(ByteBuf buffer) {
+    if (!buffer.isReadable()) {
+      return 0;
+    }
+    buffer.markReaderIndex();
+
+    byte tmp = buffer.readByte();
+    if (tmp >= 0) {
+      return tmp;
+    }
+    int result = tmp & 0x7F;
+    if (!buffer.isReadable()) {
+      buffer.resetReaderIndex();
+      return 0;
+    }
+    if ((tmp = buffer.readByte()) >= 0) {
+      return result | tmp << 7;
+    }
+    result |= (tmp & 0x7F) << 7;
+    if (!buffer.isReadable()) {
+      buffer.resetReaderIndex();
+      return 0;
+    }
+    if ((tmp = buffer.readByte()) >= 0) {
+      return result | tmp << 14;
+    }
+    return result | (tmp & 0x7F) << 14;
   }
 }

@@ -112,13 +112,17 @@ public enum ProtocolUtils {
       BinaryTagTypes.COMPOUND, BinaryTagTypes.INT_ARRAY, BinaryTagTypes.LONG_ARRAY};
   private static final QuietDecoderException BAD_VARINT_CACHED =
       new QuietDecoderException("Bad VarInt decoded");
-  private static final int[] VARINT_EXACT_BYTE_LENGTHS = new int[33];
+  private static final int[] VAR_INT_LENGTHS = new int[65];
 
   static {
-    for (int i = 0; i <= 32; ++i) {
-      VARINT_EXACT_BYTE_LENGTHS[i] = (int) Math.ceil((31d - (i - 1)) / 7d);
+    for (int i = 0; i <= 64; ++i) {
+      VAR_INT_LENGTHS[i] = (63 - i) / 7;
     }
-    VARINT_EXACT_BYTE_LENGTHS[32] = 1; // Special case for the number 0.
+  }
+
+  private static DecoderException badVarint() {
+    return MinecraftDecoder.DEBUG ? new CorruptedFrameException("Bad VarInt decoded")
+        : BAD_VARINT_CACHED;
   }
 
   /**
@@ -131,8 +135,7 @@ public enum ProtocolUtils {
     int readable = buf.readableBytes();
     if (readable == 0) {
       // special case for empty buffer
-      throw MinecraftDecoder.DEBUG ? new CorruptedFrameException("No bytes readable")
-          : BAD_VARINT_CACHED;
+      throw badVarint();
     }
 
     // we can read at least one byte, and this should be a common case
@@ -151,8 +154,7 @@ public enum ProtocolUtils {
         return i;
       }
     }
-    throw MinecraftDecoder.DEBUG ? new CorruptedFrameException("Bad VarInt decoded")
-        : BAD_VARINT_CACHED;
+    throw badVarint();
   }
 
   /**
@@ -162,7 +164,7 @@ public enum ProtocolUtils {
    * @return the byte size of {@code value} if encoded as a VarInt
    */
   public static int varIntBytes(int value) {
-    return VARINT_EXACT_BYTE_LENGTHS[Integer.numberOfLeadingZeros(value)];
+    return VAR_INT_LENGTHS[Integer.numberOfLeadingZeros(value)];
   }
 
   /**
