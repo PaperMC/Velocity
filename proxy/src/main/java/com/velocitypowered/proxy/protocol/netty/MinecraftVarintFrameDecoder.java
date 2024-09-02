@@ -17,6 +17,8 @@
 
 package com.velocitypowered.proxy.protocol.netty;
 
+import static io.netty.util.ByteProcessor.FIND_NON_NUL;
+
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -41,6 +43,14 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       return;
     }
 
+    // skip any runs of 0x00 we might find
+    int packetStart = in.forEachByte(FIND_NON_NUL);
+    if (packetStart == -1) {
+      return;
+    }
+    in.readerIndex(packetStart);
+
+    // try to read the length of the packet
     in.markReaderIndex();
     int preIndex = in.readerIndex();
     int length = readRawVarint32(in);
