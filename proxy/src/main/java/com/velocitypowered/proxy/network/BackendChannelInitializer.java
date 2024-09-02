@@ -30,7 +30,7 @@ import com.velocitypowered.proxy.protocol.netty.AutoReadHolderHandler;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
-import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
+import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthCompositeEncoder;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.handler.timeout.ReadTimeoutHandler;
@@ -55,7 +55,7 @@ public class BackendChannelInitializer extends ChannelInitializer<Channel> {
         .addLast(READ_TIMEOUT,
             new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(),
                 TimeUnit.MILLISECONDS))
-        .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
+        .addLast(FRAME_ENCODER, MinecraftVarintLengthCompositeEncoder.INSTANCE)
         .addLast(MINECRAFT_DECODER,
             new MinecraftDecoder(ProtocolUtils.Direction.CLIENTBOUND))
         .addLast(FLOW_HANDLER, new AutoReadHolderHandler())
