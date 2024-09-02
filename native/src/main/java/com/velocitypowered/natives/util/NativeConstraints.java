@@ -39,8 +39,6 @@ public class NativeConstraints {
     }
 
     String osArch = System.getProperty("os.arch", "");
-    // HotSpot on Intel macOS prefers x86_64, but OpenJ9 on macOS and HotSpot/OpenJ9 elsewhere
-    // give amd64.
     IS_AMD64 = osArch.equals("amd64") || osArch.equals("x86_64");
     IS_AARCH64 = osArch.equals("aarch64") || osArch.equals("arm64");
   }
