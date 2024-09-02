@@ -53,7 +53,7 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
     // try to read the length of the packet
     in.markReaderIndex();
     int preIndex = in.readerIndex();
-    int length = readRawVarint32(in);
+    int length = readRawVarInt21(in);
     if (preIndex == in.readerIndex()) {
       return;
     }
@@ -73,20 +73,23 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
 
   /**
    * Reads a VarInt from the buffer of up to 21 bits in size.
+   *
+   * @param buffer the buffer to read from
+   * @return the VarInt decoded, {@code 0} if no varint could be read
+   * @throws QuietDecoderException if the VarInt is too big to be decoded
    */
-  static int readRawVarint32(ByteBuf buffer) {
+  private static int readRawVarInt21(ByteBuf buffer) {
     if (buffer.readableBytes() < 4) {
-      // note that this check is just because we use the buffer.getIntLE method to do a bulk
-      // read of the first 4 bytes, which is faster than reading each byte individually.
+      // we don't have enough that we can read a potentially full varint, so fall back to
+      // the slow path.
       return readRawVarintSmallBuf(buffer);
     }
     int wholeOrMore = buffer.getIntLE(buffer.readerIndex());
 
-    // remember that this is little-endian, and we are constrained to 21-bit, so we must ignore
-    // the fourth byte in this int
+    // take the last three bytes and check if any of them have the high bit set
     int atStop = ~wholeOrMore & 0x808080;
     if (atStop == 0) {
-      // there's a continuation beyond the third byte, so fail immediately
+      // all bytes have the high bit set, so the varint we are trying to decode is too wide
       throw VARINT_TOO_BIG;
     }
 
