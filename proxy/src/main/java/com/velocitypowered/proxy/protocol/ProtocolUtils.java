@@ -115,9 +115,10 @@ public enum ProtocolUtils {
   private static final int[] VAR_INT_LENGTHS = new int[65];
 
   static {
-    for (int i = 0; i <= 64; ++i) {
-      VAR_INT_LENGTHS[i] = (63 - i) / 7;
+    for (int i = 0; i <= 32; ++i) {
+      VAR_INT_LENGTHS[i] = (int) Math.ceil((31d - (i - 1)) / 7d);
     }
+    VAR_INT_LENGTHS[32] = 1; // Special case for the number 0.
   }
 
   private static DecoderException badVarint() {
@@ -139,8 +140,8 @@ public enum ProtocolUtils {
     }
 
     // we can read at least one byte, and this should be a common case
-    int k = buf.readUnsignedByte();
-    if (k < 0x80) {
+    int k = buf.readByte();
+    if ((k & 0x80) != 128) {
       return k;
     }
 
