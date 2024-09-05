@@ -63,7 +63,7 @@ public class LoginPluginMessagePacket extends DeferredByteBufHolder implements M
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    this.id = ProtocolUtils.readVarIntSafelyOrThrow(buf);
+    this.id = ProtocolUtils.readVarInt(buf);
     this.channel = ProtocolUtils.readString(buf);
     if (buf.isReadable()) {
       this.replace(buf.readRetainedSlice(buf.readableBytes()));
