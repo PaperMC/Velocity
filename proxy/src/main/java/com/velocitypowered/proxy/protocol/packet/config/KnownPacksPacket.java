@@ -26,7 +26,7 @@ import io.netty.buffer.ByteBuf;
 
 public class KnownPacksPacket implements MinecraftPacket {
 
-    private static final int MAX_LENGTH_PACKS = Integer.getInteger("velocity.max-known-packs", 64);
+    private static final int MAX_LENGTH_PACKS = Integer.getInteger("velocity.max-known-packs", 65536);
     private static final QuietDecoderException TOO_MANY_PACKS =
         new QuietDecoderException("too many known packs");
 
