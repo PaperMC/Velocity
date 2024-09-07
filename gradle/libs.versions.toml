@@ -3,7 +3,7 @@ configurate3 = "3.7.3"
 configurate4 = "4.1.2"
 flare = "2.0.1"
 log4j = "2.22.1"
-netty = "4.2.0.Alpha3"
+netty = "4.2.0.Alpha4"
 
 [plugins]
 indra-publishing = "net.kyori.indra.publishing:2.0.6"
