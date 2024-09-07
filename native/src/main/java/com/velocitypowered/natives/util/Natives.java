@@ -133,7 +133,7 @@ public class Natives {
               "OpenSSL 1.1.x (Linux aarch64)", NativeVelocityCipher.FACTORY), // Ubuntu 20.04
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64_MUSL,
               copyAndLoadNative("/linux_aarch64/velocity-cipher-ossl30x-musl.so"),
-              "OpenSSL 1.1.x (Linux aarch64, musl)", NativeVelocityCipher.FACTORY), // Alpine 3.18
+              "OpenSSL 3.x.x (Linux aarch64, musl)", NativeVelocityCipher.FACTORY), // Alpine 3.18
 
           new NativeCodeLoader.Variant<>(NativeConstraints.MACOS_AARCH64,
               copyAndLoadNative("/macos_arm64/velocity-cipher.dylib"),
