@@ -70,7 +70,7 @@ public class ProtocolUtilsTest {
   private void writeReadTestOld(ByteBuf buf, int test) {
     buf.clear();
     writeVarIntOld(buf, test);
-    assertEquals(test, ProtocolUtils.readVarIntSafely(buf));
+    assertEquals(test, ProtocolUtils.readVarInt(buf));
   }
 
   @Test
@@ -103,7 +103,7 @@ public class ProtocolUtilsTest {
           "Encoding of " + i + " was invalid");
 
       assertEquals(i, oldReadVarIntSafely(varintNew));
-      assertEquals(i, ProtocolUtils.readVarIntSafely(varintOld));
+      assertEquals(i, ProtocolUtils.readVarInt(varintOld));
 
       varintNew.clear();
       varintOld.clear();

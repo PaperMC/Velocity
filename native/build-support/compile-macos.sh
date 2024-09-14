@@ -6,12 +6,12 @@ fi
 
 if [ ! -d libdeflate ]; then
   echo "Cloning libdeflate..."
-  git clone https://github.com/ebiggers/libdeflate.git
+  git clone --branch v1.21 --single-branch https://github.com/ebiggers/libdeflate.git
 fi
 
 echo "Compiling libdeflate..."
 cd libdeflate || exit
-cmake -B build && cmake --build build --target libdeflate_static
+rm -rf build && cmake -B build && cmake --build build --target libdeflate_static
 cd ..
 
 CFLAGS="-O2 -I$JAVA_HOME/include/ -I$JAVA_HOME/include/darwin/ -fPIC -shared -Wall -Werror -fomit-frame-pointer"
