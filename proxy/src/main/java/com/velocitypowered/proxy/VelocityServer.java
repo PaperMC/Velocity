@@ -100,6 +100,7 @@ import net.kyori.adventure.translation.GlobalTranslator;
 import net.kyori.adventure.translation.TranslationRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bstats.MetricsBase;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -263,7 +264,13 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       this.cm.queryBind(configuration.getBind().getHostString(), configuration.getQueryPort());
     }
 
-    Metrics.VelocityMetrics.startMetrics(this, configuration.getMetrics());
+    final String defaultPackage = new String(
+        new byte[] { 'o', 'r', 'g', '.', 'b', 's', 't', 'a', 't', 's' });
+    if (!MetricsBase.class.getPackage().getName().startsWith(defaultPackage)) {
+      Metrics.VelocityMetrics.startMetrics(this, configuration.getMetrics());
+    } else {
+      logger.warn("debug environment, metrics is disabled!");
+    }
   }
 
   private void registerTranslations() {
