@@ -174,7 +174,7 @@ public final class VelocityCommand {
       if (version.getName().equals("Velocity")) {
         final TextComponent embellishment = Component.text()
             .append(Component.text()
-                .content("papermc.io/software/velocity")
+                .content("PaperMC")
                 .color(NamedTextColor.GREEN)
                 .clickEvent(
                     ClickEvent.openUrl("https://papermc.io/software/velocity"))
