@@ -23,6 +23,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.proxy.VelocityServer;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -43,7 +44,7 @@ public final class ShutdownCommand {
    */
   public static BrigadierCommand command(final VelocityServer server) {
     return new BrigadierCommand(LiteralArgumentBuilder.<CommandSource>literal("shutdown")
-        .requires(source -> source == server.getConsoleCommandSource())
+        .requires(source -> source instanceof ConsoleCommandSource)
         .executes(context -> {
           server.shutdown(true);
           return Command.SINGLE_SUCCESS;

@@ -6,7 +6,8 @@ set -e
 cd "$(dirname "$0")/.." || exit 1
 
 ARCHS=(x86_64 aarch64)
-BASE_DOCKERFILE_VARIANTS=(ubuntu-focal ubuntu-jammy)
+BASE_DOCKERFILE_VARIANTS=(ubuntu-focal ubuntu-jammy alpine)
+COMPRESSION_VARIANTS=(ubuntu-focal alpine)
 
 for variant in "${BASE_DOCKERFILE_VARIANTS[@]}"; do
   docker_platforms=""
@@ -25,8 +26,8 @@ for arch in "${ARCHS[@]}"; do
     docker run --rm -v "$(pwd)":/app --platform linux/${arch} velocity-native-build:$variant /bin/bash -c "cd /app && ./build-support/compile-linux-crypto.sh"
   done
 
-  # Use only the oldest variant for the compression library
-  variant=${BASE_DOCKERFILE_VARIANTS[0]}
-  echo "Building native compression for $arch on $variant..."
-  docker run --rm -v "$(pwd)":/app --platform linux/${arch} velocity-native-build:$variant /bin/bash -c "cd /app && ./build-support/compile-linux-compress.sh"
+  for variant in "${COMPRESSION_VARIANTS[@]}"; do
+    echo "Building native compression for $arch on $variant..."
+    docker run --rm -v "$(pwd)":/app --platform linux/${arch} velocity-native-build:$variant /bin/bash -c "cd /app && ./build-support/compile-linux-compress.sh"
+  done
 done

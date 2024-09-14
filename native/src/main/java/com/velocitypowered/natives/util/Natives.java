@@ -83,11 +83,21 @@ public class Natives {
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
               copyAndLoadNative("/linux_x86_64/velocity-compress.so"),
               "libdeflate (Linux x86_64)",
-              LibdeflateVelocityCompressor.FACTORY), // compiled with Debian 10
+              LibdeflateVelocityCompressor.FACTORY), // compiled with Ubuntu 20.04
+          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64_MUSL,
+              copyAndLoadNative("/linux_x86_64/velocity-compress-musl.so"),
+              "libdeflate (Linux x86_64, musl)",
+              LibdeflateVelocityCompressor.FACTORY), // compiled with Alpine 3.18
+
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64,
               copyAndLoadNative("/linux_aarch64/velocity-compress.so"),
               "libdeflate (Linux aarch64)",
-              LibdeflateVelocityCompressor.FACTORY), // compiled with Fedora 36
+              LibdeflateVelocityCompressor.FACTORY), // compiled with Ubuntu 20.04
+          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64_MUSL,
+              copyAndLoadNative("/linux_aarch64/velocity-compress-musl.so"),
+              "libdeflate (Linux aarch64, musl)",
+              LibdeflateVelocityCompressor.FACTORY), // compiled with Alpine 3.18
+
           new NativeCodeLoader.Variant<>(NativeConstraints.MACOS_AARCH64,
               copyAndLoadNative("/macos_arm64/velocity-compress.dylib"),
               "libdeflate (macOS ARM64 / Apple Silicon)",
@@ -108,6 +118,9 @@ public class Natives {
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64,
               copyAndLoadNative("/linux_x86_64/velocity-cipher-ossl11x.so"), // Ubuntu 20.04
               "OpenSSL 1.1.x (Linux x86_64)", NativeVelocityCipher.FACTORY),
+          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_X86_64_MUSL,
+              copyAndLoadNative("/linux_x86_64/velocity-cipher-ossl30x-musl.so"), // Alpine 3.18
+              "OpenSSL 3.x.x (Linux x86_64, musl)", NativeVelocityCipher.FACTORY),
 
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64,
               copyAndLoadNative("/linux_aarch64/velocity-cipher.so"),
@@ -118,6 +131,9 @@ public class Natives {
           new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64,
               copyAndLoadNative("/linux_aarch64/velocity-cipher-ossl11x.so"),
               "OpenSSL 1.1.x (Linux aarch64)", NativeVelocityCipher.FACTORY), // Ubuntu 20.04
+          new NativeCodeLoader.Variant<>(NativeConstraints.LINUX_AARCH64_MUSL,
+              copyAndLoadNative("/linux_aarch64/velocity-cipher-ossl30x-musl.so"),
+              "OpenSSL 3.x.x (Linux aarch64, musl)", NativeVelocityCipher.FACTORY), // Alpine 3.18
 
           new NativeCodeLoader.Variant<>(NativeConstraints.MACOS_AARCH64,
               copyAndLoadNative("/macos_arm64/velocity-cipher.dylib"),
