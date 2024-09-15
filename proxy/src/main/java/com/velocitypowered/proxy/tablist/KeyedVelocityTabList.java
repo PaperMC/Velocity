@@ -18,6 +18,7 @@
 package com.velocitypowered.proxy.tablist;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.event.player.ServerUpdateTabListEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
@@ -35,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.adventure.text.Component;
@@ -78,20 +80,27 @@ public class KeyedVelocityTabList implements InternalTabList {
   }
 
   @Override
-  public void addEntry(TabListEntry entry) {
+  public void addEntry(TabListEntry entry1) {
+    KeyedVelocityTabListEntry entry;
+    if (entry1 instanceof KeyedVelocityTabListEntry) {
+      entry = (KeyedVelocityTabListEntry) entry1;
+    } else {
+      entry = new KeyedVelocityTabListEntry(this, entry1.getProfile(),
+          entry1.getDisplayNameComponent().orElse(null),
+          entry1.getLatency(), entry1.getGameMode(), entry1.getIdentifiedKey());
+    }
+
     Preconditions.checkNotNull(entry, "entry");
     Preconditions.checkArgument(entry.getTabList().equals(this),
         "The provided entry was not created by this tab list");
     Preconditions.checkArgument(!entries.containsKey(entry.getProfile().getId()),
         "this TabList already contains an entry with the same uuid");
-    Preconditions.checkArgument(entry instanceof KeyedVelocityTabListEntry,
-        "Not a Velocity tab list entry");
 
     LegacyPlayerListItemPacket.Item packetItem = LegacyPlayerListItemPacket.Item.from(entry);
     connection.write(
         new LegacyPlayerListItemPacket(LegacyPlayerListItemPacket.ADD_PLAYER,
             Collections.singletonList(packetItem)));
-    entries.put(entry.getProfile().getId(), (KeyedVelocityTabListEntry) entry);
+    entries.put(entry.getProfile().getId(), entry);
   }
 
   @Override
@@ -166,20 +175,117 @@ public class KeyedVelocityTabList implements InternalTabList {
   }
 
   @Override
-  public void processLegacy(LegacyPlayerListItemPacket packet) {
-    // Packets are already forwarded on, so no need to do that here
-    for (LegacyPlayerListItemPacket.Item item : packet.getItems()) {
-      UUID uuid = item.getUuid();
-      assert uuid != null : "1.7 tab list entry given to modern tab list handler!";
+  public void processLegacyUpdate(LegacyPlayerListItemPacket packet) {
+    ServerUpdateTabListEvent.Action action = mapToEventAction(packet.getAction());
+    Preconditions.checkNotNull(action, "action");
 
-      if (packet.getAction() != LegacyPlayerListItemPacket.ADD_PLAYER
-              && !entries.containsKey(uuid)) {
+    List<UpdateEventTabListEntry> entries = mapToEventEntries(packet.getAction(), packet.getItems());
+
+    proxyServer.getEventManager().fire(
+        new ServerUpdateTabListEvent(
+            player,
+            Set.of(action),
+            Collections.unmodifiableList(entries)
+        )
+    ).thenAcceptAsync(event -> {
+      if (event.getResult().isAllowed()) {
+        if (event.getResult().getIds().isEmpty()) {
+          boolean rewrite = false;
+          for (UpdateEventTabListEntry entry : entries) {
+            if (entry.isRewrite()) {
+              rewrite = true;
+              break;
+            }
+          }
+
+          if (rewrite) {
+            //listeners have modified entries, requires manual processing
+            if (action != ServerUpdateTabListEvent.Action.REMOVE_PLAYER) {
+              for (UpdateEventTabListEntry entry : entries) {
+                if (this.entries.containsKey(entry.getProfile().getId())) {
+                  removeEntry(entry.getProfile().getId());
+                }
+
+                addEntry(entry);
+              }
+            } else {
+              for (UpdateEventTabListEntry entry : entries) {
+                removeEntry(entry.getProfile().getId());
+              }
+            }
+          } else {
+            //listeners haven't modified entries
+            for (LegacyPlayerListItemPacket.Item item : packet.getItems()) {
+              processLegacy(packet.getAction(), item);
+            }
+
+            connection.write(packet);
+          }
+        } else {
+          //listeners have denied entries (and may have modified others), requires manual processing
+          if (action != ServerUpdateTabListEvent.Action.REMOVE_PLAYER) {
+            for (UpdateEventTabListEntry entry : entries) {
+              if (event.getResult().getIds().contains(entry.getProfile().getId())) {
+                if (this.entries.containsKey(entry.getProfile().getId())) {
+                  removeEntry(entry.getProfile().getId());
+                }
+
+                addEntry(entry);
+              }
+            }
+          } else {
+            for (UpdateEventTabListEntry entry : entries) {
+              if (event.getResult().getIds().contains(entry.getProfile().getId())) {
+                removeEntry(entry.getProfile().getId());
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  protected ServerUpdateTabListEvent.@Nullable Action mapToEventAction(int action) {
+    return switch (action) {
+      case LegacyPlayerListItemPacket.ADD_PLAYER -> ServerUpdateTabListEvent.Action.ADD_PLAYER;
+      case LegacyPlayerListItemPacket.REMOVE_PLAYER -> ServerUpdateTabListEvent.Action.REMOVE_PLAYER;
+      case LegacyPlayerListItemPacket.UPDATE_GAMEMODE -> ServerUpdateTabListEvent.Action.UPDATE_GAME_MODE;
+      case LegacyPlayerListItemPacket.UPDATE_LATENCY -> ServerUpdateTabListEvent.Action.UPDATE_LATENCY;
+      case LegacyPlayerListItemPacket.UPDATE_DISPLAY_NAME -> ServerUpdateTabListEvent.Action.UPDATE_DISPLAY_NAME;
+      default -> null;
+    };
+  }
+
+  private List<UpdateEventTabListEntry> mapToEventEntries(int action, List<LegacyPlayerListItemPacket.Item> packetItems) {
+    List<UpdateEventTabListEntry> entries = new ArrayList<>(packetItems.size());
+
+    for (LegacyPlayerListItemPacket.Item item : packetItems) {
+      UUID uuid = item.getUuid();
+      Preconditions.checkNotNull(uuid, "1.7 tab list entry given to modern tab list handler!");
+
+      if (action != LegacyPlayerListItemPacket.ADD_PLAYER
+          && !this.entries.containsKey(uuid)) {
         // Sometimes UPDATE_GAMEMODE is sent before ADD_PLAYER so don't want to warn here
         continue;
       }
 
-      switch (packet.getAction()) {
-        case LegacyPlayerListItemPacket.ADD_PLAYER: {
+      UpdateEventTabListEntry currentEntry = null;
+      KeyedVelocityTabListEntry oldCurrentEntry = this.entries.get(uuid);
+
+      if (oldCurrentEntry != null) {
+        currentEntry = new UpdateEventTabListEntry(
+            this,
+            oldCurrentEntry.getProfile(),
+            oldCurrentEntry.getDisplayNameComponent().orElse(null),
+            oldCurrentEntry.getLatency(),
+            oldCurrentEntry.getGameMode(),
+            oldCurrentEntry.getChatSession(),
+            oldCurrentEntry.isListed()
+        );
+      }
+
+      switch (action) {
+        case LegacyPlayerListItemPacket.ADD_PLAYER -> {
           // ensure that name and properties are available
           String name = item.getName();
           List<GameProfile.Property> properties = item.getProperties();
@@ -187,43 +293,97 @@ public class KeyedVelocityTabList implements InternalTabList {
             throw new IllegalStateException("Got null game profile for ADD_PLAYER");
           }
 
-          entries.putIfAbsent(item.getUuid(), (KeyedVelocityTabListEntry) TabListEntry.builder()
-              .tabList(this)
-              .profile(new GameProfile(uuid, name, properties))
-              .displayName(item.getDisplayName())
-              .latency(item.getLatency())
-              .chatSession(new RemoteChatSession(null, item.getPlayerKey()))
-              .gameMode(item.getGameMode())
-              .build());
-          break;
+          currentEntry = new UpdateEventTabListEntry(
+              this,
+              new GameProfile(uuid, name, properties),
+              item.getDisplayName(),
+              item.getLatency(),
+              item.getGameMode(),
+              new RemoteChatSession(null, item.getPlayerKey()),
+              true
+          );
         }
-        case LegacyPlayerListItemPacket.REMOVE_PLAYER:
-          entries.remove(uuid);
-          break;
-        case LegacyPlayerListItemPacket.UPDATE_DISPLAY_NAME: {
-          KeyedVelocityTabListEntry entry = entries.get(uuid);
-          if (entry != null) {
-            entry.setDisplayNameInternal(item.getDisplayName());
+        case LegacyPlayerListItemPacket.REMOVE_PLAYER -> {
+          //Nothing should be done here, as all entries which are not allowed are removed
+          // if the action is ServerUpdateTabListEvent.Action.REMOVE_PLAYER
+        }
+        case LegacyPlayerListItemPacket.UPDATE_DISPLAY_NAME -> {
+          if (currentEntry != null) {
+            currentEntry.setDisplayNameWithoutRewrite(item.getDisplayName());
           }
-          break;
         }
-        case LegacyPlayerListItemPacket.UPDATE_LATENCY: {
-          KeyedVelocityTabListEntry entry = entries.get(uuid);
-          if (entry != null) {
-            entry.setLatencyInternal(item.getLatency());
+        case LegacyPlayerListItemPacket.UPDATE_LATENCY -> {
+          if (currentEntry != null) {
+            currentEntry.setLatencyWithoutRewrite(item.getLatency());
           }
-          break;
         }
-        case LegacyPlayerListItemPacket.UPDATE_GAMEMODE: {
-          KeyedVelocityTabListEntry entry = entries.get(uuid);
-          if (entry != null) {
-            entry.setGameModeInternal(item.getGameMode());
+        case LegacyPlayerListItemPacket.UPDATE_GAMEMODE -> {
+          if (currentEntry != null) {
+            currentEntry.setGameModeWithoutRewrite(item.getGameMode());
           }
-          break;
         }
-        default:
+        default -> {
           // Nothing we can do here
-          break;
+        }
+      }
+
+      if (currentEntry != null) {
+        entries.add(currentEntry);
+      }
+    }
+
+    return entries;
+  }
+
+  private void processLegacy(int action, LegacyPlayerListItemPacket.Item item) {
+    UUID uuid = item.getUuid();
+    assert uuid != null : "1.7 tab list entry given to modern tab list handler!";
+
+    if (action != LegacyPlayerListItemPacket.ADD_PLAYER
+        && !entries.containsKey(uuid)) {
+      // Sometimes UPDATE_GAMEMODE is sent before ADD_PLAYER so don't want to warn here
+      return;
+    }
+
+    switch (action) {
+      case LegacyPlayerListItemPacket.ADD_PLAYER -> {
+        // ensure that name and properties are available
+        String name = item.getName();
+        List<GameProfile.Property> properties = item.getProperties();
+        if (name == null || properties == null) {
+          throw new IllegalStateException("Got null game profile for ADD_PLAYER");
+        }
+
+        entries.putIfAbsent(item.getUuid(), (KeyedVelocityTabListEntry) TabListEntry.builder()
+            .tabList(this)
+            .profile(new GameProfile(uuid, name, properties))
+            .displayName(item.getDisplayName())
+            .latency(item.getLatency())
+            .chatSession(new RemoteChatSession(null, item.getPlayerKey()))
+            .gameMode(item.getGameMode())
+            .build());
+      }
+      case LegacyPlayerListItemPacket.REMOVE_PLAYER -> entries.remove(uuid);
+      case LegacyPlayerListItemPacket.UPDATE_DISPLAY_NAME -> {
+        KeyedVelocityTabListEntry entry = entries.get(uuid);
+        if (entry != null) {
+          entry.setDisplayNameInternal(item.getDisplayName());
+        }
+      }
+      case LegacyPlayerListItemPacket.UPDATE_LATENCY -> {
+        KeyedVelocityTabListEntry entry = entries.get(uuid);
+        if (entry != null) {
+          entry.setLatencyInternal(item.getLatency());
+        }
+      }
+      case LegacyPlayerListItemPacket.UPDATE_GAMEMODE -> {
+        KeyedVelocityTabListEntry entry = entries.get(uuid);
+        if (entry != null) {
+          entry.setGameModeInternal(item.getGameMode());
+        }
+      }
+      default -> {
+        // Nothing we can do here
       }
     }
   }

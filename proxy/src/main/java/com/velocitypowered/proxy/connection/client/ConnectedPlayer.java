@@ -202,7 +202,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     this.onlineMode = onlineMode;
 
     if (connection.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
-      this.tabList = new VelocityTabList(this);
+      this.tabList = new VelocityTabList(this, server);
     } else if (connection.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       this.tabList = new KeyedVelocityTabList(this, server);
     } else {

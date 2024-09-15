@@ -17,16 +17,18 @@
 
 package com.velocitypowered.proxy.tablist;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.velocitypowered.api.event.player.ServerUpdateTabListEvent;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItemPacket;
-import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItemPacket.Item;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.adventure.text.Component;
@@ -82,11 +84,111 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
   }
 
   @Override
-  public void processLegacy(LegacyPlayerListItemPacket packet) {
-    Item item = packet.getItems().get(0); // Only one item per packet in 1.7
+  public void processLegacyUpdate(LegacyPlayerListItemPacket packet) {
+    ServerUpdateTabListEvent.Action action = mapToEventAction(packet.getAction());
+    Preconditions.checkNotNull(action, "action");
 
-    switch (packet.getAction()) {
-      case LegacyPlayerListItemPacket.ADD_PLAYER:
+    UpdateEventTabListEntry entry = mapToEventEntry(packet.getAction(), packet.getItems().get(0)); // Only one item per packet in 1.7
+
+    proxyServer.getEventManager().fire(
+        new ServerUpdateTabListEvent(
+            player,
+            Set.of(action),
+            Collections.singletonList(entry)
+        )
+    ).thenAcceptAsync(event -> {
+      if (event.getResult().isAllowed()) {
+        if (event.getResult().getIds().isEmpty()) {
+          if (entry.isRewrite()) {
+            //listeners have modified the entry, requires manual processing
+            if (action != ServerUpdateTabListEvent.Action.REMOVE_PLAYER) {
+              if (this.entries.containsKey(entry.getProfile().getId())) {
+                removeEntry(entry.getProfile().getId());
+              }
+
+              addEntry(entry);
+            } else {
+              removeEntry(entry.getProfile().getId());
+            }
+          } else {
+            //listeners haven't modified the entry
+            processLegacy(packet.getAction(), packet.getItems().get(0));
+
+            connection.write(packet);
+          }
+        } else {
+          //listeners have denied entries (and may have modified others), requires manual processing
+          // (doesn't make much sense as there can only be one entry)
+          if (action != ServerUpdateTabListEvent.Action.REMOVE_PLAYER) {
+            if (event.getResult().getIds().contains(entry.getProfile().getId())) {
+              if (this.entries.containsKey(entry.getProfile().getId())) {
+                removeEntry(entry.getProfile().getId());
+              }
+
+              addEntry(entry);
+            }
+          } else {
+            if (event.getResult().getIds().contains(entry.getProfile().getId())) {
+              removeEntry(entry.getProfile().getId());
+            }
+          }
+        }
+      }
+    });
+  }
+
+  private UpdateEventTabListEntry mapToEventEntry(int action, LegacyPlayerListItemPacket.Item packetItem) {
+    UpdateEventTabListEntry currentEntry = null;
+
+    switch (action) {
+      case LegacyPlayerListItemPacket.ADD_PLAYER -> {
+        if (nameMapping.containsKey(packetItem.getName())) { // ADD_PLAYER also used for updating ping
+          KeyedVelocityTabListEntry oldCurrentEntry = this.entries.get(nameMapping.get(packetItem.getName()));
+
+          if (oldCurrentEntry != null) {
+            currentEntry = new UpdateEventTabListEntry(
+                this,
+                oldCurrentEntry.getProfile(),
+                oldCurrentEntry.getDisplayNameComponent().orElse(null),
+                oldCurrentEntry.getLatency(),
+                oldCurrentEntry.getGameMode(),
+                oldCurrentEntry.getChatSession(),
+                oldCurrentEntry.isListed()
+            );
+          }
+
+          if (currentEntry != null) {
+            currentEntry.setLatencyWithoutRewrite(packetItem.getLatency());
+          }
+        } else {
+          UUID uuid = UUID.randomUUID(); // Use a fake uuid to preserve function of custom entries
+
+          nameMapping.put(packetItem.getName(), uuid);
+          currentEntry = new UpdateEventTabListEntry(
+              this,
+              new GameProfile(uuid, packetItem.getName(), ImmutableList.of()),
+              null,
+              packetItem.getLatency(),
+              0,
+              null,
+              true
+          );
+        }
+      }
+      case LegacyPlayerListItemPacket.REMOVE_PLAYER -> {
+        //Nothing should be done here as all entries which are not allowed are removed if the action is ServerUpdateTabListEvent.Action.REMOVE_PLAYER
+      }
+      default -> {
+        // For 1.7 there is only add and remove
+      }
+    }
+
+    return currentEntry;
+  }
+
+  private void processLegacy(int action, LegacyPlayerListItemPacket.Item item) {
+    switch (action) {
+      case LegacyPlayerListItemPacket.ADD_PLAYER -> {
         if (nameMapping.containsKey(item.getName())) { // ADD_PLAYER also used for updating ping
           KeyedVelocityTabListEntry entry = entries.get(nameMapping.get(item.getName()));
           if (entry != null) {
@@ -101,16 +203,16 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
               .latency(item.getLatency())
               .build());
         }
-        break;
-      case LegacyPlayerListItemPacket.REMOVE_PLAYER:
+      }
+      case LegacyPlayerListItemPacket.REMOVE_PLAYER -> {
         UUID removedUuid = nameMapping.remove(item.getName());
         if (removedUuid != null) {
           entries.remove(removedUuid);
         }
-        break;
-      default:
+      }
+      default -> {
         // For 1.7 there is only add and remove
-        break;
+      }
     }
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2023 Velocity Contributors
+ * Copyright (C) 2018-2024 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,35 +17,35 @@
 
 package com.velocitypowered.proxy.tablist;
 
+import com.velocitypowered.api.event.player.ServerUpdateTabListEvent;
 import com.velocitypowered.api.proxy.player.ChatSession;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfoPacket;
-import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Generic tab list entry implementation.
+ * Represents a {@link TabListEntry} of the {@link ServerUpdateTabListEvent}.
  */
-public class VelocityTabListEntry implements TabListEntry {
+public class UpdateEventTabListEntry implements TabListEntry {
 
-  private final VelocityTabList tabList;
+  private final TabList tabList;
   private final GameProfile profile;
   private @Nullable Component displayName;
   private int latency;
   private int gameMode;
   private boolean listed;
   private @Nullable ChatSession session;
+  private boolean rewrite = false;
 
   /**
-   * Constructs the instance.
+   * Constructs an instance.
    */
-  public VelocityTabListEntry(VelocityTabList tabList, GameProfile profile, @Nullable Component displayName,
-                              int latency,
-                              int gameMode, @Nullable ChatSession session, boolean listed) {
+  public UpdateEventTabListEntry(TabList tabList, GameProfile profile, @Nullable Component displayName,
+                                 int latency,
+                                 int gameMode, @Nullable ChatSession session, boolean listed) {
     this.tabList = tabList;
     this.profile = profile;
     this.displayName = displayName;
@@ -78,18 +78,11 @@ public class VelocityTabListEntry implements TabListEntry {
   @Override
   public TabListEntry setDisplayName(@Nullable Component displayName) {
     this.displayName = displayName;
-    UpsertPlayerInfoPacket.Entry upsertEntry = this.tabList.createRawEntry(this);
-    upsertEntry.setDisplayName(
-            displayName == null
-                    ?
-                    null :
-                    new ComponentHolder(this.tabList.getPlayer().getProtocolVersion(), displayName)
-    );
-    this.tabList.emitActionRaw(UpsertPlayerInfoPacket.Action.UPDATE_DISPLAY_NAME, upsertEntry);
+    rewrite = true;
     return this;
   }
 
-  void setDisplayNameWithoutUpdate(@Nullable Component displayName) {
+  void setDisplayNameWithoutRewrite(@Nullable Component displayName) {
     this.displayName = displayName;
   }
 
@@ -101,13 +94,11 @@ public class VelocityTabListEntry implements TabListEntry {
   @Override
   public TabListEntry setLatency(int latency) {
     this.latency = latency;
-    UpsertPlayerInfoPacket.Entry upsertEntry = this.tabList.createRawEntry(this);
-    upsertEntry.setLatency(latency);
-    this.tabList.emitActionRaw(UpsertPlayerInfoPacket.Action.UPDATE_LATENCY, upsertEntry);
+    rewrite = true;
     return this;
   }
 
-  void setLatencyWithoutUpdate(int latency) {
+  void setLatencyWithoutRewrite(int latency) {
     this.latency = latency;
   }
 
@@ -119,17 +110,15 @@ public class VelocityTabListEntry implements TabListEntry {
   @Override
   public TabListEntry setGameMode(int gameMode) {
     this.gameMode = gameMode;
-    UpsertPlayerInfoPacket.Entry upsertEntry = this.tabList.createRawEntry(this);
-    upsertEntry.setGameMode(gameMode);
-    this.tabList.emitActionRaw(UpsertPlayerInfoPacket.Action.UPDATE_GAME_MODE, upsertEntry);
+    rewrite = true;
     return this;
   }
 
-  void setGameModeWithoutUpdate(int gameMode) {
+  void setGameModeWithoutRewrite(int gameMode) {
     this.gameMode = gameMode;
   }
 
-  protected void setChatSession(@Nullable ChatSession session) {
+  void setChatSessionWithoutRewrite(@Nullable ChatSession session) {
     this.session = session;
   }
 
@@ -139,15 +128,18 @@ public class VelocityTabListEntry implements TabListEntry {
   }
 
   @Override
-  public VelocityTabListEntry setListed(boolean listed) {
+  public TabListEntry setListed(boolean listed) {
     this.listed = listed;
-    UpsertPlayerInfoPacket.Entry upsertEntry = this.tabList.createRawEntry(this);
-    upsertEntry.setListed(listed);
-    this.tabList.emitActionRaw(UpsertPlayerInfoPacket.Action.UPDATE_LISTED, upsertEntry);
+    rewrite = true;
     return this;
   }
 
-  void setListedWithoutUpdate(boolean listed) {
+  void setListedWithoutRewrite(boolean listed) {
     this.listed = listed;
   }
+
+  boolean isRewrite() {
+    return rewrite;
+  }
+
 }
