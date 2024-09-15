@@ -383,8 +383,14 @@ public interface Player extends
   /**
    * {@inheritDoc}
    *
-   * <b>This method is not currently implemented in Velocity
-   * and will not perform any actions.</b>
+   * <p>Note: This method is currently only implemented for players from version 1.19.3 and above.
+   * <br>A {@link ServerConnection} is required for this to function, so a {@link #getCurrentServer()}.isPresent() check should be made beforehand.
+   *
+   * @param sound the sound to play
+   * @throws IllegalArgumentException if the player is from a version lower than 1.19.3
+   * @throws IllegalStateException if no server is connected
+   * @since 3.3.0
+   * @sinceMinecraft 1.19.3
    */
   @Override
   default void playSound(@NotNull Sound sound) {
@@ -413,8 +419,12 @@ public interface Player extends
   /**
    * {@inheritDoc}
    *
-   * <b>This method is not currently implemented in Velocity
-   * and will not perform any actions.</b>
+   * <p>Note: This method is currently only implemented for players from version 1.19.3 and above.
+   *
+   * @param stop the sound and/or a sound source, to stop
+   * @throws IllegalArgumentException if the player is from a version lower than 1.19.3
+   * @since 3.3.0
+   * @sinceMinecraft 1.19.3
    */
   @Override
   default void stopSound(@NotNull SoundStop stop) {
