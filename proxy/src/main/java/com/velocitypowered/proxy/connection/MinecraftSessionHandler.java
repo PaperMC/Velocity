@@ -23,6 +23,8 @@ import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
 import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundSoundEntityPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundStopSoundPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
@@ -362,6 +364,14 @@ public interface MinecraftSessionHandler {
   }
 
   default boolean handle(ClientboundServerLinksPacket packet) {
+    return false;
+  }
+
+  default boolean handle(ClientboundSoundEntityPacket packet) {
+    return false;
+  }
+
+  default boolean handle(ClientboundStopSoundPacket packet) {
     return false;
   }
 }

@@ -72,6 +72,8 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundSoundEntityPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundStopSoundPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.HeaderAndFooterPacket;
@@ -124,6 +126,8 @@ import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.resource.ResourcePackInfoLike;
 import net.kyori.adventure.resource.ResourcePackRequest;
 import net.kyori.adventure.resource.ResourcePackRequestLike;
+import net.kyori.adventure.sound.Sound;
+import net.kyori.adventure.sound.SoundStop;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
@@ -1003,6 +1007,32 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   void setClientBrand(final @Nullable String clientBrand) {
     this.clientBrand = clientBrand;
+  }
+
+  @Override
+  public void playSound(@NotNull Sound sound) {
+    Preconditions.checkNotNull(sound, "sound");
+    Preconditions.checkArgument(
+        getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19_3),
+        "Player version must be 1.19.3 to be able to interact with sounds");
+    if (connection.getState() != StateRegistry.PLAY) {
+      throw new IllegalStateException("Can only interact with sounds in PLAY protocol");
+    }
+
+    connection.write(new ClientboundSoundEntityPacket(sound, null, ensureAndGetCurrentServer().getEntityId()));
+  }
+
+  @Override
+  public void stopSound(@NotNull SoundStop stop) {
+    Preconditions.checkNotNull(stop, "stop");
+    Preconditions.checkArgument(
+        getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19_3),
+        "Player version must be 1.19.3 to be able to interact with sounds");
+    if (connection.getState() != StateRegistry.PLAY) {
+      throw new IllegalStateException("Can only interact with sounds in PLAY protocol");
+    }
+
+    connection.write(new ClientboundStopSoundPacket(stop));
   }
 
   @Override
