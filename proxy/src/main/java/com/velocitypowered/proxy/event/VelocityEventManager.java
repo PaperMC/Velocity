@@ -156,17 +156,6 @@ public class VelocityEventManager implements EventManager {
     }
   }
 
-  enum AsyncType {
-    /**
-     * The complete event will be handled on an async thread.
-     */
-    ALWAYS,
-    /**
-     * The event will never run async, everything is handled on the netty thread.
-     */
-    NEVER
-  }
-
   static final class HandlersCache {
 
     final HandlerRegistration[] handlers;
