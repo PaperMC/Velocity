@@ -45,7 +45,9 @@ public interface CommandManager {
    * @throws IllegalArgumentException if one of the given aliases is already registered, or
    *         the given command does not implement a registrable {@link Command} subinterface
    * @see Command for a list of registrable Command subinterfaces
+   * @deprecated use {@link #register(CommandMeta, Command)} instead with a plugin specified
    */
+  @Deprecated
   default void register(String alias, Command command, String... otherAliases) {
     register(metaBuilder(alias).aliases(otherAliases).build(), command);
   }
@@ -55,7 +57,9 @@ public interface CommandManager {
    *
    * @param command the command to register
    * @throws IllegalArgumentException if the node alias is already registered
+   * @deprecated use {@link #register(CommandMeta, Command)} instead with a plugin specified
    */
+  @Deprecated
   void register(BrigadierCommand command);
 
   /**

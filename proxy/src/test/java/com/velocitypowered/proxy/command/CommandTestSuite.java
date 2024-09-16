@@ -29,6 +29,7 @@ import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.proxy.event.MockEventManager;
 import com.velocitypowered.proxy.event.VelocityEventManager;
+import com.velocitypowered.proxy.testutil.FakePluginManager;
 import java.util.Arrays;
 import java.util.Collection;
 import org.junit.jupiter.api.BeforeAll;
@@ -48,7 +49,7 @@ abstract class CommandTestSuite {
 
   @BeforeEach
   void setUp() {
-    this.manager = new VelocityCommandManager(eventManager);
+    this.manager = new VelocityCommandManager(eventManager, new FakePluginManager());
   }
 
   final void assertHandled(final String input) {
