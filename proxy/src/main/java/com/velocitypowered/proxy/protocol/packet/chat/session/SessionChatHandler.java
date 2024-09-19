@@ -71,7 +71,8 @@ public class SessionChatHandler implements ChatHandler<SessionPlayerChatPacket> 
                   invalidChange(logger, player);
                   return null;
                 }
-                return this.player.getChatBuilderFactory().builder().message(packet.message)
+                return this.player.getChatBuilderFactory().builder()
+                    .message(chatResult.getMessage().orElse(packet.getMessage()))
                     .setTimestamp(packet.timestamp)
                     .setLastSeenMessages(newLastSeenMessages)
                     .toServer();

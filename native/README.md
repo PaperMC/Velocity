@@ -18,13 +18,11 @@ CommonCrypto library.
 - macOS aarch64 ("Apple Silicon")
 
 For Linux platforms, we provide two versions of the native library: one built against OpenSSL 1.1.x and one built against OpenSSL 3.x.x.
-All native libraries are built on various versions of Ubuntu:
+All native libraries are built on various versions of Ubuntu and Alpine:
 
 - Ubuntu 20.04 for OpenSSL 1.1.x support and for compression
 - Ubuntu 22.04 for OpenSSL 3.x.x support
-
-Currently, we do not provide native libraries for distributions based on musl libc, like Alpine Linux. You might be able to use `apk add libc6-compat` to fake it, but this is not officially supported.
-In the future we may provide a musl libc build.
+- Alpine 3.18 for OpenSSL 3.x.x support and compression (musl libc users only)
 
 ## Building
 

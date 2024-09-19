@@ -92,6 +92,15 @@ tasks {
         dependsOn(configurateBuildTask)
         from(zipTree(configurateBuildTask.map { it.outputs.files.singleFile }))
     }
+
+    runShadow {
+        workingDir = file("run").also(File::mkdirs)
+        standardInput = System.`in`
+    }
+    named<JavaExec>("run") {
+        workingDir = file("run").also(File::mkdirs)
+        standardInput = System.`in` // Doesn't work?
+    }
 }
 
 dependencies {

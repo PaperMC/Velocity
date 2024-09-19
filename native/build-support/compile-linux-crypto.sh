@@ -20,9 +20,11 @@ if [ ! "$CC" ]; then
   export CC=gcc
 fi
 
-output_file="velocity-cipher.so"
-if [ -n "$OPENSSL_VERSION" ]; then
-  output_file="velocity-cipher-ossl${OPENSSL_VERSION}.so"
+# Determine if we are on musl libc or glibc
+suffix=""
+if ldd --version 2>&1 | grep -q musl; then
+  suffix="-musl"
+  filename=$(echo "$filename" | sed "s/\.so/$suffix.so/")
 fi
 
 CFLAGS="-O2 -I$JAVA_HOME/include/ -I$JAVA_HOME/include/linux/ -fPIC -shared -Wl,-z,noexecstack -Wall -Werror -fomit-frame-pointer"
