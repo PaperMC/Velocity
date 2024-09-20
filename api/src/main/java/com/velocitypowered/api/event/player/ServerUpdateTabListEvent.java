@@ -18,7 +18,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * This event is fired, when a {@link com.velocitypowered.api.proxy.player.TabList Tablist} is updated.
+ * This event is fired, when a {@link com.velocitypowered.api.proxy.player.TabList Tablist} is updated by a {@link com.velocitypowered.api.proxy.ServerConnection server}.
  * It can be used to override or cancel updates for {@link TabListEntry}s.
  * Velocity will wait for this event to finish firing before forwarding it to the server.
  *

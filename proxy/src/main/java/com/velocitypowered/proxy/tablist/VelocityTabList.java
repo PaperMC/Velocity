@@ -456,7 +456,7 @@ public class VelocityTabList implements InternalTabList {
             Set.of(ServerUpdateTabListEvent.Action.REMOVE_PLAYER),
             Collections.unmodifiableList(entries)
         )
-    ).thenAcceptAsync(event -> { //not sure what should be used here!
+    ).thenAcceptAsync(event -> {
       if (event.getResult().isAllowed()) {
         if (event.getResult().getIds().isEmpty()) {
           for (UUID uuid : infoPacket.getProfilesToRemove()) {
