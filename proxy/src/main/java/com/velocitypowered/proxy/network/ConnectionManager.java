@@ -109,7 +109,8 @@ public final class ConnectionManager {
           final Channel channel = future.channel();
           if (future.isSuccess()) {
             this.endpoints.put(address, new Endpoint(channel, ListenerType.MINECRAFT));
-            LOGGER.info("Listening on {}", channel.localAddress());
+            
+            LOGGER.info((this.server.getConfiguration().isProxyProtocol() ? "HAProxy listening on " : "Listening on ") + "{}", channel.localAddress());
 
             // Fire the proxy bound event after the socket is bound
             server.getEventManager().fireAndForget(
