@@ -64,6 +64,11 @@ public final class InitialInboundConnection implements VelocityInboundConnection
   }
 
   @Override
+  public Optional<String> getRawVirtualHost() {
+    return Optional.of(handshake.getServerAddress());
+  }
+
+  @Override
   public boolean isActive() {
     return connection.getChannel().isActive();
   }

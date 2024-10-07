@@ -72,6 +72,11 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
   }
 
   @Override
+  public Optional<String> getRawVirtualHost() {
+    return delegate.getRawVirtualHost();
+  }
+
+  @Override
   public boolean isActive() {
     return delegate.isActive();
   }
