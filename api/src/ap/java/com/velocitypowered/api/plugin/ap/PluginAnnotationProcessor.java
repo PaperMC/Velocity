@@ -81,7 +81,9 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
 
       Plugin plugin = element.getAnnotation(Plugin.class);
       if (!SerializedPluginDescription.ID_PATTERN.matcher(plugin.id()).matches()) {
-        environment.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid ID for plugin "
+        environment.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid ID \""
+            + plugin.id()
+            + "\" for plugin "
             + qualifiedName
             + ". IDs must start alphabetically, have lowercase alphanumeric characters, and "
             + "can contain dashes or underscores.");
