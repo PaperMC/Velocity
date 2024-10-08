@@ -54,6 +54,8 @@ import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
 import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundSoundEntityPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundStopSoundPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
@@ -399,6 +401,20 @@ public enum StateRegistry {
       clientbound.register(
           ClientboundCookieRequestPacket.class, ClientboundCookieRequestPacket::new,
           map(0x16, MINECRAFT_1_20_5, false));
+      clientbound.register(
+          ClientboundSoundEntityPacket.class, ClientboundSoundEntityPacket::new,
+          map(0x5D, MINECRAFT_1_19_3, false),
+          map(0x61, MINECRAFT_1_19_4, false),
+          map(0x63, MINECRAFT_1_20_2, false),
+          map(0x65, MINECRAFT_1_20_3, false),
+          map(0x67, MINECRAFT_1_20_5, false));
+      clientbound.register(
+          ClientboundStopSoundPacket.class, ClientboundStopSoundPacket::new,
+          map(0x5F, MINECRAFT_1_19_3, false),
+          map(0x63, MINECRAFT_1_19_4, false),
+          map(0x66, MINECRAFT_1_20_2, false),
+          map(0x68, MINECRAFT_1_20_3, false),
+          map(0x6A, MINECRAFT_1_20_5, false));
       clientbound.register(
           PluginMessagePacket.class,
           PluginMessagePacket::new,
