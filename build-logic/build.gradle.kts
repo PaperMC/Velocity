@@ -8,6 +8,7 @@ dependencies {
     // see https://github.com/gradle/gradle/issues/15383#issuecomment-779893192
     implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
     implementation("com.diffplug.spotless:spotless-plugin-gradle:${libs.plugins.spotless.get().version}")
+    implementation("net.kyori:indra-git:${libs.versions.indra.get()}")
 }
 
 spotless {
