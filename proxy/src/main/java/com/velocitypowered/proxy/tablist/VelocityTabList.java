@@ -19,7 +19,9 @@ package com.velocitypowered.proxy.tablist;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import com.velocitypowered.api.event.player.ServerUpdateTabListEvent;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.player.ChatSession;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
@@ -32,11 +34,13 @@ import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
@@ -51,6 +55,7 @@ public class VelocityTabList implements InternalTabList {
   private static final Logger logger = LogManager.getLogger(VelocityConsole.class);
   private final ConnectedPlayer player;
   private final MinecraftConnection connection;
+  protected final ProxyServer proxyServer;
   private final Map<UUID, VelocityTabListEntry> entries;
 
   /**
@@ -58,8 +63,9 @@ public class VelocityTabList implements InternalTabList {
    *
    * @param player player associated with this tab list
    */
-  public VelocityTabList(ConnectedPlayer player) {
+  public VelocityTabList(ConnectedPlayer player, final ProxyServer proxyServer) {
     this.player = player;
+    this.proxyServer = proxyServer;
     this.connection = player.getConnection();
     this.entries = Maps.newConcurrentMap();
   }
@@ -214,9 +220,45 @@ public class VelocityTabList implements InternalTabList {
 
   @Override
   public void processUpdate(UpsertPlayerInfoPacket infoPacket) {
-    for (UpsertPlayerInfoPacket.Entry entry : infoPacket.getEntries()) {
-      processUpsert(infoPacket.getActions(), entry);
-    }
+    List<UpdateEventTabListEntry> entries = mapToEventEntries(infoPacket.getActions(), infoPacket.getEntries());
+
+    proxyServer.getEventManager().fire(new ServerUpdateTabListEvent(player,
+        Collections.unmodifiableSet(mapToEventActions(infoPacket.getActions())),
+        Collections.unmodifiableList(entries))
+    ).thenAccept(event -> {
+      if (event.getResult().isAllowed()) {
+        if (event.getResult().getIds().isEmpty()) {
+          boolean rewrite = false;
+          for (UpdateEventTabListEntry entry : entries) {
+            if (entry.isRewrite()) {
+              rewrite = true;
+              break;
+            }
+          }
+
+          if (rewrite) {
+            //listeners have modified entries, requires manual processing
+            for (UpdateEventTabListEntry entry : entries) {
+              addEntry(entry);
+            }
+          } else {
+            //listeners haven't modified entries
+            for (UpsertPlayerInfoPacket.Entry entry : infoPacket.getEntries()) {
+              processUpsert(infoPacket.getActions(), entry);
+            }
+
+            connection.write(infoPacket);
+          }
+        } else {
+          //listeners have denied entries (and may have modified others), requires manual processing
+          for (UpdateEventTabListEntry entry : entries) {
+            if (event.getResult().getIds().contains(entry.getProfile().getId())) {
+              addEntry(entry);
+            }
+          }
+        }
+      }
+    }).join();
   }
 
   protected UpsertPlayerInfoPacket.Entry createRawEntry(VelocityTabListEntry entry) {
@@ -229,6 +271,134 @@ public class VelocityTabList implements InternalTabList {
   protected void emitActionRaw(UpsertPlayerInfoPacket.Action action,
                                UpsertPlayerInfoPacket.Entry entry) {
     this.connection.write(new UpsertPlayerInfoPacket(EnumSet.of(action), List.of(entry)));
+  }
+
+  private EnumSet<ServerUpdateTabListEvent.Action> mapToEventActions(EnumSet<UpsertPlayerInfoPacket.Action> packetActions) {
+    EnumSet<ServerUpdateTabListEvent.Action> actions = EnumSet.noneOf(ServerUpdateTabListEvent.Action.class);
+
+    for (UpsertPlayerInfoPacket.Action packetAction : packetActions) {
+      switch (packetAction) {
+        case ADD_PLAYER -> {
+          actions.add(ServerUpdateTabListEvent.Action.ADD_PLAYER);
+        }
+        case INITIALIZE_CHAT -> {
+          actions.add(ServerUpdateTabListEvent.Action.INITIALIZE_CHAT);
+        }
+        case UPDATE_GAME_MODE -> {
+          actions.add(ServerUpdateTabListEvent.Action.UPDATE_GAME_MODE);
+        }
+        case UPDATE_LISTED -> {
+          actions.add(ServerUpdateTabListEvent.Action.UPDATE_LISTED);
+        }
+        case UPDATE_LATENCY -> {
+          actions.add(ServerUpdateTabListEvent.Action.UPDATE_LATENCY);
+        }
+        case UPDATE_DISPLAY_NAME -> {
+          actions.add(ServerUpdateTabListEvent.Action.UPDATE_DISPLAY_NAME);
+        }
+        default -> {
+          // Nothing we can do here
+        }
+      }
+    }
+
+    return actions;
+  }
+
+  private List<UpdateEventTabListEntry> mapToEventEntries(EnumSet<UpsertPlayerInfoPacket.Action> actions,
+                                                          List<UpsertPlayerInfoPacket.Entry> packetEntries) {
+    List<UpdateEventTabListEntry> entries = new ArrayList<>(packetEntries.size());
+
+    for (UpsertPlayerInfoPacket.Entry rawEntry : packetEntries) {
+      Preconditions.checkNotNull(rawEntry.getProfileId(), "Profile ID cannot be null");
+      UUID profileId = rawEntry.getProfileId();
+      UpdateEventTabListEntry currentEntry = null;
+      VelocityTabListEntry oldCurrentEntry = this.entries.get(profileId);
+
+      if (oldCurrentEntry != null) {
+        currentEntry = new UpdateEventTabListEntry(
+            this,
+            oldCurrentEntry.getProfile(),
+            oldCurrentEntry.getDisplayNameComponent().orElse(null),
+            oldCurrentEntry.getLatency(),
+            oldCurrentEntry.getGameMode(),
+            oldCurrentEntry.getChatSession(),
+            oldCurrentEntry.isListed()
+        );
+      }
+
+      if (actions.contains(UpsertPlayerInfoPacket.Action.ADD_PLAYER)) {
+        if (currentEntry == null) {
+          currentEntry = new UpdateEventTabListEntry(
+              this,
+              rawEntry.getProfile(),
+              null,
+              0,
+              -1,
+              null,
+              false
+          );
+        } else {
+          logger.debug("Received an add player packet for an existing entry; this does nothing.");
+        }
+      } else if (currentEntry == null) {
+        logger.debug(
+            "Received a partial player before an ADD_PLAYER action; profile could not be built. {}",
+            rawEntry);
+        continue;
+      } else {
+        currentEntry = new UpdateEventTabListEntry(
+            this,
+            currentEntry.getProfile(),
+            currentEntry.getDisplayNameComponent().orElse(null),
+            currentEntry.getLatency(),
+            currentEntry.getGameMode(),
+            currentEntry.getChatSession(),
+            currentEntry.isListed()
+        );
+      }
+      if (actions.contains(UpsertPlayerInfoPacket.Action.UPDATE_GAME_MODE)) {
+        currentEntry.setGameModeWithoutRewrite(rawEntry.getGameMode());
+      }
+      if (actions.contains(UpsertPlayerInfoPacket.Action.UPDATE_LATENCY)) {
+        currentEntry.setLatencyWithoutRewrite(rawEntry.getLatency());
+      }
+      if (actions.contains(UpsertPlayerInfoPacket.Action.UPDATE_DISPLAY_NAME)) {
+        currentEntry.setDisplayNameWithoutRewrite(rawEntry.getDisplayName() != null
+            ? rawEntry.getDisplayName().getComponent() : null);
+      }
+      if (actions.contains(UpsertPlayerInfoPacket.Action.INITIALIZE_CHAT)) {
+        currentEntry.setChatSessionWithoutRewrite(rawEntry.getChatSession());
+      }
+      if (actions.contains(UpsertPlayerInfoPacket.Action.UPDATE_LISTED)) {
+        currentEntry.setListedWithoutRewrite(rawEntry.isListed());
+      }
+      entries.add(currentEntry);
+    }
+
+    return entries;
+  }
+
+  private List<UpdateEventTabListEntry> mapToEventEntries(Collection<UUID> uuids) {
+    List<UpdateEventTabListEntry> entries = new ArrayList<>();
+
+    for (Map.Entry<UUID, VelocityTabListEntry> entry : this.entries.entrySet()) {
+      if (uuids.contains(entry.getKey())) {
+        entries.add(
+            new UpdateEventTabListEntry(
+                this,
+                entry.getValue().getProfile(),
+                entry.getValue().getDisplayNameComponent().orElse(null),
+                entry.getValue().getLatency(),
+                entry.getValue().getGameMode(),
+                entry.getValue().getChatSession(),
+                entry.getValue().isListed()
+            )
+        );
+      }
+    }
+
+    return entries;
   }
 
   private void processUpsert(EnumSet<UpsertPlayerInfoPacket.Action> actions,
@@ -278,8 +448,34 @@ public class VelocityTabList implements InternalTabList {
 
   @Override
   public void processRemove(RemovePlayerInfoPacket infoPacket) {
-    for (UUID uuid : infoPacket.getProfilesToRemove()) {
-      this.entries.remove(uuid);
-    }
+    List<UpdateEventTabListEntry> entries = mapToEventEntries(infoPacket.getProfilesToRemove());
+
+    proxyServer.getEventManager().fire(
+        new ServerUpdateTabListEvent(
+            player,
+            Set.of(ServerUpdateTabListEvent.Action.REMOVE_PLAYER),
+            Collections.unmodifiableList(entries)
+        )
+    ).thenAccept(event -> {
+      if (event.getResult().isAllowed()) {
+        if (event.getResult().getIds().isEmpty()) {
+          for (UUID uuid : infoPacket.getProfilesToRemove()) {
+            this.entries.remove(uuid);
+          }
+
+          connection.write(infoPacket);
+        } else {
+          List<UUID> uuids = new ArrayList<>();
+          for (UUID uuid : infoPacket.getProfilesToRemove()) {
+            if (event.getResult().getIds().contains(uuid)) {
+              this.entries.remove(uuid);
+              uuids.add(uuid);
+            }
+          }
+
+          this.connection.write(new RemovePlayerInfoPacket(uuids));
+        }
+      }
+    }).join();
   }
 }
