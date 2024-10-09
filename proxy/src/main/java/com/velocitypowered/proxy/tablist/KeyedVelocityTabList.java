@@ -187,7 +187,7 @@ public class KeyedVelocityTabList implements InternalTabList {
             Set.of(action),
             Collections.unmodifiableList(entries)
         )
-    ).thenAcceptAsync(event -> {
+    ).thenAccept(event -> {
       if (event.getResult().isAllowed()) {
         if (event.getResult().getIds().isEmpty()) {
           boolean rewrite = false;
@@ -242,7 +242,7 @@ public class KeyedVelocityTabList implements InternalTabList {
           }
         }
       }
-    });
+    }).join();
   }
 
   protected ServerUpdateTabListEvent.@Nullable Action mapToEventAction(int action) {

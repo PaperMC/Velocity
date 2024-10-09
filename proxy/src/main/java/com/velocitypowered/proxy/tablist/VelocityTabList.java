@@ -225,7 +225,7 @@ public class VelocityTabList implements InternalTabList {
     proxyServer.getEventManager().fire(new ServerUpdateTabListEvent(player,
         Collections.unmodifiableSet(mapToEventActions(infoPacket.getActions())),
         Collections.unmodifiableList(entries))
-    ).thenAcceptAsync(event -> {
+    ).thenAccept(event -> {
       if (event.getResult().isAllowed()) {
         if (event.getResult().getIds().isEmpty()) {
           boolean rewrite = false;
@@ -258,7 +258,7 @@ public class VelocityTabList implements InternalTabList {
           }
         }
       }
-    });
+    }).join();
   }
 
   protected UpsertPlayerInfoPacket.Entry createRawEntry(VelocityTabListEntry entry) {
@@ -456,7 +456,7 @@ public class VelocityTabList implements InternalTabList {
             Set.of(ServerUpdateTabListEvent.Action.REMOVE_PLAYER),
             Collections.unmodifiableList(entries)
         )
-    ).thenAcceptAsync(event -> {
+    ).thenAccept(event -> {
       if (event.getResult().isAllowed()) {
         if (event.getResult().getIds().isEmpty()) {
           for (UUID uuid : infoPacket.getProfilesToRemove()) {
@@ -476,6 +476,6 @@ public class VelocityTabList implements InternalTabList {
           this.connection.write(new RemovePlayerInfoPacket(uuids));
         }
       }
-    });
+    }).join();
   }
 }

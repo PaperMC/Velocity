@@ -96,7 +96,7 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
             Set.of(action),
             Collections.singletonList(entry)
         )
-    ).thenAcceptAsync(event -> {
+    ).thenAccept(event -> {
       if (event.getResult().isAllowed()) {
         if (event.getResult().getIds().isEmpty()) {
           if (entry.isRewrite()) {
@@ -134,7 +134,7 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
           }
         }
       }
-    });
+    }).join();
   }
 
   private UpdateEventTabListEntry mapToEventEntry(int action, LegacyPlayerListItemPacket.Item packetItem) {
