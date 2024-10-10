@@ -486,7 +486,7 @@ public class VelocityConfiguration implements ProxyConfig {
                     "The file " + forwardSecretFile + " is not a valid file or it is a directory.");
           }
         } else {
-          throw new RuntimeException("The forwarding-secret-file does not exist.");
+          throw new RuntimeException("The file '" + secretPath + "' does not exist.");
         }
       }
       final byte[] forwardingSecret = forwardingSecretString.getBytes(StandardCharsets.UTF_8);
