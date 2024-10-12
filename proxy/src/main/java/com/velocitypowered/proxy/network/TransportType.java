@@ -45,6 +45,7 @@ import io.netty.channel.uring.IoUringIoHandler;
 import io.netty.channel.uring.IoUringServerSocketChannel;
 import io.netty.channel.uring.IoUringSocketChannel;
 import java.util.concurrent.ThreadFactory;
+import java.util.function.Supplier;
 
 /**
  * Enumerates the supported transports for Velocity.
@@ -53,36 +54,37 @@ public enum TransportType {
   NIO("NIO", NioServerSocketChannel::new,
       NioSocketChannel::new,
       NioDatagramChannel::new,
-      NioIoHandler.newFactory()),
+      NioIoHandler::newFactory),
   EPOLL("epoll", EpollServerSocketChannel::new,
       EpollSocketChannel::new,
       EpollDatagramChannel::new,
-      EpollIoHandler.newFactory()),
+      EpollIoHandler::newFactory),
   KQUEUE("kqueue", KQueueServerSocketChannel::new,
       KQueueSocketChannel::new,
       KQueueDatagramChannel::new,
-      KQueueIoHandler.newFactory()),
+      KQueueIoHandler::newFactory),
   IO_URING("io_uring", IoUringServerSocketChannel::new,
       IoUringSocketChannel::new,
       IoUringDatagramChannel::new,
-      IoUringIoHandler.newFactory());
+      IoUringIoHandler::newFactory);
 
   final String name;
   final ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory;
   final ChannelFactory<? extends SocketChannel> socketChannelFactory;
   final ChannelFactory<? extends DatagramChannel> datagramChannelFactory;
-  final IoHandlerFactory ioHandlerFactory;
+  final Supplier<IoHandlerFactory> ioHandlerFactorySupplier;
+  volatile IoHandlerFactory ioHandlerFactory;
 
   TransportType(final String name,
       final ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory,
       final ChannelFactory<? extends SocketChannel> socketChannelFactory,
       final ChannelFactory<? extends DatagramChannel> datagramChannelFactory,
-      final IoHandlerFactory ioHandlerFactory) {
+      final Supplier<IoHandlerFactory> ioHandlerFactorySupplier) {
     this.name = name;
     this.serverSocketChannelFactory = serverSocketChannelFactory;
     this.socketChannelFactory = socketChannelFactory;
     this.datagramChannelFactory = datagramChannelFactory;
-    this.ioHandlerFactory = ioHandlerFactory;
+    this.ioHandlerFactorySupplier = ioHandlerFactorySupplier;
   }
 
   @Override
@@ -90,7 +92,17 @@ public enum TransportType {
     return this.name;
   }
 
+  /**
+   * Creates a new event loop group for the given type.
+   *
+   * @param type the type of event loop group to create
+   * @return the event loop group
+   */
   public EventLoopGroup createEventLoopGroup(final Type type) {
+    if (this.ioHandlerFactory == null) {
+      this.ioHandlerFactory = this.ioHandlerFactorySupplier.get();
+    }
+    assert this.ioHandlerFactory != null;
     return new MultiThreadIoEventLoopGroup(
         0, createThreadFactory(this.name, type), this.ioHandlerFactory);
   }
