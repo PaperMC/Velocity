@@ -73,7 +73,6 @@ public enum TransportType {
   final ChannelFactory<? extends SocketChannel> socketChannelFactory;
   final ChannelFactory<? extends DatagramChannel> datagramChannelFactory;
   final Supplier<IoHandlerFactory> ioHandlerFactorySupplier;
-  volatile IoHandlerFactory ioHandlerFactory;
 
   TransportType(final String name,
       final ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory,
@@ -99,12 +98,8 @@ public enum TransportType {
    * @return the event loop group
    */
   public EventLoopGroup createEventLoopGroup(final Type type) {
-    if (this.ioHandlerFactory == null) {
-      this.ioHandlerFactory = this.ioHandlerFactorySupplier.get();
-    }
-    assert this.ioHandlerFactory != null;
     return new MultiThreadIoEventLoopGroup(
-        0, createThreadFactory(this.name, type), this.ioHandlerFactory);
+        0, createThreadFactory(this.name, type), this.ioHandlerFactorySupplier.get());
   }
 
   private static ThreadFactory createThreadFactory(final String name, final Type type) {
