@@ -18,12 +18,11 @@
 package com.velocitypowered.proxy;
 
 import com.velocitypowered.api.proxy.server.ServerInfo;
+import com.velocitypowered.proxy.util.AddressUtil;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
-
-import com.velocitypowered.proxy.util.AddressUtil;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
