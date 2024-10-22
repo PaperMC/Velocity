@@ -32,6 +32,7 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
@@ -44,6 +45,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
 public final class ServerCommand {
   private static final String SERVER_ARG = "server";
   public static final int MAX_SERVERS_TO_LIST = 50;
+  // Characters allowed in an unquoted String, as defined by `StringReader#isAllowedInUnquotedString`
+  private static final Pattern VALID_UNQUOTED = Pattern.compile("[0-9A-Za-z_\\-.+]+");
 
   @SuppressWarnings("checkstyle:MissingJavadocMethod")
   public static BrigadierCommand create(final ProxyServer server) {
@@ -56,14 +59,30 @@ public final class ServerCommand {
           outputServerInformation(player, server);
           return Command.SINGLE_SUCCESS;
         })
-        .then(BrigadierCommand.requiredArgumentBuilder(SERVER_ARG, StringArgumentType.word())
+        .then(BrigadierCommand.requiredArgumentBuilder(SERVER_ARG, StringArgumentType.string())
             .suggests((ctx, builder) -> {
-              final String argument = ctx.getArguments().containsKey(SERVER_ARG)
-                      ? StringArgumentType.getString(ctx, SERVER_ARG)
-                      : "";
+              String remaining = builder.getRemaining();
+
+              boolean forceQuoted = false;
+              boolean forceUnquoted = false;
+              if (!remaining.isEmpty()) {
+                if (remaining.charAt(0) == '"') {
+                  forceQuoted = true;
+                  remaining = remaining.substring(1);
+                }
+                forceUnquoted = !forceQuoted;
+              }
+
               for (final RegisteredServer sv : server.getAllServers()) {
                 final String serverName = sv.getServerInfo().getName();
-                if (serverName.regionMatches(true, 0, argument, 0, argument.length())) {
+                if (!serverName.regionMatches(true, 0, remaining, 0, remaining.length())) {
+                  continue;
+                }
+
+                boolean needsQuotes = !VALID_UNQUOTED.matcher(serverName).matches();
+                if (forceQuoted || (!forceUnquoted && needsQuotes)) {
+                  builder.suggest('"' + serverName + '"');
+                } else if (!needsQuotes) {
                   builder.suggest(serverName);
                 }
               }
