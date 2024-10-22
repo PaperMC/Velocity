@@ -12,16 +12,12 @@ application {
 }
 
 tasks {
-    withType<Checkstyle> {
-        exclude("**/com/velocitypowered/proxy/protocol/packet/**")
+    runShadow {
+        workingDir = project.file("run").also(File::mkdirs)
     }
 
-    jar {
-        manifest {
-            attributes["Implementation-Title"] = "Velocity"
-            attributes["Implementation-Vendor"] = "Velocity Contributors"
-            attributes["Multi-Release"] = "true"
-        }
+    withType<Checkstyle> {
+        exclude("**/com/velocitypowered/proxy/protocol/packet/**")
     }
 
     shadowJar {
