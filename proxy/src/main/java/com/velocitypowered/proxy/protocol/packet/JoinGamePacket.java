@@ -51,6 +51,7 @@ public class JoinGamePacket implements MinecraftPacket {
   private int simulationDistance; // 1.18+
   private @Nullable Pair<String, Long> lastDeathPosition; // 1.19+
   private int portalCooldown; // 1.20+
+  private int seaLevel; // 1.21.2+
   private boolean enforcesSecureChat; // 1.20.5+
 
   public int getEntityId() {
@@ -181,6 +182,14 @@ public class JoinGamePacket implements MinecraftPacket {
     this.portalCooldown = portalCooldown;
   }
 
+  public int getSeaLevel() {
+    return seaLevel;
+  }
+
+  public void setSeaLevel(int seaLevel) {
+    this.seaLevel = seaLevel;
+  }
+
   public boolean getEnforcesSecureChat() {
     return this.enforcesSecureChat;
   }
@@ -204,6 +213,7 @@ public class JoinGamePacket implements MinecraftPacket {
         dimensionInfo + '\'' + ", currentDimensionData='" + currentDimensionData + '\'' +
         ", previousGamemode=" + previousGamemode + ", simulationDistance=" + simulationDistance +
         ", lastDeathPosition='" + lastDeathPosition + '\'' + ", portalCooldown=" + portalCooldown +
+        ", seaLevel=" + seaLevel +
         '}';
   }
 
@@ -343,6 +353,11 @@ public class JoinGamePacket implements MinecraftPacket {
     }
 
     this.portalCooldown = ProtocolUtils.readVarInt(buf);
+
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_21_2)) {
+      this.seaLevel = ProtocolUtils.readVarInt(buf);
+    }
+
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
       this.enforcesSecureChat = buf.readBoolean();
     }
@@ -490,6 +505,10 @@ public class JoinGamePacket implements MinecraftPacket {
     }
 
     ProtocolUtils.writeVarInt(buf, portalCooldown);
+
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_21_2)) {
+      ProtocolUtils.writeVarInt(buf, seaLevel);
+    }
 
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
       buf.writeBoolean(this.enforcesSecureChat);
