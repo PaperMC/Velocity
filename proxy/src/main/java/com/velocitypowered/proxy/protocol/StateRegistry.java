@@ -419,14 +419,16 @@ public enum StateRegistry {
           map(0x61, MINECRAFT_1_19_4, false),
           map(0x63, MINECRAFT_1_20_2, false),
           map(0x65, MINECRAFT_1_20_3, false),
-          map(0x67, MINECRAFT_1_20_5, false));
+          map(0x67, MINECRAFT_1_20_5, false),
+          map(0x6E, MINECRAFT_1_21_2, false));
       clientbound.register(
           ClientboundStopSoundPacket.class, ClientboundStopSoundPacket::new,
           map(0x5F, MINECRAFT_1_19_3, false),
           map(0x63, MINECRAFT_1_19_4, false),
           map(0x66, MINECRAFT_1_20_2, false),
           map(0x68, MINECRAFT_1_20_3, false),
-          map(0x6A, MINECRAFT_1_20_5, false));
+          map(0x6A, MINECRAFT_1_20_5, false),
+          map(0x71, MINECRAFT_1_21_2, false));
       clientbound.register(
           PluginMessagePacket.class,
           PluginMessagePacket::new,
