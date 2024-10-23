@@ -45,8 +45,26 @@ public interface EventManager {
    * @param postOrder the order in which events should be posted to the handler
    * @param handler the handler to register
    * @param <E> the event type to handle
+   * @deprecated use {@link #register(Object, Class, short, EventHandler)} instead
    */
+  @Deprecated
   <E> void register(Object plugin, Class<E> eventClass, PostOrder postOrder,
+      EventHandler<E> handler);
+
+  /**
+   * Requests that the specified {@code handler} listen for events and associate it with the {@code
+   * plugin}.
+   *
+   * <p>Note that this method will register a non-asynchronous listener by default. If you want to
+   * use an asynchronous event handler, return {@link EventTask#async(Runnable)} from the handler.</p>
+   *
+   * @param plugin the plugin to associate with the handler
+   * @param eventClass the class for the event handler to register
+   * @param postOrder the relative order in which events should be posted to the handler
+   * @param handler the handler to register
+   * @param <E> the event type to handle
+   */
+  <E> void register(Object plugin, Class<E> eventClass, short postOrder,
       EventHandler<E> handler);
 
   /**

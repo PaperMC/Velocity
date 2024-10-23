@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.command;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.Message;
 import com.mojang.brigadier.ParseResults;
@@ -37,11 +38,15 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.VelocityBrigadierMessage;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.PostCommandInvocationEvent;
+import com.velocitypowered.api.plugin.PluginManager;
+import com.velocitypowered.proxy.command.brigadier.VelocityBrigadierCommandWrapper;
 import com.velocitypowered.proxy.command.registrar.BrigadierCommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.CommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.RawCommandRegistrar;
 import com.velocitypowered.proxy.command.registrar.SimpleCommandRegistrar;
 import com.velocitypowered.proxy.event.VelocityEventManager;
+import com.velocitypowered.proxy.plugin.virtual.VelocityVirtualPlugin;
+import io.netty.util.concurrent.FastThreadLocalThread;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -49,6 +54,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
@@ -71,13 +77,16 @@ public class VelocityCommandManager implements CommandManager {
   private final SuggestionsProvider<CommandSource> suggestionsProvider;
   private final CommandGraphInjector<CommandSource> injector;
   private final Map<String, CommandMeta> commandMetas;
+  private final PluginManager pluginManager;
 
   /**
    * Constructs a command manager.
    *
    * @param eventManager the event manager
    */
-  public VelocityCommandManager(final VelocityEventManager eventManager) {
+  public VelocityCommandManager(final VelocityEventManager eventManager,
+      PluginManager pluginManager) {
+    this.pluginManager = pluginManager;
     this.lock = new ReentrantReadWriteLock();
     this.dispatcher = new CommandDispatcher<>();
     this.eventManager = Preconditions.checkNotNull(eventManager);
@@ -218,16 +227,13 @@ public class VelocityCommandManager implements CommandManager {
     return eventManager.fire(new CommandExecuteEvent(source, cmdLine));
   }
 
-  private boolean executeImmediately0(final CommandSource source, final String cmdLine) {
+  private boolean executeImmediately0(final CommandSource source, final ParseResults<CommandSource> parsed) {
     Preconditions.checkNotNull(source, "source");
-    Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    final String normalizedInput = VelocityCommands.normalizeInput(cmdLine, true);
     CommandResult result = CommandResult.EXCEPTION;
     try {
       // The parse can fail if the requirement predicates throw
-      final ParseResults<CommandSource> parse = this.parse(normalizedInput, source);
-      boolean executed = dispatcher.execute(parse) != BrigadierCommand.FORWARD;
+      boolean executed = dispatcher.execute(parsed) != BrigadierCommand.FORWARD;
       result = executed ? CommandResult.EXECUTED : CommandResult.FORWARDED;
       return executed;
     } catch (final CommandSyntaxException e) {
@@ -249,9 +255,9 @@ public class VelocityCommandManager implements CommandManager {
       }
     } catch (final Throwable e) {
       // Ugly, ugly swallowing of everything Throwable, because plugins are naughty.
-      throw new RuntimeException("Unable to invoke command " + cmdLine + " for " + source, e);
+      throw new RuntimeException("Unable to invoke command  " + parsed.getReader().getString() + "for " + source, e);
     } finally {
-      eventManager.fireAndForget(new PostCommandInvocationEvent(source, cmdLine, result));
+      eventManager.fireAndForget(new PostCommandInvocationEvent(source, parsed.getReader().getString(), result));
     }
   }
 
@@ -260,13 +266,17 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(source, "source");
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
-    return callCommandEvent(source, cmdLine).thenApplyAsync(event -> {
+    return callCommandEvent(source, cmdLine).thenComposeAsync(event -> {
       CommandExecuteEvent.CommandResult commandResult = event.getResult();
       if (commandResult.isForwardToServer() || !commandResult.isAllowed()) {
-        return false;
+        return CompletableFuture.completedFuture(false);
       }
-      return executeImmediately0(source, commandResult.getCommand().orElse(event.getCommand()));
-    }, eventManager.getAsyncExecutor());
+      final ParseResults<CommandSource> parsed = this.parse(
+          commandResult.getCommand().orElse(cmdLine), source);
+      return CompletableFuture.supplyAsync(
+          () -> executeImmediately0(source, parsed), this.getAsyncExecutor(parsed)
+      );
+    }, figureAsyncExecutorForParsing());
   }
 
   @Override
@@ -276,7 +286,12 @@ public class VelocityCommandManager implements CommandManager {
     Preconditions.checkNotNull(cmdLine, "cmdLine");
 
     return CompletableFuture.supplyAsync(
-        () -> executeImmediately0(source, cmdLine), eventManager.getAsyncExecutor());
+        () -> this.parse(cmdLine, source), figureAsyncExecutorForParsing()
+    ).thenCompose(
+        parsed -> CompletableFuture.supplyAsync(
+            () -> executeImmediately0(source, parsed), this.getAsyncExecutor(parsed)
+        )
+    );
   }
 
   /**
@@ -324,9 +339,10 @@ public class VelocityCommandManager implements CommandManager {
    * @return the parse results
    */
   private ParseResults<CommandSource> parse(final String input, final CommandSource source) {
+    final String normalizedInput = VelocityCommands.normalizeInput(input, true);
     lock.readLock().lock();
     try {
-      return dispatcher.parse(input, source);
+      return dispatcher.parse(normalizedInput, source);
     } finally {
       lock.readLock().unlock();
     }
@@ -369,5 +385,26 @@ public class VelocityCommandManager implements CommandManager {
 
   public CommandGraphInjector<CommandSource> getInjector() {
     return injector;
+  }
+
+  private Executor getAsyncExecutor(ParseResults<CommandSource> parse) {
+    Object registrant;
+    if (parse.getContext().getCommand() instanceof VelocityBrigadierCommandWrapper vbcw) {
+      registrant = vbcw.registrant() == null ? VelocityVirtualPlugin.INSTANCE : vbcw.registrant();
+    } else {
+      registrant = VelocityVirtualPlugin.INSTANCE;
+    }
+    return pluginManager.ensurePluginContainer(registrant).getExecutorService();
+  }
+
+  private Executor figureAsyncExecutorForParsing() {
+    final Thread thread = Thread.currentThread();
+    if (thread instanceof FastThreadLocalThread) {
+      // we *never* want to block the Netty event loop, so use the async executor
+      return pluginManager.ensurePluginContainer(VelocityVirtualPlugin.INSTANCE).getExecutorService();
+    } else {
+      // it's some other thread that isn't a Netty event loop thread. direct execution it is!
+      return MoreExecutors.directExecutor();
+    }
   }
 }

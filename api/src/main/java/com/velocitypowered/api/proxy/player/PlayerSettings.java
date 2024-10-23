@@ -69,6 +69,20 @@ public interface PlayerSettings {
   boolean isClientListingAllowed();
 
   /**
+   * Returns if the client has text filtering enabled.
+   *
+   * @return if text filtering is enabled
+   */
+  boolean isTextFilteringEnabled();
+
+  /**
+   * Returns the selected "Particles" option state.
+   *
+   * @return the particle option
+   */
+  ParticleStatus getParticleStatus();
+
+  /**
    * The client's current chat display mode.
    */
   enum ChatMode {
@@ -83,5 +97,14 @@ public interface PlayerSettings {
   enum MainHand {
     LEFT,
     RIGHT
+  }
+
+  /**
+   * The client's current "Particles" option state.
+   */
+  enum ParticleStatus {
+    ALL,
+    DECREASED,
+    MINIMAL
   }
 }

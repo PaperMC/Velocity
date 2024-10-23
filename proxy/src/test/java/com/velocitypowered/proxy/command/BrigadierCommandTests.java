@@ -230,7 +230,7 @@ public class BrigadierCommandTests extends CommandTestSuite {
     final Exception wrapper = assertThrows(CompletionException.class, () ->
         manager.executeAsync(source, "hello").join());
 
-    assertSame(expected, wrapper.getCause().getCause());
+    assertSame(expected, wrapper.getCause());
   }
 
   // Suggestions

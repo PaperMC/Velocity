@@ -109,6 +109,12 @@ public final class ConnectionManager {
           final Channel channel = future.channel();
           if (future.isSuccess()) {
             this.endpoints.put(address, new Endpoint(channel, ListenerType.MINECRAFT));
+            
+            // Warn people with console access that HAProxy is in use, see PR: #1436
+            if (this.server.getConfiguration().isProxyProtocol()) {
+              LOGGER.warn("Using HAProxy and listening on {}, please ensure this listener is adequately firewalled.", channel.localAddress());
+            }
+
             LOGGER.info("Listening on {}", channel.localAddress());
 
             // Fire the proxy bound event after the socket is bound
