@@ -30,7 +30,7 @@ public interface InternalTabList extends TabList {
 
   Player getPlayer();
 
-  default void processLegacy(LegacyPlayerListItemPacket packet) {
+  default void processLegacyUpdate(LegacyPlayerListItemPacket packet) {
   }
 
   default void processUpdate(UpsertPlayerInfoPacket infoPacket) {
