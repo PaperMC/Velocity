@@ -42,7 +42,7 @@ forwarding-secret-file = "forwarding.secret"
 
 # Announce whether or not your server supports Forge. If you run a modded server, we
 # suggest turning this on.
-# 
+#
 # If your network runs one modpack consistently, consider using ping-passthrough = "mods"
 # instead for a nicer display in the server list.
 announce-forge = false
@@ -75,6 +75,9 @@ enable-player-address-logging = true
 lobby = "127.0.0.1:30066"
 factions = "127.0.0.1:30067"
 minigames = "127.0.0.1:30068"
+
+# If you need a different forwarding mode, specify it like this
+modern = { address = "127.0.0.1:30069", forwarding-mode = "MODERN" }
 
 # In what order we should try servers when a player logs in or is kicked from a server.
 try = [
