@@ -174,10 +174,10 @@ public final class VelocityCommand {
       if (version.getName().equals("Velocity")) {
         final TextComponent embellishment = Component.text()
             .append(Component.text()
-                .content("velocitypowered.com")
+                .content("PaperMC")
                 .color(NamedTextColor.GREEN)
                 .clickEvent(
-                    ClickEvent.openUrl("https://velocitypowered.com"))
+                    ClickEvent.openUrl("https://papermc.io/software/velocity"))
                 .build())
             .append(Component.text(" - "))
             .append(Component.text()
