@@ -294,27 +294,14 @@ public class VelocityCommandManager implements CommandManager {
     );
   }
 
-  /**
-   * Returns suggestions to fill in the given command.
-   *
-   * @param source  the source to execute the command for
-   * @param cmdLine the partially completed command
-   * @return a {@link CompletableFuture} eventually completed with a {@link List}, possibly empty
-   */
+  @Override
   public CompletableFuture<List<String>> offerSuggestions(final CommandSource source,
       final String cmdLine) {
     return offerBrigadierSuggestions(source, cmdLine)
         .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
   }
 
-  /**
-   * Returns suggestions to fill in the given command.
-   *
-   * @param source  the source to execute the command for
-   * @param cmdLine the partially completed command
-   * @return a {@link CompletableFuture} eventually completed with {@link Suggestions}, possibly
-   *         empty
-   */
+  @Override
   public CompletableFuture<Suggestions> offerBrigadierSuggestions(
       final CommandSource source, final String cmdLine) {
     Preconditions.checkNotNull(source, "source");
