@@ -40,6 +40,7 @@ import com.velocitypowered.proxy.protocol.packet.EncryptionResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
 import com.velocitypowered.proxy.util.VelocityProperties;
+import fun.iiii.mixedlogin.LoginServerManager;
 import fun.iiii.mixedlogin.api.event.connection.InitialLoginEvent;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
@@ -146,9 +147,9 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
             UUID pUUID=login.getHolderUuid();
             String userName=login.getUsername();
             UUID offlineUUID= UuidUtils.generateOfflinePlayerUuid(userName);
-            if(pUUID.equals(offlineUUID)||server.getLoginServerManager().shouldOfflineHost(inbound.getRawVirtualHost())){
+            if(pUUID.equals(offlineUUID)|| LoginServerManager.getInstance().shouldOfflineHost(inbound.getRawVirtualHost())){
 //              盗版用户
-              doLogin(false,server.getLoginServerManager().startOfflineRequest(userName), null);
+              doLogin(false,LoginServerManager.getInstance().startOfflineRequest(userName), null);
 //            mcConnection.setActiveSessionHandler(StateRegistry.LOGIN,
 //                new AuthSessionHandler(server, inbound,
 //                    GameProfile.forOfflinePlayer(login.getUsername()), false));

@@ -70,6 +70,8 @@ import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import fun.iiii.mixedlogin.LoginServerManager;
+import fun.iiii.mixedlogin.MixedVelocity;
+import fun.iiii.mixedlogin.MixedVelocityConfig;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -169,7 +171,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   private final VelocityChannelRegistrar channelRegistrar = new VelocityChannelRegistrar();
   private final ServerListPingHandler serverListPingHandler;
 
-  private final LoginServerManager loginServerManager=new LoginServerManager();
+  private final MixedVelocity mixedVelocity=new MixedVelocity(this);
 
   VelocityServer(final ProxyOptions options) {
     pluginManager = new VelocityPluginManager(this);
@@ -181,10 +183,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     servers = new ServerMap(this);
     serverListPingHandler = new ServerListPingHandler(this);
     this.options = options;
-  }
-
-  public LoginServerManager getLoginServerManager() {
-    return loginServerManager;
   }
 
   public KeyPair getServerKeyPair() {
@@ -238,7 +236,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       "console", "cm", "configuration"})
   void start() {
     logger.info("Booting up {} {}...", getVersion().getName(), getVersion().getVersion());
-    loginServerManager.start();
     console.setupStreams();
     pluginManager.registerPlugin(this.createVirtualPlugin());
 
@@ -328,6 +325,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     } else {
       logger.warn("debug environment, metrics is disabled!");
     }
+    mixedVelocity.start();
   }
 
   private void registerTranslations() {

@@ -1,0 +1,7 @@
+#登录服务器的名字
+login-server = "login"
+[server-forwarding-mode]
+#设定不同服务器的转发模式
+login = "modern"
+lobby = "none"
+

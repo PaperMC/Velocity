@@ -37,6 +37,8 @@ import com.velocitypowered.proxy.crypto.EncryptionUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
+import fun.iiii.mixedlogin.LoginServerManager;
+import fun.iiii.mixedlogin.MixedVelocity;
 import fun.iiii.mixedlogin.util.CryptUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
@@ -83,7 +85,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     PublicKey publickey = CryptUtil.decodePublicKey(packetIn.getPublicKey());
     String s = "";
     String serverId = (new BigInteger(CryptUtil.getServerIdHash(s, publickey, secretkey))).toString(16);
-    server.getLoginServerManager().startSubRequest(serverId,serverConn.getPlayer().getGameProfile());
+    LoginServerManager.getInstance().startSubRequest(serverId,serverConn.getPlayer().getGameProfile());
 
     byte[] verifyToken=CryptUtil.encryptData(publickey,packetIn.getVerifyToken());
 //    生成salt long
@@ -106,7 +108,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   public boolean handle(LoginPluginMessagePacket packet) {
     MinecraftConnection mc = serverConn.ensureConnected();
     VelocityConfiguration configuration = server.getConfiguration();
-    if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
+    if (MixedVelocity.getInstance().getForwardingMode(serverConn.getServerInfo().getName()) == PlayerInfoForwarding.MODERN
         && packet.getChannel().equals(PlayerDataForwarding.CHANNEL)) {
 
       int requestedForwardingVersion = PlayerDataForwarding.MODERN_DEFAULT;
@@ -166,7 +168,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ServerLoginSuccessPacket packet) {
-    if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && !informationForwarded) {
+    if (MixedVelocity.getInstance().getForwardingMode(serverConn.getServerInfo().getName()) == PlayerInfoForwarding.MODERN && !informationForwarded) {
       resultFuture.complete(ConnectionRequestResults.forDisconnect(MODERN_IP_FORWARDING_FAILURE, serverConn.getServer()));
       serverConn.disconnect();
       return true;
@@ -225,7 +227,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void disconnected() {
-    if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.LEGACY) {
+    if (MixedVelocity.getInstance().getForwardingMode(serverConn.getServerInfo().getName()) == PlayerInfoForwarding.LEGACY) {
       resultFuture.completeExceptionally(new QuietRuntimeException(
               """
               The connection to the remote server was unexpectedly closed.

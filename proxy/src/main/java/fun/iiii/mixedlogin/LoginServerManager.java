@@ -1,10 +1,12 @@
 package fun.iiii.mixedlogin;
 
 import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.proxy.config.VelocityConfiguration;
 import fun.iiii.mixedlogin.yggdrasil.VirtualYggdrasilServer;
 import fun.iiii.mixedlogin.yggdrasil.offline.VirtualOfflineService;
 import fun.iiii.mixedlogin.yggdrasil.offline.VirtualSubService;
 
+import java.nio.file.Path;
 import java.util.Optional;
 
 public class LoginServerManager {
