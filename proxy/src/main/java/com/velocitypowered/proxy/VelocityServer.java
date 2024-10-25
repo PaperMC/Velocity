@@ -38,6 +38,7 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ProxyVersion;
+import com.velocitypowered.api.util.buildinfo.ServerBuildInfo;
 import com.velocitypowered.proxy.command.VelocityCommandManager;
 import com.velocitypowered.proxy.command.builtin.CallbackCommand;
 import com.velocitypowered.proxy.command.builtin.GlistCommand;
@@ -191,7 +192,9 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
   @Override
   public ProxyVersion getVersion() {
+    // TODO: this can likely also be changed to ServerBuildInfo
     Package pkg = VelocityServer.class.getPackage();
+    final ServerBuildInfo buildInfo = ServerBuildInfo.buildInfo();
     String implName;
     String implVersion;
     String implVendor;
@@ -205,7 +208,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       implVendor = "Velocity Contributors";
     }
 
-    return new ProxyVersion(implName, implVendor, implVersion);
+    return new ProxyVersion(buildInfo.brandName(), implVendor, implVersion);
   }
 
   private VelocityPluginContainer createVirtualPlugin() {
@@ -230,7 +233,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   @EnsuresNonNull({"serverKeyPair", "servers", "pluginManager", "eventManager", "scheduler",
       "console", "cm", "configuration"})
   void start() {
-    logger.info("Booting up {} {}...", getVersion().getName(), getVersion().getVersion());
+    final ServerBuildInfo buildInfo = ServerBuildInfo.buildInfo();
+    logger.info("Booting up {} {}...", getVersion().getName(), buildInfo.asString(ServerBuildInfo.StringRepresentation.VERSION_FULL));
     console.setupStreams();
     pluginManager.registerPlugin(this.createVirtualPlugin());
 
