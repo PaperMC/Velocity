@@ -31,7 +31,7 @@ MultiLogin-MixedLoginVelocity 为接入到魔改VC的MultiLogin
 
 MixedVelocity-proxy-3.4.0-SNAPSHOT-all.jar 为魔改VC本体
 
-AuthMeVelocity-MixedVelocity-4.1.2.jar 未魔改过的AuthMEVC
+AuthMeVelocity-MixedVelocity-4.1.2.jar 为魔改过的AuthMEVC，支持跳过正版玩家的登入
 
 bukkit下的Authme和AuthMeVelocity是未经魔改的，可以随意替换
 
@@ -42,7 +42,7 @@ plugins放入魔改的MulitLogin以方便多认证源和档案管理，将offlin
 plugins放入魔改的AuthMeVelocity以支持跳过在线玩家的认证和设定登入后行为
 ### 兼容情况
 低于1.19.1:
-域名前加o-或者offical识别为离线玩家
+域名前加o-或者offline识别为离线玩家
 
 高于1.19.1:
 直接进入即可
@@ -128,3 +128,5 @@ send-on-login {
 ````
 
 made by 未冬(QQ:2388990095)
+
+如有问题请提交issue或加QQ群反馈 群号：946864759
