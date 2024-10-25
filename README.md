@@ -1,36 +1,51 @@
-# Velocity
+# MixedVelocity
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/PaperMC/Velocity/gradle.yml)](https://papermc.io/downloads/velocity)
-[![Join our Discord](https://img.shields.io/discord/289587909051416579.svg?logo=discord&label=)](https://discord.gg/papermc)
+made by 未冬(QQ:2388990095)
 
-A Minecraft server proxy with unparalleled server support, scalability,
-and flexibility.
+一套离线+正版的VC登入方案，支持VC嵌套，由于MultiLogin未添加进入后二次密码认证，目前仅实验用途，不建议用于生产
 
-Velocity is licensed under the GPLv3 license.
+相关代码开源 https://github.com/MixedLogin
 
-## Goals
+## 需要的文件清单
+offline.yml 为添加到MultiLogin中的yggd服务
+````
+# Below, only the most basic configuration is provided.
+# You can refer to the template file to complete all configurations.
 
-* A codebase that is easy to dive into and consistently follows best practices
-  for Java projects as much as reasonably possible.
-* High performance: handle thousands of players on one proxy.
-* A new, refreshing API built from the ground up to be flexible and powerful
-  whilst avoiding design mistakes and suboptimal designs from other proxies.
-* First-class support for Paper, Sponge, Fabric and Forge. (Other implementations
-  may work, but we make every endeavor to support these server implementations
-  specifically.)
-  
-## Building
+# Please edit before use.
+id: 1
 
-Velocity is built with [Gradle](https://gradle.org). We recommend using the
-wrapper script (`./gradlew`) as our CI builds using it.
+name: 'Offline'
+# Don't change it unless you really want to.
+serviceType: BLESSING_SKIN
+yggdrasilAuth:
+blessingSkin:
+apiRoot: 'http://127.0.0.1:26748/api/yggdrasil'
+````
+MultiLogin-MixedLoginVelocity 为接入到魔改VC的MultiLogin
+MixedVelocity-proxy-3.4.0-SNAPSHOT-all.jar 为魔改VC本体
 
-It is sufficient to run `./gradlew build` to run the full build cycle.
+## 使用方法
 
-## Running
+启动魔改VC后安装ML，将offline.yml拖入multilogin\services
 
-Once you've built Velocity, you can copy and run the `-all` JAR from
-`proxy/build/libs`. Velocity will generate a default configuration file
-and you can configure it from there.
+低于1.19.1:
+域名前加o-或者offical识别为离线玩家
 
-Alternatively, you can get the proxy JAR from the [downloads](https://papermc.io/downloads/velocity)
-page.
+高于1.19.1:
+直接进入即可
+
+如果下层要嵌套VC
+
+设置mixedVC
+````
+player-info-forwarding-mode = "none"
+````
+并且下层vc添加以下参数并启用在线模式以确保资料被正确转发
+````
+-Dmojang.sessionserver="http://127.0.0.1:26749/api/yggdrasil/sessionserver/session/minecraft/hasJoined"
+````
+
+普通服务器可以使用常规UUID转发办法
+
+made by 未冬(QQ:2388990095)
