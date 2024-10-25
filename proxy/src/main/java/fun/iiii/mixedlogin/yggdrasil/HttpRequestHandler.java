@@ -17,6 +17,12 @@ import static io.netty.handler.codec.http.HttpUtil.is100ContinueExpected;
 
 public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
+    private final YggdrasilResultProcessor processor;
+
+    public HttpRequestHandler(YggdrasilResultProcessor processor) {
+        this.processor = processor;
+    }
+
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) {
         ctx.flush();
@@ -57,30 +63,10 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
 
         String userName = resMap.get("username");
         String serverId = resMap.get("serverId");
-        String json = "{id:" + generateOfflinePlayerUuid(userName) + ",name:" + userName + "}";
-        String genServerId = LoginServerManager.getInstance().finishRequest(userName);
-        if (!genServerId.equals(serverId)) {
-            FullHttpResponse response = new DefaultFullHttpResponse(
-                    HttpVersion.HTTP_1_1,
-                    HttpResponseStatus.FORBIDDEN,
-                    Unpooled.copiedBuffer("404 Not Found", CharsetUtil.UTF_8));
+        String ip = resMap.get("ip");
+        YggdrasilRequestObject requestObject = new YggdrasilRequestObject(userName, serverId,ip,ctx);
+        processor.onReceive(requestObject);
 
-            ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-            return;
-        }
-        // 创建http响应
-        FullHttpResponse response = new DefaultFullHttpResponse(
-                HttpVersion.HTTP_1_1,
-                HttpResponseStatus.OK,
-                Unpooled.copiedBuffer(json, CharsetUtil.UTF_8));
-        // 设置头信息
-        response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/html; charset=UTF-8");
-        //response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
-        // 将html write到客户端
-        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
     }
 
-    public static UUID generateOfflinePlayerUuid(String username) {
-        return UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(StandardCharsets.UTF_8));
-    }
 }

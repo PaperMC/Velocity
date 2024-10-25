@@ -39,6 +39,16 @@ public class EncryptionResponsePacket implements MinecraftPacket {
   private byte[] verifyToken = EMPTY_BYTE_ARRAY;
   private @Nullable Long salt;
 
+  public EncryptionResponsePacket(){
+
+  }
+
+  public EncryptionResponsePacket(byte[] sharedSecret, byte[] verifyToken, @Nullable Long salt) {
+    this.sharedSecret = sharedSecret;
+    this.verifyToken = verifyToken;
+    this.salt = salt;
+  }
+
   public byte[] getSharedSecret() {
     return sharedSecret.clone();
   }

@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.connection.backend;
 
+import com.google.common.primitives.Longs;
 import com.velocitypowered.api.event.player.CookieRequestEvent;
 import com.velocitypowered.api.event.player.ServerLoginPluginMessageEvent;
 import com.velocitypowered.api.event.player.configuration.PlayerEnteredConfigurationEvent;
@@ -32,25 +33,25 @@ import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
+import com.velocitypowered.proxy.crypto.EncryptionUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
-import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
-import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
-import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
-import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
-import com.velocitypowered.proxy.protocol.packet.LoginAcknowledgedPacket;
-import com.velocitypowered.proxy.protocol.packet.LoginPluginMessagePacket;
-import com.velocitypowered.proxy.protocol.packet.LoginPluginResponsePacket;
-import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
-import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
+import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
+import fun.iiii.mixedlogin.util.CryptUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
+
+import java.math.BigInteger;
+import java.security.GeneralSecurityException;
+import java.security.PublicKey;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import javax.crypto.SecretKey;
 
 /**
  * Handles a player trying to log into the proxy.
@@ -75,8 +76,30 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(EncryptionRequestPacket packet) {
-    throw new IllegalStateException("Backend server is online-mode!");
+  public boolean handle(EncryptionRequestPacket packetIn) {
+//    throw new IllegalStateException("Backend server is online-mode!");
+    final SecretKey secretkey = CryptUtil.createNewSharedKey();
+    byte[] sharedSecret=secretkey.getEncoded();
+    PublicKey publickey = CryptUtil.decodePublicKey(packetIn.getPublicKey());
+    String s = "";
+    String serverId = (new BigInteger(CryptUtil.getServerIdHash(s, publickey, secretkey))).toString(16);
+    server.getLoginServerManager().startSubRequest(serverId,serverConn.getPlayer().getGameProfile());
+
+    byte[] verifyToken=CryptUtil.encryptData(publickey,packetIn.getVerifyToken());
+//    生成salt long
+    long salt= Longs.fromByteArray(CryptUtil.encryptData(publickey,Longs.toByteArray(System.currentTimeMillis())));
+    EncryptionResponsePacket responsePacket=new EncryptionResponsePacket(CryptUtil.encryptData(publickey,sharedSecret),verifyToken,salt);
+    serverConn.ensureConnected().write(responsePacket);
+    try {
+      serverConn.ensureConnected().enableEncryption(sharedSecret);
+    } catch (GeneralSecurityException e) {
+      logger.error("Unable to enable encryption for connection", e);
+      // At this point, the connection is encrypted, but something's wrong on our side and
+      // we can't do anything about it.
+      serverConn.ensureConnected().close(true);
+      return true;
+    }
+    return true;
   }
 
   @Override

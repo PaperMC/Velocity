@@ -17,8 +17,6 @@
 
 package com.velocitypowered.proxy.connection.client;
 
-import static com.google.common.net.UrlEscapers.urlFormParameterEscaper;
-import static com.velocitypowered.proxy.VelocityServer.GENERAL_GSON;
 import static com.velocitypowered.proxy.connection.VelocityConstants.EMPTY_BYTE_ARRAY;
 import static com.velocitypowered.proxy.crypto.EncryptionUtils.decryptRsa;
 import static com.velocitypowered.proxy.crypto.EncryptionUtils.generateServerId;
@@ -150,7 +148,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
             UUID offlineUUID= UuidUtils.generateOfflinePlayerUuid(userName);
             if(pUUID.equals(offlineUUID)||server.getLoginServerManager().shouldOfflineHost(inbound.getRawVirtualHost())){
 //              盗版用户
-              doLogin(false,server.getLoginServerManager().startRequest(userName), null);
+              doLogin(false,server.getLoginServerManager().startOfflineRequest(userName), null);
 //            mcConnection.setActiveSessionHandler(StateRegistry.LOGIN,
 //                new AuthSessionHandler(server, inbound,
 //                    GameProfile.forOfflinePlayer(login.getUsername()), false));

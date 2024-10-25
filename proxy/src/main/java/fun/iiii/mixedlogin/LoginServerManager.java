@@ -1,32 +1,33 @@
 package fun.iiii.mixedlogin;
 
+import com.velocitypowered.api.util.GameProfile;
 import fun.iiii.mixedlogin.yggdrasil.VirtualYggdrasilServer;
+import fun.iiii.mixedlogin.yggdrasil.offline.VirtualOfflineService;
+import fun.iiii.mixedlogin.yggdrasil.offline.VirtualSubService;
 
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class LoginServerManager {
-    private final VirtualYggdrasilServer virtualYggdrasilServer = new VirtualYggdrasilServer(26748, "127.0.0.1");
-    private Map<String, String> serverIdReqMap = new ConcurrentHashMap<>();
+    private final VirtualOfflineService virtualOfflineService = new VirtualOfflineService();
+    private final VirtualSubService virtualSubService = new VirtualSubService();
+    private final VirtualYggdrasilServer offlineYggdrasilServer = new VirtualYggdrasilServer(26748, "127.0.0.1", virtualOfflineService);
+    private final VirtualYggdrasilServer subYggdrasilServer = new VirtualYggdrasilServer(26749, "127.0.0.1", virtualSubService);
+
     private static LoginServerManager instance;
 
     public void start() {
         instance = this;
         try {
-            virtualYggdrasilServer.start();
+            offlineYggdrasilServer.start();
+            subYggdrasilServer.start();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public boolean shouldOfflineHost(Optional<String> hostName) {
-        if(hostName.isEmpty())return false;
-        String hostNameUnpack=hostName.get();
+        if (hostName.isEmpty()) return false;
+        String hostNameUnpack = hostName.get();
         if (hostNameUnpack.startsWith("offline")) return true;
         if (hostNameUnpack.startsWith("o-")) return true;
         return false;
@@ -36,30 +37,13 @@ public class LoginServerManager {
         return instance;
     }
 
-    public String finishRequest(String userName) {
-//        返回一个serverid
-        return serverIdReqMap.remove(userName);
+    public String startOfflineRequest(String userName) {
+        return virtualOfflineService.startRequest(userName);
     }
 
-    public String startRequest(String userName) {
-//        返回一个serverid
-        String gen = generateServerId(userName);
-        serverIdReqMap.put(userName, gen);
-        return gen;
+
+    public void startSubRequest(String serverId, GameProfile gameProfile) {
+        virtualSubService.startRequest(serverId,gameProfile);
     }
 
-    public static String generateServerId(String userName) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-1");
-            digest.update(userName.getBytes());
-            digest.update(UUID.randomUUID().toString().getBytes());
-            return twosComplementHexdigest(digest.digest());
-        } catch (NoSuchAlgorithmException e) {
-            throw new AssertionError(e);
-        }
-    }
-
-    public static String twosComplementHexdigest(byte[] digest) {
-        return new BigInteger(digest).toString(16);
-    }
 }

@@ -14,11 +14,13 @@ import static io.netty.handler.codec.http.HttpUtil.is100ContinueExpected;
 public class VirtualYggdrasilServer {
     private final int port;
     private final String ip;
+    private final YggdrasilResultProcessor processor;
 
     private ChannelFuture f;
-    public VirtualYggdrasilServer(int port, String ip) {
+    public VirtualYggdrasilServer(int port, String ip, YggdrasilResultProcessor processor) {
         this.port = port;
         this.ip = ip;
+        this.processor = processor;
     }
 
     public void start() throws Exception {
@@ -28,7 +30,7 @@ public class VirtualYggdrasilServer {
         bootstrap.group(boss, work)
                 .handler(new LoggingHandler(LogLevel.DEBUG))
                 .channel(NioServerSocketChannel.class)
-                .childHandler(new HttpServerInitializer());
+                .childHandler(new HttpServerInitializer(processor));
 
         f = bootstrap.bind(new InetSocketAddress(ip, port)).sync();
         System.out.println("yggdrasil server start up on : " + ip + ":" + port);
