@@ -22,12 +22,10 @@ import net.kyori.adventure.text.Component;
  */
 @AwaitingEvent
 public final class InitialLoginEvent implements ResultedEvent<ResultedEvent.ComponentResult> {
-
-    private final String originalURL;
-    private final String originalUA;
     private final String userName;
     private final String serverId;
     private final String playerIp;
+    private final boolean isOnline;
 
     private boolean success = false;
     private boolean ignoreKey = false;
@@ -37,16 +35,19 @@ public final class InitialLoginEvent implements ResultedEvent<ResultedEvent.Comp
     private Component disconnectComponent = Component.text("未知错误");
     private GameProfile gameProfile;
 
-    public InitialLoginEvent(String originalURL, String originalUA, String userName, String serverId, String playerIp) {
-        this.originalURL = originalURL;
-        this.originalUA = originalUA;
+    public InitialLoginEvent(String userName, String serverId, String playerIp, boolean isOnline) {
         this.userName = userName;
         this.serverId = serverId;
         this.playerIp = playerIp;
+        this.isOnline = isOnline;
     }
 
     public String getPlayerIp() {
         return playerIp;
+    }
+
+    public boolean isOnline() {
+        return isOnline;
     }
 
     public boolean isIgnoreKey() {
@@ -67,14 +68,6 @@ public final class InitialLoginEvent implements ResultedEvent<ResultedEvent.Comp
 
     public Throwable getThrowable() {
         return throwable;
-    }
-
-    public String getOriginalURL() {
-        return originalURL;
-    }
-
-    public String getOriginalUA() {
-        return originalUA;
     }
 
     public String getUserName() {
