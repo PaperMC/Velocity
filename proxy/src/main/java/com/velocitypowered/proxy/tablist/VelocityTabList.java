@@ -89,7 +89,7 @@ public class VelocityTabList implements InternalTabList {
     } else {
       entry = new VelocityTabListEntry(this, entry1.getProfile(),
           entry1.getDisplayNameComponent().orElse(null),
-          entry1.getLatency(), entry1.getGameMode(), entry1.getChatSession(), entry1.isListed());
+          entry1.getLatency(), entry1.getGameMode(), entry1.getChatSession(), entry1.isListed(), entry1.getListOrder());
     }
 
     EnumSet<UpsertPlayerInfoPacket.Action> actions = EnumSet
@@ -207,9 +207,9 @@ public class VelocityTabList implements InternalTabList {
   @Override
   public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
       int gameMode,
-      @Nullable ChatSession chatSession, boolean listed) {
+      @Nullable ChatSession chatSession, boolean listed, int listOrder) {
     return new VelocityTabListEntry(this, profile, displayName, latency, gameMode, chatSession,
-        listed);
+        listed, listOrder);
   }
 
   @Override
@@ -246,7 +246,8 @@ public class VelocityTabList implements InternalTabList {
                 0,
                 -1,
                 null,
-                false
+                false,
+                0
             )
         );
       } else {
@@ -273,6 +274,9 @@ public class VelocityTabList implements InternalTabList {
     }
     if (actions.contains(UpsertPlayerInfoPacket.Action.UPDATE_LISTED)) {
       currentEntry.setListedWithoutUpdate(entry.isListed());
+    }
+    if (actions.contains(UpsertPlayerInfoPacket.Action.UPDATE_LIST_ORDER)) {
+      currentEntry.setListOrderWithoutUpdate(entry.getListOrder());
     }
   }
 

@@ -168,6 +168,25 @@ public interface TabList {
    * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
    */
   @Deprecated
+  default TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
+                          int gameMode, @Nullable ChatSession chatSession, boolean listed) {
+    return buildEntry(profile, displayName, latency, gameMode, chatSession, listed, 0);
+  }
+
+  /**
+   * Represents an entry in a {@link Player}'s tab list.
+   *
+   * @param profile     the profile
+   * @param displayName the display name
+   * @param latency     the latency
+   * @param gameMode    the game mode
+   * @param chatSession the chat session
+   * @param listed      the visible status of entry
+   * @param listOrder   the order/priority of entry in the tab list
+   * @return the entry
+   * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
+   */
+  @Deprecated
   TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
-                          int gameMode, @Nullable ChatSession chatSession, boolean listed);
+                          int gameMode, @Nullable ChatSession chatSession, boolean listed, int listOrder);
 }
