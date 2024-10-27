@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.tablist;
 
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.ChatSession;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
@@ -161,9 +162,11 @@ public class VelocityTabListEntry implements TabListEntry {
   @Override
   public VelocityTabListEntry setListOrder(int listOrder) {
     this.listOrder = listOrder;
-    UpsertPlayerInfoPacket.Entry upsertEntry = this.tabList.createRawEntry(this);
-    upsertEntry.setListOrder(listOrder);
-    this.tabList.emitActionRaw(UpsertPlayerInfoPacket.Action.UPDATE_LIST_ORDER, upsertEntry);
+    if (tabList.getPlayer().getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_2)) {
+      UpsertPlayerInfoPacket.Entry upsertEntry = this.tabList.createRawEntry(this);
+      upsertEntry.setListOrder(listOrder);
+      tabList.emitActionRaw(UpsertPlayerInfoPacket.Action.UPDATE_LIST_ORDER, upsertEntry);
+    }
     return this;
   }
 

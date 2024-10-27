@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.tablist;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.player.ChatSession;
 import com.velocitypowered.api.proxy.player.TabListEntry;
@@ -127,6 +128,11 @@ public class VelocityTabList implements InternalTabList {
         if (!Objects.equals(previousEntry.isListed(), entry.isListed())) {
           actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LISTED);
           playerInfoEntry.setListed(entry.isListed());
+        }
+        if (!Objects.equals(previousEntry.getListOrder(), entry.getListOrder())
+            && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_2)) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LIST_ORDER);
+          playerInfoEntry.setListOrder(entry.getListOrder());
         }
         if (!Objects.equals(previousEntry.getChatSession(), entry.getChatSession())) {
           ChatSession from = entry.getChatSession();
