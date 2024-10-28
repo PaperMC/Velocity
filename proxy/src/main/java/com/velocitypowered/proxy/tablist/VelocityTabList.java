@@ -168,6 +168,11 @@ public class VelocityTabList implements InternalTabList {
         }
         playerInfoEntry.setLatency(entry.getLatency());
         playerInfoEntry.setListed(entry.isListed());
+        if (entry.getListOrder() != 0
+            && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_2)) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LIST_ORDER);
+          playerInfoEntry.setListOrder(entry.getListOrder());
+        }
       }
       return entry;
     });
