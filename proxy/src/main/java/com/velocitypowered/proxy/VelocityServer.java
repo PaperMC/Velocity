@@ -46,6 +46,7 @@ import com.velocitypowered.proxy.command.builtin.SendCommand;
 import com.velocitypowered.proxy.command.builtin.ServerCommand;
 import com.velocitypowered.proxy.command.builtin.ShutdownCommand;
 import com.velocitypowered.proxy.command.builtin.VelocityCommand;
+import com.velocitypowered.proxy.config.LegacyConfigurationLoader;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.player.resourcepack.VelocityResourcePackInfo;
@@ -404,7 +405,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   private void doStartupConfigLoad() {
     try {
       Path configPath = Path.of("velocity.toml");
-      configuration = VelocityConfiguration.read(configPath);
+      configuration = LegacyConfigurationLoader.read(configPath);
 
       if (!configuration.validate()) {
         logger.error("Your configuration is invalid. Velocity will not start up until the errors "
@@ -482,7 +483,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
    */
   public boolean reloadConfiguration() throws IOException {
     Path configPath = Path.of("velocity.toml");
-    VelocityConfiguration newConfiguration = VelocityConfiguration.read(configPath);
+    VelocityConfiguration newConfiguration = LegacyConfigurationLoader.read(configPath);
 
     if (!newConfiguration.validate()) {
       return false;

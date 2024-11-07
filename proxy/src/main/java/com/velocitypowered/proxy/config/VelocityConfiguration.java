@@ -18,34 +18,19 @@
 package com.velocitypowered.proxy.config;
 
 import com.electronwill.nightconfig.core.CommentedConfig;
-import com.electronwill.nightconfig.core.UnmodifiableConfig;
-import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.annotations.Expose;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
-import com.velocitypowered.proxy.config.migration.ConfigurationMigration;
-import com.velocitypowered.proxy.config.migration.ForwardingMigration;
-import com.velocitypowered.proxy.config.migration.KeyAuthenticationMigration;
-import com.velocitypowered.proxy.config.migration.MiniMessageTranslationsMigration;
-import com.velocitypowered.proxy.config.migration.MotdMigration;
-import com.velocitypowered.proxy.config.migration.PacketLimiterMigration;
-import com.velocitypowered.proxy.config.migration.PingPassthroughMigration;
-import com.velocitypowered.proxy.config.migration.TransferIntegrationMigration;
 import com.velocitypowered.proxy.util.AddressUtil;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.SecureRandom;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
@@ -54,10 +39,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 /**
  * Velocity's configuration.
  */
+@ConfigSerializable
 public class VelocityConfiguration implements ProxyConfig {
 
   private static final Logger logger = LogManager.getLogger(VelocityConfiguration.class);
@@ -100,7 +87,7 @@ public class VelocityConfiguration implements ProxyConfig {
   private PacketLimiterConfig packetLimiterConfig = PacketLimiterConfig.DEFAULT;
 
   private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
-      Query query, Metrics metrics) {
+                                Query query, Metrics metrics) {
     this.servers = servers;
     this.forcedHosts = forcedHosts;
     this.advanced = advanced;
@@ -108,7 +95,7 @@ public class VelocityConfiguration implements ProxyConfig {
     this.metrics = metrics;
   }
 
-  private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
+  VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
       boolean preventClientProxyConnections, boolean announceForge,
       PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
       boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough,
@@ -478,133 +465,6 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   /**
-   * Reads the Velocity configuration from {@code path}.
-   *
-   * @param path the path to read from
-   * @return the deserialized Velocity configuration
-   * @throws IOException if we could not read from the {@code path}.
-   */
-  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-      justification = "I looked carefully and there's no way SpotBugs is right.")
-  public static VelocityConfiguration read(Path path) throws IOException {
-    URL defaultConfigLocation = VelocityConfiguration.class.getClassLoader()
-        .getResource("default-velocity.toml");
-    if (defaultConfigLocation == null) {
-      throw new RuntimeException("Default configuration file does not exist.");
-    }
-
-    // Create the forwarding-secret file on first-time startup if it doesn't exist
-    final Path defaultForwardingSecretPath = Path.of("forwarding.secret");
-    if (Files.notExists(path) && Files.notExists(defaultForwardingSecretPath)) {
-      Files.writeString(defaultForwardingSecretPath, generateRandomString(12));
-    }
-
-    try (final CommentedFileConfig config = CommentedFileConfig.builder(path)
-            .defaultData(defaultConfigLocation)
-            .autosave()
-            .preserveInsertionOrder()
-            .sync()
-            .build()
-    ) {
-      config.load();
-
-      final ConfigurationMigration[] migrations = {
-          new ForwardingMigration(),
-          new KeyAuthenticationMigration(),
-          new MotdMigration(),
-          new MiniMessageTranslationsMigration(),
-          new TransferIntegrationMigration(),
-          new PacketLimiterMigration(),
-          new PingPassthroughMigration(),
-      };
-
-      for (final ConfigurationMigration migration : migrations) {
-        if (migration.shouldMigrate(config)) {
-          migration.migrate(config, logger);
-        }
-      }
-
-      String forwardingSecretString = System.getenv().getOrDefault(
-              "VELOCITY_FORWARDING_SECRET", "");
-      if (forwardingSecretString.isBlank()) {
-        final String forwardSecretFile = config.get("forwarding-secret-file");
-        final Path secretPath = forwardSecretFile == null
-                ? defaultForwardingSecretPath
-                : Path.of(forwardSecretFile);
-        if (Files.exists(secretPath)) {
-          if (Files.isRegularFile(secretPath)) {
-            forwardingSecretString = String.join("", Files.readAllLines(secretPath));
-          } else {
-            throw new RuntimeException(
-                    "The file " + forwardSecretFile + " is not a valid file or it is a directory.");
-          }
-        } else {
-          Files.createFile(secretPath);
-          Files.writeString(secretPath, forwardingSecretString = generateRandomString(12),
-              StandardCharsets.UTF_8);
-          logger.info("The forwarding-secret-file does not exist. A new file has been created at {}",
-              forwardSecretFile);
-        }
-      }
-      final byte[] forwardingSecret = forwardingSecretString.getBytes(StandardCharsets.UTF_8);
-      final String motd = config.getOrElse("motd", "<#09add3>A Velocity Server");
-
-      // Read the rest of the config
-      final CommentedConfig serversConfig = config.get("servers");
-      final CommentedConfig forcedHostsConfig = config.get("forced-hosts");
-      final CommentedConfig advancedConfig = config.get("advanced");
-      final CommentedConfig queryConfig = config.get("query");
-      final CommentedConfig metricsConfig = config.get("metrics");
-      final PlayerInfoForwarding forwardingMode = config.getEnumOrElse(
-              "player-info-forwarding-mode", PlayerInfoForwarding.NONE);
-      final PingPassthroughMode pingPassthrough = PingPassthroughMode.fromConfig(config.get("ping-passthrough"));
-      final boolean samplePlayersInPing = config.getOrElse("sample-players-in-ping", false);
-
-      final String bind = config.getOrElse("bind", "0.0.0.0:25565");
-      final int maxPlayers = config.getIntOrElse("show-max-players", 500);
-      final boolean onlineMode = config.getOrElse("online-mode", true);
-      final boolean forceKeyAuthentication = config.getOrElse("force-key-authentication", true);
-      final boolean announceForge = config.getOrElse("announce-forge", true);
-      final boolean preventClientProxyConnections = config.getOrElse(
-              "prevent-client-proxy-connections", false);
-      final boolean kickExisting = config.getOrElse("kick-existing-players", false);
-      final boolean enablePlayerAddressLogging = config.getOrElse(
-              "enable-player-address-logging", true);
-      final PacketLimiterConfig packetLimiterConfig = PacketLimiterConfig.fromConfig(config.get("packet-limiter"));
-
-      // Throw an exception if the forwarding-secret file is empty and the proxy is using a
-      // forwarding mode that requires it.
-      if (forwardingSecret.length == 0
-              && (forwardingMode == PlayerInfoForwarding.MODERN
-              || forwardingMode == PlayerInfoForwarding.BUNGEEGUARD)) {
-        throw new RuntimeException("The forwarding-secret file must not be empty.");
-      }
-
-      return new VelocityConfiguration(
-              bind,
-              motd,
-              maxPlayers,
-              onlineMode,
-              preventClientProxyConnections,
-              announceForge,
-              forwardingMode,
-              forwardingSecret,
-              kickExisting,
-              pingPassthrough,
-              samplePlayersInPing,
-              enablePlayerAddressLogging,
-              new Servers(serversConfig),
-              new ForcedHosts(forcedHostsConfig),
-              new Advanced(advancedConfig),
-              new Query(queryConfig),
-              new Metrics(metricsConfig),
-              forceKeyAuthentication,
-              packetLimiterConfig
-      );
-    }
-  }
-
-  /**
    * Generates a Random String.
    *
    * @param length the required string size.
@@ -624,7 +484,7 @@ public class VelocityConfiguration implements ProxyConfig {
     return onlineModeKickExistingPlayers;
   }
 
-  private static class Servers {
+  static class Servers {
 
     private Map<String, String> servers = ImmutableMap.of(
         "lobby", "127.0.0.1:30066",
@@ -633,28 +493,10 @@ public class VelocityConfiguration implements ProxyConfig {
     );
     private List<String> attemptConnectionOrder = ImmutableList.of("lobby");
 
-    private Servers() {
+    Servers() {
     }
 
-    private Servers(CommentedConfig config) {
-      if (config != null) {
-        Map<String, String> servers = new HashMap<>();
-        for (UnmodifiableConfig.Entry entry : config.entrySet()) {
-          if (entry.getValue() instanceof String) {
-            servers.put(cleanServerName(entry.getKey()), entry.getValue());
-          } else {
-            if (!entry.getKey().equalsIgnoreCase("try")) {
-              throw new IllegalArgumentException(
-                  "Server entry " + entry.getKey() + " is not a string!");
-            }
-          }
-        }
-        this.servers = ImmutableMap.copyOf(servers);
-        this.attemptConnectionOrder = config.getOrElse("try", attemptConnectionOrder);
-      }
-    }
-
-    private Servers(Map<String, String> servers, List<String> attemptConnectionOrder) {
+    Servers(Map<String, String> servers, List<String> attemptConnectionOrder) {
       this.servers = servers;
       this.attemptConnectionOrder = attemptConnectionOrder;
     }
@@ -683,7 +525,7 @@ public class VelocityConfiguration implements ProxyConfig {
      * @param name the server name to clean
      * @return the cleaned server name
      */
-    private String cleanServerName(String name) {
+    static String cleanServerName(String name) {
       return name.replace("\"", "");
     }
 
@@ -696,7 +538,7 @@ public class VelocityConfiguration implements ProxyConfig {
     }
   }
 
-  private static class ForcedHosts {
+  static class ForcedHosts {
 
     private Map<String, List<String>> forcedHosts = ImmutableMap.of(
         "lobby.example.com", ImmutableList.of("lobby"),
@@ -704,29 +546,10 @@ public class VelocityConfiguration implements ProxyConfig {
         "minigames.example.com", ImmutableList.of("minigames")
     );
 
-    private ForcedHosts() {
+    ForcedHosts() {
     }
 
-    private ForcedHosts(CommentedConfig config) {
-      if (config != null) {
-        Map<String, List<String>> forcedHosts = new HashMap<>();
-        for (UnmodifiableConfig.Entry entry : config.entrySet()) {
-          if (entry.getValue() instanceof String) {
-            forcedHosts.put(entry.getKey().toLowerCase(Locale.ROOT),
-                ImmutableList.of(entry.getValue()));
-          } else if (entry.getValue() instanceof List) {
-            forcedHosts.put(entry.getKey().toLowerCase(Locale.ROOT),
-                ImmutableList.copyOf((List<String>) entry.getValue()));
-          } else {
-            throw new IllegalStateException(
-                "Invalid value of type " + entry.getValue().getClass() + " in forced hosts!");
-          }
-        }
-        this.forcedHosts = ImmutableMap.copyOf(forcedHosts);
-      }
-    }
-
-    private ForcedHosts(Map<String, List<String>> forcedHosts) {
+    ForcedHosts(Map<String, List<String>> forcedHosts) {
       this.forcedHosts = forcedHosts;
     }
 
@@ -746,7 +569,7 @@ public class VelocityConfiguration implements ProxyConfig {
     }
   }
 
-  private static class Advanced {
+  static class Advanced {
 
     @Expose
     private int compressionThreshold = 256;
@@ -789,38 +612,39 @@ public class VelocityConfiguration implements ProxyConfig {
     @Expose
     private int kickAfterRateLimitedTabCompletes = 10;
 
-    private Advanced() {
+    Advanced() {
     }
 
-    private Advanced(CommentedConfig config) {
-      if (config != null) {
-        this.compressionThreshold = config.getIntOrElse("compression-threshold", 256);
-        this.compressionLevel = config.getIntOrElse("compression-level", -1);
-        this.loginRatelimit = config.getIntOrElse("login-ratelimit", 3000);
-        this.connectionTimeout = config.getIntOrElse("connection-timeout", 5000);
-        this.readTimeout = config.getIntOrElse("read-timeout", 30000);
-        if (config.contains("haproxy-protocol")) {
-          this.proxyProtocol = config.getOrElse("haproxy-protocol", false);
-        } else {
-          this.proxyProtocol = config.getOrElse("proxy-protocol", false);
-        }
-        this.tcpFastOpen = config.getOrElse("tcp-fast-open", false);
-        this.bungeePluginMessageChannel = config.getOrElse("bungee-plugin-message-channel", true);
-        this.showPingRequests = config.getOrElse("show-ping-requests", false);
-        this.failoverOnUnexpectedServerDisconnect = config
-            .getOrElse("failover-on-unexpected-server-disconnect", true);
-        this.announceProxyCommands = config.getOrElse("announce-proxy-commands", true);
-        this.logCommandExecutions = config.getOrElse("log-command-executions", false);
-        this.logPlayerConnections = config.getOrElse("log-player-connections", true);
-        this.acceptTransfers = config.getOrElse("accepts-transfers", false);
-        this.enableReusePort = config.getOrElse("enable-reuse-port", false);
-        this.commandRateLimit = config.getIntOrElse("command-rate-limit", 25);
-        this.forwardCommandsIfRateLimited = config.getOrElse("forward-commands-if-rate-limited", true);
-        this.kickAfterRateLimitedCommands = config.getIntOrElse("kick-after-rate-limited-commands", 0);
-        this.tabCompleteRateLimit = config.getIntOrElse("tab-complete-rate-limit", 10); // very lenient
-        this.kickAfterRateLimitedTabCompletes = config.getIntOrElse("kick-after-rate-limited-tab-completes", 0);
-      }
+    Advanced(int compressionThreshold, int compressionLevel, int loginRatelimit,
+             int connectionTimeout, int readTimeout, boolean proxyProtocol, boolean tcpFastOpen,
+             boolean bungeePluginMessageChannel, boolean showPingRequests,
+             boolean failoverOnUnexpectedServerDisconnect, boolean announceProxyCommands,
+             boolean logCommandExecutions, boolean logPlayerConnections, boolean acceptTransfers,
+             boolean enableReusePort, int commandRateLimit, boolean forwardCommandsIfRateLimited,
+             int kickAfterRateLimitedCommands, int tabCompleteRateLimit,
+             int kickAfterRateLimitedTabCompletes) {
+      this.compressionThreshold = compressionThreshold;
+      this.compressionLevel = compressionLevel;
+      this.loginRatelimit = loginRatelimit;
+      this.connectionTimeout = connectionTimeout;
+      this.readTimeout = readTimeout;
+      this.proxyProtocol = proxyProtocol;
+      this.tcpFastOpen = tcpFastOpen;
+      this.bungeePluginMessageChannel = bungeePluginMessageChannel;
+      this.showPingRequests = showPingRequests;
+      this.failoverOnUnexpectedServerDisconnect = failoverOnUnexpectedServerDisconnect;
+      this.announceProxyCommands = announceProxyCommands;
+      this.logCommandExecutions = logCommandExecutions;
+      this.logPlayerConnections = logPlayerConnections;
+      this.acceptTransfers = acceptTransfers;
+      this.enableReusePort = enableReusePort;
+      this.commandRateLimit = commandRateLimit;
+      this.forwardCommandsIfRateLimited = forwardCommandsIfRateLimited;
+      this.kickAfterRateLimitedCommands = kickAfterRateLimitedCommands;
+      this.tabCompleteRateLimit = tabCompleteRateLimit;
+      this.kickAfterRateLimitedTabCompletes = kickAfterRateLimitedTabCompletes;
     }
+
 
     public int getCompressionThreshold() {
       return compressionThreshold;
@@ -928,7 +752,7 @@ public class VelocityConfiguration implements ProxyConfig {
     }
   }
 
-  private static class Query {
+  static class Query {
 
     @Expose
     private boolean queryEnabled = false;
@@ -939,23 +763,14 @@ public class VelocityConfiguration implements ProxyConfig {
     @Expose
     private boolean showPlugins = false;
 
-    private Query() {
+    Query() {
     }
 
-    private Query(boolean queryEnabled, int queryPort, String queryMap, boolean showPlugins) {
+    Query(boolean queryEnabled, int queryPort, String queryMap, boolean showPlugins) {
       this.queryEnabled = queryEnabled;
       this.queryPort = queryPort;
       this.queryMap = queryMap;
       this.showPlugins = showPlugins;
-    }
-
-    private Query(CommentedConfig config) {
-      if (config != null) {
-        this.queryEnabled = config.getOrElse("enabled", false);
-        this.queryPort = config.getIntOrElse("port", 25565);
-        this.queryMap = config.getOrElse("map", "Velocity");
-        this.showPlugins = config.getOrElse("show-plugins", false);
-      }
     }
 
     public boolean isQueryEnabled() {
@@ -992,10 +807,11 @@ public class VelocityConfiguration implements ProxyConfig {
 
     private boolean enabled = true;
 
-    private Metrics(CommentedConfig toml) {
-      if (toml != null) {
-        this.enabled = toml.getOrElse("enabled", true);
-      }
+    Metrics() {
+    }
+
+    Metrics(boolean enabled) {
+      this.enabled = enabled;
     }
 
     public boolean isEnabled() {
