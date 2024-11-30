@@ -253,7 +253,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
         commandManager.metaBuilder(callbackCommand)
             .plugin(VelocityVirtualPlugin.INSTANCE)
             .build(),
-        velocityParentCommand
+        callbackCommand
     );
     final BrigadierCommand serverCommand = ServerCommand.create(this);
     commandManager.register(
