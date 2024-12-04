@@ -5,6 +5,7 @@ dependencyResolutionManagement {
     repositories {
         mavenCentral()
         maven("https://repo.papermc.io/repository/maven-public/")
+        maven("https://repository.apache.org/content/repositories/snapshots/")
     }
 }
 

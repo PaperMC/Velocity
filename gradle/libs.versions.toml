@@ -2,7 +2,7 @@
 configurate3 = "3.7.3"
 configurate4 = "4.1.2"
 flare = "2.0.1"
-log4j = "2.24.1"
+log4j = "2.25.0-SNAPSHOT"
 netty = "4.1.114.Final"
 
 [plugins]
