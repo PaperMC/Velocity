@@ -1047,26 +1047,25 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public void playSound(@NotNull Sound sound) {
+  public void playSound(@NotNull Sound sound, @NotNull Sound.Emitter emitter) {
     Preconditions.checkNotNull(sound, "sound");
-    Preconditions.checkArgument(
-        getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19_3),
-        "Player version must be 1.19.3 to be able to interact with sounds");
-    if (connection.getState() != StateRegistry.PLAY) {
-      throw new IllegalStateException("Can only interact with sounds in PLAY protocol");
+    Preconditions.checkNotNull(emitter, "emitter");
+    Preconditions.checkArgument(emitter.equals(Sound.Emitter.self()), "non-self emitter not supported");
+    if (getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_19_3)
+        || connection.getState() != StateRegistry.PLAY
+        || getConnectedServer() == null) {
+      return;
     }
 
-    connection.write(new ClientboundSoundEntityPacket(sound, null, ensureAndGetCurrentServer().getEntityId()));
+    connection.write(new ClientboundSoundEntityPacket(sound, null, getConnectedServer().getEntityId()));
   }
 
   @Override
   public void stopSound(@NotNull SoundStop stop) {
     Preconditions.checkNotNull(stop, "stop");
-    Preconditions.checkArgument(
-        getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19_3),
-        "Player version must be 1.19.3 to be able to interact with sounds");
-    if (connection.getState() != StateRegistry.PLAY) {
-      throw new IllegalStateException("Can only interact with sounds in PLAY protocol");
+    if (getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_19_3)
+        || connection.getState() != StateRegistry.PLAY) {
+      return;
     }
 
     connection.write(new ClientboundStopSoundPacket(stop));
