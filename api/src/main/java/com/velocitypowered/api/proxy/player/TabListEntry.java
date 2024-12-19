@@ -80,7 +80,7 @@ public interface TabListEntry extends KeyIdentifiable {
    *  <li>150-300 will display 4 bars</li>
    *  <li>300-600 will display 3 bars</li>
    *  <li>600-1000 will display 2 bars</li>
-   *  <li>A latency more than 1 second will display 1 bar</li>
+   *  <li>A latency greater than 1 second will display 1 bar</li>
    * </ul>
    *
    * @return latency set for {@code this} entry
