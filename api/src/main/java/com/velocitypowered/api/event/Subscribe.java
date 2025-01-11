@@ -32,12 +32,9 @@ public @interface Subscribe {
    * The priority of this event handler. Priorities are used to determine the order in which event
    * handlers are called. The higher the priority, the earlier the event handler will be called.
    *
-   * <p>Note that due to compatibility constraints, you must specify {@link PostOrder#CUSTOM}
-   * in order to use this field.</p>
-   *
    * @return the priority
    */
-  short priority() default Short.MIN_VALUE;
+  short priority() default 0;
 
   /**
    * Whether the handler must be called asynchronously. By default, all event handlers are called

@@ -12,6 +12,12 @@ package com.velocitypowered.api.event;
  */
 public enum PostOrder {
 
-  FIRST, EARLY, NORMAL, LATE, LAST, CUSTOM
+  FIRST, EARLY, NORMAL, LATE, LAST,
+
+  /**
+   * @deprecated No longer required, you only need to specify {@link Subscribe#priority()}.
+   */
+  @Deprecated
+  CUSTOM
 
 }
