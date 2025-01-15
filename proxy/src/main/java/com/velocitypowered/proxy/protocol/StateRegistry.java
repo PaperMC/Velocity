@@ -720,20 +720,17 @@ public enum StateRegistry {
           TransferPacket.class,
           TransferPacket::new,
           map(0x73, MINECRAFT_1_20_5, false),
-          map(0x7A, MINECRAFT_1_21_2, false),
-          map(0x79, MINECRAFT_1_21_5, false));
+          map(0x7A, MINECRAFT_1_21_2, false));
       clientbound.register(
           ClientboundCustomReportDetailsPacket.class,
           ClientboundCustomReportDetailsPacket::new,
           map(0x7A, MINECRAFT_1_21, false),
-          map(0x81, MINECRAFT_1_21_2, false),
-          map(0x80, MINECRAFT_1_21_5, false));
+          map(0x81, MINECRAFT_1_21_2, false));
       clientbound.register(
           ClientboundServerLinksPacket.class,
           ClientboundServerLinksPacket::new,
           map(0x7B, MINECRAFT_1_21, false),
-          map(0x82, MINECRAFT_1_21_2, false),
-          map(0x81, MINECRAFT_1_21_5, false));
+          map(0x82, MINECRAFT_1_21_2, false));
     }
   },
   LOGIN {
