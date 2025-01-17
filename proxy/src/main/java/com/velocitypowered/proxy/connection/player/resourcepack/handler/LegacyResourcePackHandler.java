@@ -69,6 +69,11 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
   }
 
   @Override
+  public void loadAppliedResourcePacks(Collection<ResourcePackInfo> appliedResourcePacks) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public @NotNull Collection<ResourcePackInfo> getPendingResourcePacks() {
     if (pendingResourcePack == null) {
       return List.of();

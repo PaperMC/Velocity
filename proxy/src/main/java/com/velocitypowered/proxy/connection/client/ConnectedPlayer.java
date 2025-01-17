@@ -63,6 +63,7 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.player.bundle.BundleDelimiterHandler;
+import com.velocitypowered.proxy.connection.player.resourcepack.ResourcePackTransfer;
 import com.velocitypowered.proxy.connection.player.resourcepack.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.player.resourcepack.handler.ResourcePackHandler;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
@@ -1028,10 +1029,19 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
         if (resultedAddress == null) {
           resultedAddress = address;
         }
-        connection.write(new TransferPacket(
-                resultedAddress.getHostName(), resultedAddress.getPort()));
+        storeAppliedPacks();
+        connection.write(new TransferPacket(resultedAddress.getHostName(), resultedAddress.getPort()));
       }
     });
+  }
+
+  private void storeAppliedPacks() {
+    if (connection.getState() != StateRegistry.PLAY && connection.getState() != StateRegistry.CONFIG)  {
+      return;
+    }
+    Collection<ResourcePackInfo> appliedResourcePacks = resourcePackHandler.getAppliedResourcePacks();
+    byte[] cookieData = ResourcePackTransfer.createCookieData(server.getConfiguration().getForwardingSecret(), appliedResourcePacks);
+    connection.write(new ClientboundStoreCookiePacket(ResourcePackTransfer.APPLIED_RESOURCE_PACKS_KEY, cookieData));
   }
 
   @Override
@@ -1042,8 +1052,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
         this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_5),
         "Player version must be at least 1.20.5 to be able to store cookies");
 
-    if (connection.getState() != StateRegistry.PLAY
-        && connection.getState() != StateRegistry.CONFIG) {
+    if (connection.getState() != StateRegistry.PLAY && connection.getState() != StateRegistry.CONFIG) {
       throw new IllegalStateException("Can only store cookie in CONFIGURATION or PLAY protocol");
     }
 

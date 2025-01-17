@@ -27,19 +27,24 @@ import com.google.common.base.Preconditions;
 import com.google.common.primitives.Longs;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent.PreLoginComponentResult;
+import com.velocitypowered.api.network.HandshakeIntent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.connection.player.resourcepack.ResourcePackTransfer;
 import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
+import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket;
 import com.velocitypowered.proxy.util.VelocityProperties;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
@@ -52,7 +57,9 @@ import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
@@ -77,14 +84,24 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
   private byte[] verify = EMPTY_BYTE_ARRAY;
   private LoginState currentState = LoginState.LOGIN_PACKET_EXPECTED;
   private final boolean forceKeyAuthentication;
+  private CompletableFuture<byte[]> appliedResourcePacksFuture;
 
-  InitialLoginSessionHandler(VelocityServer server, MinecraftConnection mcConnection,
-                             LoginInboundConnection inbound) {
+  InitialLoginSessionHandler(VelocityServer server, MinecraftConnection mcConnection, LoginInboundConnection inbound) {
     this.server = Preconditions.checkNotNull(server, "server");
     this.mcConnection = Preconditions.checkNotNull(mcConnection, "mcConnection");
     this.inbound = Preconditions.checkNotNull(inbound, "inbound");
     this.forceKeyAuthentication = VelocityProperties.readBoolean(
             "auth.forceSecureProfiles", server.getConfiguration().isForceKeyAuthentication());
+  }
+
+  @Override
+  public void activated() {
+    if (inbound.getHandshakeIntent() == HandshakeIntent.TRANSFER) {
+      appliedResourcePacksFuture = new CompletableFuture<byte[]>().completeOnTimeout(null, 20, TimeUnit.SECONDS);
+      mcConnection.write(new ClientboundCookieRequestPacket(ResourcePackTransfer.APPLIED_RESOURCE_PACKS_KEY));
+    } else {
+      appliedResourcePacksFuture = CompletableFuture.completedFuture(null);
+    }
   }
 
   @Override
@@ -151,8 +168,8 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
             this.currentState = LoginState.ENCRYPTION_REQUEST_SENT;
           } else {
             mcConnection.setActiveSessionHandler(StateRegistry.LOGIN,
-                new AuthSessionHandler(server, inbound,
-                    GameProfile.forOfflinePlayer(login.getUsername()), false));
+                new AuthSessionHandler(server, inbound, GameProfile.forOfflinePlayer(login.getUsername()),
+                    false, appliedResourcePacksFuture));
           }
         });
       });
@@ -254,7 +271,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
               }
               // All went well, initialize the session.
               mcConnection.setActiveSessionHandler(StateRegistry.LOGIN,
-                  new AuthSessionHandler(server, inbound, profile, true));
+                  new AuthSessionHandler(server, inbound, profile, true, appliedResourcePacksFuture));
             } else if (response.statusCode() == 204) {
               // Apparently an offline-mode user logged onto this online-mode proxy.
               inbound.disconnect(
@@ -283,6 +300,15 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
       mcConnection.close(true);
     }
     return true;
+  }
+
+  @Override
+  public boolean handle(ServerboundCookieResponsePacket packet) {
+    if (packet.getKey().equals(ResourcePackTransfer.APPLIED_RESOURCE_PACKS_KEY)) {
+      appliedResourcePacksFuture.complete(packet.getPayload());
+      return true;
+    }
+    return false;
   }
 
   private EncryptionRequestPacket generateEncryptionRequest() {
