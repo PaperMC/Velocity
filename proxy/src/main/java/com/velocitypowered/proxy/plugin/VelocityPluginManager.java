@@ -79,6 +79,30 @@ public class VelocityPluginManager implements PluginManager {
     instance.ifPresent(o -> pluginInstances.put(o, plugin));
   }
 
+  private void loadPluginDescription(JavaPluginLoader loader, Map<String, PluginDescription> foundCandidates, Path path) {
+    try {
+      PluginDescription candidate = loader.loadCandidate(path);
+
+      // If we found a duplicate candidate (with the same ID), don't load it.
+      PluginDescription maybeExistingCandidate = foundCandidates.putIfAbsent(
+              candidate.getId(), candidate);
+
+      if (maybeExistingCandidate != null) {
+        logger.error("Refusing to load plugin at path {} since we already "
+                    + "loaded a plugin with the same ID {} from {}",
+                candidate.getSource().map(Objects::toString).orElse("<UNKNOWN>"),
+                candidate.getId(),
+                maybeExistingCandidate.getSource().map(Objects::toString).orElse("<UNKNOWN>"));
+      }
+    } catch (Throwable e) {
+      logger.error("Unable to load plugin {}", path, e);
+    }
+  }
+
+  private static boolean isJarFile(Path p) {
+    return p.toFile().isFile() && p.toString().endsWith(".jar");
+  }
+
   /**
    * Loads all plugins from the specified {@code directory}.
    *
@@ -87,34 +111,27 @@ public class VelocityPluginManager implements PluginManager {
    */
   @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
       justification = "I looked carefully and there's no way SpotBugs is right.")
-  public void loadPlugins(Path directory) throws IOException {
-    checkNotNull(directory, "directory");
-    checkArgument(directory.toFile().isDirectory(), "provided path isn't a directory");
+  public void loadPlugins(Path directory, Collection<Path> extraPluginJars) throws IOException {
 
     Map<String, PluginDescription> foundCandidates = new LinkedHashMap<>();
     JavaPluginLoader loader = new JavaPluginLoader(server, directory);
 
-    try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory,
-        p -> p.toFile().isFile() && p.toString().endsWith(".jar"))) {
-      for (Path path : stream) {
-        try {
-          PluginDescription candidate = loader.loadCandidate(path);
+    for (Path path : extraPluginJars) {
+      if (VelocityPluginManager.isJarFile(path)) {
+        loadPluginDescription(loader, foundCandidates, path);
+      }
+    }
 
-          // If we found a duplicate candidate (with the same ID), don't load it.
-          PluginDescription maybeExistingCandidate = foundCandidates.putIfAbsent(
-              candidate.getId(), candidate);
-
-          if (maybeExistingCandidate != null) {
-            logger.error("Refusing to load plugin at path {} since we already "
-                    + "loaded a plugin with the same ID {} from {}",
-                candidate.getSource().map(Objects::toString).orElse("<UNKNOWN>"),
-                candidate.getId(),
-                maybeExistingCandidate.getSource().map(Objects::toString).orElse("<UNKNOWN>"));
-          }
-        } catch (Throwable e) {
-          logger.error("Unable to load plugin {}", path, e);
+    if (directory.toFile().isDirectory()) {
+      try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory,
+              VelocityPluginManager::isJarFile)) {
+        for (Path path : stream) {
+          loadPluginDescription(loader, foundCandidates, path);
         }
       }
+    } else {
+      logger.warn("Plugin location {} is not a directory, continuing without loading plugins",
+              directory);
     }
 
     if (foundCandidates.isEmpty()) {
