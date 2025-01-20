@@ -65,8 +65,8 @@ public final class ProxyOptions {
     final OptionSpec<Void> ignoreConfigServers = parser.accepts("ignore-config-servers",
             "Skip registering servers from the config file. "
                     + "Useful in dynamic setups or with the --add-server flag.");
-    final OptionSpec<String> additionalPlugins = parser.accepts("add-plugin",
-            "Specify paths to extra plugin jars to be loaded in addition to those in the plugins folder."
+    final OptionSpec<String> additionalPlugins = parser.acceptsAll(Arrays.asList("add-plugin", "add-extra-plugin-jar"),
+            "Specify paths to extra plugin jars to be loaded in addition to those in the plugins folder. "
                     + "This argument can be specified multiple times, once for each extra plugin jar path."
             ).withRequiredArg().ofType(String.class);
     final OptionSet set = parser.parse(args);
