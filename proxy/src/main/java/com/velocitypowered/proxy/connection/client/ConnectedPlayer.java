@@ -860,6 +860,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       String virtualHostStr = getVirtualHost().map(InetSocketAddress::getHostString)
           .orElse("")
           .toLowerCase(Locale.ROOT);
+      String srvPrefixStr = "_minecraft._tcp.";
+      if (virtualHostStr.contains(srvPrefixStr)) {
+        virtualHostStr = virtualHostStr.split(srvPrefixStr)[1];
+      }
       serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(virtualHostStr,
           Collections.emptyList());
     }
