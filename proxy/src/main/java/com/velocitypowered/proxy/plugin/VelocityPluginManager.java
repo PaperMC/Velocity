@@ -104,9 +104,10 @@ public class VelocityPluginManager implements PluginManager {
   }
 
   /**
-   * Loads all plugins from the specified {@code directory}.
+   * Loads all plugins from the {@code directory} and by paths {@code extraPluginJars}.
    *
    * @param directory the directory to load from
+   * @param extraPluginJars the path to additional plugins jar's
    * @throws IOException if we could not open the directory
    */
   @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
