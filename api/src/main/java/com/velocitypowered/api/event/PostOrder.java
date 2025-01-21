@@ -15,6 +15,8 @@ public enum PostOrder {
   FIRST, EARLY, NORMAL, LATE, LAST,
 
   /**
+   * Previously used to specify that {@link Subscribe#priority()} should be used.
+   *
    * @deprecated No longer required, you only need to specify {@link Subscribe#priority()}.
    */
   @Deprecated
