@@ -62,6 +62,6 @@ public class LegacyCommandHandler implements CommandHandler<LegacyChatPacket> {
         }
         return null;
       });
-    }, command, Instant.now(), null);
+    }, command, Instant.now(), null, new CommandExecuteEvent.InvocationInfo(CommandExecuteEvent.SignedState.UNSUPPORTED, CommandExecuteEvent.Source.PLAYER));
   }
 }

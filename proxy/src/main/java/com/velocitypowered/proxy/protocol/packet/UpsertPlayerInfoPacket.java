@@ -193,6 +193,11 @@ public class UpsertPlayerInfoPacket implements MinecraftPacket {
       info.listOrder = ProtocolUtils.readVarInt(buf);
     }, (version, buf, info) -> { // write
       ProtocolUtils.writeVarInt(buf, info.listOrder);
+    }),
+    UPDATE_HAT((version, buf, info) -> { // read
+      info.showHat = buf.readBoolean();
+    }, (version, buf, info) -> { // write
+      buf.writeBoolean(info.showHat);
     });
 
     private final Read read;
@@ -223,6 +228,7 @@ public class UpsertPlayerInfoPacket implements MinecraftPacket {
     private int gameMode;
     @Nullable
     private ComponentHolder displayName;
+    private boolean showHat;
     private int listOrder;
     @Nullable
     private RemoteChatSession chatSession;
@@ -256,6 +262,10 @@ public class UpsertPlayerInfoPacket implements MinecraftPacket {
       return displayName;
     }
 
+    public boolean isShowHat() {
+      return showHat;
+    }
+
     public int getListOrder() {
       return listOrder;
     }
@@ -283,6 +293,10 @@ public class UpsertPlayerInfoPacket implements MinecraftPacket {
 
     public void setDisplayName(@Nullable ComponentHolder displayName) {
       this.displayName = displayName;
+    }
+
+    public void setShowHat(boolean showHat) {
+      this.showHat = showHat;
     }
 
     public void setListOrder(int listOrder) {

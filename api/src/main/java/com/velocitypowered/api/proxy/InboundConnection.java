@@ -7,6 +7,7 @@
 
 package com.velocitypowered.api.proxy;
 
+import com.velocitypowered.api.network.HandshakeIntent;
 import com.velocitypowered.api.network.ProtocolState;
 import com.velocitypowered.api.network.ProtocolVersion;
 import java.net.InetSocketAddress;
@@ -60,4 +61,11 @@ public interface InboundConnection {
    * @return the protocol state of the connection
    */
   ProtocolState getProtocolState();
+
+  /**
+   * Returns the initial intent for the connection.
+   *
+   * @return the intent of the connection
+   */
+  HandshakeIntent getHandshakeIntent();
 }

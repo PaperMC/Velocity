@@ -25,7 +25,6 @@ import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
-import com.velocitypowered.proxy.protocol.util.VelocityLegacyHoverEventSerializer;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
@@ -47,6 +46,7 @@ import net.kyori.adventure.nbt.BinaryTagTypes;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.json.JSONOptions;
+import net.kyori.adventure.text.serializer.json.legacyimpl.NBTLegacyHoverEventSerializer;
 import net.kyori.option.OptionState;
 
 /**
@@ -58,8 +58,7 @@ public enum ProtocolUtils {
   private static final GsonComponentSerializer PRE_1_16_SERIALIZER =
       GsonComponentSerializer.builder()
           .downsampleColors()
-          .emitLegacyHoverEvent()
-          .legacyHoverEventSerializer(VelocityLegacyHoverEventSerializer.INSTANCE)
+          .legacyHoverEventSerializer(NBTLegacyHoverEventSerializer.get())
           .options(
               OptionState.optionState()
               // before 1.16
@@ -74,7 +73,7 @@ public enum ProtocolUtils {
           .build();
   private static final GsonComponentSerializer PRE_1_20_3_SERIALIZER =
           GsonComponentSerializer.builder()
-          .legacyHoverEventSerializer(VelocityLegacyHoverEventSerializer.INSTANCE)
+          .legacyHoverEventSerializer(NBTLegacyHoverEventSerializer.get())
           .options(
               OptionState.optionState()
               // after 1.16
@@ -89,7 +88,7 @@ public enum ProtocolUtils {
           .build();
   private static final GsonComponentSerializer MODERN_SERIALIZER =
       GsonComponentSerializer.builder()
-          .legacyHoverEventSerializer(VelocityLegacyHoverEventSerializer.INSTANCE)
+          .legacyHoverEventSerializer(NBTLegacyHoverEventSerializer.get())
           .options(
               OptionState.optionState()
               // after 1.16

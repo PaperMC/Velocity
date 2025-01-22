@@ -38,6 +38,7 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_20_3;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_20_5;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_21;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_21_2;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_21_4;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_7_2;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9;
@@ -358,7 +359,8 @@ public enum StateRegistry {
           map(0x27, MINECRAFT_1_20_2, false),
           map(0x28, MINECRAFT_1_20_3, false),
           map(0x2B, MINECRAFT_1_20_5, false),
-          map(0x2D, MINECRAFT_1_21_2, false));
+          map(0x2D, MINECRAFT_1_21_2, false),
+          map(0x2F, MINECRAFT_1_21_4, false));
       serverbound.register(
           FinishedUpdatePacket.class, () -> FinishedUpdatePacket.INSTANCE,
           map(0x0B, MINECRAFT_1_20_2, false),

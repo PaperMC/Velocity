@@ -301,6 +301,21 @@ public class BungeeCordMessageResponder {
     }
   }
 
+  private void processGetPlayerServer(ByteBufDataInput in) {
+    proxy.getPlayer(in.readUTF()).ifPresent(player -> {
+      player.getCurrentServer().ifPresent(server -> {
+        ByteBuf buf = Unpooled.buffer();
+        ByteBufDataOutput out = new ByteBufDataOutput(buf);
+
+        out.writeUTF("GetPlayerServer");
+        out.writeUTF(player.getUsername());
+        out.writeUTF(server.getServerInfo().getName());
+
+        sendResponseOnConnection(buf);
+      });
+    });
+  }
+
   static String getBungeeCordChannel(ProtocolVersion version) {
     return version.noLessThan(ProtocolVersion.MINECRAFT_1_13) ? MODERN_CHANNEL.getId()
         : LEGACY_CHANNEL.getId();
@@ -331,6 +346,9 @@ public class BungeeCordMessageResponder {
     ByteBufDataInput in = new ByteBufDataInput(message.content());
     String subChannel = in.readUTF();
     switch (subChannel) {
+      case "GetPlayerServer":
+        this.processGetPlayerServer(in);
+        break;
       case "ForwardToPlayer":
         this.processForwardToPlayer(in);
         break;

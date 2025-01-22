@@ -2,8 +2,8 @@
 configurate3 = "3.7.3"
 configurate4 = "4.1.2"
 flare = "2.0.1"
-log4j = "2.22.1"
-netty = "4.1.106.Final"
+log4j = "2.24.1"
+netty = "4.1.114.Final"
 
 [plugins]
 indra-publishing = "net.kyori.indra.publishing:2.0.6"
@@ -11,14 +11,15 @@ shadow = "io.github.goooler.shadow:8.1.5"
 spotless = "com.diffplug.spotless:6.25.0"
 
 [libraries]
-adventure-bom = "net.kyori:adventure-bom:4.17.0"
-adventure-facet = "net.kyori:adventure-platform-facet:4.3.2"
+adventure-bom = "net.kyori:adventure-bom:4.18.0"
+adventure-text-serializer-json-legacy-impl = "net.kyori:adventure-text-serializer-json-legacy-impl:4.18.0"
+adventure-facet = "net.kyori:adventure-platform-facet:4.3.4"
 asm = "org.ow2.asm:asm:9.6"
 auto-service = "com.google.auto.service:auto-service:1.0.1"
 auto-service-annotations = "com.google.auto.service:auto-service-annotations:1.0.1"
 brigadier = "com.velocitypowered:velocity-brigadier:1.0.0-SNAPSHOT"
 bstats = "org.bstats:bstats-base:3.0.2"
-caffeine = "com.github.ben-manes.caffeine:caffeine:3.1.5"
+caffeine = "com.github.ben-manes.caffeine:caffeine:3.1.8"
 checker-qual = "org.checkerframework:checker-qual:3.42.0"
 checkstyle = "com.puppycrawl.tools:checkstyle:10.9.3"
 completablefutures = "com.spotify:completable-futures:0.3.6"
@@ -28,15 +29,15 @@ configurate3-gson = { module = "org.spongepowered:configurate-gson", version.ref
 configurate4-hocon = { module = "org.spongepowered:configurate-hocon", version.ref = "configurate4" }
 configurate4-yaml = { module = "org.spongepowered:configurate-yaml", version.ref = "configurate4" }
 configurate4-gson = { module = "org.spongepowered:configurate-gson", version.ref = "configurate4" }
-disruptor = "com.lmax:disruptor:3.4.4"
-fastutil = "it.unimi.dsi:fastutil:8.5.12"
+disruptor = "com.lmax:disruptor:4.0.0"
+fastutil = "it.unimi.dsi:fastutil:8.5.15"
 flare-core = { module = "space.vectrix.flare:flare", version.ref = "flare" }
 flare-fastutil = { module = "space.vectrix.flare:flare-fastutil", version.ref = "flare" }
-jline = "org.jline:jline-terminal-jansi:3.23.0"
+jline = "org.jline:jline-terminal-jansi:3.27.1"
 jopt = "net.sf.jopt-simple:jopt-simple:5.0.4"
 junit = "org.junit.jupiter:junit-jupiter:5.10.2"
 jspecify = "org.jspecify:jspecify:0.3.0"
-kyori-ansi = "net.kyori:ansi:1.0.3"
+kyori-ansi = "net.kyori:ansi:1.1.0"
 guava = "com.google.guava:guava:25.1-jre"
 gson = "com.google.code.gson:gson:2.10.1"
 guice = "com.google.inject:guice:6.0.0"
