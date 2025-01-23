@@ -2,9 +2,11 @@
 
 made by 未冬(QQ:2388990095)
 
-一套离线+正版的VC登入方案，支持VC嵌套，通过AuthME及其配套插件进行二次验证，已确认可用。
+一套离线+正版的VC登入方案，支持VC嵌套，通过AuthME及其配套插件进行二次验证，已确认可用。  
 相关代码开源 https://github.com/MixedLogin
-
+## 使用后服务器结构 
+MixedVelocity->正常的VC->服务器  
+玩家统一从MixedVelocity进入
 ## 魔改后特性
 
 1. 支持VC嵌套
@@ -27,27 +29,23 @@ yggdrasilAuth:
 blessingSkin:
 apiRoot: 'http://127.0.0.1:26748/api/yggdrasil'
 ````
-MultiLogin-MixedLoginVelocity 为接入到魔改VC的MultiLogin
-
-MixedVelocity-proxy-3.4.0-SNAPSHOT-all.jar 为魔改VC本体
-
-AuthMeVelocity-MixedVelocity-4.1.2.jar 为魔改过的AuthMEVC，支持跳过正版玩家的登入
-
+MultiLogin-MixedLoginVelocity 为接入到魔改VC的MultiLogin  
+MixedVelocity-proxy-3.4.0-SNAPSHOT-all.jar 为魔改VC本体  
+AuthMeVelocity-MixedVelocity-4.1.2.jar 为魔改过的AuthMEVC，支持跳过正版玩家的登入  
 bukkit下的Authme和AuthMeVelocity是未经魔改的，可以随意替换
 
 ## 使用方法
 ### 基础安装
-plugins放入魔改的MulitLogin以方便多认证源和档案管理，将offline.yml拖入multilogin\services
-
-plugins放入魔改的AuthMeVelocity以支持跳过在线玩家的认证和设定登入后行为
+在MixedVelocity的plugins放入魔改的MulitLogin以方便多认证源和档案管理，将offline.yml拖入multilogin\service  
+在MixedVelocity的plugins放入魔改的AuthMeVelocity以支持跳过在线玩家的认证和设定登入后行为
 ### 兼容情况
-低于1.19.1:
+低于1.19.1:  
 域名前加o-或者offline识别为离线玩家
 
-高于1.19.1:
+高于1.19.1:  
 直接进入即可
 
-### 下层VC设定
+### 下层Velocity设定
 mixedvc.toml 编辑 其中lobby为下层VC服务器
 ````
 [server-forwarding-mode]
@@ -59,7 +57,7 @@ lobby = "none"
 -Dmojang.sessionserver="http://127.0.0.1:26749/api/yggdrasil/sessionserver/session/minecraft/hasJoined"
 ````
 
-### 下层普通服务器设定
+### 下层登入大厅设定
 mixedvc.toml 编辑 其中login为下层服务器，转发模式自己根据需要写即可
 ````
 [server-forwarding-mode]
@@ -71,16 +69,18 @@ login = "modern"
 首先参考下层普通服务器设定，进行设定后装入AuthMe和AuthMeVelocity来进行离线认证
 
 ### 其他注意
-AuthMeVelocity自行设置
+AuthMeVelocity自行设置  
 参考设置如下
 ````
 # AuthMeVelocity | by Glyart & 4drian3d
 
 advanced {
     # Enable debug mode
-    debug=true
+    debug=false
     # Attempts to get a valid server in SendMode Random
     random-attempts=5
+    # Skip login for online player
+    skin-online-login=true
 }
 # List of login/registration servers
 auth-servers=[
@@ -116,7 +116,7 @@ send-on-login {
     # TO_FIRST | Send to the first valid server configured
     # TO_EMPTIEST_SERVER | Send to the server with the lowest number of players
     # RANDOM | Send to a random server
-    send-mode=RANDOM
+    send-mode=TO_FIRST
     # Send logged in players to another server?
     send-on-login=true
     # List of servers to send
@@ -126,7 +126,8 @@ send-on-login {
     ]
 }
 ````
-
-made by 未冬(QQ:2388990095)
-
+## 看不懂？ 
+去群里下载整合包吧
+## 其他
+made by 未冬(QQ:2388990095)  
 如有问题请提交issue或加QQ群反馈 群号：946864759
