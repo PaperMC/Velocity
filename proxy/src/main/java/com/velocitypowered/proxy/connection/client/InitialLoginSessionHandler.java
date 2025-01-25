@@ -41,7 +41,10 @@ import com.velocitypowered.proxy.protocol.packet.LoginPluginResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
 import com.velocitypowered.proxy.util.VelocityProperties;
 import fun.iiii.mixedlogin.LoginServerManager;
+import fun.iiii.mixedlogin.MixedVelocity;
 import fun.iiii.mixedlogin.api.event.connection.InitialLoginEvent;
+import fun.iiii.mixedlogin.type.OfflineUUIDType;
+import fun.iiii.mixedlogin.util.ExtraUuidUtils;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import java.security.GeneralSecurityException;
@@ -143,22 +146,34 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
         }
 
         mcConnection.eventLoop().execute(() -> {
+          String userName=login.getUsername();
           if(login.getHolderUuid()!=null){
             UUID pUUID=login.getHolderUuid();
-            String userName=login.getUsername();
-            UUID offlineUUID= UuidUtils.generateOfflinePlayerUuid(userName);
-            if(pUUID.equals(offlineUUID)|| LoginServerManager.getInstance().shouldOfflineHost(inbound.getRawVirtualHost())){
+            OfflineUUIDType offlineUUIDType= ExtraUuidUtils.getOfflineUUID(pUUID,userName);
+            if(offlineUUIDType!=OfflineUUIDType.UNKNOWN|| LoginServerManager.getInstance().shouldOfflineHost(inbound.getRawVirtualHost())){
+              if(MixedVelocity.getInstance().getMixedVelocityConfig().isDebug()){
+                logger.info("判断为盗版用户 传入信息:"+userName+" "+pUUID+" 计算出的离线UUID类型:"+offlineUUIDType);
+              }
 //              盗版用户
               doLogin(false,LoginServerManager.getInstance().startOfflineRequest(userName), null);
 //            mcConnection.setActiveSessionHandler(StateRegistry.LOGIN,
 //                new AuthSessionHandler(server, inbound,
 //                    GameProfile.forOfflinePlayer(login.getUsername()), false));
             }else {
+              if(MixedVelocity.getInstance().getMixedVelocityConfig().isDebug()){
+                logger.info("判断为正版用户 传入信息:"+userName+" "+pUUID+" 无匹配UUID");
+              }
               EncryptionRequestPacket request = generateEncryptionRequest();
               this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
               mcConnection.write(request);
               this.currentState = LoginState.ENCRYPTION_REQUEST_SENT;
             }
+          }else{
+//            部分启动器压根不传UUID，直接当盗版处理就行
+            if(MixedVelocity.getInstance().getMixedVelocityConfig().isDebug()){
+              logger.info("判断为盗版用户(无UUID) 传入信息:"+userName);
+            }
+            doLogin(false,LoginServerManager.getInstance().startOfflineRequest(userName), null);
           }
 //          if (!result.isForceOfflineMode()
 //              && (server.getConfiguration().isOnlineMode() || result.isOnlineModeAllowed())) {

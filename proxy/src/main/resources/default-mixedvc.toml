@@ -1,3 +1,5 @@
+#由于本项目仍处于测试阶段，清不要关闭debug以便反馈数据
+debug = true
 #登录服务器的名字
 login-server = "login"
 [server-forwarding-mode]

@@ -17,10 +17,20 @@ public class MixedVelocityConfig {
 
     private final ForwardingModes forwardingModes;
     private final String loginServerName;
+    private final boolean debug;
 
-    private MixedVelocityConfig(ForwardingModes forwardingModes, String loginServerName) {
+    private MixedVelocityConfig(ForwardingModes forwardingModes, String loginServerName, boolean debug) {
         this.forwardingModes = forwardingModes;
         this.loginServerName = loginServerName;
+        this.debug = debug;
+    }
+
+    public ForwardingModes getForwardingModes() {
+        return forwardingModes;
+    }
+
+    public boolean isDebug() {
+        return debug;
     }
 
     public String getLoginServerName() {
@@ -47,10 +57,11 @@ public class MixedVelocityConfig {
         ) {
             config.load();
             final String loginServerName = config.getOrElse("login-server", "login");
+            final boolean debug = config.getOrElse("debug", true);
 
             final CommentedConfig forwardingModesConfig = config.get("server-forwarding-mode");
             ForwardingModes modes = new ForwardingModes(forwardingModesConfig);
-            return new MixedVelocityConfig(modes, loginServerName);
+            return new MixedVelocityConfig(modes, loginServerName, debug);
 
         }
     }
