@@ -150,9 +150,10 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
           if(login.getHolderUuid()!=null){
             UUID pUUID=login.getHolderUuid();
             OfflineUUIDType offlineUUIDType= ExtraUuidUtils.getOfflineUUID(pUUID,userName);
-            if(offlineUUIDType!=OfflineUUIDType.UNKNOWN|| LoginServerManager.getInstance().shouldOfflineHost(inbound.getRawVirtualHost())){
+            boolean offlineHost=LoginServerManager.getInstance().shouldOfflineHost(inbound.getRawVirtualHost());
+            if(offlineUUIDType!=OfflineUUIDType.UNKNOWN|| offlineHost){
               if(MixedVelocity.getInstance().getMixedVelocityConfig().isDebug()){
-                logger.info("判断为盗版用户 传入信息:"+userName+" "+pUUID+" 计算出的离线UUID类型:"+offlineUUIDType);
+                logger.info("判断为盗版用户 传入信息:"+userName+" "+pUUID+" 计算出的离线UUID类型:"+offlineUUIDType+" 是否为离线域名:"+offlineHost);
               }
 //              盗版用户
               doLogin(false,LoginServerManager.getInstance().startOfflineRequest(userName), null);

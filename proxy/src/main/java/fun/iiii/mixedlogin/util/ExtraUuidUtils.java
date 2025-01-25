@@ -6,15 +6,19 @@ import fun.iiii.mixedlogin.type.OfflineUUIDType;
 import java.util.UUID;
 
 public class ExtraUuidUtils {
+    private static UUID none = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     public static OfflineUUIDType getOfflineUUID(UUID holderUUID, String name) {
         UUID offlineUUID = UuidUtils.generateOfflinePlayerUuid(name);
         UUID pclUUID = UUID.fromString(toUUID(getPCL2UUID(name)));
-        if (holderUUID.equals(offlineUUID)){
+        if (holderUUID.equals(offlineUUID)) {
             return OfflineUUIDType.OFFLINE;
         }
-        if (holderUUID.equals(pclUUID)){
+        if (holderUUID.equals(pclUUID)) {
             return OfflineUUIDType.PCL;
+        }
+        if (holderUUID.equals(none)) {
+            return OfflineUUIDType.NONE;
         }
         return OfflineUUIDType.UNKNOWN;
     }
