@@ -160,10 +160,10 @@ public final class ServerPing {
     }
 
     /**
-     * Uses the modified {@code version} info in the response
-     * 
+     * Uses the modified {@code version} info in the response.
+     *
      * @param version version info to set
-     * @return this build, for chaining
+     * @return this builder, for chaining
      */
     public Builder version(Version version) {
       this.version = Preconditions.checkNotNull(version, "version");
@@ -172,9 +172,9 @@ public final class ServerPing {
 
     /**
      * Uses the modified {@code onlinePlayers} number in the response.
-     * 
+     *
      * @param onlinePlayers number for online players to set
-     * @return this build, for chaining
+     * @return this builder, for chaining
      */
     public Builder onlinePlayers(int onlinePlayers) {
       this.onlinePlayers = onlinePlayers;
@@ -184,9 +184,9 @@ public final class ServerPing {
     /**
      * Uses the modified {@code maximumPlayers} number in the response.
      * <b>This will not modify the actual maximum players that can join the server.</b>
-     * 
+     *
      * @param maximumPlayers number for maximum players to set
-     * @return this build, for chaining
+     * @return this builder, for chaining
      */
     public Builder maximumPlayers(int maximumPlayers) {
       this.maximumPlayers = maximumPlayers;
@@ -195,9 +195,9 @@ public final class ServerPing {
 
     /**
      * Uses the modified {@code players} array in the response.
-     * 
+     *
      * @param players array of SamplePlayers to set
-     * @return this build, for chaining
+     * @return this builder, for chaining
      */
     public Builder samplePlayers(SamplePlayer... players) {
       this.samplePlayers.addAll(Arrays.asList(players));
@@ -206,9 +206,9 @@ public final class ServerPing {
 
     /**
      * Uses the modified {@code modType} in the response.
-     * 
+     *
      * @param modType the mod type to set
-     * @return this build, for chaining
+     * @return this builder, for chaining
      */
     public Builder modType(String modType) {
       this.modType = Preconditions.checkNotNull(modType, "modType");
@@ -217,9 +217,9 @@ public final class ServerPing {
 
     /**
      * Uses the modified {@code mods} array in the response.
-     * 
+     *
      * @param mods array of mods to use
-     * @return this build, for chaining
+     * @return this builder, for chaining
      */
     public Builder mods(ModInfo.Mod... mods) {
       this.mods.addAll(Arrays.asList(mods));
@@ -230,7 +230,7 @@ public final class ServerPing {
      * Uses the modified {@code mods} list in the response.
      *
      * @param mods the mods list to use
-     * @return this build, for chaining
+     * @return this builder, for chaining
      */
     public Builder mods(ModInfo mods) {
       Preconditions.checkNotNull(mods, "mods");
@@ -242,8 +242,8 @@ public final class ServerPing {
 
     /**
      * Clears the current list of mods to use in the response.
-     * 
-     * @return this build, for chaining
+     *
+     * @return this builder, for chaining
      */
     public Builder clearMods() {
       this.mods.clear();
@@ -252,8 +252,8 @@ public final class ServerPing {
 
     /**
      * Clears the current list of PlayerSamples to use in the response.
-     * 
-     * @return this build, for chaining
+     *
+     * @return this builder, for chaining
      */
     public Builder clearSamplePlayers() {
       this.samplePlayers.clear();
@@ -262,8 +262,8 @@ public final class ServerPing {
 
     /**
      * Defines the server as mod incompatible in the response.
-     * 
-     * @return this build, for chaining
+     *
+     * @return this builder, for chaining
      */
     public Builder notModCompatible() {
       this.nullOutModinfo = true;
@@ -273,8 +273,8 @@ public final class ServerPing {
     /**
      * Enables nulling Players in the response.
      * This will display the player count as {@code ???}.
-     * 
-     * @return this build, for chaining
+     *
+     * @return this builder, for chaining
      */
     public Builder nullPlayers() {
       this.nullOutPlayers = true;
@@ -283,9 +283,9 @@ public final class ServerPing {
 
     /**
      * Uses the {@code description} Component in the response.
-     * 
+     *
      * @param description Component to use as the description.
-     * @return this build, for chaining
+     * @return this builder, for chaining
      */
     public Builder description(net.kyori.adventure.text.Component description) {
       this.description = Preconditions.checkNotNull(description, "description");
@@ -294,9 +294,9 @@ public final class ServerPing {
 
     /**
      * Uses the {@code favicon} in the response.
-     * 
+     *
      * @param favicon Favicon instance to use.
-     * @return this build, for chaining
+     * @return this builder, for chaining
      */
     public Builder favicon(Favicon favicon) {
       this.favicon = Preconditions.checkNotNull(favicon, "favicon");
@@ -305,8 +305,8 @@ public final class ServerPing {
 
     /**
      * Clears the current favicon used in the response.
-     * 
-     * @return this build, for chaining
+     *
+     * @return this builder, for chaining
      */
     public Builder clearFavicon() {
       this.favicon = null;
