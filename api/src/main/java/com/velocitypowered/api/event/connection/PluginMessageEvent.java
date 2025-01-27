@@ -12,7 +12,6 @@ import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
-import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
@@ -42,8 +41,11 @@ public final class PluginMessageEvent implements ResultedEvent<PluginMessageEven
    * @param identifier the channel for this plugin message
    * @param data the payload of the plugin message
    */
-  public PluginMessageEvent(ChannelMessageSource source, ChannelMessageSink target,
-      ChannelIdentifier identifier, byte[] data) {
+  public PluginMessageEvent(
+      ChannelMessageSource source,
+      ChannelMessageSink target,
+      ChannelIdentifier identifier,
+      byte[] data) {
     this.source = Preconditions.checkNotNull(source, "source");
     this.target = Preconditions.checkNotNull(target, "target");
     this.identifier = Preconditions.checkNotNull(identifier, "identifier");
@@ -88,17 +90,20 @@ public final class PluginMessageEvent implements ResultedEvent<PluginMessageEven
   @Override
   public String toString() {
     return "PluginMessageEvent{"
-        + "source=" + source
-        + ", target=" + target
-        + ", identifier=" + identifier
-        + ", data=" + Arrays.toString(data)
-        + ", result=" + result
+        + "source="
+        + source
+        + ", target="
+        + target
+        + ", identifier="
+        + identifier
+        + ", data="
+        + Arrays.toString(data)
+        + ", result="
+        + result
         + '}';
   }
 
-  /**
-   * A result determining whether or not to forward this message on.
-   */
+  /** A result determining whether or not to forward this message on. */
   public static final class ForwardResult implements ResultedEvent.Result {
 
     private static final ForwardResult ALLOWED = new ForwardResult(true);

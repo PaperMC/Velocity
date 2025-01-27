@@ -28,7 +28,6 @@ import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.HandshakePacket;
 import com.velocitypowered.proxy.protocol.packet.StatusRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusResponsePacket;
-import io.netty.channel.EventLoop;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
@@ -44,8 +43,11 @@ public class PingSessionHandler implements MinecraftSessionHandler {
   private final ProtocolVersion version;
   private boolean completed = false;
 
-  PingSessionHandler(CompletableFuture<ServerPing> result, RegisteredServer server,
-      MinecraftConnection connection, ProtocolVersion version) {
+  PingSessionHandler(
+      CompletableFuture<ServerPing> result,
+      RegisteredServer server,
+      MinecraftConnection connection,
+      ProtocolVersion version) {
     this.result = result;
     this.server = server;
     this.connection = connection;
@@ -74,8 +76,8 @@ public class PingSessionHandler implements MinecraftSessionHandler {
     completed = true;
     connection.close(true);
 
-    ServerPing ping = VelocityServer.getPingGsonInstance(version).fromJson(packet.getStatus(),
-        ServerPing.class);
+    ServerPing ping =
+        VelocityServer.getPingGsonInstance(version).fromJson(packet.getStatus(), ServerPing.class);
     result.complete(ping);
     return true;
   }
