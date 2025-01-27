@@ -41,9 +41,7 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Helper class for {@code /velocity dump}.
- */
+/** Helper class for {@code /velocity dump}. */
 public enum InformationUtils {
   ;
 
@@ -55,8 +53,7 @@ public enum InformationUtils {
    * @return {@link JsonArray} containing zero or more {@link JsonObject}
    */
   public static JsonArray collectPluginInfo(ProxyServer proxy) {
-    List<PluginContainer> allPlugins = ImmutableList.copyOf(
-        proxy.getPluginManager().getPlugins());
+    List<PluginContainer> allPlugins = ImmutableList.copyOf(proxy.getPluginManager().getPlugins());
     JsonArray plugins = new JsonArray();
 
     for (PluginContainer plugin : allPlugins) {
@@ -119,15 +116,14 @@ public enum InformationUtils {
   }
 
   /**
-   * Creates a {@link JsonObject} containing information about the forced hosts of the
-   * {@link ProxyConfig} instance.
+   * Creates a {@link JsonObject} containing information about the forced hosts of the {@link
+   * ProxyConfig} instance.
    *
    * @return {@link JsonArray} containing forced hosts
    */
   public static JsonObject collectForcedHosts(ProxyConfig config) {
     JsonObject forcedHosts = new JsonObject();
-    Map<String, List<String>> allForcedHosts = ImmutableMap.copyOf(
-        config.getForcedHosts());
+    Map<String, List<String>> allForcedHosts = ImmutableMap.copyOf(config.getForcedHosts());
     for (Map.Entry<String, List<String>> entry : allForcedHosts.entrySet()) {
       JsonArray host = new JsonArray();
       for (int i = 0; i < entry.getValue().size(); i++) {
@@ -147,7 +143,8 @@ public enum InformationUtils {
   public static String anonymizeInetAddress(InetAddress address) {
     if (address instanceof Inet4Address) {
       Inet4Address v4 = (Inet4Address) address;
-      if (v4.isAnyLocalAddress() || v4.isLoopbackAddress()
+      if (v4.isAnyLocalAddress()
+          || v4.isLoopbackAddress()
           || v4.isLinkLocalAddress()
           || v4.isSiteLocalAddress()) {
         return address.getHostAddress();
@@ -157,29 +154,32 @@ public enum InformationUtils {
       }
     } else if (address instanceof Inet6Address) {
       Inet6Address v6 = (Inet6Address) address;
-      if (v6.isAnyLocalAddress() || v6.isLoopbackAddress()
+      if (v6.isAnyLocalAddress()
+          || v6.isLoopbackAddress()
           || v6.isSiteLocalAddress()
           || v6.isSiteLocalAddress()) {
         return address.getHostAddress();
       } else {
         String[] bits = v6.getHostAddress().split(":");
-        String ret = "";
+        StringBuilder ret = new StringBuilder("");
         boolean flag = false;
         for (int iter = 0; iter < bits.length; iter++) {
           if (flag) {
-            ret += ":X";
+            ret.append(":X");
             continue;
           }
           if (!bits[iter].equals("0")) {
             if (iter == 0) {
-              ret = bits[iter];
+              ret.setLength(0);
+              ret.append(bits[iter]);
             } else {
-              ret = "::" + bits[iter];
+
+              ret.append("::" + bits[iter]);
             }
             flag = true;
           }
         }
-        return ret;
+        return ret.toString();
       }
     } else {
       return address.getHostAddress();
@@ -187,8 +187,8 @@ public enum InformationUtils {
   }
 
   /**
-   * Creates a {@link JsonObject} containing most relevant information of the
-   * {@link RegisteredServer} for diagnosis.
+   * Creates a {@link JsonObject} containing most relevant information of the {@link
+   * RegisteredServer} for diagnosis.
    *
    * @param server the server to evaluate
    * @return {@link JsonObject} containing server and diagnostic info
@@ -251,18 +251,13 @@ public enum InformationUtils {
 
   private static JsonElement serializeObject(Object toSerialize, boolean withExcludes) {
     return JsonParser.parseString(
-        withExcludes ? GSON_WITH_EXCLUDES.toJson(toSerialize) :
-            GSON_WITHOUT_EXCLUDES.toJson(toSerialize));
+        withExcludes
+            ? GSON_WITH_EXCLUDES.toJson(toSerialize)
+            : GSON_WITHOUT_EXCLUDES.toJson(toSerialize));
   }
 
-  private static final Gson GSON_WITH_EXCLUDES = new GsonBuilder()
-      .setPrettyPrinting()
-      .excludeFieldsWithoutExposeAnnotation()
-      .create();
+  private static final Gson GSON_WITH_EXCLUDES =
+      new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
 
-  private static final Gson GSON_WITHOUT_EXCLUDES = new GsonBuilder()
-      .setPrettyPrinting()
-      .create();
-
-
+  private static final Gson GSON_WITHOUT_EXCLUDES = new GsonBuilder().setPrettyPrinting().create();
 }
