@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.connection.player.resourcepack;
 
+import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -104,6 +105,7 @@ public class ResourcePackTransfer {
         byte[] hash = appliedResourcePack.getHash();
         buffer.writeBoolean(hash != null);
         if (hash != null) {
+          Preconditions.checkArgument(hash.length == 20, "Hash length is not 20");
           buffer.writeBytes(hash);
         }
         buffer.writeBoolean(appliedResourcePack.getShouldForce());
@@ -194,7 +196,6 @@ public class ResourcePackTransfer {
         VelocityResourcePackInfo appliedResourcePack = builder.build();
         appliedResourcePack.setOriginalOrigin(ORIGINS[ProtocolUtils.readVarInt(buffer)]);
         appliedResourcePacks.add(appliedResourcePack);
-        buffer.readBoolean();
       }
       return appliedResourcePacks;
     } finally {

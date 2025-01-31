@@ -153,7 +153,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
       player.resourcePackHandler().loadAppliedResourcePacks(appliedResourcePacks);
     } catch (SignatureException e) {
       logger.warn("Signature error while loading applied resource packs of {}", player.getUsername(), e);
-    } catch (CodecException e) {
+    } catch (IndexOutOfBoundsException | CodecException e) {
       logger.warn("Error while decoding applied resource packs of {}", player.getUsername(), e);
     }
   }
