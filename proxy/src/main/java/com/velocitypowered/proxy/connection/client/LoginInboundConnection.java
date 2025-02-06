@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.connection.client;
 
+import com.velocitypowered.api.network.HandshakeIntent;
 import com.velocitypowered.api.network.ProtocolState;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.LoginPhaseConnection;
@@ -176,5 +177,10 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
   @Override
   public ProtocolState getProtocolState() {
     return delegate.getProtocolState();
+  }
+
+  @Override
+  public HandshakeIntent getHandshakeIntent() {
+    return delegate.getHandshakeIntent();
   }
 }

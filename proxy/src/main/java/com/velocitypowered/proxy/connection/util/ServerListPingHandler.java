@@ -63,7 +63,7 @@ public class ServerListPingHandler {
   }
 
   private CompletableFuture<ServerPing> attemptPingPassthrough(VelocityInboundConnection connection,
-      PingPassthroughMode mode, List<String> servers, ProtocolVersion responseProtocolVersion) {
+      PingPassthroughMode mode, List<String> servers, ProtocolVersion responseProtocolVersion, String virtualHostStr) {
     ServerPing fallback = constructLocalPing(connection.getProtocolVersion());
     List<CompletableFuture<ServerPing>> pings = new ArrayList<>();
     for (String s : servers) {
@@ -73,7 +73,7 @@ public class ServerListPingHandler {
       }
       VelocityRegisteredServer vrs = (VelocityRegisteredServer) rs.get();
       pings.add(vrs.ping(connection.getConnection().eventLoop(), PingOptions.builder()
-              .version(responseProtocolVersion).build()));
+              .version(responseProtocolVersion).virtualHost(virtualHostStr).build()));
     }
     if (pings.isEmpty()) {
       return CompletableFuture.completedFuture(fallback);
@@ -155,7 +155,7 @@ public class ServerListPingHandler {
           .orElse("");
       List<String> serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(
           virtualHostStr, server.getConfiguration().getAttemptConnectionOrder());
-      return attemptPingPassthrough(connection, passthroughMode, serversToTry, shownVersion);
+      return attemptPingPassthrough(connection, passthroughMode, serversToTry, shownVersion, virtualHostStr);
     }
   }
 }

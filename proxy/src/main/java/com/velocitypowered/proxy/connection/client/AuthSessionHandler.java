@@ -97,7 +97,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
       // Initiate a regular connection and move over to it.
       ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.getGameProfile(),
           mcConnection, inbound.getVirtualHost().orElse(null), inbound.getRawVirtualHost().orElse(null), onlineMode,
-          inbound.getIdentifiedKey());
+          inbound.getHandshakeIntent(), inbound.getIdentifiedKey());
       this.connectedPlayer = player;
       if (!server.canRegisterConnection(player)) {
         player.disconnect0(

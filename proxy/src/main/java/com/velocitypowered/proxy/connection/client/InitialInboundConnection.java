@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.connection.client;
 
+import com.velocitypowered.api.network.HandshakeIntent;
 import com.velocitypowered.api.network.ProtocolState;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.InboundConnection;
@@ -96,6 +97,11 @@ public final class InitialInboundConnection implements VelocityInboundConnection
   @Override
   public ProtocolState getProtocolState() {
     return connection.getState().toProtocolState();
+  }
+
+  @Override
+  public HandshakeIntent getHandshakeIntent() {
+    return handshake.getIntent();
   }
 
   /**

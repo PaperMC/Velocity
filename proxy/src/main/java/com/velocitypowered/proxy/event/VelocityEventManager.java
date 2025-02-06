@@ -350,8 +350,9 @@ public class VelocityEventManager implements EventManager {
         asyncType = AsyncType.ALWAYS;
       }
 
+      // The default value of 0 will fall back to PostOrder, the default PostOrder (NORMAL) is also 0
       final short order;
-      if (subscribe.order() == PostOrder.CUSTOM) {
+      if (subscribe.priority() != 0) {
         order = subscribe.priority();
       } else {
         order = (short) POST_ORDER_MAP.get(subscribe.order());

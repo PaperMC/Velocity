@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.command.builtin;
 
+import com.google.gson.JsonSyntaxException;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -25,8 +26,9 @@ import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.proxy.VelocityServer;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 
 /**
  * Shuts down the proxy.
@@ -53,11 +55,22 @@ public final class ShutdownCommand {
                 StringArgumentType.greedyString())
             .executes(context -> {
               String reason = context.getArgument("reason", String.class);
-              server.shutdown(true, MiniMessage.miniMessage().deserialize(
-                  MiniMessage.miniMessage().serialize(
-                      LegacyComponentSerializer.legacy('&').deserialize(reason)
-                  )
-              ));
+              Component reasonComponent = null;
+
+              if (reason.startsWith("{") || reason.startsWith("[") || reason.startsWith("\"")) {
+                try {
+                  reasonComponent = GsonComponentSerializer.gson()
+                      .deserializeOrNull(reason);
+                } catch (JsonSyntaxException expected) {
+
+                }
+              }
+
+              if (reasonComponent == null) {
+                reasonComponent = MiniMessage.miniMessage().deserialize(reason);
+              }
+
+              server.shutdown(true, reasonComponent);
               return Command.SINGLE_SUCCESS;
             })
         ).build());

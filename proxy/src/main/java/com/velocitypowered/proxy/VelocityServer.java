@@ -803,6 +803,11 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   public VelocityChannelRegistrar getChannelRegistrar() {
     return channelRegistrar;
   }
+  
+  @Override
+  public boolean isShuttingDown() {
+    return shutdownInProgress.get();
+  }
 
   @Override
   public InetSocketAddress getBoundAddress() {
