@@ -17,9 +17,6 @@
 
 package com.velocitypowered.proxy.protocol;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.velocitypowered.proxy.protocol.util.NettyPreconditions.checkFrame;
-
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.util.GameProfile;
@@ -33,21 +30,21 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.nbt.*;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.serializer.json.JSONOptions;
+import net.kyori.adventure.text.serializer.json.legacyimpl.NBTLegacyHoverEventSerializer;
+import net.kyori.option.OptionState;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import net.kyori.adventure.key.Key;
-import net.kyori.adventure.nbt.BinaryTag;
-import net.kyori.adventure.nbt.BinaryTagIO;
-import net.kyori.adventure.nbt.BinaryTagType;
-import net.kyori.adventure.nbt.BinaryTagTypes;
-import net.kyori.adventure.nbt.CompoundBinaryTag;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
-import net.kyori.adventure.text.serializer.json.JSONOptions;
-import net.kyori.adventure.text.serializer.json.legacyimpl.NBTLegacyHoverEventSerializer;
-import net.kyori.option.OptionState;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.velocitypowered.proxy.protocol.util.NettyPreconditions.checkFrame;
 
 /**
  * Utilities for writing and reading data in the Minecraft protocol.
@@ -176,19 +173,7 @@ public enum ProtocolUtils {
   public static void writeVarInt(ByteBuf buf, int value) {
     // Peel the one and two byte count cases explicitly as they are the most common VarInt sizes
     // that the proxy will write, to improve inlining.
-    if ((value & (0xFFFFFFFF << 7)) == 0) {
-      buf.writeByte(value);
-    } else if ((value & (0xFFFFFFFF << 14)) == 0) {
-      int w = (value & 0x7F | 0x80) << 8 | (value >>> 7);
-      buf.writeShort(w);
-    } else {
-      writeVarIntFull(buf, value);
-    }
-  }
-
-  private static void writeVarIntFull(ByteBuf buf, int value) {
     // See https://steinborn.me/posts/performance/how-fast-can-you-write-a-varint/
-
     // This essentially is an unrolled version of the "traditional" VarInt encoding.
     if ((value & (0xFFFFFFFF << 7)) == 0) {
       buf.writeByte(value);
@@ -200,11 +185,11 @@ public enum ProtocolUtils {
       buf.writeMedium(w);
     } else if ((value & (0xFFFFFFFF << 28)) == 0) {
       int w = (value & 0x7F | 0x80) << 24 | (((value >>> 7) & 0x7F | 0x80) << 16)
-          | ((value >>> 14) & 0x7F | 0x80) << 8 | (value >>> 21);
+              | ((value >>> 14) & 0x7F | 0x80) << 8 | (value >>> 21);
       buf.writeInt(w);
     } else {
       int w = (value & 0x7F | 0x80) << 24 | ((value >>> 7) & 0x7F | 0x80) << 16
-          | ((value >>> 14) & 0x7F | 0x80) << 8 | ((value >>> 21) & 0x7F | 0x80);
+              | ((value >>> 14) & 0x7F | 0x80) << 8 | ((value >>> 21) & 0x7F | 0x80);
       buf.writeInt(w);
       buf.writeByte(value >>> 28);
     }
