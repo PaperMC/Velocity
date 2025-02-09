@@ -23,10 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.velocitypowered.api.command.VelocityBrigadierMessage;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
-import com.velocitypowered.api.event.player.CookieReceiveEvent;
-import com.velocitypowered.api.event.player.PlayerChannelRegisterEvent;
-import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
-import com.velocitypowered.api.event.player.TabCompleteEvent;
+import com.velocitypowered.api.event.player.*;
 import com.velocitypowered.api.event.player.configuration.PlayerEnteredConfigurationEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
@@ -712,6 +709,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
    * @param response the tab complete response from the backend
    */
   public void handleTabCompleteResponse(TabCompleteResponsePacket response) {
+
     if (outstandingTabComplete != null && !outstandingTabComplete.isAssumeCommand()) {
       if (outstandingTabComplete.getCommand().startsWith("/")) {
         this.finishCommandTabComplete(outstandingTabComplete, response);
@@ -727,38 +725,47 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   private void finishCommandTabComplete(TabCompleteRequestPacket request,
                                         TabCompleteResponsePacket response) {
-    String command = request.getCommand().substring(1);
-    server.getCommandManager().offerBrigadierSuggestions(player, command)
-        .thenAcceptAsync(offers -> {
-          boolean legacy =
-              player.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_13);
-          try {
-            for (Suggestion suggestion : offers.getList()) {
-              String offer = suggestion.getText();
-              offer = legacy && !offer.startsWith("/") ? "/" + offer : offer;
-              if (legacy && offer.startsWith(command)) {
-                offer = offer.substring(command.length());
-              }
-              ComponentHolder tooltip = null;
-              if (suggestion.getTooltip() != null
-                  && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
-                tooltip = new ComponentHolder(player.getProtocolVersion(),
-                    ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent());
-              }
-              response.getOffers().add(new Offer(offer, tooltip));
-            }
-            response.getOffers().sort(null);
-            player.getConnection().write(response);
-          } catch (Exception e) {
-            logger.error("Unable to provide tab list completions for {} for command '{}'",
-                player.getUsername(), command,
-                e);
-          }
+    server.getEventManager().fire(new TabCompleteRequestEvent(player, request.getCommand().substring(1)))
+        .thenAcceptAsync(e -> {
+          String command = e.getPartialMessage();
+          server.getCommandManager().offerBrigadierSuggestions(player, command)
+              .thenAcceptAsync(offers -> {
+                boolean legacy =
+                        player.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_13);
+                try {
+                  for (Suggestion suggestion : offers.getList()) {
+                    String offer = suggestion.getText();
+                    offer = legacy && !offer.startsWith("/") ? "/" + offer : offer;
+                    if (legacy && offer.startsWith(command)) {
+                      offer = offer.substring(command.length());
+                    }
+                    ComponentHolder tooltip = null;
+                    if (suggestion.getTooltip() != null
+                            && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
+                      tooltip = new ComponentHolder(player.getProtocolVersion(),
+                              ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent());
+                    }
+                    response.getOffers().add(new Offer(offer, tooltip));
+                  }
+                  response.getOffers().sort(null);
+                  player.getConnection().write(response);
+                } catch (Exception ex) {
+                  logger.error("Unable to provide tab list completions for {} for command '{}'",
+                          player.getUsername(), command,
+                          ex);
+                }
+              }, player.getConnection().eventLoop()).exceptionally((ex) -> {
+                logger.error(
+                        "Exception while finishing command tab completion,"
+                                + " with request {} and response {}",
+                        request, response, ex);
+                return null;
+              });
         }, player.getConnection().eventLoop()).exceptionally((ex) -> {
           logger.error(
-              "Exception while finishing command tab completion,"
-                  + " with request {} and response {}",
-              request, response, ex);
+                  "Exception while finishing regular tab completion,"
+                          + " with request {} and response{}",
+                  request, response, ex);
           return null;
         });
   }
@@ -782,6 +789,20 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                   + " with request {} and response{}",
               request, response, ex);
           return null;
+        });
+    server.getEventManager().fire(new TabCompleteResultEvent(player, request.getCommand(), offers))
+        .thenAcceptAsync(e -> {
+          response.getOffers().clear();
+          for (String s : e.getSuggestions()) {
+            response.getOffers().add(new Offer(s));
+          }
+          player.getConnection().write(response);
+        }, player.getConnection().eventLoop()).exceptionally((ex) -> {
+           logger.error(
+               "Exception while finishing regular tab completion,"
+                   + " with request {} and response{}",
+               request, response, ex);
+           return null;
         });
   }
 
