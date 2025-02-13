@@ -790,20 +790,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
               request, response, ex);
           return null;
         });
-    server.getEventManager().fire(new TabCompleteResultEvent(player, request.getCommand(), offers))
-        .thenAcceptAsync(e -> {
-          response.getOffers().clear();
-          for (String s : e.getSuggestions()) {
-            response.getOffers().add(new Offer(s));
-          }
-          player.getConnection().write(response);
-        }, player.getConnection().eventLoop()).exceptionally((ex) -> {
-           logger.error(
-               "Exception while finishing regular tab completion,"
-                   + " with request {} and response{}",
-               request, response, ex);
-           return null;
-        });
   }
 
   /**
