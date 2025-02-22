@@ -134,7 +134,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
       ChannelIdentifier id = this.server.getChannelRegistrar().getFromId(packet.getChannel());
 
       if (id == null) {
-        serverConn.getPlayer().getConnection().write(packet.retain());
+        serverConn.ensureConnected().write(packet.retain());
         return true;
       }
 
