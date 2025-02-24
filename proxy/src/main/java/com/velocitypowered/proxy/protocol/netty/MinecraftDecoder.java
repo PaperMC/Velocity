@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.protocol.netty;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.proxy.Velocity;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -27,6 +28,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.CorruptedFrameException;
+import java.util.Arrays;
+import org.apache.logging.log4j.LogManager;
 
 /**
  * Decodes Minecraft packets.
@@ -34,9 +37,13 @@ import io.netty.handler.codec.CorruptedFrameException;
 public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
   public static final boolean DEBUG = Boolean.getBoolean("velocity.packet-decode-logging");
+  public static final boolean BYPASS = Boolean.getBoolean("velocity.packet-decode-bypass");
+
   private static final QuietRuntimeException DECODE_FAILED =
       new QuietRuntimeException("A packet did not decode successfully (invalid data). For more "
-          + "information, launch Velocity with -Dvelocity.packet-decode-logging=true to see more.");
+          + "information, launch Velocity with -Dvelocity.packet-decode-logging=true to see more, "
+          + "or use -Dvelocity.packet-decode-bypass=true to ignore this issue.");
+
 
   private final ProtocolUtils.Direction direction;
   private StateRegistry state;
@@ -64,35 +71,61 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
   }
 
   private void tryDecode(ChannelHandlerContext ctx, ByteBuf buf) throws Exception {
+
     if (!ctx.channel().isActive() || !buf.isReadable()) {
       buf.release();
       return;
     }
 
+    byte[] copy = null;
+
+    if (DEBUG) {
+      copy = new byte[buf.writerIndex()];
+      buf.copy().readBytes(copy);
+    }
+
     int originalReaderIndex = buf.readerIndex();
     int packetId = ProtocolUtils.readVarInt(buf);
+
     MinecraftPacket packet = this.registry.createPacket(packetId);
+
     if (packet == null) {
       buf.readerIndex(originalReaderIndex);
       ctx.fireChannelRead(buf);
-    } else {
-      try {
-        doLengthSanityChecks(buf, packet);
+      return;
+    }
 
-        try {
-          packet.decode(buf, direction, registry.version);
-        } catch (Exception e) {
-          throw handleDecodeFailure(e, packet, packetId);
+    try {
+
+      doLengthSanityChecks(buf, packet);
+
+      try {
+        packet.decode(buf, direction, registry.version);
+      } catch (Exception e) {
+        throw handleDecodeFailure(e, packet, packetId);
+      }
+
+      if (buf.isReadable()) {
+
+        var logger = LogManager.getLogger(Velocity.class);
+
+        if (copy != null) {
+          logger.info("OverFlow Detected on class ({}). Expected: {} bytes, available {}. Frame: {}.", packet.getClass(), buf.readerIndex(),
+              buf.writerIndex(), Arrays.toString(copy));
         }
 
-        if (buf.isReadable()) {
+        if (!BYPASS) {
           throw handleOverflow(packet, buf.readerIndex(), buf.writerIndex());
         }
-        ctx.fireChannelRead(packet);
-      } finally {
-        buf.release();
+
       }
+
+      ctx.fireChannelRead(packet);
+
+    } finally {
+      buf.release();
     }
+
   }
 
   private void doLengthSanityChecks(ByteBuf buf, MinecraftPacket packet) throws Exception {
