@@ -29,7 +29,6 @@ import com.velocitypowered.api.event.Continuation;
 import com.velocitypowered.api.event.EventHandler;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.EventTask;
-import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
@@ -37,7 +36,6 @@ import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.proxy.event.UntargetedEventHandler.EventTaskHandler;
 import com.velocitypowered.proxy.event.UntargetedEventHandler.VoidHandler;
 import com.velocitypowered.proxy.event.UntargetedEventHandler.WithContinuationHandler;
-import com.velocitypowered.proxy.util.collect.Enum2IntMap;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
@@ -73,14 +71,6 @@ import org.lanternpowered.lmbda.LambdaType;
  */
 public class VelocityEventManager implements EventManager {
 
-  private static final Enum2IntMap<PostOrder> POST_ORDER_MAP = new Enum2IntMap.Builder<>(PostOrder.class)
-      .put(PostOrder.FIRST, Short.MAX_VALUE - 1)
-      .put(PostOrder.EARLY, Short.MAX_VALUE / 2)
-      .put(PostOrder.NORMAL, 0)
-      .put(PostOrder.LATE, Short.MIN_VALUE / 2)
-      .put(PostOrder.LAST, Short.MIN_VALUE + 1)
-      .put(PostOrder.CUSTOM, 0)
-      .build();
   private static final Logger logger = LogManager.getLogger(VelocityEventManager.class);
 
   private static final MethodHandles.Lookup methodHandlesLookup = MethodHandles.lookup();
@@ -352,10 +342,10 @@ public class VelocityEventManager implements EventManager {
 
       // The default value of 0 will fall back to PostOrder, the default PostOrder (NORMAL) is also 0
       final short order;
-      if (subscribe.priority() != 0) {
+      if (subscribe.order() == 0 && subscribe.priority() != 0) {
         order = subscribe.priority();
       } else {
-        order = (short) POST_ORDER_MAP.get(subscribe.order());
+        order = subscribe.order();
       }
       final String errorsJoined = errors.isEmpty() ? null : String.join(",", errors);
       collected.put(key, new MethodHandlerInfo(method, asyncType, eventType, order, errorsJoined,
@@ -391,18 +381,6 @@ public class VelocityEventManager implements EventManager {
       throw new IllegalArgumentException("The plugin main instance is automatically registered.");
     }
     registerInternally(pluginContainer, listener);
-  }
-
-  @Override
-  @SuppressWarnings("unchecked")
-  public <E> void register(final Object plugin, final Class<E> eventClass,
-      final PostOrder order, final EventHandler<E> handler) {
-    if (order == PostOrder.CUSTOM) {
-      throw new IllegalArgumentException(
-          "This method does not support custom post orders. Use the overload with short instead."
-      );
-    }
-    register(plugin, eventClass, (short) POST_ORDER_MAP.get(order), handler, AsyncType.ALWAYS);
   }
 
   @Override

@@ -11,6 +11,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import org.jetbrains.annotations.ApiStatus;
 
 /**
  * An annotation that indicates that this method can be used to listen for an event from the proxy.
@@ -25,8 +26,9 @@ public @interface Subscribe {
    * @deprecated specify the order using {@link #priority()} instead
    * @return the order
    */
-  @Deprecated
-  PostOrder order() default PostOrder.NORMAL;
+  @Deprecated(forRemoval = true)
+  @ApiStatus.ScheduledForRemoval(inVersion = "3.6.0")
+  short order() default PostOrder.NORMAL;
 
   /**
    * The priority of this event handler. Priorities are used to determine the order in which event
@@ -34,7 +36,7 @@ public @interface Subscribe {
    *
    * @return the priority
    */
-  short priority() default 0;
+  short priority() default PostOrder.NORMAL;
 
   /**
    * Whether the handler must be called asynchronously. By default, all event handlers are called
