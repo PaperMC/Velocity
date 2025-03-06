@@ -407,6 +407,10 @@ public class VelocityConfiguration implements ProxyConfig {
     return forceKeyAuthentication;
   }
 
+  public boolean isEnableReusePort() {
+    return advanced.isEnableReusePort();
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -730,6 +734,8 @@ public class VelocityConfiguration implements ProxyConfig {
     private boolean logPlayerConnections = true;
     @Expose
     private boolean acceptTransfers = false;
+    @Expose
+    private boolean enableReusePort = false;
 
     private Advanced() {
     }
@@ -755,6 +761,7 @@ public class VelocityConfiguration implements ProxyConfig {
         this.logCommandExecutions = config.getOrElse("log-command-executions", false);
         this.logPlayerConnections = config.getOrElse("log-player-connections", true);
         this.acceptTransfers = config.getOrElse("accepts-transfers", false);
+        this.enableReusePort = config.getOrElse("enable-reuse-port", false);
       }
     }
 
@@ -818,6 +825,10 @@ public class VelocityConfiguration implements ProxyConfig {
       return this.acceptTransfers;
     }
 
+    public boolean isEnableReusePort() {
+      return enableReusePort;
+    }
+
     @Override
     public String toString() {
       return "Advanced{"
@@ -835,6 +846,7 @@ public class VelocityConfiguration implements ProxyConfig {
           + ", logCommandExecutions=" + logCommandExecutions
           + ", logPlayerConnections=" + logPlayerConnections
           + ", acceptTransfers=" + acceptTransfers
+          + ", enableReusePort=" + enableReusePort
           + '}';
     }
   }

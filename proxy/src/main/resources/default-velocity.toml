@@ -145,6 +145,12 @@ log-player-connections = true
 # Transfer packet (Minecraft 1.20.5) to be received.
 accepts-transfers = false
 
+# Enables support for SO_REUSEPORT. This may help the proxy scale better on multicore systems
+# with a lot of incoming connections, and provide better CPU utilization than the existing
+# strategy of having a single thread accepting connections and distributing them to worker
+# threads. Disabled by default. Requires Linux or macOS.
+enable-reuse-port = false
+
 [query]
 # Whether to enable responding to GameSpy 4 query responses or not.
 enabled = false

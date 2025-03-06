@@ -17,14 +17,17 @@
 
 package com.velocitypowered.proxy.connection.client;
 
+import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.CookieReceiveEvent;
 import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
 import com.velocitypowered.api.event.player.configuration.PlayerConfigurationEvent;
 import com.velocitypowered.api.event.player.configuration.PlayerFinishConfigurationEvent;
 import com.velocitypowered.api.event.player.configuration.PlayerFinishedConfigurationEvent;
+import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.player.resourcepack.ResourcePackResponseBundle;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
@@ -41,6 +44,7 @@ import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.KnownPacksPacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -123,8 +127,32 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
       brandChannel = packet.getChannel();
       // Client sends `minecraft:brand` packet immediately after Login,
       // but at this time the backend server may not be ready
+    } else if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
+      return true;
     } else if (serverConn != null) {
-      serverConn.ensureConnected().write(packet.retain());
+      byte[] bytes = ByteBufUtil.getBytes(packet.content());
+      ChannelIdentifier id = this.server.getChannelRegistrar().getFromId(packet.getChannel());
+
+      if (id == null) {
+        serverConn.ensureConnected().write(packet.retain());
+        return true;
+      }
+
+      // Handling this stuff async means that we should probably pause
+      // the connection while we toss this off into another pool
+      serverConn.getPlayer().getConnection().setAutoReading(false);
+      this.server.getEventManager()
+          .fire(new PluginMessageEvent(serverConn.getPlayer(), serverConn, id, bytes))
+          .thenAcceptAsync(pme -> {
+            if (pme.getResult().isAllowed() && serverConn.getConnection() != null) {
+              serverConn.ensureConnected().write(new PluginMessagePacket(
+                  pme.getIdentifier().getId(), Unpooled.wrappedBuffer(bytes)));
+            }
+            serverConn.getPlayer().getConnection().setAutoReading(true);
+          }, player.getConnection().eventLoop()).exceptionally((ex) -> {
+            logger.error("Exception while handling plugin message packet for {}", player, ex);
+            return null;
+          });
     }
     return true;
   }

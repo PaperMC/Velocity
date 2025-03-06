@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.connection.backend;
 
+import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.connection.PreTransferEvent;
 import com.velocitypowered.api.event.player.CookieRequestEvent;
 import com.velocitypowered.api.event.player.CookieStoreEvent;
@@ -24,6 +25,7 @@ import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.ServerResourcePackRemoveEvent;
 import com.velocitypowered.api.event.player.ServerResourcePackSendEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -54,6 +56,8 @@ import com.velocitypowered.proxy.protocol.packet.config.RegistrySyncPacket;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.TagsUpdatePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
+import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.Unpooled;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
@@ -261,7 +265,29 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
           PluginMessageUtil.rewriteMinecraftBrand(packet, server.getVersion(),
               serverConn.getPlayer().getProtocolVersion()));
     } else {
-      serverConn.getPlayer().getConnection().write(packet.retain());
+      byte[] bytes = ByteBufUtil.getBytes(packet.content());
+      ChannelIdentifier id = this.server.getChannelRegistrar().getFromId(packet.getChannel());
+
+      if (id == null) {
+        serverConn.getPlayer().getConnection().write(packet.retain());
+        return true;
+      }
+
+      // Handling this stuff async means that we should probably pause
+      // the connection while we toss this off into another pool
+      this.serverConn.getConnection().setAutoReading(false);
+      this.server.getEventManager()
+          .fire(new PluginMessageEvent(serverConn, serverConn.getPlayer(), id, bytes))
+          .thenAcceptAsync(pme -> {
+            if (pme.getResult().isAllowed() && !serverConn.getPlayer().getConnection().isClosed()) {
+              serverConn.getPlayer().getConnection().write(new PluginMessagePacket(
+                  pme.getIdentifier().getId(), Unpooled.wrappedBuffer(bytes)));
+            }
+            this.serverConn.getConnection().setAutoReading(true);
+          },  serverConn.ensureConnected().eventLoop()).exceptionally((ex) -> {
+            logger.error("Exception while handling plugin message {}", packet, ex);
+            return null;
+          });
     }
     return true;
   }

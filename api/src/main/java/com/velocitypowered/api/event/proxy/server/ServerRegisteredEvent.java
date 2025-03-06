@@ -7,7 +7,6 @@
 
 package com.velocitypowered.api.event.proxy.server;
 
-import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
@@ -23,7 +22,6 @@ import org.jetbrains.annotations.NotNull;
  * @param registeredServer A {@link RegisteredServer} that has been registered.
  * @since 3.3.0
  */
-@Beta
 public record ServerRegisteredEvent(@NotNull RegisteredServer registeredServer) {
   public ServerRegisteredEvent {
     Preconditions.checkNotNull(registeredServer, "registeredServer");

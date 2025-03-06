@@ -43,7 +43,6 @@ import net.kyori.adventure.nbt.LongBinaryTag;
 import net.kyori.adventure.nbt.ShortBinaryTag;
 import net.kyori.adventure.nbt.StringBinaryTag;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -106,16 +105,14 @@ public class ComponentHolder {
   public BinaryTag getBinaryTag() {
     if (binaryTag == null) {
       // TODO: replace this with adventure-text-serializer-nbt
-      binaryTag = serialize(GsonComponentSerializer.gson().serializeToTree(getComponent()));
+      binaryTag = serialize(ProtocolUtils.getJsonChatSerializer(version).serializeToTree(getComponent()));
     }
     return binaryTag;
   }
 
   public static BinaryTag serialize(JsonElement json) {
-    if (json instanceof JsonPrimitive) {
-      JsonPrimitive jsonPrimitive = (JsonPrimitive) json;
-
-      if (jsonPrimitive.isNumber()) {
+    if (json instanceof JsonPrimitive jsonPrimitive) {
+		if (jsonPrimitive.isNumber()) {
         Number number = json.getAsNumber();
 
         if (number instanceof Byte) {

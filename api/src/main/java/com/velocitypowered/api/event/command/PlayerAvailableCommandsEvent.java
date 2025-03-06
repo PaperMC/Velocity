@@ -9,7 +9,6 @@ package com.velocitypowered.api.event.command;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.annotations.Beta;
 import com.mojang.brigadier.tree.RootCommandNode;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.Player;
@@ -21,7 +20,6 @@ import com.velocitypowered.api.proxy.Player;
  * client.
  */
 @AwaitingEvent
-@Beta
 public class PlayerAvailableCommandsEvent {
 
   private final Player player;
