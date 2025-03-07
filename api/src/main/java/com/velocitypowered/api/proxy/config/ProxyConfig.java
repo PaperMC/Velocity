@@ -164,7 +164,7 @@ public interface ProxyConfig {
   boolean isCancelCommandsIfRateLimited();
 
   /**
-   * Get the rate limit for commands that are rate limited.
+   * Get the kick limit for commands that are rate limited.
    * If this limit is 0 or less, the player will be not be kicked.
    *
    * @return the rate limited command rate limit
@@ -178,5 +178,29 @@ public interface ProxyConfig {
    */
   default boolean isKickOnCommandRateLimit() {
     return getKickAfterRateLimitedCommands() > 0;
+  }
+
+  /**
+   * Get the rate limit for how fast a player can tab complete.
+   *
+   * @return the tab complete rate limit (in milliseconds)
+   */
+  int getTabCompleteRatelimit();
+
+  /**
+   * Get the kick limit for tab completes that are rate limited.
+   * If this limit is 0 or less, the player will be not be kicked.
+   *
+   * @return the rate limited command rate limit
+   */
+  int getKickAfterRateLimitedTabCompletes();
+
+  /**
+   * Get whether the proxy should kick players who are tab complete rate limited.
+   *
+   * @return whether to kick players who are rate limited
+   */
+  default boolean isKickOnTabCompleteRateLimit() {
+    return getKickAfterRateLimitedTabCompletes() > 0;
   }
 }

@@ -362,6 +362,16 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   @Override
+  public int getTabCompleteRatelimit() {
+    return advanced.getTabCompleteRateLimit();
+  }
+
+  @Override
+  public int getKickAfterRateLimitedTabCompletes() {
+    return advanced.getKickAfterRateLimitedTabCompletes();
+  }
+
+  @Override
   public boolean isCancelCommandsIfRateLimited() {
     return advanced.isCancelCommandsIfRateLimited();
   }
@@ -748,6 +758,10 @@ public class VelocityConfiguration implements ProxyConfig {
     private boolean cancelCommandsIfRateLimited = true;
     @Expose
     private int kickAfterRateLimitedCommands = 5;
+    @Expose
+    private int tabCompleteRateLimit = 50;
+    @Expose
+    private int kickAfterRateLimitedTabCompletes = 10;
 
     private Advanced() {
     }
@@ -777,6 +791,8 @@ public class VelocityConfiguration implements ProxyConfig {
         this.commandRateLimit = config.getIntOrElse("command-rate-limit", 50);
         this.cancelCommandsIfRateLimited = config.getOrElse("cancel-commands-if-rate-limited", true);
         this.kickAfterRateLimitedCommands = config.getIntOrElse("kick-after-rate-limited-commands", 5);
+        this.tabCompleteRateLimit = config.getIntOrElse("tab-complete-rate-limit", 25); // very lenient
+        this.kickAfterRateLimitedTabCompletes = config.getIntOrElse("kick-after-rate-limited-tab-completes", 10);
       }
     }
 
@@ -854,6 +870,14 @@ public class VelocityConfiguration implements ProxyConfig {
 
     public int getKickAfterRateLimitedCommands() {
       return kickAfterRateLimitedCommands;
+    }
+
+    public int getTabCompleteRateLimit() {
+      return tabCompleteRateLimit;
+    }
+
+    public int getKickAfterRateLimitedTabCompletes() {
+      return kickAfterRateLimitedTabCompletes;
     }
 
     @Override

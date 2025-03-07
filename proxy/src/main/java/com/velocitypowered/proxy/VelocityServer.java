@@ -165,6 +165,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   private final VelocityConsole console;
   private @MonotonicNonNull Ratelimiter<InetAddress> ipAttemptLimiter;
   private @MonotonicNonNull Ratelimiter<UUID> commandRateLimiter;
+  private @MonotonicNonNull Ratelimiter<UUID> tabCompleteRateLimiter;
   private final VelocityEventManager eventManager;
   private final VelocityScheduler scheduler;
   private final VelocityChannelRegistrar channelRegistrar = new VelocityChannelRegistrar();
@@ -298,6 +299,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
     ipAttemptLimiter = Ratelimiters.createWithMilliseconds(configuration.getLoginRatelimit());
     commandRateLimiter = Ratelimiters.createWithMilliseconds(configuration.getCommandRatelimit());
+    tabCompleteRateLimiter = Ratelimiters.createWithMilliseconds(configuration.getTabCompleteRatelimit());
     loadPlugins();
 
     // Go ahead and fire the proxy initialization event. We block since plugins should have a chance
@@ -657,12 +659,16 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     return cm.createHttpClient();
   }
 
-  public Ratelimiter<InetAddress> getIpAttemptLimiter() {
+  public @MonotonicNonNull Ratelimiter<InetAddress> getIpAttemptLimiter() {
     return ipAttemptLimiter;
   }
 
   public @MonotonicNonNull Ratelimiter<UUID> getCommandRateLimiter() {
     return commandRateLimiter;
+  }
+
+  public @MonotonicNonNull Ratelimiter<UUID> getTabCompleteRateLimiter() {
+    return tabCompleteRateLimiter;
   }
 
   /**
