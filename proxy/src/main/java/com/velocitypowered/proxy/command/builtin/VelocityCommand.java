@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.command.builtin;
 
+import com.google.common.base.Suppliers;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.mojang.brigadier.Command;
@@ -53,6 +54,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -82,7 +84,7 @@ public final class VelocityCommand {
         .executes(new Heap())
         .build();
     final LiteralCommandNode<CommandSource> info = BrigadierCommand.literalArgumentBuilder("info")
-        .requires(source -> source.getPermissionValue("velocity.command.info") == Tristate.TRUE)
+        .requires(source -> source.getPermissionValue("velocity.command.info") != Tristate.FALSE)
         .executes(new Info(server))
         .build();
     final LiteralCommandNode<CommandSource> plugins = BrigadierCommand
@@ -146,50 +148,59 @@ public final class VelocityCommand {
     }
   }
 
-  private record Info(ProxyServer server) implements Command<CommandSource> {
-
+  private static final class Info implements Command<CommandSource> {
     private static final TextColor VELOCITY_COLOR = TextColor.color(0x09add3);
+    private final Supplier<Component> infoSupplier;
+
+    private Info(ProxyServer server) {
+      final ProxyVersion version = server.getVersion();
+      this.infoSupplier = Suppliers.memoize(() -> {
+        final TextComponent.Builder infoBuilder = Component.text();
+        final Component velocity = Component.text()
+                .content(version.getName() + " ")
+                .decoration(TextDecoration.BOLD, true)
+                .color(VELOCITY_COLOR)
+                .append(Component.text()
+                        .content(version.getVersion())
+                        .decoration(TextDecoration.BOLD, false))
+                .build();
+        final Component copyright = Component
+                .translatable("velocity.command.version-copyright",
+                        Component.text(version.getVendor()),
+                        Component.text(version.getName()),
+                        Component.text(LocalDate.now().getYear()));
+        infoBuilder.append(velocity)
+                .appendNewline()
+                .append(copyright);
+        if (version.getName().equals("Velocity")) {
+          final TextComponent embellishment = Component.text()
+                  .append(Component.text()
+                          .content("PaperMC")
+                          .color(NamedTextColor.GREEN)
+                          .clickEvent(
+                                  ClickEvent.openUrl("https://papermc.io/software/velocity"))
+                          .build())
+                  .append(Component.text(" - "))
+                  .append(Component.text()
+                          .content("GitHub")
+                          .color(NamedTextColor.GREEN)
+                          .decoration(TextDecoration.UNDERLINED, true)
+                          .clickEvent(ClickEvent.openUrl(
+                                  "https://github.com/PaperMC/Velocity"))
+                          .build())
+                  .build();
+          infoBuilder.appendNewline().append(embellishment);
+        }
+
+        return infoBuilder.build();
+      });
+    }
 
     @Override
     public int run(final CommandContext<CommandSource> context) {
       final CommandSource source = context.getSource();
-      final ProxyVersion version = server.getVersion();
+      source.sendMessage(infoSupplier.get());
 
-      final Component velocity = Component.text()
-          .content(version.getName() + " ")
-          .decoration(TextDecoration.BOLD, true)
-          .color(VELOCITY_COLOR)
-          .append(Component.text()
-                  .content(version.getVersion())
-                  .decoration(TextDecoration.BOLD, false))
-          .build();
-      final Component copyright = Component
-          .translatable("velocity.command.version-copyright",
-              Component.text(version.getVendor()),
-                  Component.text(version.getName()),
-                  Component.text(LocalDate.now().getYear()));
-      source.sendMessage(velocity);
-      source.sendMessage(copyright);
-
-      if (version.getName().equals("Velocity")) {
-        final TextComponent embellishment = Component.text()
-            .append(Component.text()
-                .content("PaperMC")
-                .color(NamedTextColor.GREEN)
-                .clickEvent(
-                    ClickEvent.openUrl("https://papermc.io/software/velocity"))
-                .build())
-            .append(Component.text(" - "))
-            .append(Component.text()
-                .content("GitHub")
-                .color(NamedTextColor.GREEN)
-                .decoration(TextDecoration.UNDERLINED, true)
-                .clickEvent(ClickEvent.openUrl(
-                    "https://github.com/PaperMC/Velocity"))
-                .build())
-            .build();
-        source.sendMessage(embellishment);
-      }
       return Command.SINGLE_SUCCESS;
     }
   }
