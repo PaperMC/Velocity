@@ -230,6 +230,11 @@ public class VelocityConfiguration implements ProxyConfig {
       valid = false;
     }
 
+    if (advanced.commandRateLimit < 0) {
+      logger.error("Invalid command rate limit {}", advanced.commandRateLimit);
+      valid = false;
+    }
+
     loadFavicon();
 
     return valid;
@@ -349,6 +354,21 @@ public class VelocityConfiguration implements ProxyConfig {
   @Override
   public int getReadTimeout() {
     return advanced.getReadTimeout();
+  }
+
+  @Override
+  public int getCommandRatelimit() {
+    return advanced.getCommandRateLimit();
+  }
+
+  @Override
+  public boolean isCancelCommandsIfRateLimited() {
+    return advanced.isCancelCommandsIfRateLimited();
+  }
+
+  @Override
+  public int getKickAfterRateLimitedCommands() {
+    return advanced.getKickAfterRateLimitedCommands();
   }
 
   public boolean isProxyProtocol() {
@@ -722,6 +742,12 @@ public class VelocityConfiguration implements ProxyConfig {
     private boolean acceptTransfers = false;
     @Expose
     private boolean enableReusePort = false;
+    @Expose
+    private int commandRateLimit = 50;
+    @Expose
+    private boolean cancelCommandsIfRateLimited = true;
+    @Expose
+    private int kickAfterRateLimitedCommands = 5;
 
     private Advanced() {
     }
@@ -748,6 +774,9 @@ public class VelocityConfiguration implements ProxyConfig {
         this.logPlayerConnections = config.getOrElse("log-player-connections", true);
         this.acceptTransfers = config.getOrElse("accepts-transfers", false);
         this.enableReusePort = config.getOrElse("enable-reuse-port", false);
+        this.commandRateLimit = config.getIntOrElse("command-rate-limit", 50);
+        this.cancelCommandsIfRateLimited = config.getOrElse("cancel-commands-if-rate-limited", true);
+        this.kickAfterRateLimitedCommands = config.getIntOrElse("kick-after-rate-limited-commands", 5);
       }
     }
 
@@ -813,6 +842,18 @@ public class VelocityConfiguration implements ProxyConfig {
 
     public boolean isEnableReusePort() {
       return enableReusePort;
+    }
+
+    public int getCommandRateLimit() {
+      return commandRateLimit;
+    }
+
+    public boolean isCancelCommandsIfRateLimited() {
+      return cancelCommandsIfRateLimited;
+    }
+
+    public int getKickAfterRateLimitedCommands() {
+      return kickAfterRateLimitedCommands;
     }
 
     @Override

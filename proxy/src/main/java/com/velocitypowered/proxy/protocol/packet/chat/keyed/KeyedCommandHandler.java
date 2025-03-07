@@ -21,17 +21,18 @@ import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.packet.chat.CommandHandler;
+import com.velocitypowered.proxy.protocol.packet.chat.RateLimitedCommandHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderV2;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 
-public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommandPacket> {
+public class KeyedCommandHandler extends RateLimitedCommandHandler<KeyedPlayerCommandPacket> {
 
   private final ConnectedPlayer player;
   private final VelocityServer server;
 
   public KeyedCommandHandler(ConnectedPlayer player, VelocityServer server) {
+    super(player, server);
     this.player = player;
     this.server = server;
   }
