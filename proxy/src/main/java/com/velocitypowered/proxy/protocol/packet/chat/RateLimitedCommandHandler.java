@@ -41,7 +41,7 @@ public abstract class RateLimitedCommandHandler<T extends MinecraftPacket> imple
                 failedAttempts++;
                 if (velocityServer.getConfiguration().isKickOnCommandRateLimit()
                         && failedAttempts >= velocityServer.getConfiguration().getKickAfterRateLimitedCommands()) {
-                    player.disconnect(Component.text("You are sending commands too quickly."));
+                    player.disconnect(Component.translatable("velocity.kick.command-rate-limit"));
                 }
 
                 if (velocityServer.getConfiguration().isCancelCommandsIfRateLimited()) {

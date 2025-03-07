@@ -668,7 +668,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     if (!server.getTabCompleteRateLimiter().attempt(player.getUniqueId())) {
       if (server.getConfiguration().isKickOnTabCompleteRateLimit()
               && failedTabCompleteAttempts++ >= server.getConfiguration().getKickAfterRateLimitedTabCompletes()) {
-        player.disconnect(Component.text("You are sending tab completes too quickly."));
+        player.disconnect(Component.translatable("velocity.kick.tab-complete-rate-limit"));
       }
 
       return true;
