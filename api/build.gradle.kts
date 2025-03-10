@@ -61,6 +61,7 @@ tasks {
         o.encoding = "UTF-8"
         o.source = "17"
 
+        o.use()
         o.links(
             "https://www.slf4j.org/apidocs/",
             "https://guava.dev/releases/${libs.guava.get().version}/api/docs/",
