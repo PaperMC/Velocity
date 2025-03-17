@@ -32,12 +32,14 @@ import java.util.function.Function;
  * A precisely ordered queue which allows for outside entries into the ordered queue through
  * piggybacking timestamps.
  */
-public class ChatQueue {
+public class ChatQueue implements AutoCloseable {
 
   private final Object internalLock = new Object();
   private final ConnectedPlayer player;
   private final ChatState chatState = new ChatState();
   private CompletableFuture<Void> head = CompletableFuture.completedFuture(null);
+
+  private volatile boolean closed;
 
   /**
    * Instantiates a {@link ChatQueue} for a specific {@link ConnectedPlayer}.
@@ -50,8 +52,14 @@ public class ChatQueue {
 
   private void queueTask(Task task) {
     synchronized (internalLock) {
+      if (closed) {
+        throw new IllegalStateException("ChatQueue has already been closed");
+      }
       MinecraftConnection smc = player.ensureAndGetCurrentServer().ensureConnected();
       head = head.thenCompose(v -> {
+        if (closed) {
+          return CompletableFuture.completedFuture(null);
+        }
         try {
           return task.update(chatState, smc).exceptionally(ignored -> null);
         } catch (Throwable ignored) {
@@ -102,15 +110,20 @@ public class ChatQueue {
     });
   }
 
-  private static <T extends MinecraftPacket> CompletableFuture<Void> writePacket(T packet, MinecraftConnection smc) {
+  private <T extends MinecraftPacket> CompletableFuture<Void> writePacket(T packet, MinecraftConnection smc) {
     return CompletableFuture.runAsync(() -> {
-      if (!smc.isClosed()) {
+      if (!closed && !smc.isClosed()) {
         ChannelFuture future = smc.write(packet);
         if (future != null) {
           future.awaitUninterruptibly();
         }
       }
     }, smc.eventLoop());
+  }
+
+  @Override
+  public void close() {
+    closed = true;
   }
 
   private interface Task {
