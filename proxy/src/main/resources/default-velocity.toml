@@ -155,11 +155,11 @@ enable-reuse-port = false
 # By default this is 50ms (20 commands per second)
 command-rate-limit = 25
 
-# Should we no longer accept commands from a player if they are rate limited?
+# Should we forward commands to the backend upon being rate limited?
 # This will forward the command to the server instead of processing it on the proxy.
 # Since most server implementations have a rate limit, this will prevent the player
 # from being able to send excessive commands to the server.
-cancel-commands-if-rate-limited = true
+forward-commands-if-rate-limited = true
 
 # How many commands are allowed to be sent after the rate limit is hit before the player is kicked?
 # Setting this to 0 or lower will disable this feature.

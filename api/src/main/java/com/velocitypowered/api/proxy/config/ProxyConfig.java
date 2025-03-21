@@ -157,11 +157,11 @@ public interface ProxyConfig {
   int getCommandRatelimit();
 
   /**
-   * Get whether we should not process commands if the player is rate limited.
+   * Get whether we should forward commands to the backend if the player is rate limited.
    *
-   * @return whether to cancel commands if rate limited
+   * @return whether to forward commands if rate limited
    */
-  boolean isCancelCommandsIfRateLimited();
+  boolean isForwardCommandsIfRateLimited();
 
   /**
    * Get the kick limit for commands that are rate limited.
