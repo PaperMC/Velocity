@@ -788,11 +788,11 @@ public class VelocityConfiguration implements ProxyConfig {
         this.logPlayerConnections = config.getOrElse("log-player-connections", true);
         this.acceptTransfers = config.getOrElse("accepts-transfers", false);
         this.enableReusePort = config.getOrElse("enable-reuse-port", false);
-        this.commandRateLimit = config.getIntOrElse("command-rate-limit", 50);
+        this.commandRateLimit = config.getIntOrElse("command-rate-limit", 25);
         this.cancelCommandsIfRateLimited = config.getOrElse("cancel-commands-if-rate-limited", true);
-        this.kickAfterRateLimitedCommands = config.getIntOrElse("kick-after-rate-limited-commands", 5);
-        this.tabCompleteRateLimit = config.getIntOrElse("tab-complete-rate-limit", 25); // very lenient
-        this.kickAfterRateLimitedTabCompletes = config.getIntOrElse("kick-after-rate-limited-tab-completes", 10);
+        this.kickAfterRateLimitedCommands = config.getIntOrElse("kick-after-rate-limited-commands", 0);
+        this.tabCompleteRateLimit = config.getIntOrElse("tab-complete-rate-limit", 10); // very lenient
+        this.kickAfterRateLimitedTabCompletes = config.getIntOrElse("kick-after-rate-limited-tab-completes", 0);
       }
     }
 
