@@ -156,6 +156,9 @@ enable-reuse-port = false
 command-rate-limit = 50
 
 # Should we no longer accept commands from a player if they are rate limited?
+# This will forward the command to the server instead of processing it on the proxy.
+# Since most server implementations have a rate limit, this will prevent the player
+# from being able to send excessive commands to the server.
 cancel-commands-if-rate-limited = true
 
 # How many commands are allowed to be sent after the rate limit is hit before the player is kicked?
