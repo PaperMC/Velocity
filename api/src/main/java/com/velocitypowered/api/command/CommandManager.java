@@ -115,7 +115,8 @@ public interface CommandManager {
   CompletableFuture<Boolean> executeImmediatelyAsync(CommandSource source, String cmdLine);
 
   /**
-   * Returns suggestions to fill in the given command.
+   * Asynchronously collects suggestions to fill in the given command {@code cmdLine}.
+   * Returns only the raw completion suggestions without tooltips.
    *
    * @param source  the source to execute the command for
    * @param cmdLine the partially completed command
@@ -124,7 +125,8 @@ public interface CommandManager {
   CompletableFuture<List<String>> offerSuggestions(CommandSource source, String cmdLine);
 
   /**
-   * Returns suggestions to fill in the given command.
+   * Asynchronously collects suggestions to fill in the given command {@code cmdLine}.
+   * Returns the brigadier {@link Suggestions} with tooltips for each result.
    *
    * @param source  the source to execute the command for
    * @param cmdLine the partially completed command
