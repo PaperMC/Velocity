@@ -674,6 +674,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       return true;
     }
 
+    failedTabCompleteAttempts = 0;
+
     server.getCommandManager().offerBrigadierSuggestions(player, command)
         .thenAcceptAsync(suggestions -> {
           if (suggestions.isEmpty()) {
