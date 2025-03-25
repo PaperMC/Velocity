@@ -256,8 +256,8 @@ public class ArgumentPropertyRegistry {
         RegistryKeyArgumentList.ResourceKey.class,
         RegistryKeyArgumentList.ResourceKey.Serializer.REGISTRY);
     register(id("minecraft:resource_selector", mapSet(MINECRAFT_1_21_5, 47)),
-        RegistryKeyArgumentList.ResourceKey.class,
-        RegistryKeyArgumentList.ResourceKey.Serializer.REGISTRY);
+        RegistryKeyArgumentList.ResourceSelector.class,
+        RegistryKeyArgumentList.ResourceSelector.Serializer.REGISTRY);
 
     empty(id("minecraft:template_mirror", mapSet(MINECRAFT_1_21_5, 48), mapSet(MINECRAFT_1_20_5, 47), mapSet(MINECRAFT_1_20_3, 46), mapSet(MINECRAFT_1_19, 45))); // 1.19
     empty(id("minecraft:template_rotation", mapSet(MINECRAFT_1_21_5, 49), mapSet(MINECRAFT_1_20_5, 48), mapSet(MINECRAFT_1_20_3, 47), mapSet(MINECRAFT_1_19, 46))); // 1.19
