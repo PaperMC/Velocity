@@ -18,6 +18,7 @@
 package com.velocitypowered.proxy.protocol.packet.chat.session;
 
 import com.google.common.collect.Lists;
+import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
@@ -25,6 +26,8 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.chat.LastSeenMessages;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.time.Instant;
 import java.util.List;
 
@@ -42,7 +45,7 @@ public class SessionPlayerCommandPacket implements MinecraftPacket {
     this.timeStamp = Instant.ofEpochMilli(buf.readLong());
     this.salt = buf.readLong();
     this.argumentSignatures = new ArgumentSignatures(buf);
-    this.lastSeenMessages = new LastSeenMessages(buf);
+    this.lastSeenMessages = new LastSeenMessages(buf, protocolVersion);
   }
 
   @Override
@@ -51,7 +54,7 @@ public class SessionPlayerCommandPacket implements MinecraftPacket {
     buf.writeLong(this.timeStamp.toEpochMilli());
     buf.writeLong(this.salt);
     this.argumentSignatures.encode(buf);
-    this.lastSeenMessages.encode(buf);
+    this.lastSeenMessages.encode(buf, protocolVersion);
   }
 
   public String getCommand() {
@@ -63,8 +66,11 @@ public class SessionPlayerCommandPacket implements MinecraftPacket {
   }
 
   public boolean isSigned() {
-    if (salt == 0) return false;
-    return !lastSeenMessages.isEmpty() || !argumentSignatures.isEmpty();
+    return !argumentSignatures.isEmpty();
+  }
+
+  public CommandExecuteEvent.SignedState getEventSignedState() {
+    return !this.argumentSignatures.isEmpty() ? CommandExecuteEvent.SignedState.SIGNED_WITH_ARGS : CommandExecuteEvent.SignedState.SIGNED_WITHOUT_ARGS;
   }
 
   @Override
@@ -81,6 +87,21 @@ public class SessionPlayerCommandPacket implements MinecraftPacket {
             ", argumentSignatures=" + argumentSignatures +
             ", lastSeenMessages=" + lastSeenMessages +
             '}';
+  }
+
+  public SessionPlayerCommandPacket withLastSeenMessages(@Nullable LastSeenMessages lastSeenMessages) {
+    if (lastSeenMessages == null) {
+      UnsignedPlayerCommandPacket packet = new UnsignedPlayerCommandPacket();
+      packet.command = command;
+      return packet;
+    }
+    SessionPlayerCommandPacket packet = new SessionPlayerCommandPacket();
+    packet.command = command;
+    packet.timeStamp = timeStamp;
+    packet.salt = salt;
+    packet.argumentSignatures = argumentSignatures;
+    packet.lastSeenMessages = lastSeenMessages;
+    return packet;
   }
 
   public static class ArgumentSignatures {

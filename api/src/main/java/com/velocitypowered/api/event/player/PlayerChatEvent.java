@@ -51,6 +51,13 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
     return result;
   }
 
+  /**
+   * Set result for the event.
+   *
+   * @param result the result of event
+   * @deprecated for 1.19.1 and newer, set this as denied will kick users
+   */
+  @Deprecated
   @Override
   public void setResult(ChatResult result) {
     this.result = Preconditions.checkNotNull(result, "result");

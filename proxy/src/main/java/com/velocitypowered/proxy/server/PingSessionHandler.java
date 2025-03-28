@@ -43,20 +43,23 @@ public class PingSessionHandler implements MinecraftSessionHandler {
   private final MinecraftConnection connection;
   private final ProtocolVersion version;
   private boolean completed = false;
+  private final String virtualHostString;
 
   PingSessionHandler(CompletableFuture<ServerPing> result, RegisteredServer server,
-      MinecraftConnection connection, ProtocolVersion version) {
+      MinecraftConnection connection, ProtocolVersion version, String virtualHostString) {
     this.result = result;
     this.server = server;
     this.connection = connection;
     this.version = version;
+    this.virtualHostString = virtualHostString;
   }
 
   @Override
   public void activated() {
     HandshakePacket handshake = new HandshakePacket();
     handshake.setIntent(HandshakeIntent.STATUS);
-    handshake.setServerAddress(server.getServerInfo().getAddress().getHostString());
+    handshake.setServerAddress(this.virtualHostString == null || this.virtualHostString.isEmpty()
+            ? server.getServerInfo().getAddress().getHostString() : this.virtualHostString);
     handshake.setPort(server.getServerInfo().getAddress().getPort());
     handshake.setProtocolVersion(version);
     connection.delayedWrite(handshake);

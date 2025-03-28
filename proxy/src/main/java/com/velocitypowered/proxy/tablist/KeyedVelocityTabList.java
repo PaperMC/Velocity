@@ -159,10 +159,15 @@ public class KeyedVelocityTabList implements InternalTabList {
 
   @Override
   public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
-      int gameMode,
-      @Nullable ChatSession chatSession, boolean listed) {
+      int gameMode, @Nullable ChatSession chatSession, boolean listed) {
     return new KeyedVelocityTabListEntry(this, profile, displayName, latency, gameMode,
         chatSession == null ? null : chatSession.getIdentifiedKey());
+  }
+
+  @Override
+  public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
+                                 int gameMode, @Nullable ChatSession chatSession, boolean listed, int listOrder) {
+    return buildEntry(profile, displayName, latency, gameMode, chatSession, listed);
   }
 
   @Override

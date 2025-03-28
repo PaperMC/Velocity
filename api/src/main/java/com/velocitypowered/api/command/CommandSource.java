@@ -27,7 +27,7 @@ public interface CommandSource extends Audience, PermissionSubject {
    *      for more information on the format.
    **/
   default void sendRichMessage(final @NotNull String message) {
-    this.sendMessage(MiniMessage.miniMessage().deserialize(message));
+    this.sendMessage(MiniMessage.miniMessage().deserialize(message, this));
   }
 
   /**
@@ -43,7 +43,7 @@ public interface CommandSource extends Audience, PermissionSubject {
           final @NotNull String message,
           final @NotNull TagResolver @NotNull... resolvers
   ) {
-    this.sendMessage(MiniMessage.miniMessage().deserialize(message, resolvers));
+    this.sendMessage(MiniMessage.miniMessage().deserialize(message, this, resolvers));
   }
 
   /**

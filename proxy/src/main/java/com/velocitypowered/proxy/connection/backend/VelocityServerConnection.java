@@ -53,8 +53,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import net.kyori.adventure.nbt.CompoundBinaryTag;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 
@@ -72,7 +70,6 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   private boolean gracefulDisconnect = false;
   private BackendConnectionPhase connectionPhase = BackendConnectionPhases.UNKNOWN;
   private final Map<Long, Long> pendingPings = new HashMap<>();
-  private @MonotonicNonNull CompoundBinaryTag activeDimensionRegistry;
 
   /**
    * Initializes a new server connection.
@@ -365,13 +362,5 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
    */
   public boolean hasCompletedJoin() {
     return hasCompletedJoin;
-  }
-
-  public CompoundBinaryTag getActiveDimensionRegistry() {
-    return activeDimensionRegistry;
-  }
-
-  public void setActiveDimensionRegistry(CompoundBinaryTag activeDimensionRegistry) {
-    this.activeDimensionRegistry = activeDimensionRegistry;
   }
 }

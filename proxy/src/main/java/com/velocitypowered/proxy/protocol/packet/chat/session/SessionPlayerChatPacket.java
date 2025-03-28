@@ -73,7 +73,7 @@ public class SessionPlayerChatPacket implements MinecraftPacket {
     } else {
       this.signature = new byte[0];
     }
-    this.lastSeenMessages = new LastSeenMessages(buf);
+    this.lastSeenMessages = new LastSeenMessages(buf, protocolVersion);
   }
 
   @Override
@@ -86,7 +86,7 @@ public class SessionPlayerChatPacket implements MinecraftPacket {
     if (this.signed) {
       buf.writeBytes(this.signature);
     }
-    this.lastSeenMessages.encode(buf);
+    this.lastSeenMessages.encode(buf, protocolVersion);
   }
 
   @Override
@@ -98,5 +98,16 @@ public class SessionPlayerChatPacket implements MinecraftPacket {
     byte[] signature = new byte[256];
     buf.readBytes(signature);
     return signature;
+  }
+
+  public SessionPlayerChatPacket withLastSeenMessages(LastSeenMessages lastSeenMessages) {
+    SessionPlayerChatPacket packet = new SessionPlayerChatPacket();
+    packet.message = message;
+    packet.timestamp = timestamp;
+    packet.salt = salt;
+    packet.signed = signed;
+    packet.signature = signature;
+    packet.lastSeenMessages = lastSeenMessages;
+    return packet;
   }
 }
