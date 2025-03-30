@@ -14,6 +14,7 @@ import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.ModInfo;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -196,11 +197,22 @@ public final class ServerPing {
     /**
      * Uses the modified {@code players} array in the response.
      *
-     * @param players array of SamplePlayers to set
+     * @param players array of SamplePlayers to add
      * @return this builder, for chaining
      */
     public Builder samplePlayers(SamplePlayer... players) {
       this.samplePlayers.addAll(Arrays.asList(players));
+      return this;
+    }
+
+    /**
+     * Uses the modified {@code players} collection in the response.
+     *
+     * @param players collection of SamplePlayers to add
+     * @return this builder, for chaining
+     */
+    public Builder samplePlayers(Collection<SamplePlayer> players) {
+      this.samplePlayers.addAll(players);
       return this;
     }
 
