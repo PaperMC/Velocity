@@ -1101,8 +1101,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       throw new IllegalStateException("Can only send server links in CONFIGURATION or PLAY protocol");
     }
 
-    connection.write(new ClientboundServerLinksPacket(List.copyOf(links).stream()
-        .map(l -> new ClientboundServerLinksPacket.ServerLink(l, getProtocolVersion())).toList()));
+    connection.write(new ClientboundServerLinksPacket(links.stream()
+        .map(l -> new ClientboundServerLinksPacket.ServerLink(
+            l.getBuiltInType().map(Enum::ordinal).orElse(-1),
+            l.getCustomLabel()
+                .map(c -> new ComponentHolder(getProtocolVersion(), translateMessage(c)))
+                .orElse(null),
+            l.getUrl().toString()))
+        .toList()));
   }
 
   @Override
