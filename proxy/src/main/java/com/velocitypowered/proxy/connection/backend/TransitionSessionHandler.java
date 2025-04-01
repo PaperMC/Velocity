@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.connection.backend;
 import static com.velocitypowered.proxy.connection.backend.BackendConnectionPhases.IN_TRANSITION;
 import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeBackendPhase.HELLO;
 
+import com.velocitypowered.api.event.player.PlayerClientLoadedWorldEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -33,6 +34,7 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
+import com.velocitypowered.proxy.plugin.virtual.VelocityVirtualPlugin;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.JoinGamePacket;
@@ -137,6 +139,18 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
           // Now set the connected server.
           serverConn.getPlayer().setConnectedServer(serverConn);
+
+          if (!serverConn.isClientLoaded()) { // shouldn't happen
+            server.getScheduler().buildTask(VelocityVirtualPlugin.INSTANCE, () -> {
+              if (serverConn.isClientLoaded()) {
+                return;
+              }
+              serverConn.setClientLoaded(true);
+              server.getEventManager().fireAndForget(new PlayerClientLoadedWorldEvent(player, true));
+            })
+            .delay(PlayerClientLoadedWorldEvent.NOTCHIAN_TIMEOUT)
+            .schedule();
+          }
 
           // Clean up disabling auto-read while the connected event was being processed.
           // Do this after setting the connection, so no incoming packets are processed before
