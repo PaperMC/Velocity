@@ -203,4 +203,11 @@ public interface ProxyConfig {
   default boolean isKickOnTabCompleteRateLimit() {
     return getKickAfterRateLimitedTabCompletes() > 0;
   }
+
+  /**
+   * Get the channel register limit a client can register.
+   *
+   * @return the channel limit a client can register
+   */
+  int getChannelRegisterLimit();
 }

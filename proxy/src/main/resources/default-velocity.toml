@@ -177,6 +177,9 @@ tab-complete-rate-limit = 10
 # Setting this to 0 or lower will disable this feature.
 kick-after-rate-limited-tab-completes = 0
 
+# How many channels a player can (un)register
+channel-register-limit = 128
+
 [query]
 # Whether to enable responding to GameSpy 4 query responses or not.
 enabled = false

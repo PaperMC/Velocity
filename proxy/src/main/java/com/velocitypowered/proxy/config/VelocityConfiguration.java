@@ -376,6 +376,11 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   @Override
+  public int getChannelRegisterLimit() {
+    return advanced.getChannelRegisterLimit();
+  }
+
+  @Override
   public boolean isForwardCommandsIfRateLimited() {
     return advanced.isForwardCommandsIfRateLimited();
   }
@@ -773,6 +778,8 @@ public class VelocityConfiguration implements ProxyConfig {
     private int tabCompleteRateLimit = 50;
     @Expose
     private int kickAfterRateLimitedTabCompletes = 10;
+    @Expose
+    private int channelRegisterLimit = 128;
 
     private Advanced() {
     }
@@ -889,6 +896,10 @@ public class VelocityConfiguration implements ProxyConfig {
 
     public int getKickAfterRateLimitedTabCompletes() {
       return kickAfterRateLimitedTabCompletes;
+    }
+
+    public int getChannelRegisterLimit() {
+      return channelRegisterLimit;
     }
 
     @Override

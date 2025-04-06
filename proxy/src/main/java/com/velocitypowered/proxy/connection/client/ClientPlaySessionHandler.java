@@ -299,16 +299,16 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // Handling edge case when packet with FML client handshake (state COMPLETE)
     // arrives after JoinGame packet from destination server
     VelocityServerConnection serverConn =
-        (player.getConnectedServer() == null
-            && packet.getChannel().equals(
-            LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL))
-            ? player.getConnectionInFlight() : player.getConnectedServer();
+            (player.getConnectedServer() == null
+                    && packet.getChannel().equals(
+                    LegacyForgeConstants.FORGE_LEGACY_HANDSHAKE_CHANNEL))
+                    ? player.getConnectionInFlight() : player.getConnectedServer();
 
     MinecraftConnection backendConn = serverConn != null ? serverConn.getConnection() : null;
     if (serverConn != null && backendConn != null) {
       if (backendConn.getState() != StateRegistry.PLAY) {
         logger.warn("A plugin message was received while the backend server was not "
-            + "ready. Channel: {}. Packet discarded.", packet.getChannel());
+                + "ready. Channel: {}. Packet discarded.", packet.getChannel());
       } else if (PluginMessageUtil.isRegister(packet)) {
         List<String> channels = PluginMessageUtil.getChannels(packet);
         player.getClientsideChannels().addAll(channels);
@@ -321,8 +321,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           }
         }
         server.getEventManager()
-            .fireAndForget(
-                new PlayerChannelRegisterEvent(player, ImmutableList.copyOf(channelIdentifiers)));
+                .fireAndForget(
+                        new PlayerChannelRegisterEvent(player, ImmutableList.copyOf(channelIdentifiers)));
         backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isUnregister(packet)) {
         player.getClientsideChannels().removeAll(PluginMessageUtil.getChannels(packet));
@@ -349,7 +349,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           if (id == null) {
             // We don't have any plugins listening on this channel, process the packet now.
             if (!player.getPhase().consideredComplete() || !serverConn.getPhase()
-                .consideredComplete()) {
+                    .consideredComplete()) {
               // The client is trying to send messages too early. This is primarily caused by mods,
               // but further aggravated by Velocity. To work around these issues, we will queue any
               // non-FML handshake messages to be sent once the FML handshake has completed or the
@@ -368,9 +368,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             server.getEventManager().fire(event).thenAcceptAsync(pme -> {
               if (pme.getResult().isAllowed()) {
                 PluginMessagePacket message = new PluginMessagePacket(packet.getChannel(),
-                    Unpooled.wrappedBuffer(copy));
+                        Unpooled.wrappedBuffer(copy));
                 if (!player.getPhase().consideredComplete() || !serverConn.getPhase()
-                    .consideredComplete()) {
+                        .consideredComplete()) {
                   // We're still processing the connection (see above), enqueue the packet for now.
                   loginPluginMessages.add(message.retain());
                 } else {
