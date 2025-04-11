@@ -40,6 +40,7 @@ import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
+import com.velocitypowered.proxy.util.VelocityProperties;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -82,9 +83,8 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
     this.server = Preconditions.checkNotNull(server, "server");
     this.mcConnection = Preconditions.checkNotNull(mcConnection, "mcConnection");
     this.inbound = Preconditions.checkNotNull(inbound, "inbound");
-    this.forceKeyAuthentication = System.getProperties().containsKey("auth.forceSecureProfiles")
-        ? Boolean.getBoolean("auth.forceSecureProfiles")
-        : server.getConfiguration().isForceKeyAuthentication();
+    this.forceKeyAuthentication = VelocityProperties.readBoolean(
+            "auth.forceSecureProfiles", server.getConfiguration().isForceKeyAuthentication());
   }
 
   @Override

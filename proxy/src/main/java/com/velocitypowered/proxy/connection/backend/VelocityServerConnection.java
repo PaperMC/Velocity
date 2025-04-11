@@ -22,6 +22,7 @@ import static com.velocitypowered.proxy.network.Connections.HANDLER;
 import static java.util.Objects.requireNonNull;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.network.HandshakeIntent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
@@ -52,8 +53,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import net.kyori.adventure.nbt.CompoundBinaryTag;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 
@@ -71,7 +70,6 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   private boolean gracefulDisconnect = false;
   private BackendConnectionPhase connectionPhase = BackendConnectionPhases.UNKNOWN;
   private final Map<Long, Long> pendingPings = new HashMap<>();
-  private @MonotonicNonNull CompoundBinaryTag activeDimensionRegistry;
 
   /**
    * Initializes a new server connection.
@@ -171,7 +169,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
                 .getHostString();
 
     HandshakePacket handshake = new HandshakePacket();
-    handshake.setNextStatus(StateRegistry.LOGIN_ID);
+    handshake.setIntent(HandshakeIntent.LOGIN);
     handshake.setProtocolVersion(protocolVersion);
     if (forwardingMode == PlayerInfoForwarding.LEGACY) {
       handshake.setServerAddress(createLegacyForwardingAddress());
@@ -364,13 +362,5 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
    */
   public boolean hasCompletedJoin() {
     return hasCompletedJoin;
-  }
-
-  public CompoundBinaryTag getActiveDimensionRegistry() {
-    return activeDimensionRegistry;
-  }
-
-  public void setActiveDimensionRegistry(CompoundBinaryTag activeDimensionRegistry) {
-    this.activeDimensionRegistry = activeDimensionRegistry;
   }
 }

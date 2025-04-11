@@ -17,7 +17,9 @@
 
 package com.velocitypowered.proxy.connection.backend;
 
+import com.velocitypowered.api.event.player.CookieRequestEvent;
 import com.velocitypowered.api.event.player.ServerLoginPluginMessageEvent;
+import com.velocitypowered.api.event.player.configuration.PlayerEnteredConfigurationEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
@@ -31,6 +33,8 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.LoginAcknowledgedPacket;
@@ -43,6 +47,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -138,10 +143,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ServerLoginSuccessPacket packet) {
-    if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
-        && !informationForwarded) {
-      resultFuture.complete(ConnectionRequestResults.forDisconnect(MODERN_IP_FORWARDING_FAILURE,
-          serverConn.getServer()));
+    if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && !informationForwarded) {
+      resultFuture.complete(ConnectionRequestResults.forDisconnect(MODERN_IP_FORWARDING_FAILURE, serverConn.getServer()));
       serverConn.disconnect();
       return true;
     }
@@ -152,24 +155,42 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     // Move into the PLAY phase.
     MinecraftConnection smc = serverConn.ensureConnected();
     if (smc.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
-      smc.setActiveSessionHandler(StateRegistry.PLAY,
-          new TransitionSessionHandler(server, serverConn, resultFuture));
+      smc.setActiveSessionHandler(StateRegistry.PLAY, new TransitionSessionHandler(server, serverConn, resultFuture));
     } else {
       smc.write(new LoginAcknowledgedPacket());
-      smc.setActiveSessionHandler(StateRegistry.CONFIG,
-          new ConfigSessionHandler(server, serverConn, resultFuture));
+      smc.setActiveSessionHandler(StateRegistry.CONFIG, new ConfigSessionHandler(server, serverConn, resultFuture));
       ConnectedPlayer player = serverConn.getPlayer();
       if (player.getClientSettingsPacket() != null) {
         smc.write(player.getClientSettingsPacket());
       }
-      if (player.getConnection().getActiveSessionHandler() instanceof ClientPlaySessionHandler) {
+      if (player.getConnection().getActiveSessionHandler() instanceof ClientPlaySessionHandler clientPlaySessionHandler) {
         smc.setAutoReading(false);
-        ((ClientPlaySessionHandler) player.getConnection()
-            .getActiveSessionHandler()).doSwitch().thenAcceptAsync((unused) -> {
-              smc.setAutoReading(true);
-            }, smc.eventLoop());
+        clientPlaySessionHandler.doSwitch().thenAcceptAsync((unused) -> smc.setAutoReading(true), smc.eventLoop());
+      } else {
+        // Initial login - the player is already in configuration state.
+        server.getEventManager().fireAndForget(new PlayerEnteredConfigurationEvent(player, serverConn));
       }
     }
+
+    return true;
+  }
+
+  @Override
+  public boolean handle(ClientboundStoreCookiePacket packet) {
+    throw new IllegalStateException("Can only store cookie in CONFIGURATION or PLAY protocol");
+  }
+
+  @Override
+  public boolean handle(ClientboundCookieRequestPacket packet) {
+    server.getEventManager().fire(new CookieRequestEvent(serverConn.getPlayer(), packet.getKey()))
+        .thenAcceptAsync(event -> {
+          if (event.getResult().isAllowed()) {
+            final Key resultedKey = event.getResult().getKey() == null
+                ? event.getOriginalKey() : event.getResult().getKey();
+
+            serverConn.getPlayer().getConnection().write(new ClientboundCookieRequestPacket(resultedKey));
+          }
+        }, serverConn.ensureConnected().eventLoop());
 
     return true;
   }
@@ -187,7 +208,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
               The connection to the remote server was unexpectedly closed.
               This is usually because the remote server does not have \
               BungeeCord IP forwarding correctly enabled.
-              See https://velocitypowered.com/wiki/users/forwarding/ for instructions \
+              See https://docs.papermc.io/velocity/player-information-forwarding for instructions \
               on how to configure player info forwarding correctly."""));
     } else {
       resultFuture.completeExceptionally(

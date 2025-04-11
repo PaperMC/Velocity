@@ -31,6 +31,7 @@ import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.proxy.plugin.virtual.VelocityVirtualPlugin;
 import java.util.List;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
@@ -80,7 +81,13 @@ public class GlistCommand {
         .executes(this::serverCount)
         .build();
     rootNode.then(serverNode);
-    server.getCommandManager().register(new BrigadierCommand(rootNode));
+    final BrigadierCommand command = new BrigadierCommand(rootNode);
+    server.getCommandManager().register(
+        server.getCommandManager().metaBuilder(command)
+            .plugin(VelocityVirtualPlugin.INSTANCE)
+            .build(),
+        command
+    );
   }
 
   private int totalCount(final CommandContext<CommandSource> context) {

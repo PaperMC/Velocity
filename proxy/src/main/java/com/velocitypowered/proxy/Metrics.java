@@ -65,7 +65,8 @@ public class Metrics {
         logger::info,
         config.isLogErrorsEnabled(),
         config.isLogSentDataEnabled(),
-        config.isLogResponseStatusTextEnabled()
+        config.isLogResponseStatusTextEnabled(),
+        false
     );
 
     if (!config.didExistBefore()) {

@@ -15,22 +15,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.connection.player.resourcepack;
-
-import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
-import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+package com.velocitypowered.proxy.plugin.virtual;
 
 /**
- * Legacy (Minecraft 1.17-1.20.2) ResourcePackHandler.
+ * A singleton plugin object that represents the Velocity proxy itself.
  */
-public final class Legacy117ResourcePackHandler extends LegacyResourcePackHandler {
-  Legacy117ResourcePackHandler(final ConnectedPlayer player, final VelocityServer server) {
-    super(player, server);
-  }
+public class VelocityVirtualPlugin {
+  @SuppressWarnings("InstantiationOfUtilityClass")
+  public static final VelocityVirtualPlugin INSTANCE = new VelocityVirtualPlugin();
 
-  @Override
-  protected boolean shouldDisconnectForForcePack(final PlayerResourcePackStatusEvent event) {
-    return super.shouldDisconnectForForcePack(event) && !event.isOverwriteKick();
+  private VelocityVirtualPlugin() {
   }
 }

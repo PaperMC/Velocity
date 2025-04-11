@@ -21,6 +21,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatType;
+import com.velocitypowered.proxy.protocol.packet.chat.LastSeenMessages;
 import java.time.Instant;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
@@ -36,6 +37,7 @@ public abstract class ChatBuilderV2 {
   protected @Nullable Identity senderIdentity;
   protected Instant timestamp;
   protected ChatType type = ChatType.CHAT;
+  protected @Nullable LastSeenMessages lastSeenMessages;
 
   protected ChatBuilderV2(ProtocolVersion version) {
     this.version = version;
@@ -74,6 +76,11 @@ public abstract class ChatBuilderV2 {
 
   public ChatBuilderV2 asServer() {
     this.senderIdentity = null;
+    return this;
+  }
+
+  public ChatBuilderV2 setLastSeenMessages(LastSeenMessages lastSeenMessages) {
+    this.lastSeenMessages = lastSeenMessages;
     return this;
   }
 

@@ -22,11 +22,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyReloadEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.plugin.PluginContainer;
+import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -45,13 +47,16 @@ import com.velocitypowered.proxy.command.builtin.ShutdownCommand;
 import com.velocitypowered.proxy.command.builtin.VelocityCommand;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
+import com.velocitypowered.proxy.connection.player.resourcepack.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ServerListPingHandler;
 import com.velocitypowered.proxy.console.VelocityConsole;
 import com.velocitypowered.proxy.crypto.EncryptionUtils;
 import com.velocitypowered.proxy.event.VelocityEventManager;
 import com.velocitypowered.proxy.network.ConnectionManager;
 import com.velocitypowered.proxy.plugin.VelocityPluginManager;
+import com.velocitypowered.proxy.plugin.loader.VelocityPluginContainer;
+import com.velocitypowered.proxy.plugin.loader.VelocityPluginDescription;
+import com.velocitypowered.proxy.plugin.virtual.VelocityVirtualPlugin;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
 import com.velocitypowered.proxy.protocol.util.GameProfileSerializer;
@@ -70,15 +75,15 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.http.HttpClient;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.AccessController;
 import java.security.KeyPair;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -102,6 +107,7 @@ import net.kyori.adventure.translation.GlobalTranslator;
 import net.kyori.adventure.translation.TranslationRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bstats.MetricsBase;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -111,6 +117,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * Implementation of {@link ProxyServer}.
  */
 public class VelocityServer implements ProxyServer, ForwardingAudience {
+
+  public static final String VELOCITY_URL = "https://velocitypowered.com";
 
   private static final Logger logger = LogManager.getLogger(VelocityServer.class);
   public static final Gson GENERAL_GSON = new GsonBuilder()
@@ -155,7 +163,9 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
   private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
   private final VelocityConsole console;
-  private @MonotonicNonNull Ratelimiter ipAttemptLimiter;
+  private @MonotonicNonNull Ratelimiter<InetAddress> ipAttemptLimiter;
+  private @MonotonicNonNull Ratelimiter<UUID> commandRateLimiter;
+  private @MonotonicNonNull Ratelimiter<UUID> tabCompleteRateLimiter;
   private final VelocityEventManager eventManager;
   private final VelocityScheduler scheduler;
   private final VelocityChannelRegistrar channelRegistrar = new VelocityChannelRegistrar();
@@ -164,7 +174,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   VelocityServer(final ProxyOptions options) {
     pluginManager = new VelocityPluginManager(this);
     eventManager = new VelocityEventManager(pluginManager);
-    commandManager = new VelocityCommandManager(eventManager);
+    commandManager = new VelocityCommandManager(eventManager, pluginManager);
     scheduler = new VelocityScheduler(pluginManager);
     console = new VelocityConsole(this);
     cm = new ConnectionManager(this);
@@ -201,6 +211,16 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     return new ProxyVersion(implName, implVendor, implVersion);
   }
 
+  private VelocityPluginContainer createVirtualPlugin() {
+    ProxyVersion version = getVersion();
+    PluginDescription description = new VelocityPluginDescription(
+        "velocity", version.getName(), version.getVersion(), "The Velocity proxy",
+        VELOCITY_URL, ImmutableList.of(version.getVendor()), Collections.emptyList(), null);
+    VelocityPluginContainer container = new VelocityPluginContainer(description);
+    container.setInstance(VelocityVirtualPlugin.INSTANCE);
+    return container;
+  }
+
   @Override
   public VelocityCommandManager getCommandManager() {
     return commandManager;
@@ -215,29 +235,71 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   void start() {
     logger.info("Booting up {} {}...", getVersion().getName(), getVersion().getVersion());
     console.setupStreams();
+    pluginManager.registerPlugin(this.createVirtualPlugin());
 
     registerTranslations();
 
+    // Yes, you're reading that correctly. We're generating a 1024-bit RSA keypair. Sounds
+    // dangerous, right? We're well within the realm of factoring such a key...
+    //
+    // You can blame Mojang. For the record, we also don't consider the Minecraft protocol
+    // encryption scheme to be secure, and it has reached the point where any serious cryptographic
+    // protocol needs a refresh. There are multiple obvious weaknesses, and this is far from the
+    // most serious.
+    //
+    // If you are using Minecraft in a security-sensitive application, *I don't know what to say.*
     serverKeyPair = EncryptionUtils.createRsaKeyPair(1024);
 
     cm.logChannelInformation();
 
     // Initialize commands first
-    commandManager.register(VelocityCommand.create(this));
-    commandManager.register(CallbackCommand.create());
-    commandManager.register(ServerCommand.create(this));
-    commandManager.register("shutdown", ShutdownCommand.command(this),
-        "end", "stop");
+    final BrigadierCommand velocityParentCommand = VelocityCommand.create(this);
+    commandManager.register(
+        commandManager.metaBuilder(velocityParentCommand)
+            .plugin(VelocityVirtualPlugin.INSTANCE)
+            .build(),
+        velocityParentCommand
+    );
+    final BrigadierCommand callbackCommand = CallbackCommand.create();
+    commandManager.register(
+        commandManager.metaBuilder(callbackCommand)
+            .plugin(VelocityVirtualPlugin.INSTANCE)
+            .build(),
+        callbackCommand
+    );
+    final BrigadierCommand serverCommand = ServerCommand.create(this);
+    commandManager.register(
+        commandManager.metaBuilder(serverCommand)
+            .plugin(VelocityVirtualPlugin.INSTANCE)
+            .build(),
+        serverCommand
+    );
+    final BrigadierCommand shutdownCommand = ShutdownCommand.command(this);
+    commandManager.register(
+        commandManager.metaBuilder(shutdownCommand)
+            .plugin(VelocityVirtualPlugin.INSTANCE)
+            .aliases("end", "stop")
+            .build(),
+        shutdownCommand
+    );
     new GlistCommand(this).register();
     new SendCommand(this).register();
 
     this.doStartupConfigLoad();
 
-    for (Map.Entry<String, String> entry : configuration.getServers().entrySet()) {
-      servers.register(new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue())));
+    for (ServerInfo cliServer : options.getServers()) {
+      servers.register(cliServer);
+    }
+
+    if (!options.isIgnoreConfigServers()) {
+      for (Map.Entry<String, String> entry : configuration.getServers().entrySet()) {
+        servers.register(new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue())));
+      }
     }
 
     ipAttemptLimiter = Ratelimiters.createWithMilliseconds(configuration.getLoginRatelimit());
+    commandRateLimiter = Ratelimiters.createWithMilliseconds(configuration.getCommandRatelimit());
+    tabCompleteRateLimiter = Ratelimiters.createWithMilliseconds(configuration.getTabCompleteRatelimit());
     loadPlugins();
 
     // Go ahead and fire the proxy initialization event. We block since plugins should have a chance
@@ -265,7 +327,13 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       this.cm.queryBind(configuration.getBind().getHostString(), configuration.getQueryPort());
     }
 
-    Metrics.VelocityMetrics.startMetrics(this, configuration.getMetrics());
+    final String defaultPackage = new String(
+        new byte[] { 'o', 'r', 'g', '.', 'b', 's', 't', 'a', 't', 's' });
+    if (!MetricsBase.class.getPackage().getName().startsWith(defaultPackage)) {
+      Metrics.VelocityMetrics.startMetrics(this, configuration.getMetrics());
+    } else {
+      logger.warn("debug environment, metrics is disabled!");
+    }
   }
 
   private void registerTranslations() {
@@ -471,11 +539,11 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     boolean queryPortChanged = newConfiguration.getQueryPort() != configuration.getQueryPort();
     boolean queryAlreadyEnabled = configuration.isQueryEnabled();
     boolean queryEnabled = newConfiguration.isQueryEnabled();
-    if ((!queryEnabled && queryAlreadyEnabled) || queryPortChanged) {
+    if (queryAlreadyEnabled && (!queryEnabled || queryPortChanged)) {
       this.cm.close(new InetSocketAddress(
           configuration.getBind().getHostString(), configuration.getQueryPort()));
     }
-    if (queryEnabled && queryPortChanged) {
+    if (queryEnabled && (!queryAlreadyEnabled || queryPortChanged)) {
       this.cm.queryBind(newConfiguration.getBind().getHostString(),
           newConfiguration.getQueryPort());
     }
@@ -522,8 +590,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
           // makes sure that all the disconnect events are being fired
 
           CompletableFuture<Void> playersTeardownFuture = CompletableFuture.allOf(players.stream()
-              .map(ConnectedPlayer::getTeardownFuture)
-              .toArray((IntFunction<CompletableFuture<Void>[]>) CompletableFuture[]::new));
+                  .map(ConnectedPlayer::getTeardownFuture)
+                  .toArray((IntFunction<CompletableFuture<Void>[]>) CompletableFuture[]::new));
 
           playersTeardownFuture.get(10, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
@@ -535,7 +603,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
         eventManager.fire(new ProxyShutdownEvent()).join();
 
-        timedOut = !eventManager.shutdown() || timedOut;
         timedOut = !scheduler.shutdown() || timedOut;
 
         if (timedOut) {
@@ -552,14 +619,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       shutdown = true;
 
       if (explicitExit) {
-        AccessController.doPrivileged(new PrivilegedAction<Void>() {
-          @Override
-          @SuppressFBWarnings("DM_EXIT")
-          public Void run() {
-            System.exit(0);
-            return null;
-          }
-        });
+        System.exit(0);
       }
     };
 
@@ -599,8 +659,16 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     return cm.createHttpClient();
   }
 
-  public Ratelimiter getIpAttemptLimiter() {
+  public @MonotonicNonNull Ratelimiter<InetAddress> getIpAttemptLimiter() {
     return ipAttemptLimiter;
+  }
+
+  public @MonotonicNonNull Ratelimiter<UUID> getCommandRateLimiter() {
+    return commandRateLimiter;
+  }
+
+  public @MonotonicNonNull Ratelimiter<UUID> getTabCompleteRateLimiter() {
+    return tabCompleteRateLimiter;
   }
 
   /**
@@ -747,6 +815,11 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   @Override
   public VelocityChannelRegistrar getChannelRegistrar() {
     return channelRegistrar;
+  }
+  
+  @Override
+  public boolean isShuttingDown() {
+    return shutdownInProgress.get();
   }
 
   @Override

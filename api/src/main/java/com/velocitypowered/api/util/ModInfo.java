@@ -76,9 +76,17 @@ public final class ModInfo {
     private final String id;
     private final String version;
 
+    /**
+     * Creates a new mod info.
+     *
+     * @param id the mod identifier
+     * @param version the mod version
+     */
     public Mod(String id, String version) {
       this.id = Preconditions.checkNotNull(id, "id");
       this.version = Preconditions.checkNotNull(version, "version");
+      Preconditions.checkArgument(id.length() < 128, "mod id is too long");
+      Preconditions.checkArgument(version.length() < 128, "mod version is too long");
     }
 
     public String getId() {

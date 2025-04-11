@@ -10,6 +10,7 @@ package com.velocitypowered.api.command;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -43,8 +44,10 @@ public interface CommandManager {
    * @param otherAliases additional aliases
    * @throws IllegalArgumentException if one of the given aliases is already registered, or
    *         the given command does not implement a registrable {@link Command} subinterface
-   * @see Command for a list of registrable {@link Command} subinterfaces
+   * @see Command for a list of registrable Command subinterfaces
+   * @deprecated use {@link #register(CommandMeta, Command)} instead with a plugin specified
    */
+  @Deprecated
   default void register(String alias, Command command, String... otherAliases) {
     register(metaBuilder(alias).aliases(otherAliases).build(), command);
   }
@@ -54,7 +57,9 @@ public interface CommandManager {
    *
    * @param command the command to register
    * @throws IllegalArgumentException if the node alias is already registered
+   * @deprecated use {@link #register(CommandMeta, Command)} instead with a plugin specified
    */
+  @Deprecated
   void register(BrigadierCommand command);
 
   /**
@@ -64,7 +69,7 @@ public interface CommandManager {
    * @param command the command to register
    * @throws IllegalArgumentException if one of the given aliases is already registered, or
    *         the given command does not implement a registrable {@link Command} subinterface
-   * @see Command for a list of registrable {@link Command} subinterfaces
+   * @see Command for a list of registrable Command subinterfaces
    */
   void register(CommandMeta meta, Command command);
 
@@ -126,4 +131,15 @@ public interface CommandManager {
    * @return true if the alias is registered; false otherwise
    */
   boolean hasCommand(String alias);
+
+  /**
+   * Returns whether the given alias is registered on this manager
+   * and can be used by the given {@link CommandSource}.
+   * See {@link com.mojang.brigadier.builder.ArgumentBuilder#requires(Predicate)}
+   *
+   * @param alias the command alias to check
+   * @param source the command source
+   * @return true if the alias is registered and usable; false otherwise
+   */
+  boolean hasCommand(String alias, CommandSource source);
 }

@@ -56,8 +56,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-    if (msg instanceof ByteBuf) {
-      ByteBuf buf = (ByteBuf) msg;
+    if (msg instanceof ByteBuf buf) {
       tryDecode(ctx, buf);
     } else {
       ctx.fireChannelRead(msg);
@@ -146,5 +145,9 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
   public void setState(StateRegistry state) {
     this.state = state;
     this.setProtocolVersion(registry.version);
+  }
+
+  public ProtocolUtils.Direction getDirection() {
+    return direction;
   }
 }

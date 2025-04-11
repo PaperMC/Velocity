@@ -37,7 +37,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import java.util.Optional;
 import java.util.StringJoiner;
-import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.ComponentSerializer;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -143,7 +142,7 @@ public class BungeeCordMessageResponder {
         out.writeUTF("PlayerList");
         out.writeUTF(info.getServerInfo().getName());
 
-        StringJoiner joiner = new StringJoiner(", ");
+        final StringJoiner joiner = new StringJoiner(", ");
         for (Player online : info.getPlayersConnected()) {
           joiner.add(online.getUsername());
         }
@@ -187,10 +186,9 @@ public class BungeeCordMessageResponder {
 
     Component messageComponent = serializer.deserialize(message);
     if (target.equals("ALL")) {
-      proxy.sendMessage(Identity.nil(), messageComponent);
+      proxy.sendMessage(messageComponent);
     } else {
-      proxy.getPlayer(target).ifPresent(player -> player.sendMessage(Identity.nil(),
-          messageComponent));
+      proxy.getPlayer(target).ifPresent(player -> player.sendMessage(messageComponent));
     }
   }
 
@@ -262,6 +260,13 @@ public class BungeeCordMessageResponder {
     });
   }
 
+  private void processKickRaw(ByteBufDataInput in) {
+    proxy.getPlayer(in.readUTF()).ifPresent(player -> {
+      String kickReason = in.readUTF();
+      player.disconnect(GsonComponentSerializer.gson().deserialize(kickReason));
+    });
+  }
+
   private void processForwardToPlayer(ByteBufDataInput in) {
     Optional<Player> player = proxy.getPlayer(in.readUTF());
     if (player.isPresent()) {
@@ -296,6 +301,21 @@ public class BungeeCordMessageResponder {
     }
   }
 
+  private void processGetPlayerServer(ByteBufDataInput in) {
+    proxy.getPlayer(in.readUTF()).ifPresent(player -> {
+      player.getCurrentServer().ifPresent(server -> {
+        ByteBuf buf = Unpooled.buffer();
+        ByteBufDataOutput out = new ByteBufDataOutput(buf);
+
+        out.writeUTF("GetPlayerServer");
+        out.writeUTF(player.getUsername());
+        out.writeUTF(server.getServerInfo().getName());
+
+        sendResponseOnConnection(buf);
+      });
+    });
+  }
+
   static String getBungeeCordChannel(ProtocolVersion version) {
     return version.noLessThan(ProtocolVersion.MINECRAFT_1_13) ? MODERN_CHANNEL.getId()
         : LEGACY_CHANNEL.getId();
@@ -326,6 +346,9 @@ public class BungeeCordMessageResponder {
     ByteBufDataInput in = new ByteBufDataInput(message.content());
     String subChannel = in.readUTF();
     switch (subChannel) {
+      case "GetPlayerServer":
+        this.processGetPlayerServer(in);
+        break;
       case "ForwardToPlayer":
         this.processForwardToPlayer(in);
         break;
@@ -373,6 +396,9 @@ public class BungeeCordMessageResponder {
         break;
       case "KickPlayer":
         this.processKick(in);
+        break;
+      case "KickPlayerRaw":
+        this.processKickRaw(in);
         break;
       default:
         // Do nothing, unknown command

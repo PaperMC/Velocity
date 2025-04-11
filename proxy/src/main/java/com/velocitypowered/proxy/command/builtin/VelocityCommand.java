@@ -46,6 +46,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -73,7 +74,7 @@ public final class VelocityCommand {
   @SuppressWarnings("checkstyle:MissingJavadocMethod")
   public static BrigadierCommand create(final VelocityServer server) {
     final LiteralCommandNode<CommandSource> dump = BrigadierCommand.literalArgumentBuilder("dump")
-        .requires(source -> source.getPermissionValue("velocity.command.plugins") == Tristate.TRUE)
+        .requires(source -> source.getPermissionValue("velocity.command.dump") == Tristate.TRUE)
         .executes(new Dump(server))
         .build();
     final LiteralCommandNode<CommandSource> heap = BrigadierCommand.literalArgumentBuilder("heap")
@@ -81,7 +82,7 @@ public final class VelocityCommand {
         .executes(new Heap())
         .build();
     final LiteralCommandNode<CommandSource> info = BrigadierCommand.literalArgumentBuilder("info")
-        .requires(source -> source.getPermissionValue("velocity.command.info") != Tristate.FALSE)
+        .requires(source -> source.getPermissionValue("velocity.command.info") == Tristate.TRUE)
         .executes(new Info(server))
         .build();
     final LiteralCommandNode<CommandSource> plugins = BrigadierCommand
@@ -165,17 +166,18 @@ public final class VelocityCommand {
       final Component copyright = Component
           .translatable("velocity.command.version-copyright",
               Component.text(version.getVendor()),
-              Component.text(version.getName()));
+                  Component.text(version.getName()),
+                  Component.text(LocalDate.now().getYear()));
       source.sendMessage(velocity);
       source.sendMessage(copyright);
 
       if (version.getName().equals("Velocity")) {
         final TextComponent embellishment = Component.text()
             .append(Component.text()
-                .content("velocitypowered.com")
+                .content("PaperMC")
                 .color(NamedTextColor.GREEN)
                 .clickEvent(
-                    ClickEvent.openUrl("https://velocitypowered.com"))
+                    ClickEvent.openUrl("https://papermc.io/software/velocity"))
                 .build())
             .append(Component.text(" - "))
             .append(Component.text()
@@ -377,7 +379,7 @@ public final class VelocityCommand {
                 this.heapGenerator.invoke(hotspotMbean, file.toString(), true);
               } catch (Throwable e1) {
                 // This should not occur
-                throw new RuntimeException(e);
+                throw new RuntimeException(e1);
               }
               src.sendMessage(Component.text("Heap dump saved to " + file, NamedTextColor.GREEN));
             };

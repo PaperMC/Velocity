@@ -32,6 +32,7 @@ import com.velocitypowered.api.command.InvocableCommand;
 import com.velocitypowered.proxy.command.VelocityCommandMeta;
 import com.velocitypowered.proxy.command.VelocityCommands;
 import com.velocitypowered.proxy.command.brigadier.VelocityArgumentBuilder;
+import com.velocitypowered.proxy.command.brigadier.VelocityBrigadierCommandWrapper;
 import com.velocitypowered.proxy.command.invocation.CommandInvocationFactory;
 import java.util.Iterator;
 import java.util.concurrent.locks.Lock;
@@ -76,11 +77,11 @@ abstract class InvocableCommandRegistrar<T extends InvocableCommand<I>,
       final I invocation = invocationFactory.create(context);
       return command.hasPermission(invocation);
     };
-    final Command<CommandSource> callback = context -> {
+    final Command<CommandSource> callback = VelocityBrigadierCommandWrapper.wrap(context -> {
       final I invocation = invocationFactory.create(context);
       command.execute(invocation);
       return 1; // handled
-    };
+    }, meta.getPlugin());
 
     final LiteralCommandNode<CommandSource> literal = LiteralArgumentBuilder
         .<CommandSource>literal(alias)

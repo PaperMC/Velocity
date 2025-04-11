@@ -25,7 +25,11 @@ import com.mojang.brigadier.tree.RootCommandNode;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.command.PlayerAvailableCommandsEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
+import com.velocitypowered.api.event.connection.PreTransferEvent;
+import com.velocitypowered.api.event.player.CookieRequestEvent;
+import com.velocitypowered.api.event.player.CookieStoreEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
+import com.velocitypowered.api.event.player.ServerResourcePackRemoveEvent;
 import com.velocitypowered.api.event.player.ServerResourcePackSendEvent;
 import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -37,8 +41,8 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.connection.player.VelocityResourcePackInfo;
-import com.velocitypowered.proxy.connection.player.resourcepack.ResourcePackHandler;
+import com.velocitypowered.proxy.connection.player.resourcepack.VelocityResourcePackInfo;
+import com.velocitypowered.proxy.connection.player.resourcepack.handler.ResourcePackHandler;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -47,6 +51,8 @@ import com.velocitypowered.proxy.protocol.packet.AvailableCommandsPacket;
 import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
 import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
 import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItemPacket;
@@ -57,6 +63,7 @@ import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.ServerDataPacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.TransferPacket;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfoPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
@@ -66,7 +73,9 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.handler.timeout.ReadTimeoutException;
+import java.net.InetSocketAddress;
 import java.util.regex.Pattern;
+import net.kyori.adventure.key.Key;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -250,14 +259,26 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(RemoveResourcePackPacket packet) {
-    final ConnectedPlayer player = serverConn.getPlayer();
-    final ResourcePackHandler handler = player.resourcePackHandler();
-    if (packet.getId() != null) {
-      handler.remove(packet.getId());
-    } else {
-      handler.clearAppliedResourcePacks();
-    }
-    playerConnection.write(packet);
+    final ServerResourcePackRemoveEvent event = new ServerResourcePackRemoveEvent(
+            packet.getId(), this.serverConn);
+    server.getEventManager().fire(event).thenAcceptAsync(serverResourcePackRemoveEvent -> {
+      if (playerConnection.isClosed()) {
+        return;
+      }
+      if (serverResourcePackRemoveEvent.getResult().isAllowed()) {
+        final ConnectedPlayer player = serverConn.getPlayer();
+        final ResourcePackHandler handler = player.resourcePackHandler();
+        if (packet.getId() != null) {
+          handler.remove(packet.getId());
+        } else {
+          handler.clearAppliedResourcePacks();
+        }
+        playerConnection.write(packet);
+      }
+    }, playerConnection.eventLoop()).exceptionally((ex) -> {
+      logger.error("Exception while handling resource pack remove for {}", playerConnection, ex);
+      return null;
+    });
     return true;
   }
 
@@ -360,6 +381,63 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                 pingEvent.getPing().getDescriptionComponent()),
                 pingEvent.getPing().getFavicon().orElse(null), packet.isSecureChatEnforced())),
         playerConnection.eventLoop());
+    return true;
+  }
+
+  @Override
+  public boolean handle(TransferPacket packet) {
+    final InetSocketAddress originalAddress = packet.address();
+    if (originalAddress == null) {
+      logger.error("""
+          Unexpected nullable address received in TransferPacket \
+          from Backend Server in Play State""");
+      return true;
+    }
+    this.server.getEventManager()
+        .fire(new PreTransferEvent(this.serverConn.getPlayer(), originalAddress))
+        .thenAcceptAsync(event -> {
+          if (event.getResult().isAllowed()) {
+            InetSocketAddress resultedAddress = event.getResult().address();
+            if (resultedAddress == null) {
+              resultedAddress = originalAddress;
+            }
+            this.playerConnection.write(new TransferPacket(
+                    resultedAddress.getHostName(), resultedAddress.getPort()));
+          }
+        }, playerConnection.eventLoop());
+    return true;
+  }
+
+  @Override
+  public boolean handle(ClientboundStoreCookiePacket packet) {
+    server.getEventManager()
+        .fire(new CookieStoreEvent(serverConn.getPlayer(), packet.getKey(), packet.getPayload()))
+        .thenAcceptAsync(event -> {
+          if (event.getResult().isAllowed()) {
+            final Key resultedKey = event.getResult().getKey() == null
+                ? event.getOriginalKey() : event.getResult().getKey();
+            final byte[] resultedData = event.getResult().getData() == null
+                ? event.getOriginalData() : event.getResult().getData();
+
+            playerConnection.write(new ClientboundStoreCookiePacket(resultedKey, resultedData));
+          }
+        }, playerConnection.eventLoop());
+
+    return true;
+  }
+
+  @Override
+  public boolean handle(ClientboundCookieRequestPacket packet) {
+    server.getEventManager().fire(new CookieRequestEvent(serverConn.getPlayer(), packet.getKey()))
+        .thenAcceptAsync(event -> {
+          if (event.getResult().isAllowed()) {
+            final Key resultedKey = event.getResult().getKey() == null
+                ? event.getOriginalKey() : event.getResult().getKey();
+
+            playerConnection.write(new ClientboundCookieRequestPacket(resultedKey));
+          }
+        }, playerConnection.eventLoop());
+
     return true;
   }
 

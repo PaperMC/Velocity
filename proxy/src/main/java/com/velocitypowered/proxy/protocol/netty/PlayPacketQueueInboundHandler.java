@@ -23,9 +23,8 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPromise;
 import io.netty.util.ReferenceCountUtil;
-import io.netty.util.internal.PlatformDependent;
+import java.util.ArrayDeque;
 import java.util.Queue;
 import org.jetbrains.annotations.NotNull;
 
@@ -40,38 +39,33 @@ import org.jetbrains.annotations.NotNull;
  * <p>This handler will queue up any packets that are sent to the client during this time, and send
  * them once the client has (re)entered the PLAY state.
  */
-public class PlayPacketQueueHandler extends ChannelDuplexHandler {
+public class PlayPacketQueueInboundHandler extends ChannelDuplexHandler {
 
   private final StateRegistry.PacketRegistry.ProtocolRegistry registry;
-  private final Queue<MinecraftPacket> queue = PlatformDependent.newMpscQueue();
+  private final Queue<Object> queue = new ArrayDeque<>();
 
   /**
    * Provides registries for client &amp; server bound packets.
    *
    * @param version the protocol version
    */
-  public PlayPacketQueueHandler(ProtocolVersion version, ProtocolUtils.Direction direction) {
-    this.registry =
-        StateRegistry.CONFIG.getProtocolRegistry(direction, version);
+  public PlayPacketQueueInboundHandler(ProtocolVersion version, ProtocolUtils.Direction direction) {
+    this.registry = StateRegistry.CONFIG.getProtocolRegistry(direction, version);
   }
 
   @Override
-  public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
-      throws Exception {
-    if (!(msg instanceof MinecraftPacket)) {
-      ctx.write(msg, promise);
-      return;
-    }
-
-    // If the packet exists in the CONFIG state, we want to always
-    // ensure that it gets sent out to the client
-    if (this.registry.containsPacket(((MinecraftPacket) msg))) {
-      ctx.write(msg, promise);
-      return;
+  public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+    if (msg instanceof final MinecraftPacket packet) {
+      // If the packet exists in the CONFIG state, we want to always
+      // ensure that it gets handled by the current handler
+      if (this.registry.containsPacket(packet)) {
+        ctx.fireChannelRead(msg);
+        return;
+      }
     }
 
     // Otherwise, queue the packet
-    this.queue.offer((MinecraftPacket) msg);
+    this.queue.offer(msg);
   }
 
   @Override
@@ -87,22 +81,14 @@ public class PlayPacketQueueHandler extends ChannelDuplexHandler {
   }
 
   private void releaseQueue(ChannelHandlerContext ctx, boolean active) {
-    if (this.queue.isEmpty()) {
-      return;
-    }
-
-    // Send out all the queued packets
-    MinecraftPacket packet;
-    while ((packet = this.queue.poll()) != null) {
+    // Handle all the queued packets
+    Object msg;
+    while ((msg = this.queue.poll()) != null) {
       if (active) {
-        ctx.write(packet, ctx.voidPromise());
+        ctx.fireChannelRead(msg);
       } else {
-        ReferenceCountUtil.release(packet);
+        ReferenceCountUtil.release(msg);
       }
-    }
-
-    if (active) {
-      ctx.flush();
     }
   }
 }
