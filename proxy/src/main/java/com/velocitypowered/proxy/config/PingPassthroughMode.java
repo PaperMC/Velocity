@@ -18,11 +18,36 @@
 package com.velocitypowered.proxy.config;
 
 /**
- * Supported passthrough modes for ping passthrough.
+ * Object to contain all of the things that can be toggled for ping passthrough.
  */
-public enum PingPassthroughMode {
-  DISABLED,
-  MODS,
-  DESCRIPTION,
-  ALL
+public class PingPassthroughMode {
+  public boolean version;
+  public boolean players;
+  public boolean description;
+  public boolean favicon;
+  public boolean modinfo;
+
+  /**
+   * Passthrough mode constructor.
+   * Looking at other code, I'm not sure the constructor is supposed to need a javadoc style comment,
+   * but checkstyle was yelling at me because I didn't include one.
+   * Probably for the best.
+   *
+   * @param version whether the version should be passed through.
+   * @param players whether the player count should be passed through.
+   * @param description whether the description should be passed through.
+   * @param favicon whether the favicon should be passed through.
+   * @param modinfo whether the modinfo should be passed through.
+   */
+  public PingPassthroughMode(boolean version, boolean players, boolean description, boolean favicon, boolean modinfo) {
+    this.version = version;
+    this.players = players;
+    this.description = description;
+    this.favicon = favicon;
+    this.modinfo = modinfo;
+  }
+
+  public boolean enabled() {
+    return this.version || this.players || this.description || this.favicon || this.modinfo;
+  }
 }
