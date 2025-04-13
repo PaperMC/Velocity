@@ -205,7 +205,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   public boolean handle(ServerboundPlayerLoadedPacket packet) {
     VelocityServerConnection serverConnection = player.getConnectedServer();
     if (serverConnection == null) {
-      return true; // shouldn't happen
+      // No server connection yet, probably transitioning - shouldn't be possible with a vanilla client
+      return true;
     }
     if (!serverConnection.isClientLoaded()) {
       serverConnection.setClientLoaded(true);

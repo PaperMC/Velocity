@@ -24,7 +24,7 @@ import java.time.Duration;
 @Beta
 public final class PlayerClientLoadedWorldEvent {
 
-  public static final Duration NOTCHIAN_TIMEOUT = Duration.ofMillis(1500); // 60 ticks
+  public static final Duration VANILLA_TIMEOUT = Duration.ofMillis(1500); // 60 ticks
 
   private final Player player;
   private final boolean timeout;

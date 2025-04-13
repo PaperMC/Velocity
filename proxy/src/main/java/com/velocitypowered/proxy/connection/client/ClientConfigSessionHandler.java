@@ -352,7 +352,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
         serverConn.setClientLoaded(true);
         server.getEventManager().fireAndForget(new PlayerClientLoadedWorldEvent(player, true));
       })
-      .delay(PlayerClientLoadedWorldEvent.NOTCHIAN_TIMEOUT)
+      .delay(PlayerClientLoadedWorldEvent.VANILLA_TIMEOUT)
       .schedule();
     }, player.getConnection().eventLoop()).exceptionally(ex -> {
       logger.error("Error finishing configuration state:", ex);
