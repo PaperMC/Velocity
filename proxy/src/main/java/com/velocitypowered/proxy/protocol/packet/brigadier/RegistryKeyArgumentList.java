@@ -67,23 +67,23 @@ public final class RegistryKeyArgumentList {
     }
   }
 
-  public static class Resource extends RegistryKeyArgument {
+  public static class ResourceSelector extends RegistryKeyArgument {
 
-    public Resource(String identifier) {
+    public ResourceSelector(String identifier) {
       super(identifier);
     }
 
-    public static class Serializer implements ArgumentPropertySerializer<Resource> {
+    public static class Serializer implements ArgumentPropertySerializer<ResourceSelector> {
 
-      static final Resource.Serializer REGISTRY = new Resource.Serializer();
+      static final ResourceSelector.Serializer REGISTRY = new ResourceSelector.Serializer();
 
       @Override
-      public Resource deserialize(ByteBuf buf, ProtocolVersion protocolVersion) {
-        return new Resource(ProtocolUtils.readString(buf));
+      public ResourceSelector deserialize(ByteBuf buf, ProtocolVersion protocolVersion) {
+        return new ResourceSelector(ProtocolUtils.readString(buf));
       }
 
       @Override
-      public void serialize(Resource object, ByteBuf buf, ProtocolVersion protocolVersion) {
+      public void serialize(ResourceSelector object, ByteBuf buf, ProtocolVersion protocolVersion) {
         ProtocolUtils.writeString(buf, object.getIdentifier());
       }
     }

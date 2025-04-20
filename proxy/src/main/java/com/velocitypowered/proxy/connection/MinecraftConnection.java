@@ -84,6 +84,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   private static final Logger logger = LogManager.getLogger(MinecraftConnection.class);
 
   private final Channel channel;
+  public boolean pendingConfigurationSwitch = false;
   private SocketAddress remoteAddress;
   private StateRegistry state;
   private Map<StateRegistry, MinecraftSessionHandler> sessionHandlers;

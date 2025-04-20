@@ -26,6 +26,7 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
   private final CommandSource commandSource;
   private final String command;
   private CommandResult result;
+  private InvocationInfo invocationInfo;
 
   /**
    * Constructs a CommandExecuteEvent.
@@ -34,9 +35,21 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
    * @param command the command being executed without first slash
    */
   public CommandExecuteEvent(CommandSource commandSource, String command) {
+    this(commandSource, command, new InvocationInfo(SignedState.UNSUPPORTED, Source.API));
+  }
+
+  /**
+   * Constructs a CommandExecuteEvent.
+   *
+   * @param commandSource the source executing the command
+   * @param command the command being executed without first slash
+   * @param invocationInfo the invocation info of this command
+   */
+  public CommandExecuteEvent(CommandSource commandSource, String command, InvocationInfo invocationInfo) {
     this.commandSource = Preconditions.checkNotNull(commandSource, "commandSource");
     this.command = Preconditions.checkNotNull(command, "command");
     this.result = CommandResult.allowed();
+    this.invocationInfo = invocationInfo;
   }
 
   /**
@@ -61,6 +74,16 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
     return command;
   }
 
+  /**
+   * Returns the info of the command invocation.
+   *
+   * @since 3.4.0
+   * @return invocation info
+   */
+  public InvocationInfo getInvocationInfo() {
+    return this.invocationInfo;
+  }
+
   @Override
   public CommandResult getResult() {
     return result;
@@ -78,6 +101,75 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
         + ", command=" + command
         + ", result=" + result
         + '}';
+  }
+
+  /**
+   * Represents information about a command invocation, including its signed state and source.
+   *
+   * @since 3.4.0
+   */
+  public record InvocationInfo(SignedState signedState, Source source) {
+  }
+
+  /**
+   * Represents the signed state of a command invocation.
+   *
+   * @since 3.4.0
+   */
+  public enum SignedState {
+    /**
+     * Indicates that the command was executed from a signed source with signed message arguments,
+     * This is currently only possible by typing a command in chat with signed arguments.
+     *
+     * <p><b>Note:</b> Cancelling the {@link CommandExecuteEvent} in this state will result in the player being kicked.</p>
+     *
+     * @since 3.4.0
+     */
+    SIGNED_WITH_ARGS,
+    /**
+     * Indicates that the command was executed from an signed source with no signed message arguments,
+     * This is currently only possible by typing a command in chat.
+     *
+     * @since 3.4.0
+     */
+    SIGNED_WITHOUT_ARGS,
+    /**
+     * Indicates that the command was executed from an unsigned source,
+     * such as clicking on a component with a {@link net.kyori.adventure.text.event.ClickEvent.Action#RUN_COMMAND}.
+     *
+     * <p>Clients running version 1.20.5 or later will send this state.</p>
+     *
+     * @since 3.4.0
+     */
+    UNSIGNED,
+    /**
+     * Indicates that the command invocation does not support signing.
+     *
+     * <p>This state is sent by clients running versions prior to 1.19.3.</p>
+     *
+     * @since 3.4.0
+     */
+    UNSUPPORTED
+  }
+
+  /**
+   * Represents the source of a command invocation.
+   *
+   * @since 3.4.0
+   */
+  public enum Source {
+    /**
+     * Indicates that the command was invoked by a player.
+     *
+     * @since 3.4.0
+     */
+    PLAYER,
+    /**
+     * Indicates that the command was invoked programmatically through an API call.
+     *
+     * @since 3.4.0
+     */
+    API
   }
 
   /**

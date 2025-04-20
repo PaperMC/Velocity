@@ -35,6 +35,8 @@ public class VelocityTabListEntryLegacy extends KeyedVelocityTabListEntry {
   @Override
   public TabListEntry setDisplayName(@Nullable Component displayName) {
     getTabList().removeEntry(getProfile().getId()); // We have to remove first if updating
-    return super.setDisplayName(displayName);
+    setDisplayNameInternal(displayName);
+    getTabList().addEntry(this);
+    return this;
   }
 }

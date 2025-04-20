@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.connection.client;
 
+import com.velocitypowered.api.network.HandshakeIntent;
 import com.velocitypowered.api.network.ProtocolState;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.LoginPhaseConnection;
@@ -30,9 +31,9 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import java.net.InetSocketAddress;
-import java.util.ArrayDeque;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -58,7 +59,7 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
       InitialInboundConnection delegate) {
     this.delegate = delegate;
     this.outstandingResponses = Int2ObjectSyncMap.hashmap();
-    this.loginMessagesToSend = new ArrayDeque<>();
+    this.loginMessagesToSend = new ConcurrentLinkedQueue<>();
   }
 
   @Override
@@ -69,6 +70,11 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
   @Override
   public Optional<InetSocketAddress> getVirtualHost() {
     return delegate.getVirtualHost();
+  }
+
+  @Override
+  public Optional<String> getRawVirtualHost() {
+    return delegate.getRawVirtualHost();
   }
 
   @Override
@@ -171,5 +177,10 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
   @Override
   public ProtocolState getProtocolState() {
     return delegate.getProtocolState();
+  }
+
+  @Override
+  public HandshakeIntent getHandshakeIntent() {
+    return delegate.getHandshakeIntent();
   }
 }

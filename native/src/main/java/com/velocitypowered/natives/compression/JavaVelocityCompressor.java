@@ -57,7 +57,8 @@ public class JavaVelocityCompressor implements VelocityCompressor {
     inflater.setInput(source.nioBuffer());
 
     try {
-      while (!inflater.finished() && inflater.getBytesWritten() < uncompressedSize) {
+      final int readable = source.readableBytes();
+      while (!inflater.finished() && inflater.getBytesRead() < readable) {
         if (!destination.isWritable()) {
           destination.ensureWritable(ZLIB_BUFFER_SIZE);
         }

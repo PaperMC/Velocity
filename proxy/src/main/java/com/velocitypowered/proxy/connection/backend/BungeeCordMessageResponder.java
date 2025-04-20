@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.connection.backend;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
+import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -301,9 +302,24 @@ public class BungeeCordMessageResponder {
     }
   }
 
-  static String getBungeeCordChannel(ProtocolVersion version) {
-    return version.noLessThan(ProtocolVersion.MINECRAFT_1_13) ? MODERN_CHANNEL.getId()
-        : LEGACY_CHANNEL.getId();
+  private void processGetPlayerServer(ByteBufDataInput in) {
+    proxy.getPlayer(in.readUTF()).ifPresent(player -> {
+      player.getCurrentServer().ifPresent(server -> {
+        ByteBuf buf = Unpooled.buffer();
+        ByteBufDataOutput out = new ByteBufDataOutput(buf);
+
+        out.writeUTF("GetPlayerServer");
+        out.writeUTF(player.getUsername());
+        out.writeUTF(server.getServerInfo().getName());
+
+        sendResponseOnConnection(buf);
+      });
+    });
+  }
+
+  static ChannelIdentifier getBungeeCordChannel(ProtocolVersion version) {
+    return version.noLessThan(ProtocolVersion.MINECRAFT_1_13) ? MODERN_CHANNEL
+        : LEGACY_CHANNEL;
   }
 
   // Note: this method will always release the buffer!
@@ -314,8 +330,8 @@ public class BungeeCordMessageResponder {
   // Note: this method will always release the buffer!
   private static void sendServerResponse(ConnectedPlayer player, ByteBuf buf) {
     MinecraftConnection serverConnection = player.ensureAndGetCurrentServer().ensureConnected();
-    String chan = getBungeeCordChannel(serverConnection.getProtocolVersion());
-    PluginMessagePacket msg = new PluginMessagePacket(chan, buf);
+    ChannelIdentifier chan = getBungeeCordChannel(serverConnection.getProtocolVersion());
+    PluginMessagePacket msg = new PluginMessagePacket(chan.getId(), buf);
     serverConnection.write(msg);
   }
 
@@ -331,6 +347,9 @@ public class BungeeCordMessageResponder {
     ByteBufDataInput in = new ByteBufDataInput(message.content());
     String subChannel = in.readUTF();
     switch (subChannel) {
+      case "GetPlayerServer":
+        this.processGetPlayerServer(in);
+        break;
       case "ForwardToPlayer":
         this.processForwardToPlayer(in);
         break;

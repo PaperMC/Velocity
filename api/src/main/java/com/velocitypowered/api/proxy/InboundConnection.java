@@ -7,6 +7,7 @@
 
 package com.velocitypowered.api.proxy;
 
+import com.velocitypowered.api.network.HandshakeIntent;
 import com.velocitypowered.api.network.ProtocolState;
 import com.velocitypowered.api.network.ProtocolVersion;
 import java.net.InetSocketAddress;
@@ -26,10 +27,19 @@ public interface InboundConnection {
 
   /**
    * Returns the hostname that the user entered into the client, if applicable.
-   *
+   * <br/>
+   * This is partially processed, including removing a trailing dot, and discarding data after a null byte.
+
    * @return the hostname from the client
    */
   Optional<InetSocketAddress> getVirtualHost();
+
+  /**
+   * Returns the raw hostname that the client sent, if applicable.
+   *
+   * @return the raw hostname from the client
+   */
+  Optional<String> getRawVirtualHost();
 
   /**
    * Determine whether or not the player remains online.
@@ -51,4 +61,11 @@ public interface InboundConnection {
    * @return the protocol state of the connection
    */
   ProtocolState getProtocolState();
+
+  /**
+   * Returns the initial intent for the connection.
+   *
+   * @return the intent of the connection
+   */
+  HandshakeIntent getHandshakeIntent();
 }

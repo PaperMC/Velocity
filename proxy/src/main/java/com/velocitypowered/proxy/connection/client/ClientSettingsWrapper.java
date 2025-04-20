@@ -30,7 +30,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class ClientSettingsWrapper implements PlayerSettings {
 
   static final PlayerSettings DEFAULT = new ClientSettingsWrapper(
-      new ClientSettingsPacket("en_US", (byte) 10, 0, true, (short) 127, 1, true, false));
+      new ClientSettingsPacket("en_us", (byte) 2, 0, true, (short) 0, 1, false, false, 0));
 
   private final ClientSettingsPacket settings;
   private final SkinParts parts;
@@ -56,11 +56,11 @@ public class ClientSettingsWrapper implements PlayerSettings {
 
   @Override
   public ChatMode getChatMode() {
-    int chat = settings.getChatVisibility();
-    if (chat < 0 || chat > 2) {
-      return ChatMode.SHOWN;
-    }
-    return ChatMode.values()[chat];
+    return switch (settings.getChatVisibility()) {
+      case 1 -> ChatMode.COMMANDS_ONLY;
+      case 2 -> ChatMode.HIDDEN;
+      default -> ChatMode.SHOWN;
+    };
   }
 
   @Override
@@ -81,6 +81,20 @@ public class ClientSettingsWrapper implements PlayerSettings {
   @Override
   public boolean isClientListingAllowed() {
     return settings.isClientListingAllowed();
+  }
+
+  @Override
+  public boolean isTextFilteringEnabled() {
+    return settings.isTextFilteringEnabled();
+  }
+
+  @Override
+  public ParticleStatus getParticleStatus() {
+    return switch (settings.getParticleStatus()) {
+      case 1 -> ParticleStatus.DECREASED;
+      case 2 -> ParticleStatus.MINIMAL;
+      default -> ParticleStatus.ALL;
+    };
   }
 
   @Override
