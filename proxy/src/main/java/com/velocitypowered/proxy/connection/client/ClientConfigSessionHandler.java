@@ -34,12 +34,7 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
-import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
-import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
-import com.velocitypowered.proxy.protocol.packet.PingIdentifyPacket;
-import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
-import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
-import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.*;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.KnownPacksPacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
@@ -58,21 +53,15 @@ import org.apache.logging.log4j.Logger;
  * Handles the client config stage.
  */
 public class ClientConfigSessionHandler implements MinecraftSessionHandler {
-
   private static final Logger logger = LogManager.getLogger(ClientConfigSessionHandler.class);
+
   private final VelocityServer server;
   private final ConnectedPlayer player;
-  private String brandChannel = null;
+  private String brandChannel;
 
   private CompletableFuture<?> configurationFuture;
   private CompletableFuture<Void> configSwitchFuture;
 
-  /**
-   * Constructs a client config session handler.
-   *
-   * @param server the Velocity server instance
-   * @param player the player
-   */
   public ClientConfigSessionHandler(VelocityServer server, ConnectedPlayer player) {
     this.server = server;
     this.player = player;
@@ -89,7 +78,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(final KeepAlivePacket packet) {
+  public boolean handle(KeepAlivePacket packet) {
     player.forwardKeepAlive(packet);
     return true;
   }
@@ -102,134 +91,130 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ResourcePackResponsePacket packet) {
-    return player.resourcePackHandler().onResourcePackResponse(
-        new ResourcePackResponseBundle(packet.getId(),
-            packet.getHash(),
-            packet.getStatus())
-    );
+    return player.resourcePackHandler()
+                 .onResourcePackResponse(new ResourcePackResponseBundle(
+                     packet.getId(), packet.getHash(), packet.getStatus()));
   }
 
   @Override
   public boolean handle(FinishedUpdatePacket packet) {
-    player.getConnection().setActiveSessionHandler(StateRegistry.PLAY, new ClientPlaySessionHandler(server, player));
-
+    player.getConnection()
+          .setActiveSessionHandler(StateRegistry.PLAY, new ClientPlaySessionHandler(server, player));
     configSwitchFuture.complete(null);
     return true;
   }
 
   @Override
-  public boolean handle(final PluginMessagePacket packet) {
-    final VelocityServerConnection serverConn = player.getConnectionInFlight();
+  public boolean handle(PluginMessagePacket packet) {
+
     if (PluginMessageUtil.isMcBrand(packet)) {
-      final String brand = PluginMessageUtil.readBrandMessage(packet.content());
+      String brand = PluginMessageUtil.readBrandMessage(packet.content());
       server.getEventManager().fireAndForget(new PlayerClientBrandEvent(player, brand));
       player.setClientBrand(brand);
       brandChannel = packet.getChannel();
-      // Client sends `minecraft:brand` packet immediately after Login,
-      // but at this time the backend server may not be ready
-    } else if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
       return true;
-    } else if (serverConn != null) {
-      byte[] bytes = ByteBufUtil.getBytes(packet.content());
-      ChannelIdentifier id = this.server.getChannelRegistrar().getFromId(packet.getChannel());
+    }
+
+    if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
+      return true;
+    }
+
+    VelocityServerConnection serverConn = player.getConnectionInFlight();
+    if (serverConn != null) {
+      ChannelIdentifier id = server.getChannelRegistrar().getFromId(packet.getChannel());
+      byte[] data = ByteBufUtil.getBytes(packet.content());
 
       if (id == null) {
         serverConn.ensureConnected().write(packet.retain());
-        return true;
+      } else {
+        player.getConnection().setAutoReading(false);
+        server.getEventManager()
+              .fire(new PluginMessageEvent(player, serverConn, id, data))
+              .thenAcceptAsync(event -> {
+                if (event.getResult().isAllowed() && serverConn.getConnection() != null) {
+                  serverConn.ensureConnected()
+                            .write(new PluginMessagePacket(id.getId(), Unpooled.wrappedBuffer(data)));
+                }
+                player.getConnection().setAutoReading(true);
+              }, player.getConnection().eventLoop())
+              .exceptionally(ex -> {
+                logger.error("Exception while handling plugin message packet for {}", player, ex);
+                return null;
+              });
       }
-
-      // Handling this stuff async means that we should probably pause
-      // the connection while we toss this off into another pool
-      serverConn.getPlayer().getConnection().setAutoReading(false);
-      this.server.getEventManager()
-          .fire(new PluginMessageEvent(serverConn.getPlayer(), serverConn, id, bytes))
-          .thenAcceptAsync(pme -> {
-            if (pme.getResult().isAllowed() && serverConn.getConnection() != null) {
-              serverConn.ensureConnected().write(new PluginMessagePacket(
-                  pme.getIdentifier().getId(), Unpooled.wrappedBuffer(bytes)));
-            }
-            serverConn.getPlayer().getConnection().setAutoReading(true);
-          }, player.getConnection().eventLoop()).exceptionally((ex) -> {
-            logger.error("Exception while handling plugin message packet for {}", player, ex);
-            return null;
-          });
     }
+
     return true;
   }
 
   @Override
   public boolean handle(PingIdentifyPacket packet) {
-    if (player.getConnectionInFlight() != null) {
-      player.getConnectionInFlight().ensureConnected().write(packet);
+    VelocityServerConnection serverConn = player.getConnectionInFlight();
+    if (serverConn != null) {
+      serverConn.ensureConnected().write(packet);
       return true;
     }
-
     return false;
   }
 
   @Override
   public boolean handle(KnownPacksPacket packet) {
-    callConfigurationEvent().thenRun(() -> {
-      player.getConnectionInFlightOrConnectedServer().ensureConnected().write(packet);
-    }).exceptionally(ex -> {
-      logger.error("Error forwarding known packs response to backend:", ex);
-      return null;
-    });
-
+    callConfigurationEvent()
+        .thenRun(() ->
+            player.getConnectionInFlightOrConnectedServer()
+                  .ensureConnected()
+                  .write(packet))
+        .exceptionally(ex -> {
+          logger.error("Error forwarding known packs response to backend:", ex);
+          return null;
+        });
     return true;
   }
 
   @Override
   public boolean handle(ServerboundCookieResponsePacket packet) {
     server.getEventManager()
-        .fire(new CookieReceiveEvent(player, packet.getKey(), packet.getPayload()))
-        .thenAcceptAsync(event -> {
-          if (event.getResult().isAllowed()) {
-            final VelocityServerConnection serverConnection = player.getConnectionInFlight();
-            if (serverConnection != null) {
-              final Key resultedKey = event.getResult().getKey() == null
-                  ? event.getOriginalKey() : event.getResult().getKey();
-              final byte[] resultedData = event.getResult().getData() == null
-                  ? event.getOriginalData() : event.getResult().getData();
-
-              serverConnection.ensureConnected()
-                  .write(new ServerboundCookieResponsePacket(resultedKey, resultedData));
+          .fire(new CookieReceiveEvent(player, packet.getKey(), packet.getPayload()))
+          .thenAcceptAsync(event -> {
+            if (!event.getResult().isAllowed()) {
+              return;
             }
-          }
-        }, player.getConnection().eventLoop());
-
+            VelocityServerConnection serverConn = player.getConnectionInFlight();
+            if (serverConn != null) {
+              Key key = event.getResult().getKey();
+              byte[] data = event.getResult().getData();
+              serverConn.ensureConnected()
+                        .write(new ServerboundCookieResponsePacket(
+                            key == null ? packet.getKey() : key,
+                            data == null ? packet.getPayload() : data));
+            }
+          }, player.getConnection().eventLoop());
     return true;
   }
 
   @Override
   public void handleGeneric(MinecraftPacket packet) {
-    VelocityServerConnection serverConnection = player.getConnectedServer();
-    if (serverConnection == null) {
-      // No server connection yet, probably transitioning.
+    VelocityServerConnection serverConn = player.getConnectedServer();
+    if (serverConn == null || !serverConn.getPhase().consideredComplete()) {
       return;
     }
-
-    MinecraftConnection smc = serverConnection.getConnection();
-    if (smc != null && serverConnection.getPhase().consideredComplete()) {
+    MinecraftConnection conn = serverConn.getConnection();
+    if (conn != null) {
       if (packet instanceof PluginMessagePacket) {
         ((PluginMessagePacket) packet).retain();
       }
-      smc.write(packet);
+      conn.write(packet);
     }
   }
 
   @Override
   public void handleUnknown(ByteBuf buf) {
-    final VelocityServerConnection serverConnection = player.getConnectedServer();
-    if (serverConnection == null) {
-      // No server connection yet, probably transitioning.
+    VelocityServerConnection serverConn = player.getConnectedServer();
+    if (serverConn == null || serverConn.getConnection().isClosed() ||
+        !serverConn.getPhase().consideredComplete()) {
       return;
     }
-
-    final MinecraftConnection smc = serverConnection.getConnection();
-    if (smc != null && !smc.isClosed() && serverConnection.getPhase().consideredComplete()) {
-      smc.write(buf.retain());
-    }
+    serverConn.getConnection().write(buf.retain());
   }
 
   @Override
@@ -239,55 +224,47 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void exception(Throwable throwable) {
-    player.disconnect(Component.translatable("velocity.error.player-connection-error", NamedTextColor.RED));
+    player.disconnect(Component.translatable(
+        "velocity.error.player-connection-error", NamedTextColor.RED));
   }
 
-  /**
-   * Calls the {@link PlayerConfigurationEvent}.
-   * For 1.20.5+ backends this is done when the client responds to
-   * the known packs request. The response is delayed until the event
-   * has been called.
-   * For 1.20.2-1.20.4 servers this is done when the client acknowledges
-   * the end of the configuration.
-   * This is handled differently because for 1.20.5+ servers can't keep
-   * their connection alive between states and older servers don't have
-   * the known packs transaction.
-   */
   private CompletableFuture<?> callConfigurationEvent() {
-    if (configurationFuture != null) {
-      return configurationFuture;
+    if (configurationFuture == null) {
+      configurationFuture = server.getEventManager()
+                                  .fire(new PlayerConfigurationEvent(
+                                      player, player.getConnectionInFlightOrConnectedServer()));
     }
-    return configurationFuture = server.getEventManager().fire(new PlayerConfigurationEvent(player, player.getConnectionInFlightOrConnectedServer()));
+    return configurationFuture;
   }
 
-  /**
-   * Handles the backend finishing the config stage.
-   *
-   * @param serverConn the server connection
-   * @return a future that completes when the config stage is finished
-   */
   public CompletableFuture<Void> handleBackendFinishUpdate(VelocityServerConnection serverConn) {
-    final MinecraftConnection smc = serverConn.ensureConnected();
+    MinecraftConnection conn = serverConn.ensureConnected();
 
-    final String brand = serverConn.getPlayer().getClientBrand();
-    if (brand != null && brandChannel != null) {
-      final ByteBuf buf = Unpooled.buffer();
-      ProtocolUtils.writeString(buf, brand);
-      final PluginMessagePacket brandPacket = new PluginMessagePacket(brandChannel, buf);
-      smc.write(brandPacket);
+    if (player.getClientBrand() != null && brandChannel != null) {
+      ByteBuf buf = Unpooled.buffer();
+      ProtocolUtils.writeString(buf, player.getClientBrand());
+      conn.write(new PluginMessagePacket(brandChannel, buf));
     }
 
-    callConfigurationEvent().thenCompose(v -> {
-      return server.getEventManager().fire(new PlayerFinishConfigurationEvent(player, serverConn))
-          .completeOnTimeout(null, 5, TimeUnit.SECONDS);
-    }).thenRunAsync(() -> {
-      player.getConnection().write(FinishedUpdatePacket.INSTANCE);
-      player.getConnection().getChannel().pipeline().get(MinecraftEncoder.class).setState(StateRegistry.PLAY);
-      server.getEventManager().fireAndForget(new PlayerFinishedConfigurationEvent(player, serverConn));
-    }, player.getConnection().eventLoop()).exceptionally(ex -> {
-      logger.error("Error finishing configuration state:", ex);
-      return null;
-    });
+    callConfigurationEvent()
+        .thenCompose(v ->
+            server.getEventManager()
+                  .fire(new PlayerFinishConfigurationEvent(player, serverConn))
+                  .completeOnTimeout(null, 5, TimeUnit.SECONDS))
+        .thenRunAsync(() -> {
+          player.getConnection().write(FinishedUpdatePacket.INSTANCE);
+          player.getConnection()
+                .getChannel()
+                .pipeline()
+                .get(MinecraftEncoder.class)
+                .setState(StateRegistry.PLAY);
+          server.getEventManager()
+                .fireAndForget(new PlayerFinishedConfigurationEvent(player, serverConn));
+        }, player.getConnection().eventLoop())
+        .exceptionally(ex -> {
+          logger.error("Error finishing configuration state:", ex);
+          return null;
+        });
 
     return configSwitchFuture;
   }
