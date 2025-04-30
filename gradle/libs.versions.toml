@@ -11,8 +11,8 @@ shadow = "io.github.goooler.shadow:8.1.5"
 spotless = "com.diffplug.spotless:6.25.0"
 
 [libraries]
-adventure-bom = "net.kyori:adventure-bom:4.20.0"
-adventure-text-serializer-json-legacy-impl = "net.kyori:adventure-text-serializer-json-legacy-impl:4.20.0"
+adventure-bom = "net.kyori:adventure-bom:4.21.0"
+adventure-text-serializer-json-legacy-impl = "net.kyori:adventure-text-serializer-json-legacy-impl:4.21.0"
 adventure-facet = "net.kyori:adventure-platform-facet:4.3.4"
 asm = "org.ow2.asm:asm:9.7.1"
 auto-service = "com.google.auto.service:auto-service:1.0.1"
