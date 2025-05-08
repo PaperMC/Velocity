@@ -29,6 +29,7 @@ import com.velocitypowered.proxy.network.netty.SeparatePoolInetNameResolver;
 import com.velocitypowered.proxy.protocol.netty.GameSpyQueryHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -114,6 +115,11 @@ public final class ConnectionManager {
           .group(this.workerGroup);
     } else {
       bootstrap.group(this.bossGroup, this.workerGroup);
+    }
+
+    // Restore allocator used before Netty 4.2 due to oom issues with the adaptive allocator
+    if (System.getProperty("io.netty.allocator.type") == null) {
+      bootstrap.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
     }
 
     final int binds = server.getConfiguration().isEnableReusePort()
