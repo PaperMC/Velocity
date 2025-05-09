@@ -1050,7 +1050,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   public void playSound(@NotNull Sound sound, @NotNull Sound.Emitter emitter) {
     Preconditions.checkNotNull(sound, "sound");
     Preconditions.checkNotNull(emitter, "emitter");
-    Preconditions.checkArgument(emitter.equals(Sound.Emitter.self()), "non-self emitter not supported");
     if (getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_19_3)
         || connection.getState() != StateRegistry.PLAY
         || getConnectedServer() == null) {
