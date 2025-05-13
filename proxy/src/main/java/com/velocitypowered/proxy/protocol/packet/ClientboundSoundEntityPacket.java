@@ -33,14 +33,14 @@ public class ClientboundSoundEntityPacket implements MinecraftPacket {
 
   private Sound sound;
   private @Nullable Float fixedRange;
-  private int entityId;
+  private int emitterEntityId;
 
   public ClientboundSoundEntityPacket() {}
 
-  public ClientboundSoundEntityPacket(Sound sound, @Nullable Float fixedRange, int entityId) {
+  public ClientboundSoundEntityPacket(Sound sound, @Nullable Float fixedRange, int emitterEntityId) {
     this.sound = sound;
     this.fixedRange = fixedRange;
-    this.entityId = entityId;
+    this.emitterEntityId = emitterEntityId;
   }
 
   @Override
@@ -60,7 +60,7 @@ public class ClientboundSoundEntityPacket implements MinecraftPacket {
 
     ProtocolUtils.writeVarInt(buf, sound.source().ordinal());
 
-    ProtocolUtils.writeVarInt(buf, entityId);
+    ProtocolUtils.writeVarInt(buf, emitterEntityId);
 
     buf.writeFloat(sound.volume());
 

@@ -1050,13 +1050,29 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   public void playSound(@NotNull Sound sound, @NotNull Sound.Emitter emitter) {
     Preconditions.checkNotNull(sound, "sound");
     Preconditions.checkNotNull(emitter, "emitter");
+    VelocityServerConnection soundTargetServerConn = getConnectedServer();
     if (getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_19_3)
         || connection.getState() != StateRegistry.PLAY
-        || getConnectedServer() == null) {
+        || soundTargetServerConn == null) {
       return;
     }
 
-    connection.write(new ClientboundSoundEntityPacket(sound, null, getConnectedServer().getEntityId()));
+    VelocityServerConnection soundEmitterServerConn;
+    if (emitter == Sound.Emitter.self()) {
+      soundEmitterServerConn = soundTargetServerConn;
+    } else if (emitter instanceof ConnectedPlayer player) {
+      if ((soundEmitterServerConn = player.getConnectedServer()) == null) {
+        return;
+      }
+
+      if (!soundEmitterServerConn.getServer().equals(soundTargetServerConn.getServer())) {
+        return;
+      }
+    } else {
+      return;
+    }
+
+    connection.write(new ClientboundSoundEntityPacket(sound, null, soundEmitterServerConn.getEntityId()));
   }
 
   @Override

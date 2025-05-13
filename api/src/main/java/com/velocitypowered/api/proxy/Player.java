@@ -48,7 +48,7 @@ public interface Player extends
     /* Fundamental Velocity interfaces */
     CommandSource, InboundConnection, ChannelMessageSource, ChannelMessageSink,
     /* Adventure-specific interfaces */
-    Identified, HoverEventSource<HoverEvent.ShowEntity>, Keyed, KeyIdentifiable {
+    Identified, HoverEventSource<HoverEvent.ShowEntity>, Keyed, KeyIdentifiable, Sound.Emitter {
 
   /**
    * Returns the player's current username.
@@ -403,11 +403,13 @@ public interface Player extends
   /**
    * {@inheritDoc}
    *
+   * <p><b>Note</b>: Due to <a href="https://bugs.mojang.com/browse/MC/issues/MC-146721">MC-146721</a>, stereo sounds are always played globally.
+   *
    * <p>Note: This method is currently only implemented for players from version 1.19.3 and above
-   * and requires a present {@link #getCurrentServer}. Additionally, it only supports {@link Sound.Emitter#self()} for now.
+   * and requires a present {@link #getCurrentServer} for the emitting player as well as this player.
    *
    * @param sound the sound to play
-   * @param emitter the emitter of the sound
+   * @param emitter the emitter of the sound; may be another player of this player's server
    * @since 3.4.0
    * @sinceMinecraft 1.19.3
    */
