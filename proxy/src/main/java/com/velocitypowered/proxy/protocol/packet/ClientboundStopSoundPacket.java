@@ -93,9 +93,17 @@ public class ClientboundStopSoundPacket implements MinecraftPacket {
     return source;
   }
 
+  public void setSource(@Nullable Sound.Source source) {
+    this.source = source;
+  }
+
   @Nullable
   public Key getSoundName() {
     return soundName;
+  }
+
+  public void setSoundName(@Nullable Key soundName) {
+    this.soundName = soundName;
   }
 
 }

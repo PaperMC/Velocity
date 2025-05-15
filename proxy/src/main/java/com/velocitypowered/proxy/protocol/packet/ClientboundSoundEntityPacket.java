@@ -74,4 +74,28 @@ public class ClientboundSoundEntityPacket implements MinecraftPacket {
     return handler.handle(this);
   }
 
+  public Sound getSound() {
+    return sound;
+  }
+
+  public void setSound(Sound sound) {
+    this.sound = sound;
+  }
+
+  public @Nullable Float getFixedRange() {
+    return fixedRange;
+  }
+
+  public void setFixedRange(@Nullable Float fixedRange) {
+    this.fixedRange = fixedRange;
+  }
+
+  public int getEmitterEntityId() {
+    return emitterEntityId;
+  }
+
+  public void setEmitterEntityId(int emitterEntityId) {
+    this.emitterEntityId = emitterEntityId;
+  }
+
 }
