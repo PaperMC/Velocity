@@ -396,14 +396,20 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   /**
-   * Translates the message in the user's locale.
+   * Translates the message in the user's locale, falling back to the default locale if not set.
    *
    * @param message the message to translate
    * @return the translated message
    */
   public Component translateMessage(Component message) {
-    Locale locale = ClosestLocaleMatcher.INSTANCE
-        .lookupClosest(getEffectiveLocale() == null ? Locale.getDefault() : getEffectiveLocale());
+    Locale locale = this.getEffectiveLocale();
+    if (locale == null && settings != null) {
+      locale = settings.getLocale();
+    }
+    if (locale == null) {
+      locale = Locale.getDefault();
+    }
+    locale = ClosestLocaleMatcher.INSTANCE.lookupClosest(locale);
     return GlobalTranslator.render(message, locale);
   }
 
