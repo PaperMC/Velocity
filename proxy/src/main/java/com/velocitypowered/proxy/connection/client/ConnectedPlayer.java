@@ -153,7 +153,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   private static final ComponentLogger logger = ComponentLogger.logger(ConnectedPlayer.class);
 
-  private final Identity identity = new IdentityImpl();
   private static final @NotNull PointersSupplier<ConnectedPlayer> POINTERS_SUPPLIER =
           PointersSupplier.<ConnectedPlayer>builder()
                   .resolving(Identity.UUID, Player::getUniqueId)
@@ -260,7 +259,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   @Override
   public @NonNull Identity identity() {
-    return this.identity;
+    return Identity.identity(this.getUniqueId());
   }
 
   @Override
@@ -1368,14 +1367,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   @Override
   public @Nullable IdentifiedKey getIdentifiedKey() {
     return playerKey;
-  }
-
-  private class IdentityImpl implements Identity {
-
-    @Override
-    public @NonNull UUID uuid() {
-      return ConnectedPlayer.this.getUniqueId();
-    }
   }
 
   @Override
