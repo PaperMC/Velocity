@@ -2,8 +2,8 @@
 configurate3 = "3.7.3"
 configurate4 = "4.1.2"
 flare = "2.0.1"
-log4j = "2.24.1"
-netty = "4.2.0.Final"
+log4j = "2.24.3"
+netty = "4.2.1.Final"
 
 [plugins]
 indra-publishing = "net.kyori.indra.publishing:2.0.6"
@@ -14,7 +14,7 @@ spotless = "com.diffplug.spotless:6.25.0"
 adventure-bom = "net.kyori:adventure-bom:4.21.0"
 adventure-text-serializer-json-legacy-impl = "net.kyori:adventure-text-serializer-json-legacy-impl:4.21.0"
 adventure-facet = "net.kyori:adventure-platform-facet:4.3.4"
-asm = "org.ow2.asm:asm:9.7.1"
+asm = "org.ow2.asm:asm:9.8"
 auto-service = "com.google.auto.service:auto-service:1.0.1"
 auto-service-annotations = "com.google.auto.service:auto-service-annotations:1.0.1"
 brigadier = "com.velocitypowered:velocity-brigadier:1.0.0-SNAPSHOT"
@@ -33,7 +33,7 @@ disruptor = "com.lmax:disruptor:4.0.0"
 fastutil = "it.unimi.dsi:fastutil:8.5.15"
 flare-core = { module = "space.vectrix.flare:flare", version.ref = "flare" }
 flare-fastutil = { module = "space.vectrix.flare:flare-fastutil", version.ref = "flare" }
-jline = "org.jline:jline-terminal-jansi:3.27.1"
+jline = "org.jline:jline-terminal-jansi:3.30.2"
 jopt = "net.sf.jopt-simple:jopt-simple:5.0.4"
 junit = "org.junit.jupiter:junit-jupiter:5.10.2"
 jspecify = "org.jspecify:jspecify:0.3.0"
