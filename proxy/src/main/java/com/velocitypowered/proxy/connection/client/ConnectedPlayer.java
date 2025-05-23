@@ -145,11 +145,7 @@ import org.jetbrains.annotations.NotNull;
 public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, KeyIdentifiable,
     VelocityInboundConnection {
 
-  public static final int MAX_CLIENTSIDE_PLUGIN_CHANNELS = Integer.parseInt(
-          System.getProperty(
-                  "velocity.max_clientside_plugin_channels",
-                  "1024"
-          ));
+  public static final int MAX_CLIENTSIDE_PLUGIN_CHANNELS = Integer.getInteger("velocity.max-clientside-plugin-channels", 1024);
   private static final PlainTextComponentSerializer PASS_THRU_TRANSLATE =
       PlainTextComponentSerializer.builder().flattener(TranslatableMapper.FLATTENER).build();
   static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
