@@ -65,6 +65,7 @@ public class AvailableCommandsPacket implements MinecraftPacket {
   private static final byte FLAG_EXECUTABLE = 0x04;
   private static final byte FLAG_IS_REDIRECT = 0x08;
   private static final byte FLAG_HAS_SUGGESTIONS = 0x10;
+  private static final byte FLAG_IS_RESTRICTED = 0x20;
 
   private @MonotonicNonNull RootCommandNode<CommandSource> rootNode;
 
