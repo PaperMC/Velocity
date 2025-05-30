@@ -96,33 +96,23 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
    */
   public CompletableFuture<Impl> connect() {
     CompletableFuture<Impl> result = new CompletableFuture<>();
-    // Note: we use the event loop for the connection the player is on. This reduces context
-    // switches.
     server.createBootstrap(proxyPlayer.getConnection().eventLoop())
         .handler(server.getBackendChannelInitializer())
         .connect(registeredServer.getServerInfo().getAddress())
         .addListener((ChannelFutureListener) future -> {
           if (future.isSuccess()) {
             connection = new MinecraftConnection(future.channel(), server);
-            connection.setAssociation(VelocityServerConnection.this);
+            connection.setAssociation(this);
             future.channel().pipeline().addLast(HANDLER, connection);
-
-            // Kick off the connection process
             if (!connection.setActiveSessionHandler(StateRegistry.HANDSHAKE)) {
               MinecraftSessionHandler handler =
-                  new LoginSessionHandler(server, VelocityServerConnection.this, result);
+                  new LoginSessionHandler(server, this, result);
               connection.setActiveSessionHandler(StateRegistry.HANDSHAKE, handler);
               connection.addSessionHandler(StateRegistry.LOGIN, handler);
             }
-
-            // Set the connection phase, which may, for future forge (or whatever), be
-            // determined
-            // at this point already
             connectionPhase = connection.getType().getInitialBackendPhase();
             startHandshake();
           } else {
-            // Complete the result immediately. ConnectedPlayer will reset the in-flight
-            // connection.
             result.completeExceptionally(future.cause());
           }
         });
@@ -131,12 +121,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
 
   String getPlayerRemoteAddressAsString() {
     final String addr = proxyPlayer.getRemoteAddress().getAddress().getHostAddress();
-    int ipv6ScopeIdx = addr.indexOf('%');
-    if (ipv6ScopeIdx == -1) {
-      return addr;
-    } else {
-      return addr.substring(0, ipv6ScopeIdx);
-    }
+    final int ipv6ScopeIdx = addr.indexOf('%');
+    return (ipv6ScopeIdx == -1) ? addr : addr.substring(0, ipv6ScopeIdx);
   }
 
   private String createLegacyForwardingAddress() {
@@ -161,28 +147,26 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   private void startHandshake() {
     final MinecraftConnection mc = ensureConnected();
     PlayerInfoForwarding forwardingMode = server.getConfiguration().getPlayerInfoForwardingMode();
-
-    // Initiate the handshake.
     ProtocolVersion protocolVersion = proxyPlayer.getConnection().getProtocolVersion();
     String playerVhost = proxyPlayer.getVirtualHost()
                 .orElseGet(() -> registeredServer.getServerInfo().getAddress())
                 .getHostString();
-
     HandshakePacket handshake = new HandshakePacket();
     handshake.setIntent(HandshakeIntent.LOGIN);
     handshake.setProtocolVersion(protocolVersion);
-    if (forwardingMode == PlayerInfoForwarding.LEGACY) {
-      handshake.setServerAddress(createLegacyForwardingAddress());
-    } else if (forwardingMode == PlayerInfoForwarding.BUNGEEGUARD) {
-      byte[] secret = server.getConfiguration().getForwardingSecret();
-      handshake.setServerAddress(createBungeeGuardForwardingAddress(secret));
-    } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
-      handshake.setServerAddress(playerVhost + HANDSHAKE_HOSTNAME_TOKEN);
-    } else if (proxyPlayer.getConnection().getType() instanceof ModernForgeConnectionType) {
-      handshake.setServerAddress(playerVhost + ((ModernForgeConnectionType) proxyPlayer
-              .getConnection().getType()).getModernToken());
-    } else {
-      handshake.setServerAddress(playerVhost);
+
+    switch (forwardingMode) {
+      case LEGACY -> handshake.setServerAddress(createLegacyForwardingAddress());
+      case BUNGEEGUARD -> handshake.setServerAddress(createBungeeGuardForwardingAddress(server.getConfiguration().getForwardingSecret()));
+      default -> {
+        if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
+          handshake.setServerAddress(playerVhost + HANDSHAKE_HOSTNAME_TOKEN);
+        } else if (proxyPlayer.getConnection().getType() instanceof ModernForgeConnectionType forgeType) {
+          handshake.setServerAddress(playerVhost + forgeType.getModernToken());
+        } else {
+          handshake.setServerAddress(playerVhost);
+        }
+      }
     }
 
     handshake.setPort(proxyPlayer.getVirtualHost()
@@ -193,11 +177,10 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     mc.setProtocolVersion(protocolVersion);
     mc.setActiveSessionHandler(StateRegistry.LOGIN);
     if (proxyPlayer.getIdentifiedKey() == null
-        && proxyPlayer.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
+        && protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
       mc.delayedWrite(new ServerLoginPacket(proxyPlayer.getUsername(), proxyPlayer.getUniqueId()));
     } else {
-      mc.delayedWrite(new ServerLoginPacket(proxyPlayer.getUsername(),
-              proxyPlayer.getIdentifiedKey()));
+      mc.delayedWrite(new ServerLoginPacket(proxyPlayer.getUsername(), proxyPlayer.getIdentifiedKey()));
     }
     mc.flush();
   }
@@ -220,24 +203,16 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   }
 
   @Override
-  public VelocityRegisteredServer getServer() {
-    return registeredServer;
-  }
+  public VelocityRegisteredServer getServer() { return registeredServer; }
 
   @Override
-  public Optional<RegisteredServer> getPreviousServer() {
-    return Optional.ofNullable(this.previousServer);
-  }
+  public Optional<RegisteredServer> getPreviousServer() { return Optional.ofNullable(this.previousServer); }
 
   @Override
-  public ServerInfo getServerInfo() {
-    return registeredServer.getServerInfo();
-  }
+  public ServerInfo getServerInfo() { return registeredServer.getServerInfo(); }
 
   @Override
-  public ConnectedPlayer getPlayer() {
-    return proxyPlayer;
-  }
+  public ConnectedPlayer getPlayer() { return proxyPlayer; }
 
   /**
    * Disconnects from the server.
@@ -292,9 +267,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   public boolean sendPluginMessage(ChannelIdentifier identifier, ByteBuf data) {
     Preconditions.checkNotNull(identifier, "identifier");
     Preconditions.checkNotNull(data, "data");
-
     final MinecraftConnection mc = ensureConnected();
-
     final PluginMessagePacket message = new PluginMessagePacket(identifier.getId(), data);
     mc.write(message);
     return true;
@@ -307,7 +280,6 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     if (!hasCompletedJoin) {
       hasCompletedJoin = true;
       if (connectionPhase == BackendConnectionPhases.UNKNOWN) {
-        // Now we know
         connectionPhase = BackendConnectionPhases.VANILLA;
         if (connection != null) {
           connection.setType(ConnectionTypes.VANILLA);
@@ -316,13 +288,9 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     }
   }
 
-  boolean isGracefulDisconnect() {
-    return gracefulDisconnect;
-  }
+  boolean isGracefulDisconnect() { return gracefulDisconnect; }
 
-  public Map<Long, Long> getPendingPings() {
-    return pendingPings;
-  }
+  public Map<Long, Long> getPendingPings() { return pendingPings; }
 
   /**
    * Ensures that this server connection remains "active": the connection is established and not
@@ -341,9 +309,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
    *
    * @return The {@link BackendConnectionPhase}
    */
-  public BackendConnectionPhase getPhase() {
-    return connectionPhase;
-  }
+  public BackendConnectionPhase getPhase() { return connectionPhase; }
 
   /**
    * Sets the current "phase" of the connection. See {@link #getPhase()}
@@ -360,7 +326,5 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
    *
    * @return Whether the join has been completed.
    */
-  public boolean hasCompletedJoin() {
-    return hasCompletedJoin;
-  }
+  public boolean hasCompletedJoin() { return hasCompletedJoin; }
 }
