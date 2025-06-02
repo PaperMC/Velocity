@@ -50,6 +50,6 @@ public final class UuidUtils {
    * @return the offline mode UUID
    */
   public static UUID generateOfflinePlayerUuid(String username) {
-    return UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(StandardCharsets.UTF_8));
+    return UUID.nameUUIDFromBytes(("OfflinePlayer:" + username.toUpperCase()).getBytes(StandardCharsets.UTF_8));
   }
 }
