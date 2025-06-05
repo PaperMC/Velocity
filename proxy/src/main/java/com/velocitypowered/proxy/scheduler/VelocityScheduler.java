@@ -51,12 +51,31 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
+/**
+ * The Velocity "scheduler", which is actually a thin wrapper around
+ * {@link ScheduledExecutorService} and a dynamically-sized {@link ExecutorService}.
+ * Many plugins are accustomed to the Bukkit Scheduler model, although it is not relevant
+ * in a proxy context.
+ * 
+ * <p>This implementation has been optimized for high performance and thread safety
+ * using concurrent collections and atomic operations.</p>
+ */
 public class VelocityScheduler implements Scheduler {
 
     private final PluginManager pluginManager;
     private final ScheduledExecutorService timerExecutionService;
+    
+    /**
+     * Tracks tasks by their plugin instance using concurrent collections.
+     * Uses synchronized IdentityHashSet per plugin for efficient task management.
+     */
     private final ConcurrentHashMap<Object, Set<ScheduledTask>> tasksByPlugin = new ConcurrentHashMap<>();
 
+    /**
+     * Initializes the scheduler.
+     *
+     * @param pluginManager the Velocity plugin manager
+     */
     public VelocityScheduler(PluginManager pluginManager) {
         this.pluginManager = pluginManager;
         this.timerExecutionService = Executors
@@ -95,6 +114,12 @@ public class VelocityScheduler implements Scheduler {
         }
     }
 
+    /**
+     * Shuts down the Velocity scheduler.
+     *
+     * @return {@code true} if all tasks finished, {@code false} otherwise
+     * @throws InterruptedException if the current thread was interrupted
+     */
     public boolean shutdown() throws InterruptedException {
         // Step 1: Cancel all scheduled tasks
         List<ScheduledTask> allTasks = new ArrayList<>();
@@ -150,6 +175,9 @@ public class VelocityScheduler implements Scheduler {
         return allShutdown;
     }
 
+    /**
+     * Implementation of TaskBuilder for Velocity.
+     */
     private class TaskBuilderImpl implements TaskBuilder {
 
         private final PluginContainer container;
@@ -210,6 +238,10 @@ public class VelocityScheduler implements Scheduler {
         }
     }
 
+    /**
+     * Implementation of ScheduledTask for Velocity.
+     * Uses atomic operations for thread-safe task management.
+     */
     @VisibleForTesting
     class VelocityTask implements Runnable, ScheduledTask {
 
@@ -218,8 +250,17 @@ public class VelocityScheduler implements Scheduler {
         private final Consumer<ScheduledTask> consumer;
         private final long delay;
         private final long repeat;
+        
+        /**
+         * Atomic flag to ensure task removal happens exactly once.
+         */
         private final AtomicBoolean removed = new AtomicBoolean();
         private @Nullable ScheduledFuture<?> future;
+        
+        /**
+         * Reference to the thread currently executing the task,
+         * used for proper interruption handling.
+         */
         private volatile @Nullable Thread currentTaskThread;
 
         private VelocityTask(PluginContainer container, Runnable runnable,
@@ -231,6 +272,9 @@ public class VelocityScheduler implements Scheduler {
             this.repeat = repeat;
         }
 
+        /**
+         * Schedules this task with the executor service.
+         */
         void schedule() {
             if (repeat == 0) {
                 this.future = timerExecutionService.schedule(this, delay, TimeUnit.MILLISECONDS);
@@ -271,6 +315,10 @@ public class VelocityScheduler implements Scheduler {
             }
         }
 
+        /**
+         * Cleans up task resources and removes from tracking.
+         * Uses atomic flag to ensure single execution.
+         */
         private void onFinish() {
             if (removed.compareAndSet(false, true)) {
                 Object plugin = plugin();
@@ -312,6 +360,9 @@ public class VelocityScheduler implements Scheduler {
             });
         }
 
+        /**
+         * Waits for task completion (for testing purposes).
+         */
         public void awaitCompletion() {
             try {
                 Objects.requireNonNull(future).get();
