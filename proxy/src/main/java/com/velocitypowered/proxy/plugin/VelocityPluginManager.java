@@ -26,6 +26,8 @@ import com.google.inject.Module;
 import com.google.inject.name.Names;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.EventManager;
+import com.velocitypowered.api.event.player.CookieReceiveEvent;
+import com.velocitypowered.api.event.plugin.PluginLoadEvent;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
@@ -179,6 +181,9 @@ public class VelocityPluginManager implements PluginManager {
       logger.info("Loaded plugin {} {} by {}", description.getId(), description.getVersion()
           .orElse("<UNKNOWN>"), Joiner.on(", ").join(description.getAuthors()));
       registerPlugin(container);
+
+      PluginLoadEvent pluginLoadEvent = new PluginLoadEvent(container, plugin.getValue());
+      server.getEventManager().fire(pluginLoadEvent);
     }
   }
 
