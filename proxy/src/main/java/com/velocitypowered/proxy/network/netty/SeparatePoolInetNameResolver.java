@@ -38,8 +38,25 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * An optimized implementation of {@code InetNameResolver} that performs DNS lookups in a
+ * dedicated thread pool. This design prevents blocking Netty's event loop threads while
+ * maintaining high throughput and consistency.
+ *
+ * <p>Key features:
+ * <ul>
+ *   <li>Request coalescing: Concurrent requests for the same host are combined</li>
+ *   <li>Unified caching: Full DNS results are cached and reused across resolve types</li>
+ *   <li>Configurable threading: Thread pool size adjustable via system property</li>
+ *   <li>Graceful shutdown: Ensures completion of in-flight requests during shutdown</li>
+ * </ul>
+ */
 public final class SeparatePoolInetNameResolver extends InetNameResolver {
 
+  /**
+   * System property to configure DNS resolver thread count.
+   * Default value: 2 threads.
+   */
   private static final int DNS_RESOLVER_THREADS = Integer.getInteger(
       "velocity.dns_resolver_threads", 2
   );
@@ -47,9 +64,21 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
   private final ExecutorService resolveExecutor;
   private final InetNameResolver delegate;
   private final Cache<String, List<InetAddress>> cache;
+  
+  /**
+   * Tracks in-flight DNS resolutions to prevent duplicate requests.
+   * Key: Hostname being resolved
+   * Value: Promise representing the ongoing resolution
+   */
   private final ConcurrentHashMap<String, Promise<List<InetAddress>>> pendingResolutions;
+  
   private AddressResolverGroup<InetSocketAddress> resolverGroup;
 
+  /**
+   * Creates a new optimized DNS resolver instance.
+   *
+   * @param executor the {@link EventExecutor} used to notify resolution listeners
+   */
   public SeparatePoolInetNameResolver(EventExecutor executor) {
     super(executor);
     this.resolveExecutor = Executors.newFixedThreadPool(
@@ -84,17 +113,27 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
     });
   }
 
+  /**
+   * Core resolution method handling cache lookup, request coalescing and async execution.
+   *
+   * @param inetHost hostname to resolve
+   * @param promise resolution promise to fulfill
+   * @param callback processing strategy for resolved addresses
+   * @param <T> resolution result type (single address or list)
+   */
   private <T> void resolveWithFullList(
       String inetHost,
       Promise<T> promise,
       ResolutionCallback<T> callback
   ) {
+    // Check cache first
     List<InetAddress> cached = cache.getIfPresent(inetHost);
     if (cached != null) {
       callback.onResolution(cached, promise);
       return;
     }
 
+    // Check for existing resolution in progress
     Promise<List<InetAddress>> pending = pendingResolutions.get(inetHost);
     if (pending != null) {
       pending.addListener((Future<List<InetAddress>> future) -> {
@@ -107,17 +146,23 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
       return;
     }
 
+    // Initiate new resolution
     try {
       final Promise<List<InetAddress>> newPromise = executor().newPromise();
-      pendingResolutions.put(inetHost, newPromise);
-      
+      if (pendingResolutions.putIfAbsent(inetHost, newPromise) != null) {
+        // Another thread started resolution concurrently, retry
+        doResolve(inetHost, promise);
+        return;
+      }
+
       resolveExecutor.execute(() -> {
+        // Always resolve full list for caching consistency
         delegate.resolveAll(inetHost, newPromise);
       });
 
       newPromise.addListener((Future<List<InetAddress>> future) -> {
+        // Cache result and clean up
         pendingResolutions.remove(inetHost);
-        
         if (future.isSuccess()) {
           List<InetAddress> result = future.getNow();
           cache.put(inetHost, result);
@@ -132,8 +177,17 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
     }
   }
 
+  /**
+   * Shuts down the resolver with graceful termination.
+   * <p>Sequence:
+   * <ol>
+   *   <li>Prevent new tasks from being submitted</li>
+   *   <li>Wait 5 seconds for existing tasks to complete</li>
+   *   <li>Forcefully terminate if timeout is reached</li>
+   * </ol>
+   */
   public void shutdown() {
-    this.resolveExecutor.shutdown();
+    resolveExecutor.shutdown();
     try {
       if (!resolveExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
         resolveExecutor.shutdownNow();
@@ -144,6 +198,11 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
     }
   }
 
+  /**
+   * Provides this resolver as an AddressResolverGroup.
+   *
+   * @return resolver group instance
+   */
   public AddressResolverGroup<InetSocketAddress> asGroup() {
     if (this.resolverGroup == null) {
       this.resolverGroup = new AddressResolverGroup<InetSocketAddress>() {
@@ -156,6 +215,11 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
     return this.resolverGroup;
   }
 
+  /**
+   * Functional interface for processing resolved addresses.
+   *
+   * @param <T> result type (InetAddress or List<InetAddress>)
+   */
   @FunctionalInterface
   private interface ResolutionCallback<T> {
     void onResolution(List<InetAddress> addresses, Promise<T> resultPromise);
