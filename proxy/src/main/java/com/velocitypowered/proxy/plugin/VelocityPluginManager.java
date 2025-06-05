@@ -26,7 +26,6 @@ import com.google.inject.Module;
 import com.google.inject.name.Names;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.EventManager;
-import com.velocitypowered.api.event.player.CookieReceiveEvent;
 import com.velocitypowered.api.event.plugin.PluginLoadEvent;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
