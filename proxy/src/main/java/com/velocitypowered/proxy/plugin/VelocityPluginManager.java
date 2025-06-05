@@ -26,7 +26,6 @@ import com.google.inject.Module;
 import com.google.inject.name.Names;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.EventManager;
-import com.velocitypowered.api.event.plugin.PluginLoadEvent;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
@@ -38,6 +37,8 @@ import com.velocitypowered.proxy.plugin.loader.java.JavaPluginLoader;
 import com.velocitypowered.proxy.plugin.util.PluginDependencyUtils;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -181,8 +182,20 @@ public class VelocityPluginManager implements PluginManager {
           .orElse("<UNKNOWN>"), Joiner.on(", ").join(description.getAuthors()));
       registerPlugin(container);
 
-      PluginLoadEvent pluginLoadEvent = new PluginLoadEvent(container, plugin.getValue());
-      server.getEventManager().fire(pluginLoadEvent);
+      Optional<?> instanceOptional = container.getInstance();
+
+      if (instanceOptional.isEmpty()) {
+        return;
+      }
+
+      Object instance = instanceOptional.get();
+      Class<?> instanceClass = instance.getClass();
+      try {
+        Method method = instanceClass.getMethod("velocity$afterConstruct");
+        method.invoke(instance);
+      } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) {
+        // nop
+      }
     }
   }
 
