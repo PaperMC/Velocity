@@ -40,6 +40,7 @@ import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.command.VelocityCommandManager;
 import com.velocitypowered.proxy.command.builtin.CallbackCommand;
+import com.velocitypowered.proxy.command.builtin.HelpCommand;
 import com.velocitypowered.proxy.command.builtin.GlistCommand;
 import com.velocitypowered.proxy.command.builtin.SendCommand;
 import com.velocitypowered.proxy.command.builtin.ServerCommand;
@@ -267,6 +268,13 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
             .plugin(VelocityVirtualPlugin.INSTANCE)
             .build(),
         callbackCommand
+    );
+    final BrigadierCommand helpCommand = HelpCommand.create();
+    commandManager.register(
+            commandManager.metaBuilder(helpCommand)
+                    .plugin(VelocityVirtualPlugin.INSTANCE)
+                    .build(),
+            helpCommand
     );
     final BrigadierCommand serverCommand = ServerCommand.create(this);
     commandManager.register(
