@@ -73,6 +73,8 @@ public interface ProxyServer extends Audience {
    */
   int getPlayerCount();
 
+  void setPlayerCount(int players);
+
   /**
    * Retrieves a registered {@link RegisteredServer} instance by its name. The search is
    * case-insensitive.

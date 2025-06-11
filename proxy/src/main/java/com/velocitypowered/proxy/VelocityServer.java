@@ -75,6 +75,7 @@ import java.nio.file.Path;
 import java.security.AccessController;
 import java.security.KeyPair;
 import java.security.PrivilegedAction;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
@@ -138,6 +139,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
   private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
   private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
+  private int cachedPlayerCount = 0;
   private final VelocityConsole console;
   private @MonotonicNonNull Ratelimiter ipAttemptLimiter;
   private final VelocityEventManager eventManager;
@@ -668,7 +670,12 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
   @Override
   public int getPlayerCount() {
-    return connectionsByUuid.size();
+    return cachedPlayerCount;
+  }
+
+  @Override
+  public void setPlayerCount(int newPlayerCount) {
+    this.cachedPlayerCount = Math.max(0, newPlayerCount);
   }
 
   @Override
