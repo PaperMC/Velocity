@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,10 +28,13 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import java.util.List;
 
+/**
+ * Decompresses a Minecraft packet.
+ */
 public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
 
   private static final int VANILLA_MAXIMUM_UNCOMPRESSED_SIZE = 8 * 1024 * 1024; // 8MiB
-  private static final int HARD_MAXIMUM_UNCOMPRESSED_SIZE = 16 * 1024 * 1024; // 16MiB
+  private static final int HARD_MAXIMUM_UNCOMPRESSED_SIZE = 128 * 1024 * 1024; // 128MiB
 
   private static final int UNCOMPRESSED_CAP =
       Boolean.getBoolean("velocity.increased-compression-cap")
@@ -49,13 +52,16 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
   protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
     int claimedUncompressedSize = ProtocolUtils.readVarInt(in);
     if (claimedUncompressedSize == 0) {
+      int actualUncompressedSize = in.readableBytes();
+      checkFrame(actualUncompressedSize < threshold, "Actual uncompressed size %s is greater than"
+              + " threshold %s", actualUncompressedSize, threshold);
       // This message is not compressed.
       out.add(in.retain());
       return;
     }
 
     checkFrame(claimedUncompressedSize >= threshold, "Uncompressed size %s is less than"
-            + " threshold %s", claimedUncompressedSize, threshold);
+        + " threshold %s", claimedUncompressedSize, threshold);
     checkFrame(claimedUncompressedSize <= UNCOMPRESSED_CAP,
         "Uncompressed size %s exceeds hard threshold of %s", claimedUncompressedSize,
         UNCOMPRESSED_CAP);

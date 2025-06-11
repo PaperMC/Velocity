@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2021 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,16 +17,16 @@
 
 package com.velocitypowered.proxy.util.ratelimit;
 
-import java.net.InetAddress;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A {@link Ratelimiter} that does no rate-limiting.
  */
-enum NoopCacheRatelimiter implements Ratelimiter {
+enum NoopCacheRatelimiter implements Ratelimiter<Object> {
   INSTANCE;
 
   @Override
-  public boolean attempt(InetAddress address) {
+  public boolean attempt(@NotNull Object key) {
     return true;
   }
 }

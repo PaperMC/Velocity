@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,14 +38,15 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
+/**
+ * Implements loading a Java plugin.
+ */
 public class JavaPluginLoader implements PluginLoader {
 
   private final ProxyServer server;
@@ -60,13 +61,21 @@ public class JavaPluginLoader implements PluginLoader {
   public PluginDescription loadCandidate(Path source) throws Exception {
     Optional<SerializedPluginDescription> serialized = getSerializedPluginInfo(source);
 
-    if (!serialized.isPresent()) {
+    if (serialized.isEmpty()) {
       throw new InvalidPluginException("Did not find a valid velocity-plugin.json.");
     }
 
     SerializedPluginDescription pd = serialized.get();
     if (!SerializedPluginDescription.ID_PATTERN.matcher(pd.getId()).matches()) {
       throw new InvalidPluginException("Plugin ID '" + pd.getId() + "' is invalid.");
+    }
+
+    for (SerializedPluginDescription.Dependency dependency : pd.getDependencies()) {
+      if (!SerializedPluginDescription.ID_PATTERN.matcher(dependency.getId()).matches()) {
+        throw new InvalidPluginException(
+            "Dependency ID '" + dependency.getId() + "' for plugin '" + pd.getId() + "' is invalid."
+        );
+      }
     }
 
     return createCandidateDescription(pd, source);
@@ -78,19 +87,20 @@ public class JavaPluginLoader implements PluginLoader {
       throw new IllegalArgumentException("Description provided isn't of the Java plugin loader");
     }
 
-    URL pluginJarUrl = candidate.getSource().get().toUri().toURL();
-    PluginClassLoader loader = AccessController.doPrivileged(
-        (PrivilegedAction<PluginClassLoader>) () -> new PluginClassLoader(new URL[]{pluginJarUrl}));
+    URL pluginJarUrl = candidate.getSource().orElseThrow(
+        () -> new InvalidPluginException("Description provided does not have a source path")
+    ).toUri().toURL();
+    PluginClassLoader loader = new PluginClassLoader(new URL[]{pluginJarUrl});
     loader.addToClassloaders();
 
     JavaVelocityPluginDescriptionCandidate candidateInst =
         (JavaVelocityPluginDescriptionCandidate) candidate;
-    Class mainClass = loader.loadClass(candidateInst.getMainClass());
+    Class<?> mainClass = loader.loadClass(candidateInst.getMainClass());
     return createDescription(candidateInst, mainClass);
   }
 
   @Override
-  public Module createModule(PluginContainer container) throws Exception {
+  public Module createModule(PluginContainer container) {
     PluginDescription description = container.getDescription();
     if (!(description instanceof JavaVelocityPluginDescription)) {
       throw new IllegalArgumentException("Description provided isn't of the Java plugin loader");
@@ -99,11 +109,11 @@ public class JavaPluginLoader implements PluginLoader {
     JavaVelocityPluginDescription javaDescription = (JavaVelocityPluginDescription) description;
     Optional<Path> source = javaDescription.getSource();
 
-    if (!source.isPresent()) {
+    if (source.isEmpty()) {
       throw new IllegalArgumentException("No path in plugin description");
     }
 
-    return new VelocityPluginModule(server, javaDescription, container, baseDirectory);
+    return new VelocityPluginModule(javaDescription, container, baseDirectory);
   }
 
   @Override
@@ -122,7 +132,7 @@ public class JavaPluginLoader implements PluginLoader {
 
     if (instance == null) {
       throw new IllegalStateException(
-        "Got nothing from injector for plugin " + description.getId());
+          "Got nothing from injector for plugin " + description.getId());
     }
 
     ((VelocityPluginContainer) container).setInstance(instance);
@@ -181,7 +191,7 @@ public class JavaPluginLoader implements PluginLoader {
 
   private VelocityPluginDescription createDescription(
       JavaVelocityPluginDescriptionCandidate description,
-      Class mainClass) {
+      Class<?> mainClass) {
     return new JavaVelocityPluginDescription(
         description.getId(),
         description.getName().orElse(null),

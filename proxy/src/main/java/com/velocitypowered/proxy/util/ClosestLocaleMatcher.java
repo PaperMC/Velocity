@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Matches a player's locale to the "closest" Velocity locale, for message localization.
+ */
 public class ClosestLocaleMatcher {
+
   public static final ClosestLocaleMatcher INSTANCE = new ClosestLocaleMatcher();
 
   private final Map<String, Locale> byLanguage;

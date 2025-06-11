@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2022-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,13 +40,14 @@ public class ArgumentIdentifier {
     for (int i = 0; i < versions.length; i++) {
       VersionSet current = Preconditions.checkNotNull(versions[i]);
 
-      Preconditions.checkArgument(current.getVersion().compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0,
-              "Version too old for ID index");
-      Preconditions.checkArgument(previous == null || previous.compareTo(current.getVersion()) > 0,
-              "Invalid protocol version order");
+      Preconditions.checkArgument(
+          current.getVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19),
+          "Version too old for ID index");
+      Preconditions.checkArgument(previous == null || previous.greaterThan(current.getVersion()),
+          "Invalid protocol version order");
 
       for (ProtocolVersion v : ProtocolVersion.values()) {
-        if (v.compareTo(current.getVersion()) >= 0) {
+        if (v.noLessThan(current.getVersion())) {
           temp.putIfAbsent(v, current.getId());
         }
       }
@@ -55,6 +56,13 @@ public class ArgumentIdentifier {
     }
 
     this.versionById = ImmutableMap.copyOf(temp);
+  }
+
+  @Override
+  public String toString() {
+    return "ArgumentIdentifier{" +
+        "identifier='" + identifier + '\'' +
+        '}';
   }
 
   public String getIdentifier() {
@@ -77,6 +85,7 @@ public class ArgumentIdentifier {
    * This class is purely for convenience.
    */
   public static class VersionSet {
+
     private final ProtocolVersion version;
     private final int id;
 

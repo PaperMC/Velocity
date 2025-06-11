@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.connection.util;
 import com.google.common.collect.ImmutableList;
 import com.spotify.futures.CompletableFutures;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.server.PingOptions;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.api.util.ModInfo;
@@ -29,11 +30,16 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
+/**
+ * Common utilities for handling server list ping results.
+ */
 public class ServerListPingHandler {
 
   private final VelocityServer server;
@@ -43,12 +49,31 @@ public class ServerListPingHandler {
   }
 
   private ServerPing constructLocalPing(ProtocolVersion version) {
+    if (version == ProtocolVersion.UNKNOWN) {
+      version = ProtocolVersion.MAXIMUM_VERSION;
+    }
     VelocityConfiguration configuration = server.getConfiguration();
+    List<ServerPing.SamplePlayer> samplePlayers;
+    if (configuration.getSamplePlayersInPing()) {
+      List<ServerPing.SamplePlayer> unshuffledPlayers = server.getAllPlayers().stream()
+              .map(p -> {
+                if (p.getPlayerSettings().isClientListingAllowed()) {
+                  return new ServerPing.SamplePlayer(p.getUsername(), p.getUniqueId());
+                } else {
+                  return ServerPing.SamplePlayer.ANONYMOUS;
+                }
+              })
+              .collect(Collectors.toList());
+      Collections.shuffle(unshuffledPlayers);
+      samplePlayers = unshuffledPlayers.subList(0, Math.min(12, server.getPlayerCount()));
+    } else {
+      samplePlayers = ImmutableList.of();
+    }
     return new ServerPing(
         new ServerPing.Version(version.getProtocol(),
             "Velocity " + ProtocolVersion.SUPPORTED_VERSION_STRING),
         new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(),
-            ImmutableList.of()),
+            samplePlayers),
         configuration.getMotd(),
         configuration.getFavicon().orElse(null),
         configuration.isAnnounceForge() ? ModInfo.DEFAULT : null
@@ -56,16 +81,17 @@ public class ServerListPingHandler {
   }
 
   private CompletableFuture<ServerPing> attemptPingPassthrough(VelocityInboundConnection connection,
-      PingPassthroughMode mode, List<String> servers, ProtocolVersion responseProtocolVersion) {
+      PingPassthroughMode mode, List<String> servers, ProtocolVersion responseProtocolVersion, String virtualHostStr) {
     ServerPing fallback = constructLocalPing(connection.getProtocolVersion());
     List<CompletableFuture<ServerPing>> pings = new ArrayList<>();
     for (String s : servers) {
       Optional<RegisteredServer> rs = server.getServer(s);
-      if (!rs.isPresent()) {
+      if (rs.isEmpty()) {
         continue;
       }
       VelocityRegisteredServer vrs = (VelocityRegisteredServer) rs.get();
-      pings.add(vrs.ping(connection.getConnection().eventLoop(), responseProtocolVersion));
+      pings.add(vrs.ping(connection.getConnection().eventLoop(), PingOptions.builder()
+              .version(responseProtocolVersion).virtualHost(virtualHostStr).build()));
     }
     if (pings.isEmpty()) {
       return CompletableFuture.completedFuture(fallback);
@@ -135,7 +161,7 @@ public class ServerListPingHandler {
    */
   public CompletableFuture<ServerPing> getInitialPing(VelocityInboundConnection connection) {
     VelocityConfiguration configuration = server.getConfiguration();
-    ProtocolVersion shownVersion = ProtocolVersion.isSupported(connection.getProtocolVersion())
+    ProtocolVersion shownVersion = connection.getProtocolVersion().isSupported()
         ? connection.getProtocolVersion() : ProtocolVersion.MAXIMUM_VERSION;
     PingPassthroughMode passthroughMode = configuration.getPingPassthrough();
 
@@ -147,7 +173,7 @@ public class ServerListPingHandler {
           .orElse("");
       List<String> serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(
           virtualHostStr, server.getConfiguration().getAttemptConnectionOrder());
-      return attemptPingPassthrough(connection, passthroughMode, serversToTry, shownVersion);
+      return attemptPingPassthrough(connection, passthroughMode, serversToTry, shownVersion, virtualHostStr);
     }
   }
 }

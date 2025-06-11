@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@ package com.velocitypowered.proxy.server;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.velocitypowered.api.event.proxy.server.ServerRegisteredEvent;
+import com.velocitypowered.api.event.proxy.server.ServerUnregisteredEvent;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.proxy.VelocityServer;
@@ -29,6 +31,9 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Implements the Velocity server registry.
+ */
 public class ServerMap {
 
   private final @Nullable VelocityServer server;
@@ -55,8 +60,8 @@ public class ServerMap {
   }
 
   /**
-   * Creates a raw implementation of a {@link RegisteredServer} without
-   *  tying it to the internal server map.
+   * Creates a raw implementation of a {@link RegisteredServer} without tying it to the internal
+   * server map.
    *
    * @param serverInfo the server to create a registered server with
    * @return the {@link RegisteredServer} built from the {@link ServerInfo}
@@ -81,6 +86,10 @@ public class ServerMap {
       throw new IllegalArgumentException(
           "Server with name " + serverInfo.getName() + " already registered");
     } else if (existing == null) {
+      if (server != null) {
+        server.getEventManager().fireAndForget(new ServerRegisteredEvent(rs));
+      }
+
       return rs;
     } else {
       return existing;
@@ -104,5 +113,9 @@ public class ServerMap {
         "Trying to remove server %s with differing information", serverInfo.getName());
     Preconditions.checkState(servers.remove(lowerName, rs),
         "Server with name %s replaced whilst unregistering", serverInfo.getName());
+
+    if (server != null) {
+      server.getEventManager().fireAndForget(new ServerUnregisteredEvent(rs));
+    }
   }
 }

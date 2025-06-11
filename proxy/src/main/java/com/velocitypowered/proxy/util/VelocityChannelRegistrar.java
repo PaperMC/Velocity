@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Registry for channels recognized by the proxy.
+ */
 public class VelocityChannelRegistrar implements ChannelRegistrar {
 
   private final Map<String, ChannelIdentifier> identifierMap = new ConcurrentHashMap<>();
@@ -76,10 +79,10 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
    *
    * @return all legacy channel IDs
    */
-  public Collection<String> getLegacyChannelIds() {
-    Collection<String> ids = new HashSet<>();
+  public Collection<ChannelIdentifier> getLegacyChannelIds() {
+    Collection<ChannelIdentifier> ids = new HashSet<>();
     for (ChannelIdentifier value : identifierMap.values()) {
-      ids.add(value.getId());
+      ids.add(new LegacyChannelIdentifier(value.getId()));
     }
     return ids;
   }
@@ -89,13 +92,13 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
    *
    * @return the channel IDs for Minecraft 1.13 and above
    */
-  public Collection<String> getModernChannelIds() {
-    Collection<String> ids = new HashSet<>();
+  public Collection<ChannelIdentifier> getModernChannelIds() {
+    Collection<ChannelIdentifier> ids = new HashSet<>();
     for (ChannelIdentifier value : identifierMap.values()) {
       if (value instanceof MinecraftChannelIdentifier) {
-        ids.add(value.getId());
+        ids.add(value);
       } else {
-        ids.add(PluginMessageUtil.transformLegacyToModernChannel(value.getId()));
+        ids.add(MinecraftChannelIdentifier.from(PluginMessageUtil.transformLegacyToModernChannel(value.getId())));
       }
     }
     return ids;
@@ -107,11 +110,12 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
 
   /**
    * Returns all the channel names to register depending on the Minecraft protocol version.
+   *
    * @param protocolVersion the protocol version in use
    * @return the list of channels to register
    */
-  public Collection<String> getChannelsForProtocol(ProtocolVersion protocolVersion) {
-    if (protocolVersion.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0) {
+  public Collection<ChannelIdentifier> getChannelsForProtocol(ProtocolVersion protocolVersion) {
+    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_13)) {
       return getModernChannelIds();
     }
     return getLegacyChannelIds();

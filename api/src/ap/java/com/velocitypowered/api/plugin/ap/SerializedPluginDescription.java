@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -19,6 +19,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Serialized version of {@link com.velocitypowered.api.plugin.PluginDescription}.
+ */
 public final class SerializedPluginDescription {
 
   public static final Pattern ID_PATTERN = Pattern.compile("[a-z][a-z0-9-_]{0,63}");
@@ -130,6 +133,9 @@ public final class SerializedPluginDescription {
         + '}';
   }
 
+  /**
+   * Represents a dependency.
+   */
   public static final class Dependency {
 
     private final String id;

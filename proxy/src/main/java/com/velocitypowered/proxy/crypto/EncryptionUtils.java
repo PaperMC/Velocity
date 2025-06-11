@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2022-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +23,6 @@ import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import it.unimi.dsi.fastutil.Pair;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.Key;
@@ -41,27 +39,30 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import javax.crypto.Cipher;
 
+/**
+ * Generic utilities for dealing with encryption operations in Minecraft.
+ */
 public enum EncryptionUtils {
   ;
 
   public static final Pair<String, String> PEM_RSA_PUBLIC_KEY_DESCRIPTOR =
-          Pair.of("-----BEGIN RSA PUBLIC KEY-----", "-----END RSA PUBLIC KEY-----");
+      Pair.of("-----BEGIN RSA PUBLIC KEY-----", "-----END RSA PUBLIC KEY-----");
   public static final Pair<String, String> PEM_RSA_PRIVATE_KEY_DESCRIPTOR =
-          Pair.of("-----BEGIN RSA PRIVATE KEY-----", "-----END RSA PRIVATE KEY-----");
+      Pair.of("-----BEGIN RSA PRIVATE KEY-----", "-----END RSA PRIVATE KEY-----");
 
   public static final String SHA1_WITH_RSA = "SHA1withRSA";
   public static final String SHA256_WITH_RSA = "SHA256withRSA";
 
   public static final QuietDecoderException INVALID_SIGNATURE
-          = new QuietDecoderException("Incorrectly signed chat message");
+      = new QuietDecoderException("Incorrectly signed chat message");
   public static final QuietDecoderException PREVIEW_SIGNATURE_MISSING
-          = new QuietDecoderException("Unsigned chat message requested signed preview");
+      = new QuietDecoderException("Unsigned chat message requested signed preview");
   public static final byte[] EMPTY = new byte[0];
   private static PublicKey YGGDRASIL_SESSION_KEY;
   private static KeyFactory RSA_KEY_FACTORY;
 
   private static final Base64.Encoder MIME_SPECIAL_ENCODER
-          = Base64.getMimeEncoder(76, "\n".getBytes(StandardCharsets.UTF_8));
+      = Base64.getMimeEncoder(76, "\n".getBytes(StandardCharsets.UTF_8));
 
   static {
     try {
@@ -72,8 +73,9 @@ public enum EncryptionUtils {
 
     try {
       byte[] bytes = ByteStreams.toByteArray(
-              EncryptionUtils.class.getClassLoader().getResourceAsStream("yggdrasil_session_pubkey.der"));
-      YGGDRASIL_SESSION_KEY =  parseRsaPublicKey(bytes);
+          EncryptionUtils.class.getClassLoader()
+              .getResourceAsStream("yggdrasil_session_pubkey.der"));
+      YGGDRASIL_SESSION_KEY = parseRsaPublicKey(bytes);
     } catch (IOException | NullPointerException err) {
       throw new RuntimeException(err);
     }
@@ -87,12 +89,13 @@ public enum EncryptionUtils {
    * Verifies a key signature.
    *
    * @param algorithm the signature algorithm
-   * @param base the public key to verify with
+   * @param base      the public key to verify with
    * @param signature the signature to verify against
-   * @param toVerify the byte array(s) of data to verify
+   * @param toVerify  the byte array(s) of data to verify
    * @return validity of the signature
    */
-  public static boolean verifySignature(String algorithm, PublicKey base, byte[] signature, byte[]... toVerify) {
+  public static boolean verifySignature(String algorithm, PublicKey base, byte[] signature,
+      byte[]... toVerify) {
     Preconditions.checkArgument(toVerify.length > 0);
     try {
       Signature construct = Signature.getInstance(algorithm);
@@ -106,64 +109,12 @@ public enum EncryptionUtils {
     }
   }
 
-  /**
-   * Generates a signature for input data.
-   *
-   * @param algorithm the signature algorithm
-   * @param base the private key to sign with
-   * @param toSign the byte array(s) of data to sign
-   * @return the generated signature
-   */
-  public static byte[] generateSignature(String algorithm, PrivateKey base, byte[]... toSign) {
-    Preconditions.checkArgument(toSign.length > 0);
-    try {
-      Signature construct = Signature.getInstance(algorithm);
-      construct.initSign(base);
-      for (byte[] bytes : toSign) {
-        construct.update(bytes);
-      }
-      return construct.sign();
-    } catch (GeneralSecurityException e) {
-      throw new IllegalArgumentException("Invalid signature parameters");
-    }
-  }
-
-  /**
-   * Encodes a long array as Big-endian byte array.
-   *
-   * @param bits the long (array) of numbers to encode
-   * @return the encoded bytes
-   */
-  public static byte[] longToBigEndianByteArray(long... bits) {
-    ByteBuffer ret = ByteBuffer.allocate(8 * bits.length).order(ByteOrder.BIG_ENDIAN);
-    for (long put : bits) {
-      ret.putLong(put);
-    }
-    return ret.array();
-  }
-
   public static String encodeUrlEncoded(byte[] data) {
     return MIME_SPECIAL_ENCODER.encodeToString(data);
   }
 
   public static byte[] decodeUrlEncoded(String toParse) {
     return Base64.getMimeDecoder().decode(toParse);
-  }
-
-  /**
-   * Parse a cer-encoded RSA key into its key bytes.
-   *
-   * @param toParse the cer-encoded key String
-   * @param descriptors the type of key
-   * @return the parsed key bytes
-   */
-  public static byte[] parsePemEncoded(String toParse, Pair<String, String> descriptors) {
-    int startIdx = toParse.indexOf(descriptors.first());
-    Preconditions.checkArgument(startIdx >= 0);
-    int firstLen = descriptors.first().length();
-    int endIdx = toParse.indexOf(descriptors.second(), firstLen + startIdx) + 1;
-    Preconditions.checkArgument(endIdx > 0);
-    return decodeUrlEncoded(toParse.substring(startIdx + firstLen, endIdx));
   }
 
   /**
@@ -184,8 +135,8 @@ public enum EncryptionUtils {
     }
 
     return encoder.first() + "\n"
-            + encodeUrlEncoded(toEncode.getEncoded()) + "\n"
-            + encoder.second() + "\n";
+        + encodeUrlEncoded(toEncode.getEncoded()) + "\n"
+        + encoder.second() + "\n";
   }
 
   /**
@@ -232,7 +183,7 @@ public enum EncryptionUtils {
    * Decrypts an RSA message.
    *
    * @param keyPair the key pair to use
-   * @param bytes the bytes of the encrypted message
+   * @param bytes   the bytes of the encrypted message
    * @return the decrypted message
    * @throws GeneralSecurityException if the message couldn't be decoded
    */
@@ -246,7 +197,7 @@ public enum EncryptionUtils {
    * Generates the server ID for the hasJoined endpoint.
    *
    * @param sharedSecret the shared secret between the client and the proxy
-   * @param key the RSA public key
+   * @param key          the RSA public key
    * @return the server ID
    */
   public static String generateServerId(byte[] sharedSecret, PublicKey key) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.protocol.packet.chat;
 import java.time.Instant;
 
 public class ChatTimeKeeper {
+
   private Instant lastTimestamp;
 
   public ChatTimeKeeper() {

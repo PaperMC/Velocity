@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,14 +24,15 @@ import com.velocitypowered.proxy.protocol.packet.chat.session.SessionChatBuilder
 import java.util.function.Function;
 
 public class ChatBuilderFactory {
+
   private final ProtocolVersion version;
   private final Function<ProtocolVersion, ChatBuilderV2> builderFunction;
 
   public ChatBuilderFactory(ProtocolVersion version) {
     this.version = version;
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
       this.builderFunction = SessionChatBuilder::new;
-    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+    } else if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
       this.builderFunction = KeyedChatBuilder::new;
     } else {
       this.builderFunction = LegacyChatBuilder::new;

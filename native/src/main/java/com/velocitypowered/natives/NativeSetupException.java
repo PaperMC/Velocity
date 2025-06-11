@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,9 @@
 
 package com.velocitypowered.natives;
 
+/**
+ * Thrown when we cannot set up a variant of a native library.
+ */
 public class NativeSetupException extends RuntimeException {
 
   public NativeSetupException() {

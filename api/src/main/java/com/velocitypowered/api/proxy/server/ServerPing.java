@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -14,6 +14,7 @@ import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.ModInfo;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -159,31 +160,79 @@ public final class ServerPing {
 
     }
 
+    /**
+     * Uses the modified {@code version} info in the response.
+     *
+     * @param version version info to set
+     * @return this builder, for chaining
+     */
     public Builder version(Version version) {
       this.version = Preconditions.checkNotNull(version, "version");
       return this;
     }
 
+    /**
+     * Uses the modified {@code onlinePlayers} number in the response.
+     *
+     * @param onlinePlayers number for online players to set
+     * @return this builder, for chaining
+     */
     public Builder onlinePlayers(int onlinePlayers) {
       this.onlinePlayers = onlinePlayers;
       return this;
     }
 
+    /**
+     * Uses the modified {@code maximumPlayers} number in the response.
+     * <b>This will not modify the actual maximum players that can join the server.</b>
+     *
+     * @param maximumPlayers number for maximum players to set
+     * @return this builder, for chaining
+     */
     public Builder maximumPlayers(int maximumPlayers) {
       this.maximumPlayers = maximumPlayers;
       return this;
     }
 
+    /**
+     * Uses the modified {@code players} array in the response.
+     *
+     * @param players array of SamplePlayers to add
+     * @return this builder, for chaining
+     */
     public Builder samplePlayers(SamplePlayer... players) {
       this.samplePlayers.addAll(Arrays.asList(players));
       return this;
     }
 
+    /**
+     * Uses the modified {@code players} collection in the response.
+     *
+     * @param players collection of SamplePlayers to add
+     * @return this builder, for chaining
+     */
+    public Builder samplePlayers(Collection<SamplePlayer> players) {
+      this.samplePlayers.addAll(players);
+      return this;
+    }
+
+    /**
+     * Uses the modified {@code modType} in the response.
+     *
+     * @param modType the mod type to set
+     * @return this builder, for chaining
+     */
     public Builder modType(String modType) {
       this.modType = Preconditions.checkNotNull(modType, "modType");
       return this;
     }
 
+    /**
+     * Uses the modified {@code mods} array in the response.
+     *
+     * @param mods array of mods to use
+     * @return this builder, for chaining
+     */
     public Builder mods(ModInfo.Mod... mods) {
       this.mods.addAll(Arrays.asList(mods));
       return this;
@@ -191,8 +240,9 @@ public final class ServerPing {
 
     /**
      * Uses the modified {@code mods} list in the response.
+     *
      * @param mods the mods list to use
-     * @return this build, for chaining
+     * @return this builder, for chaining
      */
     public Builder mods(ModInfo mods) {
       Preconditions.checkNotNull(mods, "mods");
@@ -202,36 +252,74 @@ public final class ServerPing {
       return this;
     }
 
+    /**
+     * Clears the current list of mods to use in the response.
+     *
+     * @return this builder, for chaining
+     */
     public Builder clearMods() {
       this.mods.clear();
       return this;
     }
 
+    /**
+     * Clears the current list of PlayerSamples to use in the response.
+     *
+     * @return this builder, for chaining
+     */
     public Builder clearSamplePlayers() {
       this.samplePlayers.clear();
       return this;
     }
 
+    /**
+     * Defines the server as mod incompatible in the response.
+     *
+     * @return this builder, for chaining
+     */
     public Builder notModCompatible() {
       this.nullOutModinfo = true;
       return this;
     }
 
+    /**
+     * Enables nulling Players in the response.
+     * This will display the player count as {@code ???}.
+     *
+     * @return this builder, for chaining
+     */
     public Builder nullPlayers() {
       this.nullOutPlayers = true;
       return this;
     }
 
+    /**
+     * Uses the {@code description} Component in the response.
+     *
+     * @param description Component to use as the description.
+     * @return this builder, for chaining
+     */
     public Builder description(net.kyori.adventure.text.Component description) {
       this.description = Preconditions.checkNotNull(description, "description");
       return this;
     }
 
+    /**
+     * Uses the {@code favicon} in the response.
+     *
+     * @param favicon Favicon instance to use.
+     * @return this builder, for chaining
+     */
     public Builder favicon(Favicon favicon) {
       this.favicon = Preconditions.checkNotNull(favicon, "favicon");
       return this;
     }
 
+    /**
+     * Clears the current favicon used in the response.
+     *
+     * @return this builder, for chaining
+     */
     public Builder clearFavicon() {
       this.favicon = null;
       return this;
@@ -240,6 +328,7 @@ public final class ServerPing {
     /**
      * Uses the information from this builder to create a new {@link ServerPing} instance. The
      * builder can be re-used after this event has been called.
+     *
      * @return a new {@link ServerPing} instance
      */
     public ServerPing build() {
@@ -303,6 +392,12 @@ public final class ServerPing {
     }
   }
 
+  /**
+   * Represents the version of the server sent to the client. A protocol version
+   * that does not match the client's protocol version will show up on the server
+   * list as an incompatible version, but the client will still permit the user
+   * to connect to the server anyway.
+   */
   public static final class Version {
 
     private final int protocol;
@@ -310,6 +405,7 @@ public final class ServerPing {
 
     /**
      * Creates a new instance.
+     *
      * @param protocol the protocol version as an integer
      * @param name a friendly name for the protocol version
      */
@@ -352,6 +448,10 @@ public final class ServerPing {
     }
   }
 
+  /**
+   * Represents what the players the server purports to have online, its maximum capacity,
+   * and a sample of players on the server.
+   */
   public static final class Players {
 
     private final int online;
@@ -360,6 +460,7 @@ public final class ServerPing {
 
     /**
      * Creates a new instance.
+     *
      * @param online the number of online players
      * @param max the maximum number of players
      * @param sample a sample of players on the server
@@ -410,8 +511,15 @@ public final class ServerPing {
     }
   }
 
+  /**
+   * A player returned in the sample field of the server ping players field.
+   */
   public static final class SamplePlayer {
 
+    public static final SamplePlayer ANONYMOUS = new SamplePlayer(
+        "Anonymous Player",
+        new UUID(0L, 0L)
+    );
     private final String name;
     private final UUID id;
 

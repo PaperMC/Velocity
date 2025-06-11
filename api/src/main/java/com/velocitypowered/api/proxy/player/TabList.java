@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2022 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -40,8 +40,33 @@ public interface TabList {
    * Adds a {@link TabListEntry} to the {@link Player}'s tab list.
    *
    * @param entry to add to the tab list
+   * @throws IllegalArgumentException on versions below 1.19.3, if an entry with the same UUID already exists
    */
   void addEntry(TabListEntry entry);
+
+  /**
+   * Adds a {@link Iterable} of {@link TabListEntry}'s to the {@link Player}'s tab list.
+   *
+   * @param entries to add to the tab list
+   * @throws IllegalArgumentException on versions below 1.19.3, if an entry with the same UUID already exists
+   */
+  default void addEntries(Iterable<TabListEntry> entries) {
+    for (TabListEntry entry : entries) {
+      addEntry(entry);
+    }
+  }
+
+  /**
+   * Adds an array of {@link TabListEntry}'s to the {@link Player}'s tab list.
+   *
+   * @param entries to add to the tab list
+   * @throws IllegalArgumentException on versions below 1.19.3, if an entry with the same UUID already exists
+   */
+  default void addEntries(TabListEntry... entries) {
+    for (TabListEntry entry : entries) {
+      addEntry(entry);
+    }
+  }
 
   /**
    * Removes the {@link TabListEntry} from the tab list with the {@link GameProfile} identified with
@@ -60,6 +85,15 @@ public interface TabList {
    * @return {@code true} if it exists, {@code false} if it does not
    */
   boolean containsEntry(UUID uuid);
+
+  /**
+   * Retrieves the tab list entry associated with the given uuid.
+   *
+   * @param uuid The player's {@link UUID} the {@link TabListEntry} is in reference to.
+   * @return {@code Optional.empty()} if the player is not present in the provided player's
+   *     {@link TabList} otherwise a present {@link TabListEntry} in relation to the player.
+   */
+  Optional<TabListEntry> getEntry(UUID uuid);
 
   /**
    * Returns an immutable {@link Collection} of the {@link TabListEntry}s in the tab list.
@@ -137,6 +171,45 @@ public interface TabList {
    * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
    */
   @Deprecated
+  default TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
+                          int gameMode, @Nullable ChatSession chatSession, boolean listed) {
+    return buildEntry(profile, displayName, latency, gameMode, chatSession, listed, 0);
+  }
+
+  /**
+   * Represents an entry in a {@link Player}'s tab list.
+   *
+   * @param profile     the profile
+   * @param displayName the display name
+   * @param latency     the latency
+   * @param gameMode    the game mode
+   * @param chatSession the chat session
+   * @param listed      the visible status of entry
+   * @param listOrder   the order/priority of entry in the tab list
+   * @return the entry
+   * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
+   */
+  @Deprecated
+  default TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
+                          int gameMode, @Nullable ChatSession chatSession, boolean listed, int listOrder) {
+    return buildEntry(profile, displayName, latency, gameMode, chatSession, listed, listOrder, true);
+  }
+
+  /**
+   * Represents an entry in a {@link Player}'s tab list.
+   *
+   * @param profile     the profile
+   * @param displayName the display name
+   * @param latency     the latency
+   * @param gameMode    the game mode
+   * @param chatSession the chat session
+   * @param listed      the visible status of entry
+   * @param listOrder   the order/priority of entry in the tab list
+   * @param showHat     the visibility of this entry's hat layer
+   * @return the entry
+   * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
+   */
+  @Deprecated
   TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
-                          int gameMode, @Nullable ChatSession chatSession, boolean listed);
+                          int gameMode, @Nullable ChatSession chatSession, boolean listed, int listOrder, boolean showHat);
 }

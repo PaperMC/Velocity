@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,18 +17,27 @@
 
 package com.velocitypowered.proxy.tablist;
 
+import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.player.TabList;
-import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
-import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfo;
-import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
+import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItemPacket;
+import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfoPacket;
+import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfoPacket;
 
+/**
+ * Tab list interface with methods for handling player info packets.
+ */
 public interface InternalTabList extends TabList {
-  default void processLegacy(LegacyPlayerListItem packet) {
+
+  Player getPlayer();
+
+  default void processLegacy(LegacyPlayerListItemPacket packet) {
   }
 
-  default void processUpdate(UpsertPlayerInfo infoPacket) {
+  default void processUpdate(UpsertPlayerInfoPacket infoPacket) {
   }
 
-  default void processRemove(RemovePlayerInfo infoPacket) {
+  default void processRemove(RemovePlayerInfoPacket infoPacket) {
   }
+
+  void clearAllSilent();
 }

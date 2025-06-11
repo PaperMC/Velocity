@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,11 +21,13 @@ import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatType;
-import com.velocitypowered.proxy.protocol.packet.chat.SystemChat;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
+import com.velocitypowered.proxy.protocol.packet.chat.SystemChatPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderV2;
 import net.kyori.adventure.text.Component;
 
 public class KeyedChatBuilder extends ChatBuilderV2 {
+
   public KeyedChatBuilder(ProtocolVersion version) {
     super(version);
   }
@@ -34,16 +36,16 @@ public class KeyedChatBuilder extends ChatBuilderV2 {
   public MinecraftPacket toClient() {
     // This is temporary
     Component msg = component == null ? Component.text(message) : component;
-    return new SystemChat(msg, type == ChatType.CHAT ? ChatType.SYSTEM : type);
+    return new SystemChatPacket(new ComponentHolder(version, msg), type == ChatType.CHAT ? ChatType.SYSTEM : type);
   }
 
   @Override
   public MinecraftPacket toServer() {
     if (message.startsWith("/")) {
-      return new KeyedPlayerCommand(message.substring(1), ImmutableList.of(), timestamp);
+      return new KeyedPlayerCommandPacket(message.substring(1), ImmutableList.of(), timestamp);
     } else {
       // This will produce an error on the server, but needs to be here.
-      KeyedPlayerChat v1Chat = new KeyedPlayerChat(message);
+      KeyedPlayerChatPacket v1Chat = new KeyedPlayerChatPacket(message);
       v1Chat.setExpiry(this.timestamp);
       return v1Chat;
     }

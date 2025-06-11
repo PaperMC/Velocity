@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +19,15 @@ package com.velocitypowered.proxy.protocol;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Protocol utils test.
+ */
 public class ProtocolUtilsTest {
 
   @Test
@@ -68,7 +70,7 @@ public class ProtocolUtilsTest {
   private void writeReadTestOld(ByteBuf buf, int test) {
     buf.clear();
     writeVarIntOld(buf, test);
-    assertEquals(test, ProtocolUtils.readVarIntSafely(buf));
+    assertEquals(test, ProtocolUtils.readVarInt(buf));
   }
 
   @Test
@@ -101,7 +103,7 @@ public class ProtocolUtilsTest {
           "Encoding of " + i + " was invalid");
 
       assertEquals(i, oldReadVarIntSafely(varintNew));
-      assertEquals(i, ProtocolUtils.readVarIntSafely(varintOld));
+      assertEquals(i, ProtocolUtils.readVarInt(varintOld));
 
       varintNew.clear();
       varintOld.clear();

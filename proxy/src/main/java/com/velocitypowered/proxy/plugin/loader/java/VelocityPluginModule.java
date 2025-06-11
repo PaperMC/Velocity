@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,21 +23,20 @@ import com.google.inject.Scopes;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
-import com.velocitypowered.api.proxy.ProxyServer;
 import java.nio.file.Path;
+import java.util.concurrent.ExecutorService;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 class VelocityPluginModule implements Module {
 
-  private final ProxyServer server;
   private final JavaVelocityPluginDescription description;
   private final PluginContainer pluginContainer;
   private final Path basePluginPath;
 
-  VelocityPluginModule(ProxyServer server, JavaVelocityPluginDescription description,
-                       PluginContainer pluginContainer, Path basePluginPath) {
-    this.server = server;
+  VelocityPluginModule(JavaVelocityPluginDescription description, PluginContainer pluginContainer,
+      Path basePluginPath) {
     this.description = description;
     this.pluginContainer = pluginContainer;
     this.basePluginPath = basePluginPath;
@@ -48,9 +47,12 @@ class VelocityPluginModule implements Module {
     binder.bind(description.getMainClass()).in(Scopes.SINGLETON);
 
     binder.bind(Logger.class).toInstance(LoggerFactory.getLogger(description.getId()));
+    binder.bind(ComponentLogger.class).toInstance(ComponentLogger.logger(description.getId()));
     binder.bind(Path.class).annotatedWith(DataDirectory.class)
         .toInstance(basePluginPath.resolve(description.getId()));
     binder.bind(PluginDescription.class).toInstance(description);
     binder.bind(PluginContainer.class).toInstance(pluginContainer);
+
+    binder.bind(ExecutorService.class).toProvider(pluginContainer::getExecutorService);
   }
 }

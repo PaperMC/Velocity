@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,9 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 
+/**
+ * Mock of {@link PluginManager}.
+ */
 public class MockPluginManager implements PluginManager {
 
   public static final PluginManager INSTANCE = new MockPluginManager();

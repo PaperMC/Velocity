@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -7,10 +7,10 @@
 
 package com.velocitypowered.api.proxy.messages;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.base.Strings;
 import java.util.Objects;
-import java.util.regex.Pattern;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -19,8 +19,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * multi-threaded use.
  */
 public final class MinecraftChannelIdentifier implements ChannelIdentifier {
-
-  private static final Pattern VALID_IDENTIFIER_REGEX = Pattern.compile("[a-z0-9/\\-_]*");
 
   private final String namespace;
   private final String name;
@@ -38,7 +36,7 @@ public final class MinecraftChannelIdentifier implements ChannelIdentifier {
    * @return a new channel identifier
    */
   public static MinecraftChannelIdentifier forDefaultNamespace(String name) {
-    return new MinecraftChannelIdentifier("minecraft", name);
+    return new MinecraftChannelIdentifier(Key.MINECRAFT_NAMESPACE, name);
   }
 
   /**
@@ -49,13 +47,12 @@ public final class MinecraftChannelIdentifier implements ChannelIdentifier {
    * @return a new channel identifier
    */
   public static MinecraftChannelIdentifier create(String namespace, String name) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(namespace), "namespace is null or empty");
-    Preconditions.checkArgument(name != null, "namespace is null or empty");
-    Preconditions.checkArgument(VALID_IDENTIFIER_REGEX.matcher(namespace).matches(),
-        "namespace is not valid, must match: %s got %s", VALID_IDENTIFIER_REGEX.toString(), namespace);
-    Preconditions
-        .checkArgument(VALID_IDENTIFIER_REGEX.matcher(name).matches(),
-          "name is not valid, must match: %s got %s", VALID_IDENTIFIER_REGEX.toString(), name);
+    checkArgument(!Strings.isNullOrEmpty(namespace), "namespace is null or empty");
+    checkArgument(name != null, "namespace is null or empty");
+    checkArgument(Key.parseableNamespace(namespace),
+        "namespace is not valid, must match: [a-z0-9_.-] got %s", namespace);
+    checkArgument(Key.parseableValue(name),
+        "name is not valid, must match: [a-z0-9/._-] got %s", name);
     return new MinecraftChannelIdentifier(namespace, name);
   }
 
@@ -68,10 +65,9 @@ public final class MinecraftChannelIdentifier implements ChannelIdentifier {
   public static MinecraftChannelIdentifier from(String identifier) {
     int colonPos = identifier.indexOf(':');
     if (colonPos == -1) {
-      throw new IllegalArgumentException("Identifier does not contain a colon.");
-    }
-    if (colonPos + 1 == identifier.length()) {
-      throw new IllegalArgumentException("Identifier is empty.");
+      return create(Key.MINECRAFT_NAMESPACE, identifier);
+    } else if (colonPos == 0) {
+      return create(Key.MINECRAFT_NAMESPACE, identifier.substring(1));
     }
     String namespace = identifier.substring(0, colonPos);
     String name = identifier.substring(colonPos + 1);

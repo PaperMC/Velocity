@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,28 +18,43 @@
 package com.velocitypowered.proxy.testutil;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
+import com.velocitypowered.proxy.plugin.virtual.VelocityVirtualPlugin;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+/**
+ * A fake plugin manager.
+ */
 public class FakePluginManager implements PluginManager {
 
   public static final Object PLUGIN_A = new Object();
   public static final Object PLUGIN_B = new Object();
 
-  private static final PluginContainer PC_A = new FakePluginContainer("a", PLUGIN_A);
-  private static final PluginContainer PC_B = new FakePluginContainer("b", PLUGIN_B);
+  private final PluginContainer containerA = new FakePluginContainer("a", PLUGIN_A);
+  private final PluginContainer containerB = new FakePluginContainer("b", PLUGIN_B);
+  private final PluginContainer containerVelocity = new FakePluginContainer("velocity",
+      VelocityVirtualPlugin.INSTANCE);
+
+  private ExecutorService service = Executors.newCachedThreadPool(
+      new ThreadFactoryBuilder().setNameFormat("Test Async Thread").setDaemon(true).build()
+  );
 
   @Override
   public @NonNull Optional<PluginContainer> fromInstance(@NonNull Object instance) {
     if (instance == PLUGIN_A) {
-      return Optional.of(PC_A);
+      return Optional.of(containerA);
     } else if (instance == PLUGIN_B) {
-      return Optional.of(PC_B);
+      return Optional.of(containerB);
+    } else if (instance == VelocityVirtualPlugin.INSTANCE) {
+      return Optional.of(containerVelocity);
     } else {
       return Optional.empty();
     }
@@ -49,9 +64,11 @@ public class FakePluginManager implements PluginManager {
   public @NonNull Optional<PluginContainer> getPlugin(@NonNull String id) {
     switch (id) {
       case "a":
-        return Optional.of(PC_A);
+        return Optional.of(containerA);
       case "b":
-        return Optional.of(PC_B);
+        return Optional.of(containerB);
+      case "velocity":
+        return Optional.of(containerVelocity);
       default:
         return Optional.empty();
     }
@@ -59,7 +76,7 @@ public class FakePluginManager implements PluginManager {
 
   @Override
   public @NonNull Collection<PluginContainer> getPlugins() {
-    return ImmutableList.of(PC_A, PC_B);
+    return ImmutableList.of(containerVelocity, containerA, containerB);
   }
 
   @Override
@@ -72,7 +89,11 @@ public class FakePluginManager implements PluginManager {
     throw new UnsupportedOperationException();
   }
 
-  private static class FakePluginContainer implements PluginContainer {
+  public void shutdown() {
+    this.service.shutdownNow();
+  }
+
+  private class FakePluginContainer implements PluginContainer {
 
     private final String id;
     private final Object instance;
@@ -90,6 +111,11 @@ public class FakePluginManager implements PluginManager {
     @Override
     public Optional<?> getInstance() {
       return Optional.of(instance);
+    }
+
+    @Override
+    public ExecutorService getExecutorService() {
+      return service;
     }
   }
 }

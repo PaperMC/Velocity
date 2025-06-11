@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2020 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -12,7 +12,7 @@ package com.velocitypowered.api.command;
  * the command and its arguments directly without further processing.
  * This is useful for bolting on external command frameworks to Velocity.
  */
-public interface RawCommand extends InvocableCommand<RawCommand.Invocation> {
+public non-sealed interface RawCommand extends InvocableCommand<RawCommand.Invocation> {
 
   /**
    * Contains the invocation data for a raw command.

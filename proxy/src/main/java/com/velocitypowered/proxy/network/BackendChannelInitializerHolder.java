@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,9 @@ import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * Backend channel initializer holder.
+ */
 public class BackendChannelInitializerHolder implements Supplier<ChannelInitializer<Channel>> {
 
   private static final Logger LOGGER = LogManager.getLogger(ConnectionManager.class);

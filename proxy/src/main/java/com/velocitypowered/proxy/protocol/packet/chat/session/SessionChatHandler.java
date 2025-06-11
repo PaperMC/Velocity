@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2022-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,10 @@ import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SessionChatHandler implements ChatHandler<SessionPlayerChat> {
+import java.util.concurrent.CompletableFuture;
+
+public class SessionChatHandler implements ChatHandler<SessionPlayerChatPacket> {
+
   private static final Logger logger = LogManager.getLogger(SessionChatHandler.class);
 
   private final ConnectedPlayer player;
@@ -41,17 +44,18 @@ public class SessionChatHandler implements ChatHandler<SessionPlayerChat> {
   }
 
   @Override
-  public Class<SessionPlayerChat> packetClass() {
-    return SessionPlayerChat.class;
+  public Class<SessionPlayerChatPacket> packetClass() {
+    return SessionPlayerChatPacket.class;
   }
 
   @Override
-  public void handlePlayerChatInternal(SessionPlayerChat packet) {
+  public void handlePlayerChatInternal(SessionPlayerChatPacket packet) {
     ChatQueue chatQueue = this.player.getChatQueue();
     EventManager eventManager = this.server.getEventManager();
     PlayerChatEvent toSend = new PlayerChatEvent(player, packet.getMessage());
+    CompletableFuture<PlayerChatEvent> eventFuture = eventManager.fire(toSend);
     chatQueue.queuePacket(
-        eventManager.fire(toSend)
+        newLastSeenMessages -> eventFuture
             .thenApply(pme -> {
               PlayerChatEvent.ChatResult chatResult = pme.getResult();
               if (!chatResult.isAllowed()) {
@@ -61,22 +65,26 @@ public class SessionChatHandler implements ChatHandler<SessionPlayerChat> {
                 return null;
               }
 
-              if (chatResult.getMessage().map(str -> !str.equals(packet.getMessage())).orElse(false)) {
+              if (chatResult.getMessage().map(str -> !str.equals(packet.getMessage()))
+                  .orElse(false)) {
                 if (packet.isSigned()) {
                   invalidChange(logger, player);
                   return null;
                 }
-                return this.player.getChatBuilderFactory().builder().message(packet.message)
+                return this.player.getChatBuilderFactory().builder()
+                    .message(chatResult.getMessage().orElse(packet.getMessage()))
                     .setTimestamp(packet.timestamp)
+                    .setLastSeenMessages(newLastSeenMessages)
                     .toServer();
               }
-              return packet;
+              return packet.withLastSeenMessages(newLastSeenMessages);
             })
             .exceptionally((ex) -> {
               logger.error("Exception while handling player chat for {}", player, ex);
               return null;
             }),
-        packet.getTimestamp()
+        packet.getTimestamp(),
+        packet.getLastSeenMessages()
     );
   }
 }

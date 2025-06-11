@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,9 @@ import java.util.stream.Stream;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Handles building commands for plugins to register.
+ */
 public final class VelocityCommandMeta implements CommandMeta {
 
   static final class Builder implements CommandMeta.Builder {
@@ -44,7 +47,7 @@ public final class VelocityCommandMeta implements CommandMeta {
     public Builder(final String alias) {
       Preconditions.checkNotNull(alias, "alias");
       this.aliases = ImmutableSet.<String>builder()
-              .add(alias.toLowerCase(Locale.ENGLISH));
+          .add(alias.toLowerCase(Locale.ENGLISH));
       this.hints = ImmutableList.builder();
       this.plugin = null;
     }
@@ -87,12 +90,12 @@ public final class VelocityCommandMeta implements CommandMeta {
   }
 
   /**
-   * Creates a node to use for hinting the arguments of a {@link Command}. Hint nodes are
-   * sent to 1.13+ clients and the proxy uses them for providing suggestions.
+   * Creates a node to use for hinting the arguments of a {@link Command}. Hint nodes are sent to
+   * 1.13+ clients and the proxy uses them for providing suggestions.
    *
    * <p>A hint node is used to provide suggestions if and only if the requirements of
-   * the corresponding {@link CommandNode} are satisfied. The requirement predicate
-   * of the returned node always returns {@code false}.
+   * the corresponding {@link CommandNode} are satisfied. The requirement predicate of the returned
+   * node always returns {@code false}.
    *
    * @param hint the node containing hinting metadata
    * @return the hinting command node
@@ -101,8 +104,8 @@ public final class VelocityCommandMeta implements CommandMeta {
     // We need to perform a deep copy of the hint to prevent the user
     // from modifying the nodes and adding a Command or a redirect.
     final ArgumentBuilder<CommandSource, ?> builder = hint.createBuilder()
-            // Requirement checking is performed by SuggestionProvider
-            .requires(source -> false);
+        // Requirement checking is performed by SuggestionProvider
+        .requires(source -> false);
     for (final CommandNode<CommandSource> child : hint.getChildren()) {
       builder.then(copyForHinting(child));
     }
@@ -125,9 +128,9 @@ public final class VelocityCommandMeta implements CommandMeta {
   private final Object plugin;
 
   private VelocityCommandMeta(
-          final Set<String> aliases,
-          final List<CommandNode<CommandSource>> hints,
-          final @Nullable Object plugin
+      final Set<String> aliases,
+      final List<CommandNode<CommandSource>> hints,
+      final @Nullable Object plugin
   ) {
     this.aliases = aliases;
     this.hints = hints;

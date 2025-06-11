@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,8 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.ProxyVersion;
+import com.velocitypowered.natives.util.Natives;
+import com.velocitypowered.proxy.network.TransportType;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -39,19 +41,22 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Helper class for {@code /velocity dump}.
+ */
 public enum InformationUtils {
   ;
 
   /**
-   * Retrieves a {@link JsonArray} containing basic information about all
-   * running plugins on the {@link ProxyServer} instance.
+   * Retrieves a {@link JsonArray} containing basic information about all running plugins on the
+   * {@link ProxyServer} instance.
    *
    * @param proxy the proxy instance to retrieve from
    * @return {@link JsonArray} containing zero or more {@link JsonObject}
    */
   public static JsonArray collectPluginInfo(ProxyServer proxy) {
     List<PluginContainer> allPlugins = ImmutableList.copyOf(
-            proxy.getPluginManager().getPlugins());
+        proxy.getPluginManager().getPlugins());
     JsonArray plugins = new JsonArray();
 
     for (PluginContainer plugin : allPlugins) {
@@ -90,8 +95,8 @@ public enum InformationUtils {
   }
 
   /**
-   * Creates a {@link JsonObject} containing information about the
-   * current environment the project is run under.
+   * Creates a {@link JsonObject} containing information about the current environment the project
+   * is run under.
    *
    * @return {@link JsonObject} containing environment info
    */
@@ -102,19 +107,27 @@ public enum InformationUtils {
     envInfo.addProperty("operatingSystemArchitecture", System.getProperty("os.arch"));
     envInfo.addProperty("javaVersion", System.getProperty("java.version"));
     envInfo.addProperty("javaVendor", System.getProperty("java.vendor"));
+
+    JsonObject listenerInfo = new JsonObject();
+    listenerInfo.addProperty("listenerType", TransportType.bestType().toString());
+    listenerInfo.addProperty("compression", Natives.compress.getLoadedVariant());
+    listenerInfo.addProperty("encryption", Natives.cipher.getLoadedVariant());
+
+    envInfo.add("listener", listenerInfo);
+
     return envInfo;
   }
 
   /**
-   * Creates a {@link JsonObject} containing information about the
-   * forced hosts of the {@link ProxyConfig} instance.
+   * Creates a {@link JsonObject} containing information about the forced hosts of the
+   * {@link ProxyConfig} instance.
    *
    * @return {@link JsonArray} containing forced hosts
    */
   public static JsonObject collectForcedHosts(ProxyConfig config) {
     JsonObject forcedHosts = new JsonObject();
     Map<String, List<String>> allForcedHosts = ImmutableMap.copyOf(
-            config.getForcedHosts());
+        config.getForcedHosts());
     for (Map.Entry<String, List<String>> entry : allForcedHosts.entrySet()) {
       JsonArray host = new JsonArray();
       for (int i = 0; i < entry.getValue().size(); i++) {
@@ -126,8 +139,7 @@ public enum InformationUtils {
   }
 
   /**
-   * Anonymises or redacts a given {@link InetAddress}
-   * public address bits.
+   * Anonymises or redacts a given {@link InetAddress} public address bits.
    *
    * @param address The address to redact
    * @return {@link String} address with public parts redacted
@@ -136,8 +148,8 @@ public enum InformationUtils {
     if (address instanceof Inet4Address) {
       Inet4Address v4 = (Inet4Address) address;
       if (v4.isAnyLocalAddress() || v4.isLoopbackAddress()
-              || v4.isLinkLocalAddress()
-              || v4.isSiteLocalAddress()) {
+          || v4.isLinkLocalAddress()
+          || v4.isSiteLocalAddress()) {
         return address.getHostAddress();
       } else {
         byte[] addr = v4.getAddress();
@@ -146,8 +158,8 @@ public enum InformationUtils {
     } else if (address instanceof Inet6Address) {
       Inet6Address v6 = (Inet6Address) address;
       if (v6.isAnyLocalAddress() || v6.isLoopbackAddress()
-              || v6.isSiteLocalAddress()
-              || v6.isSiteLocalAddress()) {
+          || v6.isSiteLocalAddress()
+          || v6.isSiteLocalAddress()) {
         return address.getHostAddress();
       } else {
         String[] bits = v6.getHostAddress().split(":");
@@ -175,8 +187,8 @@ public enum InformationUtils {
   }
 
   /**
-   * Creates a {@link JsonObject} containing most relevant
-   * information of the {@link RegisteredServer} for diagnosis.
+   * Creates a {@link JsonObject} containing most relevant information of the
+   * {@link RegisteredServer} for diagnosis.
    *
    * @param server the server to evaluate
    * @return {@link JsonObject} containing server and diagnostic info
@@ -196,8 +208,8 @@ public enum InformationUtils {
   }
 
   /**
-   * Creates a {@link JsonObject} containing information about the
-   * current environment the project is run under.
+   * Creates a {@link JsonObject} containing information about the current environment the project
+   * is run under.
    *
    * @param version the proxy instance to retrieve from
    * @return {@link JsonObject} containing environment info
@@ -207,8 +219,8 @@ public enum InformationUtils {
   }
 
   /**
-   * Creates a {@link JsonObject} containing most relevant
-   * information of the {@link ProxyConfig} for diagnosis.
+   * Creates a {@link JsonObject} containing most relevant information of the {@link ProxyConfig}
+   * for diagnosis.
    *
    * @param config the config instance to retrieve from
    * @return {@link JsonObject} containing select config values
@@ -239,18 +251,18 @@ public enum InformationUtils {
 
   private static JsonElement serializeObject(Object toSerialize, boolean withExcludes) {
     return JsonParser.parseString(
-            withExcludes ? GSON_WITH_EXCLUDES.toJson(toSerialize) :
+        withExcludes ? GSON_WITH_EXCLUDES.toJson(toSerialize) :
             GSON_WITHOUT_EXCLUDES.toJson(toSerialize));
   }
 
   private static final Gson GSON_WITH_EXCLUDES = new GsonBuilder()
-          .setPrettyPrinting()
-          .excludeFieldsWithoutExposeAnnotation()
-          .create();
+      .setPrettyPrinting()
+      .excludeFieldsWithoutExposeAnnotation()
+      .create();
 
   private static final Gson GSON_WITHOUT_EXCLUDES = new GsonBuilder()
-          .setPrettyPrinting()
-          .create();
+      .setPrettyPrinting()
+      .create();
 
 
 }

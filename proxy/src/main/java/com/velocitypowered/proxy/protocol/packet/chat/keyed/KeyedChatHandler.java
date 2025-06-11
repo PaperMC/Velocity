@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2022-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,9 @@ import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class KeyedChatHandler implements com.velocitypowered.proxy.protocol.packet.chat.ChatHandler<KeyedPlayerChat> {
+public class KeyedChatHandler implements
+    com.velocitypowered.proxy.protocol.packet.chat.ChatHandler<KeyedPlayerChatPacket> {
+
   private static final Logger logger = LogManager.getLogger(KeyedChatHandler.class);
 
   private final VelocityServer server;
@@ -42,8 +44,8 @@ public class KeyedChatHandler implements com.velocitypowered.proxy.protocol.pack
   }
 
   @Override
-  public Class<KeyedPlayerChat> packetClass() {
-    return KeyedPlayerChat.class;
+  public Class<KeyedPlayerChatPacket> packetClass() {
+    return KeyedPlayerChatPacket.class;
   }
 
   public static void invalidCancel(Logger logger, ConnectedPlayer player) {
@@ -63,7 +65,7 @@ public class KeyedChatHandler implements com.velocitypowered.proxy.protocol.pack
   }
 
   @Override
-  public void handlePlayerChatInternal(KeyedPlayerChat packet) {
+  public void handlePlayerChatInternal(KeyedPlayerChatPacket packet) {
     ChatQueue chatQueue = this.player.getChatQueue();
     EventManager eventManager = this.server.getEventManager();
     PlayerChatEvent toSend = new PlayerChatEvent(player, packet.getMessage());
@@ -84,30 +86,35 @@ public class KeyedChatHandler implements com.velocitypowered.proxy.protocol.pack
         }
 
         return player.getChatBuilderFactory().builder()
-            .message(chatResult.getMessage().orElse(packet.getMessage())).setTimestamp(packet.getExpiry()).toServer();
+            .message(chatResult.getMessage().orElse(packet.getMessage()))
+            .setTimestamp(packet.getExpiry()).toServer();
       });
     }
     chatQueue.queuePacket(
-        chatFuture.exceptionally((ex) -> {
+        newLastSeen -> chatFuture.exceptionally((ex) -> {
           logger.error("Exception while handling player chat for {}", player, ex);
           return null;
         }),
-        packet.getExpiry()
+        packet.getExpiry(),
+        null
     );
   }
 
-  private Function<PlayerChatEvent, MinecraftPacket> handleOldSignedChat(KeyedPlayerChat packet) {
+  private Function<PlayerChatEvent, MinecraftPacket> handleOldSignedChat(KeyedPlayerChatPacket packet) {
     IdentifiedKey playerKey = this.player.getIdentifiedKey();
     assert playerKey != null;
     return pme -> {
       PlayerChatEvent.ChatResult chatResult = pme.getResult();
-      if (!chatResult.isAllowed() && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
-        invalidCancel(logger, player);
+      if (!chatResult.isAllowed()) {
+        if (playerKey.getKeyRevision().noLessThan(IdentifiedKey.Revision.LINKED_V2)) {
+          // Bad, very bad.
+          invalidCancel(logger, player);
+        }
         return null;
       }
 
       if (chatResult.getMessage().map(str -> !str.equals(packet.getMessage())).orElse(false)) {
-        if (playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+        if (playerKey.getKeyRevision().noLessThan(IdentifiedKey.Revision.LINKED_V2)) {
           // Bad, very bad.
           invalidChange(logger, player);
         } else {

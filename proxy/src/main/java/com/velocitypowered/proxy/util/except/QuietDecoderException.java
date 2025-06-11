@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,8 @@ package com.velocitypowered.proxy.util.except;
 import io.netty.handler.codec.DecoderException;
 
 /**
- * A special-purpose exception thrown when we want to indicate an error decoding but do not want
- * to see a large stack trace in logs.
+ * A special-purpose exception thrown when we want to indicate an error decoding but do not want to
+ * see a large stack trace in logs.
  */
 public class QuietDecoderException extends DecoderException {
 

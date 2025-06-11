@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -33,6 +33,7 @@ public final class ServerConnectedEvent {
 
   /**
    * Constructs a ServerConnectedEvent.
+   *
    * @param player the player that was connected
    * @param server the server the player was connected to
    * @param previousServer the server the player was previously connected to, null if none

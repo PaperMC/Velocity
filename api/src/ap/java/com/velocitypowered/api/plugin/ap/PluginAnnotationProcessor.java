@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -7,7 +7,9 @@
 
 package com.velocitypowered.api.plugin.ap;
 
+import com.google.auto.service.AutoService;
 import com.google.gson.Gson;
+import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -16,6 +18,7 @@ import java.util.Objects;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
@@ -27,6 +30,10 @@ import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 
+/**
+ * Annotation processor for Velocity.
+ */
+@AutoService(Processor.class)
 @SupportedAnnotationTypes({"com.velocitypowered.api.plugin.Plugin"})
 public class PluginAnnotationProcessor extends AbstractProcessor {
 
@@ -79,6 +86,16 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
             + ". IDs must start alphabetically, have lowercase alphanumeric characters, and "
             + "can contain dashes or underscores.");
         return false;
+      }
+
+      for (Dependency dependency : plugin.dependencies()) {
+        if (!SerializedPluginDescription.ID_PATTERN.matcher(dependency.id()).matches()) {
+          environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                  "Invalid dependency ID '" + dependency.id() + "' for plugin " + qualifiedName
+                  + ". IDs must start alphabetically, have lowercase alphanumeric characters, and "
+                  + "can contain dashes or underscores.");
+          return false;
+        }
       }
 
       // All good, generate the velocity-plugin.json.

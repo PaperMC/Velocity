@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2019-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,9 @@ import com.velocitypowered.api.util.GameProfile;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Handles 1.7 tab list entries.
+ */
 public class VelocityTabListEntryLegacy extends KeyedVelocityTabListEntry {
 
   VelocityTabListEntryLegacy(VelocityTabListLegacy tabList, GameProfile profile,
@@ -32,6 +35,8 @@ public class VelocityTabListEntryLegacy extends KeyedVelocityTabListEntry {
   @Override
   public TabListEntry setDisplayName(@Nullable Component displayName) {
     getTabList().removeEntry(getProfile().getId()); // We have to remove first if updating
-    return super.setDisplayName(displayName);
+    setDisplayNameInternal(displayName);
+    getTabList().addEntry(this);
+    return this;
   }
 }

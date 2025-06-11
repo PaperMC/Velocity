@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,23 +34,31 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+/**
+ * Event firing tests.
+ */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class EventTest {
 
   public static final String CONTINUATION_TEST_THREAD_NAME = "Continuation test thread";
-  private final VelocityEventManager eventManager =
-      new VelocityEventManager(new FakePluginManager());
+  private final FakePluginManager pluginManager = new FakePluginManager();
+  private final VelocityEventManager eventManager = new VelocityEventManager(pluginManager);
 
   @AfterAll
   void shutdown() throws Exception {
-    eventManager.shutdown();
+    pluginManager.shutdown();
   }
 
   static final class TestEvent {
+
+  }
+
+  static void assertSyncThread(final Thread thread) {
+    assertEquals(Thread.currentThread(), thread);
   }
 
   static void assertAsyncThread(final Thread thread) {
-    assertTrue(thread.getName().contains("Velocity Async Event Executor"));
+    assertTrue(thread.getName().contains("Test Async Thread"));
   }
 
   static void assertContinuationThread(final Thread thread) {
@@ -68,60 +76,80 @@ public class EventTest {
 
   @Test
   void listenerOrderPreserved() throws Exception {
-    final AtomicLong listenerAInvoked = new AtomicLong();
-    final AtomicLong listenerBInvoked = new AtomicLong();
-    final AtomicLong listenerCInvoked = new AtomicLong();
+    final AtomicLong listener1Invoked = new AtomicLong();
+    final AtomicLong listener2Invoked = new AtomicLong();
+    final AtomicLong listener3Invoked = new AtomicLong();
 
     eventManager.register(FakePluginManager.PLUGIN_A, TestEvent.class, event -> {
-      listenerAInvoked.set(System.nanoTime());
+      listener1Invoked.set(System.nanoTime());
     });
     eventManager.register(FakePluginManager.PLUGIN_B, TestEvent.class, event -> {
-      listenerBInvoked.set(System.nanoTime());
+      listener2Invoked.set(System.nanoTime());
     });
     eventManager.register(FakePluginManager.PLUGIN_A, TestEvent.class, event -> {
-      listenerCInvoked.set(System.nanoTime());
+      listener3Invoked.set(System.nanoTime());
     });
 
     try {
       eventManager.fire(new TestEvent()).get();
     } finally {
       eventManager.unregisterListeners(FakePluginManager.PLUGIN_A);
+      eventManager.unregisterListeners(FakePluginManager.PLUGIN_B);
     }
 
-    // Check that the order is A < B < C. Check only that A < B and B < C as B < C and A < B => A < C.
-    assertTrue(listenerAInvoked.get() < listenerBInvoked.get(), "Listener B invoked before A!");
-    assertTrue(listenerBInvoked.get() < listenerCInvoked.get(), "Listener C invoked before B!");
+    // Check that the order is A < B < C.
+    assertTrue(listener1Invoked.get() < listener2Invoked.get(), "Listener B invoked before A!");
+    assertTrue(listener2Invoked.get() < listener3Invoked.get(), "Listener C invoked before B!");
   }
 
   @Test
   void listenerOrderPreservedWithContinuation() throws Exception {
-    final AtomicLong listenerAInvoked = new AtomicLong();
-    final AtomicLong listenerBInvoked = new AtomicLong();
-    final AtomicLong listenerCInvoked = new AtomicLong();
+    final AtomicLong listener1Invoked = new AtomicLong();
+    final AtomicLong listener2Invoked = new AtomicLong();
+    final AtomicLong listener3Invoked = new AtomicLong();
 
-    eventManager.register(FakePluginManager.PLUGIN_A, TestEvent.class, event -> {
-      listenerAInvoked.set(System.nanoTime());
-    });
+    eventManager.register(FakePluginManager.PLUGIN_A, TestEvent.class, event ->
+        listener1Invoked.set(System.nanoTime()));
     eventManager.register(FakePluginManager.PLUGIN_B, TestEvent.class,
         (AwaitingEventExecutor<TestEvent>) event -> EventTask.withContinuation(continuation -> {
           new Thread(() -> {
-            listenerBInvoked.set(System.nanoTime());
+            listener2Invoked.set(System.nanoTime());
             continuation.resume();
           }).start();
         }));
-    eventManager.register(FakePluginManager.PLUGIN_A, TestEvent.class, event -> {
-      listenerCInvoked.set(System.nanoTime());
-    });
+    eventManager.register(FakePluginManager.PLUGIN_A, TestEvent.class, event ->
+        listener3Invoked.set(System.nanoTime()));
 
     try {
       eventManager.fire(new TestEvent()).get();
     } finally {
       eventManager.unregisterListeners(FakePluginManager.PLUGIN_A);
+      eventManager.unregisterListeners(FakePluginManager.PLUGIN_B);
     }
 
-    // Check that the order is A < B < C. Check only that A < B and B < C as B < C and A < B => A < C.
-    assertTrue(listenerAInvoked.get() < listenerBInvoked.get(), "Listener B invoked before A!");
-    assertTrue(listenerBInvoked.get() < listenerCInvoked.get(), "Listener C invoked before B!");
+    // Check that the order is A < B < C.
+    assertTrue(listener1Invoked.get() < listener2Invoked.get(), "Listener B invoked before A!");
+    assertTrue(listener2Invoked.get() < listener3Invoked.get(), "Listener C invoked before B!");
+  }
+
+  @Test
+  void testAlwaysSync() throws Exception {
+    final AlwaysSyncListener listener = new AlwaysSyncListener();
+    handleMethodListener(listener);
+    assertSyncThread(listener.thread);
+    assertEquals(1, listener.result);
+  }
+
+  static final class AlwaysSyncListener {
+
+    @MonotonicNonNull Thread thread;
+    int result;
+
+    @Subscribe(async = false)
+    void sync(TestEvent event) {
+      result++;
+      thread = Thread.currentThread();
+    }
   }
 
   @Test
@@ -141,7 +169,7 @@ public class EventTest {
     @MonotonicNonNull Thread threadC;
     int result;
 
-    @Subscribe
+    @Subscribe(async = true, order = PostOrder.EARLY)
     void firstAsync(TestEvent event) {
       result++;
       threadA = Thread.currentThread();
@@ -153,7 +181,7 @@ public class EventTest {
       return EventTask.async(() -> result++);
     }
 
-    @Subscribe
+    @Subscribe(order = PostOrder.LATE)
     void thirdAsync(TestEvent event) {
       result++;
       threadC = Thread.currentThread();
@@ -161,12 +189,52 @@ public class EventTest {
   }
 
   @Test
+  void testSometimesAsync() throws Exception {
+    final SometimesAsyncListener listener = new SometimesAsyncListener();
+    handleMethodListener(listener);
+    assertSyncThread(listener.threadA);
+    assertSyncThread(listener.threadB);
+    assertAsyncThread(listener.threadC);
+    assertAsyncThread(listener.threadD);
+    assertEquals(3, listener.result);
+  }
+
+  static final class SometimesAsyncListener {
+
+    @MonotonicNonNull Thread threadA;
+    @MonotonicNonNull Thread threadB;
+    @MonotonicNonNull Thread threadC;
+    @MonotonicNonNull Thread threadD;
+    int result;
+
+    @Subscribe(order = PostOrder.EARLY, async = false)
+    void notAsync(TestEvent event) {
+      result++;
+      threadA = Thread.currentThread();
+    }
+
+    @Subscribe
+    EventTask notAsyncUntilTask(TestEvent event) {
+      threadB = Thread.currentThread();
+      return EventTask.async(() -> {
+        threadC = Thread.currentThread();
+        result++;
+      });
+    }
+
+    @Subscribe(order = PostOrder.LATE, async = false)
+    void stillAsyncAfterTask(TestEvent event) {
+      threadD = Thread.currentThread();
+      result++;
+    }
+  }
+
+  @Test
   void testContinuation() throws Exception {
     final ContinuationListener listener = new ContinuationListener();
     handleMethodListener(listener);
-    assertAsyncThread(listener.threadA);
-    assertAsyncThread(listener.threadB);
-    assertContinuationThread(listener.threadBCustom);
+    assertSyncThread(listener.threadA);
+    assertSyncThread(listener.threadB);
     assertAsyncThread(listener.threadC);
     assertEquals(2, listener.value.get());
   }
@@ -175,7 +243,6 @@ public class EventTest {
 
     @MonotonicNonNull Thread threadA;
     @MonotonicNonNull Thread threadB;
-    @MonotonicNonNull Thread threadBCustom;
     @MonotonicNonNull Thread threadC;
 
     final AtomicInteger value = new AtomicInteger();
@@ -187,10 +254,14 @@ public class EventTest {
         value.incrementAndGet();
         threadB = Thread.currentThread();
         new Thread(() -> {
-          threadBCustom = Thread.currentThread();
+          try {
+            Thread.sleep(100);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
           value.incrementAndGet();
           continuation.resume();
-        }, CONTINUATION_TEST_THREAD_NAME).start();
+        }).start();
       });
     }
 
@@ -205,9 +276,9 @@ public class EventTest {
     final ResumeContinuationImmediatelyListener listener =
         new ResumeContinuationImmediatelyListener();
     handleMethodListener(listener);
-    assertAsyncThread(listener.threadA);
-    assertAsyncThread(listener.threadB);
-    assertAsyncThread(listener.threadC);
+    assertSyncThread(listener.threadA);
+    assertSyncThread(listener.threadB);
+    assertSyncThread(listener.threadC);
     assertEquals(2, listener.result);
   }
 
@@ -239,9 +310,8 @@ public class EventTest {
   void testContinuationParameter() throws Exception {
     final ContinuationParameterListener listener = new ContinuationParameterListener();
     handleMethodListener(listener);
-    assertAsyncThread(listener.threadA);
-    assertAsyncThread(listener.threadB);
-    assertContinuationThread(listener.threadBCustom);
+    assertSyncThread(listener.threadA);
+    assertSyncThread(listener.threadB);
     assertAsyncThread(listener.threadC);
     assertEquals(3, listener.result.get());
   }
@@ -250,7 +320,6 @@ public class EventTest {
 
     @MonotonicNonNull Thread threadA;
     @MonotonicNonNull Thread threadB;
-    @MonotonicNonNull Thread threadBCustom;
     @MonotonicNonNull Thread threadC;
 
     final AtomicInteger result = new AtomicInteger();
@@ -266,10 +335,14 @@ public class EventTest {
     void resumeFromCustomThread(TestEvent event, Continuation continuation) {
       threadB = Thread.currentThread();
       new Thread(() -> {
-        threadBCustom = Thread.currentThread();
+        try {
+          Thread.sleep(100);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
         result.incrementAndGet();
         continuation.resume();
-      }, CONTINUATION_TEST_THREAD_NAME).start();
+      }).start();
     }
 
     @Subscribe(order = PostOrder.LAST)

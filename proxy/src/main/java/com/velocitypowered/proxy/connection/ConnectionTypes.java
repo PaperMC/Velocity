@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,9 +29,8 @@ import com.velocitypowered.proxy.connection.util.ConnectionTypeImpl;
 public final class ConnectionTypes {
 
   /**
-   * Indicates that the connection has yet to reach the
-   * point where we have a definitive answer as to what
-   * type of connection we have.
+   * Indicates that the connection has yet to reach the point where we have a definitive answer as
+   * to what type of connection we have.
    */
   public static final ConnectionType UNDETERMINED =
       new ConnectionTypeImpl(ClientConnectionPhases.VANILLA, BackendConnectionPhases.UNKNOWN);
@@ -46,8 +45,7 @@ public final class ConnectionTypes {
       LegacyForgeHandshakeClientPhase.NOT_STARTED, BackendConnectionPhases.UNKNOWN);
 
   /**
-   * Indicates that the connection is a 1.8-1.12 Forge
-   * connection.
+   * Indicates that the connection is a 1.8-1.12 Forge connection.
    */
   public static final ConnectionType LEGACY_FORGE = new LegacyForgeConnectionType();
 

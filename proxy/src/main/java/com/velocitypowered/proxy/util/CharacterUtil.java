@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,23 +17,27 @@
 
 package com.velocitypowered.proxy.util;
 
+/**
+ * Utilities for handling characters in the context of Minecraft chat handling.
+ */
 public final class CharacterUtil {
 
   /**
    * Checks if a character is allowed.
+   *
    * @param c character to check
    * @return true if the character is allowed
    */
   public static boolean isAllowedCharacter(char c) {
     // 167 = §, 127 = DEL
-    // https://minecraft.fandom.com/wiki/Multiplayer#Chat
+    // https://minecraft.wiki/w/Chat
     return c != 167 && c >= ' ' && c != 127;
   }
 
   /**
-   * It is not possible to send certain characters in the chat like:
-   * section symbol, DEL, and all characters below space.
-   * Checks if a message contains illegal characters.
+   * It is not possible to send certain characters in the chat like: section symbol, DEL, and all
+   * characters below space. Checks if a message contains illegal characters.
+   *
    * @param message the message to check
    * @return true if the message contains illegal characters
    */

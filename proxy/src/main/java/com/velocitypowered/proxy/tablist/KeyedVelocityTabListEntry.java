@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,11 +22,14 @@ import com.velocitypowered.api.proxy.player.ChatSession;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItem;
+import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItemPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
 import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Handles modern tab list entries.
+ */
 public class KeyedVelocityTabListEntry implements TabListEntry {
 
   private final KeyedVelocityTabList tabList;
@@ -37,8 +40,8 @@ public class KeyedVelocityTabListEntry implements TabListEntry {
   private @Nullable IdentifiedKey playerKey;
 
   KeyedVelocityTabListEntry(KeyedVelocityTabList tabList, GameProfile profile,
-                            net.kyori.adventure.text.@Nullable Component displayName, int latency, int gameMode,
-                            @Nullable IdentifiedKey playerKey) {
+      net.kyori.adventure.text.@Nullable Component displayName, int latency, int gameMode,
+      @Nullable IdentifiedKey playerKey) {
     this.tabList = tabList;
     this.profile = profile;
     this.displayName = displayName;
@@ -65,7 +68,7 @@ public class KeyedVelocityTabListEntry implements TabListEntry {
   @Override
   public TabListEntry setDisplayName(net.kyori.adventure.text.@Nullable Component displayName) {
     this.displayName = displayName;
-    tabList.updateEntry(LegacyPlayerListItem.UPDATE_DISPLAY_NAME, this);
+    tabList.updateEntry(LegacyPlayerListItemPacket.UPDATE_DISPLAY_NAME, this);
     return this;
   }
 
@@ -81,7 +84,7 @@ public class KeyedVelocityTabListEntry implements TabListEntry {
   @Override
   public TabListEntry setLatency(int latency) {
     this.latency = latency;
-    tabList.updateEntry(LegacyPlayerListItem.UPDATE_LATENCY, this);
+    tabList.updateEntry(LegacyPlayerListItemPacket.UPDATE_LATENCY, this);
     return this;
   }
 
@@ -97,7 +100,7 @@ public class KeyedVelocityTabListEntry implements TabListEntry {
   @Override
   public TabListEntry setGameMode(int gameMode) {
     this.gameMode = gameMode;
-    tabList.updateEntry(LegacyPlayerListItem.UPDATE_GAMEMODE, this);
+    tabList.updateEntry(LegacyPlayerListItemPacket.UPDATE_GAMEMODE, this);
     return this;
   }
 
