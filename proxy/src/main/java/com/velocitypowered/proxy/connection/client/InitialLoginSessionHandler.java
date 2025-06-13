@@ -40,7 +40,6 @@ import com.velocitypowered.proxy.protocol.packet.LoginPluginResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
 import com.velocitypowered.proxy.util.VelocityProperties;
 import io.netty.buffer.ByteBuf;
-
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.MessageDigest;
@@ -144,8 +143,8 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
           }
 
           // support for offline mode encryption was added in 1.20.5
-          if (onlineMode || (event.isOfflineEncryption() &&
-              mcConnection.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_5))) {
+          if (onlineMode || (event.isOfflineEncryption()
+              && mcConnection.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_5))) {
             EncryptionRequestPacket request = generateEncryptionRequest();
             request.setShouldAuthenticate(onlineMode);
 

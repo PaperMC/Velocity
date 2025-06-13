@@ -17,6 +17,10 @@
 
 package com.velocitypowered.proxy.connection.auth;
 
+import static com.google.common.net.UrlEscapers.urlFormParameterEscaper;
+import static com.velocitypowered.proxy.VelocityServer.GENERAL_GSON;
+import static com.velocitypowered.proxy.crypto.EncryptionUtils.generateServerId;
+
 import com.google.gson.JsonParseException;
 import com.velocitypowered.api.event.Continuation;
 import com.velocitypowered.api.event.Subscribe;
@@ -24,21 +28,19 @@ import com.velocitypowered.api.event.connection.AuthAttemptEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.VelocityServer;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.security.PublicKey;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import static com.google.common.net.UrlEscapers.urlFormParameterEscaper;
-import static com.velocitypowered.proxy.VelocityServer.GENERAL_GSON;
-import static com.velocitypowered.proxy.crypto.EncryptionUtils.generateServerId;
-
+/**
+ * Default implementation of player authentication that uses the Mojang session server.
+ */
 public class DefaultPlayerAuthenticator {
 
   private static final Logger logger = LogManager.getLogger(DefaultPlayerAuthenticator.class);
@@ -51,13 +53,18 @@ public class DefaultPlayerAuthenticator {
   private final VelocityServer server;
   private final HttpClient httpClient;
 
+  /**
+   * Creates a new instance of the default player authenticator.
+   *
+   * @param server the Velocity server instance
+   */
   public DefaultPlayerAuthenticator(VelocityServer server) {
     this.server = server;
     this.httpClient = server.createHttpClient();
   }
 
   @Subscribe(priority = 1) // low priority to allow plugins to override this
-  public void onAuthAttempt(AuthAttemptEvent event, Continuation continuation) {
+  private void onAuthAttempt(AuthAttemptEvent event, Continuation continuation) {
     if (event.getResult() != null || !event.isOnlineMode() || event.getSharedSecret() == null) {
       continuation.resume();
       return;
@@ -78,7 +85,7 @@ public class DefaultPlayerAuthenticator {
   }
 
   @Subscribe
-  public void onShutdown(ProxyShutdownEvent event) throws Exception {
+  private void onShutdown(ProxyShutdownEvent event) throws Exception {
     if (httpClient instanceof AutoCloseable c) {
       c.close();
     }
