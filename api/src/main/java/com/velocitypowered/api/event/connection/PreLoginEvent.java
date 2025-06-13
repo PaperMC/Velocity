@@ -36,7 +36,7 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
   private final String username;
   private final @Nullable UUID uuid;
   private PreLoginComponentResult result;
-  private boolean attemptEncryption;
+  private boolean offlineEncryption;
 
   /**
    * Creates a new instance, without an associated UUID.
@@ -71,12 +71,12 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
    * @param uuid the player's uuid, if known
    */
   public PreLoginEvent(final InboundConnection connection, final String username, final @Nullable UUID uuid,
-                       boolean attemptEncryption) {
+                       boolean offlineEncryption) {
     this.connection = Preconditions.checkNotNull(connection, "connection");
     this.username = Preconditions.checkNotNull(username, "username");
     this.uuid = uuid;
     this.result = PreLoginComponentResult.allowed();
-    this.attemptEncryption = attemptEncryption;
+    this.offlineEncryption = offlineEncryption;
   }
 
   public InboundConnection getConnection() {
@@ -110,29 +110,28 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
   }
 
   /**
-   * Returns whether the proxy should attempt to encrypt the connection.
-   * This is {@code true} by default, but can be set to {@code false} to skip encryption. In older
-   * game versions (earlier than 1.20.5), offline mode connections will not be encrypted,
-   * regardless of this setting, since support for encrypted offline-mode connections was added
-   * in 1.20.5.
+   * Returns whether the proxy should attempt to encrypt the connection when the player is in
+   * offline mode, {@code false} by default. In older game versions (earlier than 1.20.5), offline
+   * mode connections will not be encrypted, regardless of this setting, since support for
+   * encrypted offline-mode connections was added in 1.20.5.
    *
-   * @return whether the proxy should attempt to encrypt the connection
+   * @return whether the proxy should attempt to encrypt the connection in offline mode
    */
-  public boolean isAttemptEncryption() {
-    return attemptEncryption;
+  public boolean isOfflineEncryption() {
+    return offlineEncryption;
   }
 
   /**
-   * Sets whether the proxy should attempt to encrypt the connection.
-   * This is {@code true} by default, but can be set to {@code false} to skip encryption. In older
-   * game versions (earlier than 1.20.5), offline mode connections will not be encrypted,
-   * regardless of this setting, since support for encrypted offline-mode connections was added
-   * in 1.20.5.
+   * Sets whether the proxy should attempt to encrypt the connection when the player is in
+   * offline mode. This is {@code false} by default. In older game versions (earlier than 1.20.5),
+   * offline mode connections will not be encrypted, regardless of this setting, since support for
+   * encrypted offline-mode connections was added in 1.20.5.
    *
-   * @param attemptEncryption whether the proxy should attempt to encrypt the connection
+   * @param offlineEncryption whether the proxy should attempt to encrypt the connection in offline
+   *                          mode
    */
-  public void setAttemptEncryption(boolean attemptEncryption) {
-    this.attemptEncryption = attemptEncryption;
+  public void setOfflineEncryption(boolean offlineEncryption) {
+    this.offlineEncryption = offlineEncryption;
   }
 
   @Override
@@ -141,7 +140,7 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
         + "connection=" + connection
         + ", username='" + username + '\''
         + ", result=" + result
-        + ", attemptEncryption=" + attemptEncryption
+        + ", attemptEncryption=" + offlineEncryption
         + '}';
   }
 

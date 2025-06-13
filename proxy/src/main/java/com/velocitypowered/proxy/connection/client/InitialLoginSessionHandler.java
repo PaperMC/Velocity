@@ -144,7 +144,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
           }
 
           // support for offline mode encryption was added in 1.20.5
-          if (onlineMode || (event.isAttemptEncryption() &&
+          if (onlineMode || (event.isOfflineEncryption() &&
               mcConnection.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_5))) {
             EncryptionRequestPacket request = generateEncryptionRequest();
             request.setShouldAuthenticate(onlineMode);

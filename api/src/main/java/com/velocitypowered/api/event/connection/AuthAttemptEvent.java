@@ -107,9 +107,15 @@ public final class AuthAttemptEvent implements ResultedEvent<AuthAttemptEvent.Au
     this.result = result;
   }
 
+  /**
+   * Interface representing the result of an authentication attempt.
+   */
   public sealed interface AuthResult extends Result permits SuccessResult, FailureResult {
   }
 
+  /**
+   * Represents a successful authentication result, containing the player's profile.
+   */
   public record SuccessResult(@NonNull GameProfile profile) implements AuthResult {
     @Override
     public boolean isAllowed() {
@@ -117,6 +123,9 @@ public final class AuthAttemptEvent implements ResultedEvent<AuthAttemptEvent.Au
     }
   }
 
+  /**
+   * Represents a failed authentication result, containing a reason for the failure.
+   */
   public record FailureResult(@NonNull Component reason) implements AuthResult {
     @Override
     public boolean isAllowed() {
