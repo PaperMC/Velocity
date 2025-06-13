@@ -15,6 +15,10 @@ show-max-players = 500
 # Should we authenticate players with Mojang? By default, this is on.
 online-mode = true
 
+# Should we attempt to enable encryption for offline-mode connections? By default, this is off.
+# Note that this feature is only supported by version 1.20.5+.
+offline-encryption = false
+
 # Should the proxy enforce the new public key security standard? By default, this is on.
 force-key-authentication = true
 

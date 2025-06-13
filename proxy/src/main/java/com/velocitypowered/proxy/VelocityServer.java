@@ -46,6 +46,7 @@ import com.velocitypowered.proxy.command.builtin.ServerCommand;
 import com.velocitypowered.proxy.command.builtin.ShutdownCommand;
 import com.velocitypowered.proxy.command.builtin.VelocityCommand;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
+import com.velocitypowered.proxy.connection.auth.DefaultPlayerAuthenticator;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.player.resourcepack.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ServerListPingHandler;
@@ -236,7 +237,9 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   void start() {
     logger.info("Booting up {} {}...", getVersion().getName(), getVersion().getVersion());
     console.setupStreams();
-    pluginManager.registerPlugin(this.createVirtualPlugin());
+
+    PluginContainer virtualPlugin = createVirtualPlugin();
+    pluginManager.registerPlugin(virtualPlugin);
 
     registerTranslations();
 
@@ -250,6 +253,10 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     //
     // If you are using Minecraft in a security-sensitive application, *I don't know what to say.*
     serverKeyPair = EncryptionUtils.createRsaKeyPair(1024);
+
+    // initialize the default online-mode authenticator
+    DefaultPlayerAuthenticator authenticator = new DefaultPlayerAuthenticator(this);
+    eventManager.registerInternally(virtualPlugin, authenticator);
 
     cm.logChannelInformation();
 

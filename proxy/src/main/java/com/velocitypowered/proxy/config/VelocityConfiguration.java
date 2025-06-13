@@ -68,6 +68,8 @@ public class VelocityConfiguration implements ProxyConfig {
   @Expose
   private boolean onlineMode = true;
   @Expose
+  private boolean offlineEncryption = false;
+  @Expose
   private boolean preventClientProxyConnections = false;
   @Expose
   private PlayerInfoForwarding playerInfoForwardingMode = PlayerInfoForwarding.NONE;
@@ -104,7 +106,7 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
-      boolean preventClientProxyConnections, boolean announceForge,
+      boolean offlineEncryption, boolean preventClientProxyConnections, boolean announceForge,
       PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
       boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough,
       boolean samplePlayersInPing, boolean enablePlayerAddressLogging, Servers servers,
@@ -114,6 +116,7 @@ public class VelocityConfiguration implements ProxyConfig {
     this.motd = motd;
     this.showMaxPlayers = showMaxPlayers;
     this.onlineMode = onlineMode;
+    this.offlineEncryption = offlineEncryption;
     this.preventClientProxyConnections = preventClientProxyConnections;
     this.announceForge = announceForge;
     this.playerInfoForwardingMode = playerInfoForwardingMode;
@@ -295,6 +298,11 @@ public class VelocityConfiguration implements ProxyConfig {
   @Override
   public boolean isOnlineMode() {
     return onlineMode;
+  }
+
+  @Override
+  public boolean isOfflineEncryptionEnabled() {
+    return offlineEncryption;
   }
 
   @Override
@@ -550,6 +558,7 @@ public class VelocityConfiguration implements ProxyConfig {
       final String bind = config.getOrElse("bind", "0.0.0.0:25565");
       final int maxPlayers = config.getIntOrElse("show-max-players", 500);
       final boolean onlineMode = config.getOrElse("online-mode", true);
+      final boolean offlineEncryption = config.getOrElse("offline-encryption", false);
       final boolean forceKeyAuthentication = config.getOrElse("force-key-authentication", true);
       final boolean announceForge = config.getOrElse("announce-forge", true);
       final boolean preventClientProxyConnections = config.getOrElse(
@@ -571,6 +580,7 @@ public class VelocityConfiguration implements ProxyConfig {
               motd,
               maxPlayers,
               onlineMode,
+              offlineEncryption,
               preventClientProxyConnections,
               announceForge,
               forwardingMode,

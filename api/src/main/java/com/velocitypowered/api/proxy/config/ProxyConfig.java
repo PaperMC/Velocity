@@ -69,6 +69,14 @@ public interface ProxyConfig {
   boolean isOnlineMode();
 
   /**
+   * Get whether the proxy will attempt to encrypt offline-mode connections. This can only
+   * be performed on 1.20.5+ clients.
+   *
+   * @return whether offline encryption is enabled
+   */
+  boolean isOfflineEncryptionEnabled();
+
+  /**
    * If client's ISP/AS sent from this proxy is different from the one from Mojang's
    * authentication server, the player is kicked. This disallows some VPN and proxy
    * connections but is a weak form of protection.

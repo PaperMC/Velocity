@@ -49,6 +49,22 @@ public class EncryptionRequestPacket implements MinecraftPacket {
     this.verifyToken = verifyToken.clone();
   }
 
+  public String getServerId() {
+    return serverId;
+  }
+
+  public void setServerId(String serverId) {
+    this.serverId = serverId;
+  }
+
+  public boolean getShouldAuthenticate() {
+    return shouldAuthenticate;
+  }
+
+  public void setShouldAuthenticate(boolean shouldAuthenticate) {
+    this.shouldAuthenticate = shouldAuthenticate;
+  }
+
   @Override
   public String toString() {
     return "EncryptionRequest{"

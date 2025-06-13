@@ -36,17 +36,31 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
   private final String username;
   private final @Nullable UUID uuid;
   private PreLoginComponentResult result;
+  private boolean attemptEncryption;
 
   /**
    * Creates a new instance, without an associated UUID.
    *
    * @param connection the connection logging into the proxy
    * @param username the player's username
-   * @deprecated use {@link #PreLoginEvent(InboundConnection, String, UUID)}
+   * @deprecated use {@link #PreLoginEvent(InboundConnection, String, UUID, boolean)}
    */
   @Deprecated
   public PreLoginEvent(final InboundConnection connection, final String username) {
-    this(connection, username, null);
+    this(connection, username, null, false);
+  }
+
+  /**
+   * Creates a new instance.
+   *
+   * @param connection the connection logging into the proxy
+   * @param username the player's username
+   * @param uuid the player's uuid, if known
+   * @deprecated use {@link #PreLoginEvent(InboundConnection, String, UUID, boolean)}
+   */
+  @Deprecated
+  public PreLoginEvent(final InboundConnection connection, final String username, final @Nullable UUID uuid) {
+    this(connection, username, uuid, false);
   }
 
   /**
@@ -56,11 +70,13 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
    * @param username the player's username
    * @param uuid the player's uuid, if known
    */
-  public PreLoginEvent(final InboundConnection connection, final String username, final @Nullable UUID uuid) {
+  public PreLoginEvent(final InboundConnection connection, final String username, final @Nullable UUID uuid,
+                       boolean attemptEncryption) {
     this.connection = Preconditions.checkNotNull(connection, "connection");
     this.username = Preconditions.checkNotNull(username, "username");
     this.uuid = uuid;
     this.result = PreLoginComponentResult.allowed();
+    this.attemptEncryption = attemptEncryption;
   }
 
   public InboundConnection getConnection() {
@@ -93,12 +109,39 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
     this.result = Preconditions.checkNotNull(result, "result");
   }
 
+  /**
+   * Returns whether the proxy should attempt to encrypt the connection.
+   * This is {@code true} by default, but can be set to {@code false} to skip encryption. In older
+   * game versions (earlier than 1.20.5), offline mode connections will not be encrypted,
+   * regardless of this setting, since support for encrypted offline-mode connections was added
+   * in 1.20.5.
+   *
+   * @return whether the proxy should attempt to encrypt the connection
+   */
+  public boolean isAttemptEncryption() {
+    return attemptEncryption;
+  }
+
+  /**
+   * Sets whether the proxy should attempt to encrypt the connection.
+   * This is {@code true} by default, but can be set to {@code false} to skip encryption. In older
+   * game versions (earlier than 1.20.5), offline mode connections will not be encrypted,
+   * regardless of this setting, since support for encrypted offline-mode connections was added
+   * in 1.20.5.
+   *
+   * @param attemptEncryption whether the proxy should attempt to encrypt the connection
+   */
+  public void setAttemptEncryption(boolean attemptEncryption) {
+    this.attemptEncryption = attemptEncryption;
+  }
+
   @Override
   public String toString() {
     return "PreLoginEvent{"
         + "connection=" + connection
         + ", username='" + username + '\''
         + ", result=" + result
+        + ", attemptEncryption=" + attemptEncryption
         + '}';
   }
 
