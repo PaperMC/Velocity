@@ -354,7 +354,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
           serverConn.setClientLoaded(true);
           server.getEventManager().fireAndForget(new PlayerClientLoadedWorldEvent(player, true));
         })
-        .delay(PlayerClientLoadedWorldEvent.VANILLA_TIMEOUT)
+        .delay(PlayerClientLoadedWorldEvent.TIMEOUT)
         .schedule();
       }
     }, player.getConnection().eventLoop()).exceptionally(ex -> {

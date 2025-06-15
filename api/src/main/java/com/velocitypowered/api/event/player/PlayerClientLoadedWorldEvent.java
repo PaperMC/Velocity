@@ -15,18 +15,21 @@ import java.time.Duration;
 /**
  * Called when a player is marked as loaded by the client.
  *
- * <p>Note: This event may be fired in the following scenarios:
+ * <p>This event may be fired in the following scenarios:
  * <br>- If the player notifies the server after loading the world (closing the downloading terrain screen)
- * <br>- If the player has <u>not</u> notified the server within 1500ms after joining the server - ({@link #timeout} = true)
+ * <br>- If the player has <u>not</u> notified the server within {@link PlayerClientLoadedWorldEvent#TIMEOUT} after joining the server
+ * - ({@link #timeout} = true)
  *
- * <p>Note: Velocity does not ensure the timing of this packet. Consequently, this event might fire before {@link Player#getCurrentServer()} is set.
+ * @apiNote Velocity does not ensure the timing of this packet. Consequently, this event might fire before {@link Player#getCurrentServer()} is set.
+ *     <br>To (not) let other plugins override the default 1500ms,
+ *     (don't) load the class, override the value yourself, and/or ensure its value later on.
  * @since 3.4.0
  * @sinceMinecraft 1.21.4
  */
 @Beta
 public final class PlayerClientLoadedWorldEvent {
 
-  public static final Duration VANILLA_TIMEOUT = Duration.ofMillis(1500); // 60 ticks
+  public static final Duration TIMEOUT = Duration.ofMillis(Long.getLong("velocity.loaded-world-timeout-override", 1500 /* 60 ticks */));
 
   private final Player player;
   private final boolean timeout;
@@ -42,7 +45,7 @@ public final class PlayerClientLoadedWorldEvent {
 
   /**
    * True if the event was triggered because the server has not been notified by the player
-   * for 1500ms after the player joined the server.
+   * withing {@link PlayerClientLoadedWorldEvent#TIMEOUT} after the player joined the server.
    *
    * @return true if the event was triggered because of a timeout
    */
