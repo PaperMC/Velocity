@@ -20,6 +20,8 @@ import java.time.Duration;
  * <br>- If the player has <u>not</u> notified the server within 1500ms after joining the server - ({@link #timeout} = true)
  *
  * <p>Note: Velocity does not ensure the timing of this packet. Consequently, this event might fire before {@link Player#getCurrentServer()} is set.
+ * @since 3.4.0
+ * @sinceMinecraft 1.21.4
  */
 @Beta
 public final class PlayerClientLoadedWorldEvent {
