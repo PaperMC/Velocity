@@ -7,7 +7,7 @@ netty = "4.2.2.Final"
 
 [plugins]
 indra-publishing = "net.kyori.indra.publishing:2.0.6"
-shadow = "io.github.goooler.shadow:8.1.5"
+shadow = "com.gradleup.shadow:8.3.6"
 spotless = "com.diffplug.spotless:6.25.0"
 
 [libraries]
