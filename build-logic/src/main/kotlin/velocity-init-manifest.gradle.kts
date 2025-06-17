@@ -2,8 +2,15 @@ import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.withType
 import java.io.ByteArrayOutputStream
 
+// This interface is needed as a workaround to get an instance of ExecOperations
+interface Injected {
+    @get:Inject
+    val execOps: ExecOperations
+}
+
 val currentShortRevision = ByteArrayOutputStream().use {
-    exec {
+    val execOps = objects.newInstance<Injected>().execOps
+    execOps.exec {
         executable = "git"
         args = listOf("rev-parse", "HEAD")
         standardOutput = it
