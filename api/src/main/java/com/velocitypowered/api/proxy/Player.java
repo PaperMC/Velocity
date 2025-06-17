@@ -403,7 +403,9 @@ public interface Player extends
   /**
    * {@inheritDoc}
    *
-   * <p><b>Note</b>: Due to <a href="https://bugs.mojang.com/browse/MC/issues/MC-146721">MC-146721</a>, stereo sounds are always played globally.
+   * <p><b>Note</b>: Due to <a href="https://bugs.mojang.com/browse/MC/issues/MC-146721">MC-146721</a>, stereo sounds are always played globally in 1.14+.
+   *
+   * <p><b>Note</b>: Due to <a href="https://bugs.mojang.com/browse/MC/issues/MC-138832">MC-138832</a>, the volume and pitch are ignored when using this method in 1.14 to 1.16.5.
    *
    * <p>Note: This method is currently only implemented for players from version 1.19.3 and above
    * and requires a present {@link #getCurrentServer} for the emitting player as well as this player.
