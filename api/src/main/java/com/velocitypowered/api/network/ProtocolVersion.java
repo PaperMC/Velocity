@@ -91,7 +91,8 @@ public enum ProtocolVersion implements Ordered<ProtocolVersion> {
   MINECRAFT_1_21_2(768, "1.21.2", "1.21.3"),
   MINECRAFT_1_21_4(769, "1.21.4"),
   MINECRAFT_1_21_5(770, "1.21.5"),
-  MINECRAFT_1_21_6(771, "1.21.6");
+  MINECRAFT_1_21_6(771, "1.21.6"),
+  MINECRAFT_1_21_7(1073742081 /* 772 */, "1.21.7");
 
   private static final int SNAPSHOT_BIT = 30;
 
