@@ -407,7 +407,7 @@ public interface Player extends
    *
    * <p><b>Note</b>: Due to <a href="https://bugs.mojang.com/browse/MC/issues/MC-138832">MC-138832</a>, the volume and pitch are ignored when using this method in 1.14 to 1.16.5.
    *
-   * <p>Note: This method is currently only implemented for players from version 1.19.3 and above
+   * <p>Note: This method is currently only implemented for players on 1.19.3+
    * and requires a present {@link #getCurrentServer} for the emitting player as well as this player.
    *
    * @param sound the sound to play
@@ -422,7 +422,7 @@ public interface Player extends
   /**
    * {@inheritDoc}
    *
-   * <p>Note: This method is currently only implemented for players from version 1.19.3 and above.
+   * <p>Note: This method is currently only implemented for players on 1.19.3+.
    *
    * @param stop the sound and/or a sound source, to stop
    * @since 3.4.0

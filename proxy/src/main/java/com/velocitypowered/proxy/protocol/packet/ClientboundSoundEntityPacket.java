@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Velocity Contributors
+ * Copyright (C) 2025 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,9 +50,9 @@ public class ClientboundSoundEntityPacket implements MinecraftPacket {
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    ProtocolUtils.writeVarInt(buf, 0); // version-dependent hardcoded sound id
+    ProtocolUtils.writeVarInt(buf, 0); // version-dependent, hardcoded sound ID
 
-    ProtocolUtils.writeString(buf, sound.name().asMinimalString()); // not using writeKey, as the client already defaults to the vanilla namespace
+    ProtocolUtils.writeString(buf, sound.name().asMinimalString()); // Not using writeKey, as the client already defaults to the vanilla namespace
 
     buf.writeBoolean(fixedRange != null);
     if (fixedRange != null)

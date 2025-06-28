@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Velocity Contributors
+ * Copyright (C) 2025 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -79,7 +79,7 @@ public class ClientboundStopSoundPacket implements MinecraftPacket {
     }
 
     if (soundName != null) {
-      ProtocolUtils.writeString(buf, soundName.asMinimalString()); // not using writeKey, as the client already defaults to the vanilla namespace
+      ProtocolUtils.writeString(buf, soundName.asMinimalString()); // Not using writeKey, as the client already defaults to the vanilla namespace
     }
   }
 
