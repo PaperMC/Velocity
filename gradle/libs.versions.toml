@@ -6,6 +6,7 @@ log4j = "2.24.3"
 netty = "4.2.1.Final"
 
 [plugins]
+fill = "io.papermc.fill.gradle:1.0.3"
 indra-publishing = "net.kyori.indra.publishing:2.0.6"
 shadow = "io.github.goooler.shadow:8.1.5"
 spotless = "com.diffplug.spotless:6.25.0"
