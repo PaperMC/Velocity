@@ -119,7 +119,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class VelocityServer implements ProxyServer, ForwardingAudience {
 
-  public static final String VELOCITY_URL = "https://velocitypowered.com";
+  public static final String VELOCITY_URL = "https://papermc.io/software/velocity";
 
   private static final Logger logger = LogManager.getLogger(VelocityServer.class);
   public static final Gson GENERAL_GSON = new GsonBuilder()
@@ -216,7 +216,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     ProxyVersion version = getVersion();
     PluginDescription description = new VelocityPluginDescription(
         "velocity", version.getName(), version.getVersion(), "The Velocity proxy",
-        VELOCITY_URL, ImmutableList.of(version.getVendor()), Collections.emptyList(), null);
+            version.getName().equals("Velocity") ? VELOCITY_URL : null,
+            ImmutableList.of(version.getVendor()), Collections.emptyList(), null);
     VelocityPluginContainer container = new VelocityPluginContainer(description);
     container.setInstance(VelocityVirtualPlugin.INSTANCE);
     return container;
