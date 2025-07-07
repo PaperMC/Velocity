@@ -50,10 +50,12 @@ import com.velocitypowered.proxy.protocol.packet.RemoveResourcePackPacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TransferPacket;
+import com.velocitypowered.proxy.protocol.packet.config.ClearDialogPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ClientboundCustomReportDetailsPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ClientboundServerLinksPacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.RegistrySyncPacket;
+import com.velocitypowered.proxy.protocol.packet.config.ShowDialogPacket;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.TagsUpdatePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
@@ -134,6 +136,18 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ClientboundServerLinksPacket packet) {
+    serverConn.getPlayer().getConnection().write(packet);
+    return true;
+  }
+
+  @Override
+  public boolean handle(ShowDialogPacket packet) {
+    serverConn.getPlayer().getConnection().write(packet);
+    return true;
+  }
+
+  @Override
+  public boolean handle(ClearDialogPacket packet) {
     serverConn.getPlayer().getConnection().write(packet);
     return true;
   }

@@ -40,6 +40,7 @@ import com.velocitypowered.proxy.protocol.packet.PingIdentifyPacket;
 import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.config.CustomClickActionPacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.KnownPacksPacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
@@ -179,6 +180,16 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
       logger.error("Error forwarding known packs response to backend:", ex);
       return null;
     });
+
+    return true;
+  }
+
+  @Override
+  public boolean handle(CustomClickActionPacket packet) {
+    if (player.getConnectionInFlight() != null) {
+      player.getConnectionInFlight().ensureConnected().write(packet);
+      return true;
+    }
 
     return true;
   }

@@ -99,11 +99,14 @@ import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChatP
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommandPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.session.UnsignedPlayerCommandPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ActiveFeaturesPacket;
+import com.velocitypowered.proxy.protocol.packet.config.ClearDialogPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ClientboundCustomReportDetailsPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ClientboundServerLinksPacket;
+import com.velocitypowered.proxy.protocol.packet.config.CustomClickActionPacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.KnownPacksPacket;
 import com.velocitypowered.proxy.protocol.packet.config.RegistrySyncPacket;
+import com.velocitypowered.proxy.protocol.packet.config.ShowDialogPacket;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.TagsUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.title.LegacyTitlePacket;
@@ -183,6 +186,10 @@ public enum StateRegistry {
           KnownPacksPacket.class,
           KnownPacksPacket::new,
           map(0x07, MINECRAFT_1_20_5, false));
+      serverbound.register(
+          CustomClickActionPacket.class,
+          CustomClickActionPacket::new,
+          map(0x08, MINECRAFT_1_21_6, false));
 
       clientbound.register(
           ClientboundCookieRequestPacket.class, ClientboundCookieRequestPacket::new,
@@ -237,6 +244,10 @@ public enum StateRegistry {
           map(0x0F, MINECRAFT_1_21, false));
       clientbound.register(ClientboundServerLinksPacket.class, ClientboundServerLinksPacket::new,
           map(0x10, MINECRAFT_1_21, false));
+      clientbound.register(ClearDialogPacket.class, ClearDialogPacket::new,
+          map(0x11, MINECRAFT_1_21_6, false));
+      clientbound.register(ShowDialogPacket.class, ShowDialogPacket::new,
+          map(0x12, MINECRAFT_1_21_6, false));
     }
   },
   PLAY {

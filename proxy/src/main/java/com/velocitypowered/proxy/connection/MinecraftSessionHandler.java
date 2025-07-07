@@ -65,11 +65,14 @@ import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChatPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChatPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommandPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ActiveFeaturesPacket;
+import com.velocitypowered.proxy.protocol.packet.config.ClearDialogPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ClientboundCustomReportDetailsPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ClientboundServerLinksPacket;
+import com.velocitypowered.proxy.protocol.packet.config.CustomClickActionPacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.KnownPacksPacket;
 import com.velocitypowered.proxy.protocol.packet.config.RegistrySyncPacket;
+import com.velocitypowered.proxy.protocol.packet.config.ShowDialogPacket;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.TagsUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.title.LegacyTitlePacket;
@@ -345,6 +348,10 @@ public interface MinecraftSessionHandler {
     return false;
   }
 
+  default boolean handle(CustomClickActionPacket packet) {
+    return false;
+  }
+
   default boolean handle(ClientboundStoreCookiePacket packet) {
     return false;
   }
@@ -362,6 +369,14 @@ public interface MinecraftSessionHandler {
   }
 
   default boolean handle(ClientboundServerLinksPacket packet) {
+    return false;
+  }
+
+  default boolean handle(ShowDialogPacket packet) {
+    return false;
+  }
+
+  default boolean handle(ClearDialogPacket packet) {
     return false;
   }
 }
