@@ -39,12 +39,7 @@ import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.command.VelocityCommandManager;
-import com.velocitypowered.proxy.command.builtin.CallbackCommand;
-import com.velocitypowered.proxy.command.builtin.GlistCommand;
-import com.velocitypowered.proxy.command.builtin.SendCommand;
-import com.velocitypowered.proxy.command.builtin.ServerCommand;
 import com.velocitypowered.proxy.command.builtin.ShutdownCommand;
-import com.velocitypowered.proxy.command.builtin.VelocityCommand;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.player.resourcepack.VelocityResourcePackInfo;
@@ -254,27 +249,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     cm.logChannelInformation();
 
     // Initialize commands first
-    final BrigadierCommand velocityParentCommand = VelocityCommand.create(this);
-    commandManager.register(
-        commandManager.metaBuilder(velocityParentCommand)
-            .plugin(VelocityVirtualPlugin.INSTANCE)
-            .build(),
-        velocityParentCommand
-    );
-    final BrigadierCommand callbackCommand = CallbackCommand.create();
-    commandManager.register(
-        commandManager.metaBuilder(callbackCommand)
-            .plugin(VelocityVirtualPlugin.INSTANCE)
-            .build(),
-        callbackCommand
-    );
-    final BrigadierCommand serverCommand = ServerCommand.create(this);
-    commandManager.register(
-        commandManager.metaBuilder(serverCommand)
-            .plugin(VelocityVirtualPlugin.INSTANCE)
-            .build(),
-        serverCommand
-    );
     final BrigadierCommand shutdownCommand = ShutdownCommand.command(this);
     commandManager.register(
         commandManager.metaBuilder(shutdownCommand)
@@ -283,8 +257,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
             .build(),
         shutdownCommand
     );
-    new GlistCommand(this).register();
-    new SendCommand(this).register();
 
     this.doStartupConfigLoad();
 
