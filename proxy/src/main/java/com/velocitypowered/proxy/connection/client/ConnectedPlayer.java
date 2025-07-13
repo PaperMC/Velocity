@@ -713,7 +713,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       friendlyError = Component.translatable("velocity.error.connecting-server-error",
           Component.text(server.getServerInfo().getName()));
     }
-    handleConnectionException(server, null, friendlyError.color(NamedTextColor.RED), safe);
+
+    handleConnectionException(server, friendlyError.color(NamedTextColor.RED), safe);
   }
 
   /**
@@ -733,29 +734,39 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     Component disconnectReason = disconnect.getReason().getComponent();
     String plainTextReason = PASS_THRU_TRANSLATE.serialize(disconnectReason);
     if (connectedServer != null && connectedServer.getServerInfo().equals(server.getServerInfo())) {
+
       logger.info("{}: kicked from server {}: {}", this, server.getServerInfo().getName(),
           plainTextReason);
-      handleConnectionException(server, disconnectReason,
-          Component.translatable("velocity.error.moved-to-new-server", NamedTextColor.RED,
-              Component.text(server.getServerInfo().getName()),
-              disconnectReason), safe);
+
+      handleConnectionException(server, disconnectReason, safe);
+
+//      handleConnectionException(server, disconnectReason,
+//          Component.translatable("velocity.error.moved-to-new-server", NamedTextColor.RED,
+//              Component.text(server.getServerInfo().getName()),
+//              disconnectReason), safe);
     } else {
+
       logger.error("{}: disconnected while connecting to {}: {}", this,
           server.getServerInfo().getName(), plainTextReason);
-      handleConnectionException(server, disconnectReason,
-          Component.translatable("velocity.error.cant-connect", NamedTextColor.RED,
-              Component.text(server.getServerInfo().getName()),
-              disconnectReason), safe);
+
+      handleConnectionException(server, disconnectReason, safe);
+
+//      handleConnectionException(server, disconnectReason,
+//          Component.translatable("velocity.error.cant-connect", NamedTextColor.RED,
+//              Component.text(server.getServerInfo().getName()),
+//              disconnectReason), safe);
     }
   }
 
   private void handleConnectionException(RegisteredServer rs,
-                                         @Nullable Component kickReason, Component friendlyReason,
+                                         @Nullable Component kickReason,
                                          boolean safe) {
     if (!isActive()) {
       // If the connection is no longer active, it makes no sense to try and recover it.
       return;
     }
+
+    Component friendlyReason = kickReason == null ? Component.text("Unable to connect.", NamedTextColor.RED) : kickReason.color(NamedTextColor.RED);
 
     if (!safe) {
       // /!\ IT IS UNSAFE TO CONTINUE /!\
