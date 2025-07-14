@@ -111,7 +111,7 @@ public abstract sealed class ResourcePackHandler
     }
     request.setRequired(queued.getShouldForce());
     request.setPrompt(queued.getPrompt() == null ? null :
-            new ComponentHolder(player.getProtocolVersion(), queued.getPrompt()));
+            new ComponentHolder(player.getProtocolVersion(), player.translateMessage(queued.getPrompt())));
 
     player.getConnection().write(request);
   }
