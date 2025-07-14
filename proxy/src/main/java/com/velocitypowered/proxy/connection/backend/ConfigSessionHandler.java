@@ -256,8 +256,15 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(DisconnectPacket packet) {
     serverConn.disconnect();
-    resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
-    serverConn.getPlayer().handleConnectionException(serverConn.getServer(), packet, true);
+    resultFuture.thenApply((result) -> {
+      MinecraftConnection connection = serverConn.getConnection();
+      if (connection == null) {
+        return result;
+      }
+      connection.closeWith(DisconnectPacket.create(packet.getReason().getComponent(), connection.getProtocolVersion(), connection.getState()));
+      return result;
+    }).complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
+
     return true;
   }
 

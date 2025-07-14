@@ -182,7 +182,6 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
       resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
     }
 
-    serverConn.getPlayer().handleConnectionException(serverConn.getServer(), packet, true);
     return true;
   }
 
