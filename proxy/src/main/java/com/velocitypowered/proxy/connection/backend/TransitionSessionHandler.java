@@ -176,12 +176,18 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     // the client.
     if (connection.getType() == ConnectionTypes.LEGACY_FORGE && !serverConn.getPhase().consideredComplete()) {
       resultFuture.thenApply((result) -> {
-        connection.closeWith(DisconnectPacket.create(packet.getReason().getComponent(), connection.getProtocolVersion(), connection.getState()));
+        connection.closeWith(DisconnectPacket.create(
+            packet.getReason().getComponent(),
+            connection.getProtocolVersion(),
+            connection.getState()));
         return result;
       }).complete(ConnectionRequestResults.forUnsafeDisconnect(packet, serverConn.getServer()));
     } else {
       resultFuture.thenApply((result) -> {
-        connection.closeWith(DisconnectPacket.create(packet.getReason().getComponent(), connection.getProtocolVersion(), connection.getState()));
+        connection.closeWith(DisconnectPacket.create(
+            packet.getReason().getComponent(),
+            connection.getProtocolVersion(),
+            connection.getState()));
         return result;
       }).complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
     }
