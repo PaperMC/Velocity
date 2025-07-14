@@ -175,21 +175,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     // If we were in the middle of the Forge handshake, it is not safe to proceed. We must kick
     // the client.
     if (connection.getType() == ConnectionTypes.LEGACY_FORGE && !serverConn.getPhase().consideredComplete()) {
-      resultFuture.thenApply((result) -> {
-        connection.closeWith(DisconnectPacket.create(
-            packet.getReason().getComponent(),
-            connection.getProtocolVersion(),
-            connection.getState()));
-        return result;
-      }).complete(ConnectionRequestResults.forUnsafeDisconnect(packet, serverConn.getServer()));
+      resultFuture.complete(ConnectionRequestResults.forUnsafeDisconnect(packet, serverConn.getServer()));
     } else {
-      resultFuture.thenApply((result) -> {
-        connection.closeWith(DisconnectPacket.create(
-            packet.getReason().getComponent(),
-            connection.getProtocolVersion(),
-            connection.getState()));
-        return result;
-      }).complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
+      resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
     }
 
     return true;
