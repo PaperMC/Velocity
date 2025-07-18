@@ -1053,7 +1053,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     VelocityServerConnection soundTargetServerConn = getConnectedServer();
     if (getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_19_3)
         || connection.getState() != StateRegistry.PLAY
-        || soundTargetServerConn == null) {
+        || soundTargetServerConn == null
+        || (sound.source() == Sound.Source.UI
+            && getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_21_5))) {
       return;
     }
 
@@ -1079,7 +1081,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   public void stopSound(@NotNull SoundStop stop) {
     Preconditions.checkNotNull(stop, "stop");
     if (getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_19_3)
-        || connection.getState() != StateRegistry.PLAY) {
+        || connection.getState() != StateRegistry.PLAY
+        || (stop.source() == Sound.Source.UI
+            && getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_21_5))) {
       return;
     }
 

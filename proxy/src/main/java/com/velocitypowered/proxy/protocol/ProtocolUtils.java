@@ -792,7 +792,7 @@ public enum ProtocolUtils {
   public static Sound.Source readSoundSource(ByteBuf buf, ProtocolVersion version) {
     int ordinal = readVarInt(buf);
 
-    if (version.noGreaterThan(ProtocolVersion.MINECRAFT_1_21_5)
+    if (version.lessThan(ProtocolVersion.MINECRAFT_1_21_5)
         && ordinal == Sound.Source.UI.ordinal()) {
       throw new UnsupportedOperationException("UI sound-source is only supported in 1.21.5+");
     }
@@ -808,7 +808,7 @@ public enum ProtocolUtils {
    * @param source the sound source to write
    */
   public static void writeSoundSource(ByteBuf buf, ProtocolVersion version, Sound.Source source) {
-    if (version.noGreaterThan(ProtocolVersion.MINECRAFT_1_21_5)
+    if (version.lessThan(ProtocolVersion.MINECRAFT_1_21_5)
         && source == Sound.Source.UI) {
       throw new UnsupportedOperationException("UI sound-source is only supported in 1.21.5+");
     }
