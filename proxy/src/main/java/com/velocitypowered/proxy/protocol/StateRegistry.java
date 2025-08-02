@@ -59,6 +59,8 @@ import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
+import com.velocitypowered.proxy.protocol.packet.DialogClearPacket;
+import com.velocitypowered.proxy.protocol.packet.DialogShowPacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionResponsePacket;
@@ -237,6 +239,10 @@ public enum StateRegistry {
           map(0x0F, MINECRAFT_1_21, false));
       clientbound.register(ClientboundServerLinksPacket.class, ClientboundServerLinksPacket::new,
           map(0x10, MINECRAFT_1_21, false));
+      clientbound.register(DialogClearPacket.class, () -> DialogClearPacket.INSTANCE,
+          map(0x11, MINECRAFT_1_21_6, false));
+      clientbound.register(DialogShowPacket.class, () -> new DialogShowPacket(this),
+          map(0x12, MINECRAFT_1_21_6, false));
     }
   },
   PLAY {
