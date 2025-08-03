@@ -318,6 +318,16 @@ public enum ProtocolUtils {
   }
 
   /**
+   * Writes the key to the buffer, dropping the "minecraft:" namespace when present.
+   *
+   * @param buf the buffer to write to
+   * @param key the key to write
+   */
+  public static void writeMinimalKey(ByteBuf buf, Key key) {
+    writeString(buf, key.asMinimalString());
+  }
+
+  /**
    * Reads a standard Mojang Text namespaced:key array from the buffer.
    *
    * @param buf the buffer to read from

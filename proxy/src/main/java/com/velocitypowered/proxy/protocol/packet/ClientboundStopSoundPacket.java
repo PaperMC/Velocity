@@ -79,7 +79,7 @@ public class ClientboundStopSoundPacket implements MinecraftPacket {
     }
 
     if (soundName != null) {
-      ProtocolUtils.writeString(buf, soundName.asMinimalString()); // Not using writeKey, as the client already defaults to the vanilla namespace
+      ProtocolUtils.writeMinimalKey(buf, soundName);
     }
   }
 

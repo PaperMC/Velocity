@@ -52,7 +52,7 @@ public class ClientboundSoundEntityPacket implements MinecraftPacket {
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     ProtocolUtils.writeVarInt(buf, 0); // version-dependent, hardcoded sound ID
 
-    ProtocolUtils.writeString(buf, sound.name().asMinimalString()); // Not using writeKey, as the client already defaults to the vanilla namespace
+    ProtocolUtils.writeMinimalKey(buf, sound.name());
 
     buf.writeBoolean(fixedRange != null);
     if (fixedRange != null)
