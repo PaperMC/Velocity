@@ -610,6 +610,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
         try {
           // Wait for the connections finish tearing down, this
           // makes sure that all the disconnect events are being fired
+
           CompletableFuture<Void> playersTeardownFuture = CompletableFuture.allOf(players.stream()
                   .map(ConnectedPlayer::getTeardownFuture)
                   .toArray((IntFunction<CompletableFuture<Void>[]>) CompletableFuture[]::new));
