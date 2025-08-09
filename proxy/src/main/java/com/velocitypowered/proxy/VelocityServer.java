@@ -578,6 +578,27 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       // done first to refuse new connections
       cm.shutdown();
 
+      int shutdownTimeout = 10;
+
+      try {
+        logger.info("Firing ProxyShutdownEvent (waiting up to {}s for plugins)...",
+                10);
+
+        eventManager.fire(new ProxyShutdownEvent())
+                .toCompletableFuture()
+                .get(shutdownTimeout, TimeUnit.SECONDS);
+
+        logger.info("ProxyShutdownEvent handlers finished.");
+      } catch (TimeoutException te) {
+        logger.warn("ProxyShutdownEvent timed out after {}s; continuing shutdown.",
+                shutdownTimeout);
+      } catch (ExecutionException ee) {
+        logger.error("Exception in ProxyShutdownEvent handler; continuing shutdown.", ee);
+      } catch (InterruptedException ie) {
+        Thread.currentThread().interrupt();
+        logger.warn("Interrupted while waiting for ProxyShutdownEvent; continuing shutdown.");
+      }
+
       ImmutableList<ConnectedPlayer> players = ImmutableList.copyOf(connectionsByUuid.values());
       for (ConnectedPlayer player : players) {
         player.disconnect(reason);
@@ -589,7 +610,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
         try {
           // Wait for the connections finish tearing down, this
           // makes sure that all the disconnect events are being fired
-
           CompletableFuture<Void> playersTeardownFuture = CompletableFuture.allOf(players.stream()
                   .map(ConnectedPlayer::getTeardownFuture)
                   .toArray((IntFunction<CompletableFuture<Void>[]>) CompletableFuture[]::new));
@@ -601,8 +621,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
           timedOut = true;
           logger.error("Exception while tearing down player connections", e);
         }
-
-        eventManager.fire(new ProxyShutdownEvent()).join();
 
         timedOut = !scheduler.shutdown() || timedOut;
 
