@@ -28,9 +28,14 @@ public sealed interface ConfigurationMigration
         permits ForwardingMigration,
                 KeyAuthenticationMigration,
                 MotdMigration,
+<<<<<<< HEAD
                 MiniMessageTranslationsMigration,
                 TransferIntegrationMigration,
                 PacketLimiterMigration {
+=======
+                TransferIntegrationMigration,
+                PingPassthroughMigration {
+>>>>>>> a7407b4f (Removed legacy ping passthrough & added config migration)
   boolean shouldMigrate(CommentedFileConfig config);
 
   void migrate(CommentedFileConfig config, Logger logger) throws IOException;

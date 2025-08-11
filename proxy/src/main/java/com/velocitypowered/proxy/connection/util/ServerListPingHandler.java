@@ -84,8 +84,7 @@ public class ServerListPingHandler {
   }
 
   private CompletableFuture<ServerPing> attemptPingPassthrough(VelocityInboundConnection connection,
-      PingPassthroughMode mode, LegacyPingPassthroughMode legacyMode,
-      List<String> servers, ProtocolVersion responseProtocolVersion, String virtualHostStr) {
+      PingPassthroughMode mode, List<String> servers, ProtocolVersion responseProtocolVersion, String virtualHostStr) {
     ServerPing fallback = constructLocalPing(connection.getProtocolVersion());
     List<CompletableFuture<ServerPing>> pings = new ArrayList<>();
     for (String s : servers) {
@@ -103,119 +102,64 @@ public class ServerListPingHandler {
 
     CompletableFuture<List<ServerPing>> pingResponses = CompletableFutures.successfulAsList(pings,
         (ex) -> fallback);
-    // Use the new ping passthrough mode if enabled.
-    if (mode.enabled()) {
-      return pingResponses.thenApply(responses -> {
-        // Find the first non-fallback. If it includes a modlist, add it too.
-        for (ServerPing response : responses) {
-          if (response == fallback) {
-            continue;
-          }
 
-          if (response.getDescriptionComponent() == null) {
-            continue;
-          }
-
-          ServerPing.Version version;
-          if (mode.version) {
-            version = response.getVersion();
-          } else {
-            version = fallback.getVersion();
-          }
-
-          ServerPing.Players players;
-          if (mode.players) {
-            players = response.getPlayers().orElse(null);
-          } else {
-            players = fallback.getPlayers().orElse(null);
-          }
-
-          net.kyori.adventure.text.Component description;
-          if (mode.description) {
-            description = response.getDescriptionComponent();
-          } else {
-            description = fallback.getDescriptionComponent();
-          }
-
-          Favicon favicon;
-          if (mode.favicon) {
-            favicon = response.getFavicon().orElse(null);
-          } else {
-            favicon = fallback.getFavicon().orElse(null);
-          }
-
-          ModInfo modinfo;
-          if (mode.modinfo) {
-            modinfo = response.getModinfo().orElse(null);
-          } else {
-            modinfo = fallback.getModinfo().orElse(null);
-          }
-
-          return new ServerPing(
-              version,
-              players,
-              description,
-              favicon,
-              modinfo
-          );
-        }
-        return fallback;
-      });
-    } else {
-      // Otherwise, use the legacy ping passthrough mode.
-      switch (legacyMode) {
-        case ALL:
-          return pingResponses.thenApply(responses -> {
-            // Find the first non-fallback
-            for (ServerPing response : responses) {
-              if (response == fallback) {
-                continue;
-              }
-              return response;
-            }
-            return fallback;
-          });
-        case MODS:
-          return pingResponses.thenApply(responses -> {
-            // Find the first non-fallback that contains a mod list
-            for (ServerPing response : responses) {
-              if (response == fallback) {
-                continue;
-              }
-              Optional<ModInfo> modInfo = response.getModinfo();
-              if (modInfo.isPresent()) {
-                return fallback.asBuilder().mods(modInfo.get()).build();
-              }
-            }
-            return fallback;
-          });
-        case DESCRIPTION:
-          return pingResponses.thenApply(responses -> {
-            // Find the first non-fallback. If it includes a modlist, add it too.
-            for (ServerPing response : responses) {
-              if (response == fallback) {
-                continue;
-              }
-
-              if (response.getDescriptionComponent() == null) {
-                continue;
-              }
-
-              return new ServerPing(
-                  fallback.getVersion(),
-                  fallback.getPlayers().orElse(null),
-                  response.getDescriptionComponent(),
-                  fallback.getFavicon().orElse(null),
-                  response.getModinfo().orElse(null)
-              );
-            }
-            return fallback;
-          });
-        // Not possible, but covered for completeness.
-        default:
-          return CompletableFuture.completedFuture(fallback);
-      }
+    // Return early if ping passthrough is not enabled
+    if (!mode.enabled()) {
+      return CompletableFuture.completedFuture(fallback);
     }
+
+    return pingResponses.thenApply(responses -> {
+      // Find the first non-fallback
+      for (ServerPing response : responses) {
+        if (response == fallback) {
+          continue;
+        }
+
+        ServerPing.Version version;
+        if (mode.version) {
+          version = response.getVersion();
+        } else {
+          version = fallback.getVersion();
+        }
+
+        ServerPing.Players players;
+        if (mode.players) {
+          players = response.getPlayers().orElse(null);
+        } else {
+          players = fallback.getPlayers().orElse(null);
+        }
+
+        net.kyori.adventure.text.Component description;
+        if (mode.description && response.getDescriptionComponent() != null) {
+          description = response.getDescriptionComponent();
+        } else {
+          description = fallback.getDescriptionComponent();
+        }
+
+        Favicon favicon;
+        if (mode.favicon) {
+          favicon = response.getFavicon().orElse(null);
+        } else {
+          favicon = fallback.getFavicon().orElse(null);
+        }
+
+        ModInfo modinfo;
+        if (mode.modinfo) {
+          modinfo = response.getModinfo().orElse(null);
+        } else {
+          modinfo = fallback.getModinfo().orElse(null);
+        }
+
+        return new ServerPing(
+            version,
+            players,
+            description,
+            favicon,
+            modinfo
+        );
+      }
+      return fallback;
+    });
   }
 
   /**
@@ -229,9 +173,8 @@ public class ServerListPingHandler {
     ProtocolVersion shownVersion = connection.getProtocolVersion().isSupported()
         ? connection.getProtocolVersion() : ProtocolVersion.MAXIMUM_VERSION;
     PingPassthroughMode passthroughMode = configuration.getPingPassthrough();
-    LegacyPingPassthroughMode legacyPassthroughMode = configuration.getLegacyPingPassthrough();
 
-    if (!passthroughMode.enabled() && legacyPassthroughMode == LegacyPingPassthroughMode.DISABLED) {
+    if (!passthroughMode.enabled()) {
       return CompletableFuture.completedFuture(constructLocalPing(shownVersion));
     } else {
       String virtualHostStr = connection.getVirtualHost().map(InetSocketAddress::getHostString)
@@ -239,7 +182,7 @@ public class ServerListPingHandler {
           .orElse("");
       List<String> serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(
           virtualHostStr, server.getConfiguration().getAttemptConnectionOrder());
-      return attemptPingPassthrough(connection, passthroughMode, legacyPassthroughMode, serversToTry, shownVersion, virtualHostStr);
+      return attemptPingPassthrough(connection, passthroughMode, serversToTry, shownVersion, virtualHostStr);
     }
   }
 }
