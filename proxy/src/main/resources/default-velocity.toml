@@ -1,5 +1,5 @@
 # Config version. Do not change this
-config-version = "2.7"
+config-version = "2.8"
 
 # What port should the proxy be bound to? By default, we'll bind to all addresses on port 25565.
 bind = "0.0.0.0:25565"
@@ -51,22 +51,19 @@ announce-forge = false
 # any existing player who is online if a duplicate connection attempt is made.
 kick-existing-players = false
 
-# For the below options, the backend server Velocity contacts will be the first server that responds in the try list (or the forced host).
-# If no servers can be contacted, the Velocity configuration will be used instead.
-
-# Should Velocity send the version number from the backend server when responding to server list ping requests?
+# Should Velocity pass the version number from the backend server when responding to server list ping requests?
 ping-passthrough-version = false
 
-# Should Velocity send the player count from the backend server when responding to server list ping requests?
+# Should Velocity pass the player count from the backend server when responding to server list ping requests?
 ping-passthrough-players = false
 
-# Should Velocity send the description from the backend server when responding to server list ping requests?
+# Should Velocity pass the description from the backend server when responding to server list ping requests?
 ping-passthrough-description = false
 
-# Should Velocity send the favicon (also known as the server icon) from the backend server when responding to server list ping requests?
+# Should Velocity pass the favicon (also known as the server icon) from the backend server when responding to server list ping requests?
 ping-passthrough-favicon = false
 
-# Should Velocity send the mod list from the backend server when responding to server list ping requests?
+# Should Velocity pass the mod list from the backend server when responding to server list ping requests?
 ping-passthrough-modinfo = false
 
 # If enabled (default is false), then a sample of the online players on the proxy will be visible
