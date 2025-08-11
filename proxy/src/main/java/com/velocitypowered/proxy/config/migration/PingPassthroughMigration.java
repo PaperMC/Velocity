@@ -22,7 +22,7 @@ import com.velocitypowered.proxy.config.LegacyPingPassthroughMode;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Migrate the old ping passthrough entry to separate config entries
+ * Migrate the old ping passthrough entry to separate config entries.
  */
 public final class PingPassthroughMigration implements ConfigurationMigration {
   @Override
