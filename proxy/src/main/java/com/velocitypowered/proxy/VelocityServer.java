@@ -24,6 +24,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.event.proxy.ProxyPreShutdownEvent;
 import com.velocitypowered.api.event.proxy.ProxyReloadEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -581,22 +582,22 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       int shutdownTimeout = 10;
 
       try {
-        logger.info("Firing ProxyShutdownEvent (waiting up to {}s for plugins)...",
+        logger.info("Firing ProxyPreShutdownEvent (waiting up to {}s for plugins)...",
                 10);
 
-        eventManager.fire(new ProxyShutdownEvent())
+        eventManager.fire(new ProxyPreShutdownEvent())
                 .toCompletableFuture()
                 .get(shutdownTimeout, TimeUnit.SECONDS);
 
-        logger.info("ProxyShutdownEvent handlers finished.");
+        logger.info("ProxyPreShutdownEvent handlers finished.");
       } catch (TimeoutException te) {
-        logger.warn("ProxyShutdownEvent timed out after {}s; continuing shutdown.",
+        logger.warn("ProxyPreShutdownEvent timed out after {}s; continuing shutdown.",
                 shutdownTimeout);
       } catch (ExecutionException ee) {
-        logger.error("Exception in ProxyShutdownEvent handler; continuing shutdown.", ee);
+        logger.error("Exception in ProxyPreShutdownEvent handler; continuing shutdown.", ee);
       } catch (InterruptedException ie) {
         Thread.currentThread().interrupt();
-        logger.warn("Interrupted while waiting for ProxyShutdownEvent; continuing shutdown.");
+        logger.warn("Interrupted while waiting for ProxyPreShutdownEvent; continuing shutdown.");
       }
 
       ImmutableList<ConnectedPlayer> players = ImmutableList.copyOf(connectionsByUuid.values());
@@ -622,6 +623,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
           timedOut = true;
           logger.error("Exception while tearing down player connections", e);
         }
+
+        eventManager.fire(new ProxyShutdownEvent()).join();
 
         timedOut = !scheduler.shutdown() || timedOut;
 
