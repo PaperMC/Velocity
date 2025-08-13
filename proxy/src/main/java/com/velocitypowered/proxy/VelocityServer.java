@@ -590,7 +590,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
                 shutdownTimeout);
       } catch (ExecutionException ee) {
         logger.error("Exception in ProxyPreShutdownEvent handler; continuing shutdown.", ee);
-      } catch (InterruptedException ie) {
+      } catch (InterruptedException ignored) {
         Thread.currentThread().interrupt();
         logger.warn("Interrupted while waiting for ProxyPreShutdownEvent; continuing shutdown.");
       }
