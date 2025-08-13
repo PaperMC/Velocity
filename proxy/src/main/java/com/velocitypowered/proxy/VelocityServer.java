@@ -586,7 +586,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
                 .toCompletableFuture()
                 .get(shutdownTimeout, TimeUnit.SECONDS);
       } catch (TimeoutException ignored) {
-        logger.warn("ProxyPreShutdownEvent timed out after {}s; continuing shutdown.",
+        logger.warn("Your plugins took over {} seconds to shut down while disconnecting players.",
                 shutdownTimeout);
       } catch (ExecutionException ee) {
         logger.error("Exception in ProxyPreShutdownEvent handler; continuing shutdown.", ee);
