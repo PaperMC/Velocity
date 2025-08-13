@@ -582,14 +582,9 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       int shutdownTimeout = 10;
 
       try {
-        logger.info("Firing ProxyPreShutdownEvent (waiting up to {}s for plugins)...",
-                10);
-
         eventManager.fire(new ProxyPreShutdownEvent())
                 .toCompletableFuture()
                 .get(shutdownTimeout, TimeUnit.SECONDS);
-
-        logger.info("ProxyPreShutdownEvent handlers finished.");
       } catch (TimeoutException te) {
         logger.warn("ProxyPreShutdownEvent timed out after {}s; continuing shutdown.",
                 shutdownTimeout);
