@@ -3,30 +3,23 @@ plugins {
     `maven-publish`
 }
 
-extensions.configure<PublishingExtension> {
-    repositories {
-        maven {
-            credentials(PasswordCredentials::class.java)
-
-            name = if (version.toString().endsWith("SNAPSHOT")) "paperSnapshots" else "paper" // "paper" is seemingly not defined
-            val base = "https://repo.papermc.io/repository/maven"
-            val releasesRepoUrl = "$base-releases/"
-            val snapshotsRepoUrl = "$base-snapshots/"
-            setUrl(if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl)
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+            groupId = "com.velocitypowered"
+            artifactId = "velocity-api"
+            version = "3.4.0-LMC"
         }
     }
-    publications {
-        create<MavenPublication>("maven") {
-            from(components["java"])
-            pom {
-                name.set("Velocity")
-                description.set("The modern, next-generation Minecraft server proxy")
-                url.set("https://papermc.io/software/velocity")
-                scm {
-                    url.set("https://github.com/PaperMC/Velocity")
-                    connection.set("scm:git:https://github.com/PaperMC/Velocity.git")
-                    developerConnection.set("scm:git:https://github.com/PaperMC/Velocity.git")
-                }
+    repositories {
+        maven {
+            name = "lifestealmc"
+            url = uri("https://repo.lifestealmc.com/private")
+
+            credentials {
+                username = findProperty("repoUser") as String?: ""
+                password = findProperty("repoPass") as String?: ""
             }
         }
     }
