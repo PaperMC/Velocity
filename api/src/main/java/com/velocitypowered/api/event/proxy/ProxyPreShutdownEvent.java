@@ -17,7 +17,7 @@ import com.velocitypowered.api.event.annotation.AwaitingEvent;
  * for example to transfer them to another proxy or perform other cleanup tasks.
  *
  * <p><b>Note:</b> Velocity will wait for all event listeners to complete before disconnecting players,
- * but note that the event will time out after a certain period (currently 10 seconds)
+ * but note that the event will time out after 10 seconds
  * to prevent shutdown from hanging indefinitely.</p>
  */
 @Beta
