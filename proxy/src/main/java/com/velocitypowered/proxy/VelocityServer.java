@@ -151,6 +151,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       )
       .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
       .create();
+    private static final int PRE_SHUTDOWN_TIMEOUT =
+            Integer.getInteger("velocity.pre-shutdown-timeout", 10);
 
   private final ConnectionManager cm;
   private final ProxyOptions options;
@@ -579,15 +581,13 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       // done first to refuse new connections
       cm.shutdown();
 
-      int shutdownTimeout = 10;
-
       try {
         eventManager.fire(new ProxyPreShutdownEvent())
                 .toCompletableFuture()
-                .get(shutdownTimeout, TimeUnit.SECONDS);
+                .get(PRE_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS);
       } catch (TimeoutException ignored) {
         logger.warn("Your plugins took over {} seconds during pre shutdown.",
-                shutdownTimeout);
+                PRE_SHUTDOWN_TIMEOUT);
       } catch (ExecutionException ee) {
         logger.error("Exception in ProxyPreShutdownEvent handler; continuing shutdown.", ee);
       } catch (InterruptedException ignored) {
