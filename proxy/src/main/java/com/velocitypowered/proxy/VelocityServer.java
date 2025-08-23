@@ -151,7 +151,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       )
       .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
       .create();
-    private static final int PRE_SHUTDOWN_TIMEOUT =
+  private static final int PRE_SHUTDOWN_TIMEOUT =
             Integer.getInteger("velocity.pre-shutdown-timeout", 10);
 
   private final ConnectionManager cm;
