@@ -1487,12 +1487,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
             final Component reason = status.getReasonComponent()
                     .orElse(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
 
-              if (connectedServer == null && connection.getState() == StateRegistry.CONFIG) {
-                  connection.closeWith(DisconnectPacket.create(reason, getProtocolVersion(), connection.getState()));
-              } else {
-                  handleConnectionException(toConnect,
-                          DisconnectPacket.create(reason, getProtocolVersion(), connection.getState()), status.isSafe());
-              }
+            if (connectedServer == null && connection.getState() == StateRegistry.CONFIG) {
+              connection.closeWith(DisconnectPacket.create(reason, getProtocolVersion(), connection.getState()));
+            } else {
+              handleConnectionException(toConnect,
+                    DisconnectPacket.create(reason, getProtocolVersion(), connection.getState()), status.isSafe());
+            }
           }
           default -> {
             // The only remaining value is successful (no need to do anything!)
