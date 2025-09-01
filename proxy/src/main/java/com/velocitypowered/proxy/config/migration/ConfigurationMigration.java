@@ -28,7 +28,8 @@ public sealed interface ConfigurationMigration
         permits ForwardingMigration,
                 KeyAuthenticationMigration,
                 MotdMigration,
-                TransferIntegrationMigration {
+                TransferIntegrationMigration,
+                PingPassthroughMigration {
   boolean shouldMigrate(CommentedFileConfig config);
 
   void migrate(CommentedFileConfig config, Logger logger) throws IOException;

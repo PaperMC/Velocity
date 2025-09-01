@@ -30,8 +30,6 @@ import com.velocitypowered.api.event.player.TabCompleteEvent;
 import com.velocitypowered.api.event.player.configuration.PlayerEnteredConfigurationEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
-import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -162,7 +160,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public void activated() {
     configSwitchFuture = new CompletableFuture<>();
-    Collection<String> channels =
+    Collection<ChannelIdentifier> channels =
         server.getChannelRegistrar().getChannelsForProtocol(player.getProtocolVersion());
     if (!channels.isEmpty()) {
       PluginMessagePacket register = constructChannelsPacket(player.getProtocolVersion(), channels);
@@ -310,22 +308,17 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         logger.warn("A plugin message was received while the backend server was not "
             + "ready. Channel: {}. Packet discarded.", packet.getChannel());
       } else if (PluginMessageUtil.isRegister(packet)) {
-        List<String> channels = PluginMessageUtil.getChannels(packet);
+        List<ChannelIdentifier> channels =
+            PluginMessageUtil.getChannels(this.player.getClientsideChannels().size(), packet,
+                this.player.getProtocolVersion());
         player.getClientsideChannels().addAll(channels);
-        List<ChannelIdentifier> channelIdentifiers = new ArrayList<>();
-        for (String channel : channels) {
-          try {
-            channelIdentifiers.add(MinecraftChannelIdentifier.from(channel));
-          } catch (IllegalArgumentException e) {
-            channelIdentifiers.add(new LegacyChannelIdentifier(channel));
-          }
-        }
         server.getEventManager()
             .fireAndForget(
-                new PlayerChannelRegisterEvent(player, ImmutableList.copyOf(channelIdentifiers)));
+                new PlayerChannelRegisterEvent(player, ImmutableList.copyOf(channels)));
         backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isUnregister(packet)) {
-        player.getClientsideChannels().removeAll(PluginMessageUtil.getChannels(packet));
+        player.getClientsideChannels()
+            .removeAll(PluginMessageUtil.getChannels(0, packet, this.player.getProtocolVersion()));
         backendConn.write(packet.retain());
       } else if (PluginMessageUtil.isMcBrand(packet)) {
         String brand = PluginMessageUtil.readBrandMessage(packet.content());
@@ -402,7 +395,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // Complete client switch
     player.getConnection().setActiveSessionHandler(StateRegistry.CONFIG);
     VelocityServerConnection serverConnection = player.getConnectedServer();
-    server.getEventManager().fireAndForget(new PlayerEnteredConfigurationEvent(player, serverConnection));
+    server.getEventManager()
+        .fireAndForget(new PlayerEnteredConfigurationEvent(player, serverConnection));
     if (serverConnection != null) {
       MinecraftConnection smc = serverConnection.ensureConnected();
       CompletableFuture.runAsync(() -> {
@@ -589,7 +583,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     // Tell the server about the proxy's plugin message channels.
     ProtocolVersion serverVersion = serverMc.getProtocolVersion();
-    final Collection<String> channels = server.getChannelRegistrar()
+    final Collection<ChannelIdentifier> channels = server.getChannelRegistrar()
         .getChannelsForProtocol(serverMc.getProtocolVersion());
     if (!channels.isEmpty()) {
       serverMc.delayedWrite(constructChannelsPacket(serverVersion, channels));
