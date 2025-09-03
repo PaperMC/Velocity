@@ -26,23 +26,23 @@ import io.netty.buffer.ByteBuf;
 
 public class ServerboundCustomClickActionPacket extends DeferredByteBufHolder implements MinecraftPacket {
 
-    public ServerboundCustomClickActionPacket() {
-        super(null);
-    }
+  public ServerboundCustomClickActionPacket() {
+    super(null);
+  }
 
-    @Override
-    public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-        replace(buf.readRetainedSlice(buf.readableBytes()));
-    }
+  @Override
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+    replace(buf.readRetainedSlice(buf.readableBytes()));
+  }
 
-    @Override
-    public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-        buf.writeBytes(content());
-    }
+  @Override
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+    buf.writeBytes(content());
+  }
 
-    @Override
-    public boolean handle(MinecraftSessionHandler handler) {
-        return handler.handle(this);
-    }
+  @Override
+  public boolean handle(MinecraftSessionHandler handler) {
+    return handler.handle(this);
+  }
 
 }
