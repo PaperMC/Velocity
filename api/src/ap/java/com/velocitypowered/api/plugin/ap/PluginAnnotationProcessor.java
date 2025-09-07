@@ -68,8 +68,8 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
 
       Name qualifiedName = ((TypeElement) element).getQualifiedName();
 
-      if (Objects.equals(pluginClassFound, qualifiedName.toString())) {
-        if (!warnedAboutMultiplePlugins) {
+      if (pluginClassFound != null) {
+        if (!pluginClassFound.equals(qualifiedName.toString()) && !warnedAboutMultiplePlugins) {
           environment.getMessager()
               .printMessage(Diagnostic.Kind.WARNING, "Velocity does not yet currently support "
                   + "multiple plugins. We are using " + pluginClassFound
