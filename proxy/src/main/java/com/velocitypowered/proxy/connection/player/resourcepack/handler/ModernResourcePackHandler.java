@@ -94,7 +94,7 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
         this.outstandingResourcePacks.get(info.getId());
     outstandingResourcePacks.add(info);
     if (outstandingResourcePacks.size() == 1) {
-      tickResourcePackQueue(outstandingResourcePacks.get(0).getId());
+      tickResourcePackQueue(outstandingResourcePacks.getFirst().getId());
     }
   }
 
@@ -111,7 +111,7 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
     final List<ResourcePackInfo> outstandingResourcePacks =
         this.outstandingResourcePacks.get(uuid);
     if (!outstandingResourcePacks.isEmpty()) {
-      sendResourcePackRequestPacket(outstandingResourcePacks.get(0));
+      sendResourcePackRequestPacket(outstandingResourcePacks.getFirst());
     }
   }
 
@@ -124,7 +124,7 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
         this.outstandingResourcePacks.get(uuid);
     final boolean peek = bundle.status().isIntermediate();
     final ResourcePackInfo queued = outstandingResourcePacks.isEmpty() ? null :
-        peek ? outstandingResourcePacks.get(0) : outstandingResourcePacks.remove(0);
+        peek ? outstandingResourcePacks.getFirst() : outstandingResourcePacks.removeFirst();
 
     server.getEventManager()
             .fire(new PlayerResourcePackStatusEvent(this.player, uuid, bundle.status(), queued))

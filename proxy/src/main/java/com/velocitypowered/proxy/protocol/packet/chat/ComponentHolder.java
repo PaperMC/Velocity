@@ -113,23 +113,32 @@ public class ComponentHolder {
   public static BinaryTag serialize(JsonElement json) {
     if (json instanceof JsonPrimitive jsonPrimitive) {
 		if (jsonPrimitive.isNumber()) {
-        Number number = json.getAsNumber();
+            Number number = json.getAsNumber();
 
-        if (number instanceof Byte) {
-          return ByteBinaryTag.byteBinaryTag((Byte) number);
-        } else if (number instanceof Short) {
-          return ShortBinaryTag.shortBinaryTag((Short) number);
-        } else if (number instanceof Integer) {
-          return IntBinaryTag.intBinaryTag((Integer) number);
-        } else if (number instanceof Long) {
-          return LongBinaryTag.longBinaryTag((Long) number);
-        } else if (number instanceof Float) {
-          return FloatBinaryTag.floatBinaryTag((Float) number);
-        } else if (number instanceof Double) {
-          return DoubleBinaryTag.doubleBinaryTag((Double) number);
-        } else if (number instanceof LazilyParsedNumber) {
-          return IntBinaryTag.intBinaryTag(number.intValue());
-        }
+            switch (number) {
+                case Byte b -> {
+                    return ByteBinaryTag.byteBinaryTag(b);
+                }
+                case Short s -> {
+                    return ShortBinaryTag.shortBinaryTag(s);
+                }
+                case Integer i -> {
+                    return IntBinaryTag.intBinaryTag(i);
+                }
+                case Long l -> {
+                    return LongBinaryTag.longBinaryTag(l);
+                }
+                case Float f -> {
+                    return FloatBinaryTag.floatBinaryTag(f);
+                }
+                case Double d -> {
+                    return DoubleBinaryTag.doubleBinaryTag(d);
+                }
+                case LazilyParsedNumber l -> {
+                    return IntBinaryTag.intBinaryTag(l.intValue());
+                }
+                default -> {}
+            }
       } else if (jsonPrimitive.isString()) {
         return StringBinaryTag.stringBinaryTag(jsonPrimitive.getAsString());
       } else if (jsonPrimitive.isBoolean()) {

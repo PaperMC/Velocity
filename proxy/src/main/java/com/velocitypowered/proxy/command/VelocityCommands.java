@@ -133,7 +133,7 @@ public final class VelocityCommands {
     if (nodes.isEmpty()) {
       throw new IllegalArgumentException("Cannot read alias from empty node list");
     }
-    return nodes.get(0).getNode().getName();
+    return nodes.getFirst().getNode().getName();
   }
 
   public static final String ARGS_NODE_NAME = "arguments";
