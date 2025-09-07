@@ -70,6 +70,11 @@ public final class InitialInboundConnection implements VelocityInboundConnection
   }
 
   @Override
+  public Optional<InetSocketAddress> getHaProxyAddress() {
+    return Optional.ofNullable((InetSocketAddress) connection.getHaProxyAddress());
+  }
+
+  @Override
   public boolean isActive() {
     return connection.getChannel().isActive();
   }

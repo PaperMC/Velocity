@@ -42,6 +42,14 @@ public interface InboundConnection {
   Optional<String> getRawVirtualHost();
 
   /**
+   * If the connection was made through a proxy using the HAProxy protocol, this will contain the
+   * real address of the proxy. Otherwise, this will be empty.
+   *
+   * @return the address of the HAProxy proxy, if applicable
+   */
+  Optional<InetSocketAddress> getHaProxyAddress();
+
+  /**
    * Determine whether or not the player remains online.
    *
    * @return whether or not the player active

@@ -87,6 +87,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   private final Channel channel;
   public boolean pendingConfigurationSwitch = false;
   private SocketAddress remoteAddress;
+  private @Nullable SocketAddress haProxyAddress;
   private StateRegistry state;
   private Map<StateRegistry, MinecraftSessionHandler> sessionHandlers;
   private @Nullable MinecraftSessionHandler activeSessionHandler;
@@ -158,6 +159,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
       } else if (msg instanceof HAProxyMessage proxyMessage) {
         this.remoteAddress = new InetSocketAddress(proxyMessage.sourceAddress(),
             proxyMessage.sourcePort());
+
+        final var proxyTransportAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+        this.haProxyAddress = new InetSocketAddress(proxyTransportAddress.getAddress().getHostAddress(),
+                proxyTransportAddress.getPort());
       } else if (msg instanceof ByteBuf) {
         activeSessionHandler.handleUnknown((ByteBuf) msg);
       }
@@ -325,6 +330,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   public SocketAddress getRemoteAddress() {
     return remoteAddress;
+  }
+
+  public @Nullable SocketAddress getHaProxyAddress() {
+    return haProxyAddress;
   }
 
   public StateRegistry getState() {

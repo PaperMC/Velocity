@@ -78,6 +78,11 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
   }
 
   @Override
+  public Optional<InetSocketAddress> getHaProxyAddress() {
+    return delegate.getHaProxyAddress();
+  }
+
+  @Override
   public boolean isActive() {
     return delegate.isActive();
   }

@@ -383,6 +383,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     return Optional.ofNullable(rawVirtualHost);
   }
 
+  @Override
+  public Optional<InetSocketAddress> getHaProxyAddress() {
+    return Optional.ofNullable((InetSocketAddress) connection.getHaProxyAddress());
+  }
+
   void setPermissionFunction(PermissionFunction permissionFunction) {
     this.permissionFunction = permissionFunction;
   }
