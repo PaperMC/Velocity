@@ -125,12 +125,12 @@ public class LegacyPlayerListItemPacket implements MinecraftPacket {
             ProtocolUtils.writeVarInt(buf, item.getLatency());
             writeDisplayName(buf, item.getDisplayName(), version);
             if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
-              if (item.getPlayerKey() != null) {
-                buf.writeBoolean(true);
-                ProtocolUtils.writePlayerKey(buf, item.getPlayerKey());
-              } else {
-                buf.writeBoolean(false);
-              }
+                if (item.getPlayerKey() != null) {
+                    buf.writeBoolean(true);
+                    ProtocolUtils.writePlayerKey(buf, item.getPlayerKey());
+                } else {
+                    buf.writeBoolean(false);
+                }
             }
           }
           case UPDATE_GAMEMODE -> ProtocolUtils.writeVarInt(buf, item.getGameMode());
