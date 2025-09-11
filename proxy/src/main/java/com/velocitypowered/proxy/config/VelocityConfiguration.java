@@ -156,19 +156,16 @@ public class VelocityConfiguration implements ProxyConfig {
     }
 
     switch (playerInfoForwardingMode) {
-      case NONE:
-        logger.warn("Player info forwarding is disabled! All players will appear to be connecting "
+      case NONE -> logger.warn("Player info forwarding is disabled! All players will appear to be connecting "
             + "from the proxy and will have offline-mode UUIDs.");
-        break;
-      case MODERN:
-      case BUNGEEGUARD:
+      case MODERN, BUNGEEGUARD -> {
         if (forwardingSecret == null || forwardingSecret.length == 0) {
           logger.error("You don't have a forwarding secret set. This is required for security.");
           valid = false;
         }
-        break;
-      default:
-        break;
+      }
+      default -> {
+      }
     }
 
     if (servers.getServers().isEmpty()) {
