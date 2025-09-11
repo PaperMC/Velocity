@@ -76,16 +76,16 @@ public class LegacyPlayerListItemPacket implements MinecraftPacket {
             item.setLatency(ProtocolUtils.readVarInt(buf));
             item.setDisplayName(readOptionalComponent(buf, version));
             if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
-              if (buf.readBoolean()) {
-                item.setPlayerKey(ProtocolUtils.readPlayerKey(version, buf));
-              }
+                if (buf.readBoolean()) {
+                    item.setPlayerKey(ProtocolUtils.readPlayerKey(version, buf));
+                }
             }
           }
           case UPDATE_GAMEMODE -> item.setGameMode(ProtocolUtils.readVarInt(buf));
           case UPDATE_LATENCY -> item.setLatency(ProtocolUtils.readVarInt(buf));
           case UPDATE_DISPLAY_NAME -> item.setDisplayName(readOptionalComponent(buf, version));
           case REMOVE_PLAYER -> {
-            //Do nothing, all that is needed is the uuid
+              //Do nothing, all that is needed is the uuid
           }
           default -> throw new UnsupportedOperationException("Unknown action " + action);
         }
