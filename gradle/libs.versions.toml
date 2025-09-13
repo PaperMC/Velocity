@@ -3,7 +3,7 @@ configurate3 = "3.7.3"
 configurate4 = "4.1.2"
 flare = "2.0.1"
 log4j = "2.24.3"
-netty = "4.2.5.Final"
+netty = "4.2.6.Final"
 
 [plugins]
 fill = "io.papermc.fill.gradle:1.0.3"
@@ -14,13 +14,13 @@ spotless = "com.diffplug.spotless:6.25.0"
 [libraries]
 adventure-bom = "net.kyori:adventure-bom:4.24.0"
 adventure-text-serializer-json-legacy-impl = "net.kyori:adventure-text-serializer-json-legacy-impl:4.24.0"
-adventure-facet = "net.kyori:adventure-platform-facet:4.3.4"
+adventure-facet = "net.kyori:adventure-platform-facet:4.4.1"
 asm = "org.ow2.asm:asm:9.8"
 auto-service = "com.google.auto.service:auto-service:1.0.1"
 auto-service-annotations = "com.google.auto.service:auto-service-annotations:1.0.1"
 brigadier = "com.velocitypowered:velocity-brigadier:1.0.0-SNAPSHOT"
-bstats = "org.bstats:bstats-base:3.0.3"
-caffeine = "com.github.ben-manes.caffeine:caffeine:3.1.8"
+bstats = "org.bstats:bstats-base:3.1.0"
+caffeine = "com.github.ben-manes.caffeine:caffeine:3.2.2"
 checker-qual = "org.checkerframework:checker-qual:3.42.0"
 checkstyle = "com.puppycrawl.tools:checkstyle:10.9.3"
 completablefutures = "com.spotify:completable-futures:0.3.6"
@@ -34,7 +34,7 @@ disruptor = "com.lmax:disruptor:4.0.0"
 fastutil = "it.unimi.dsi:fastutil:8.5.15"
 flare-core = { module = "space.vectrix.flare:flare", version.ref = "flare" }
 flare-fastutil = { module = "space.vectrix.flare:flare-fastutil", version.ref = "flare" }
-jline = "org.jline:jline-terminal-jansi:3.30.2"
+jline = "org.jline:jline-terminal-jansi:3.30.6"
 jopt = "net.sf.jopt-simple:jopt-simple:5.0.4"
 junit = "org.junit.jupiter:junit-jupiter:5.10.2"
 jspecify = "org.jspecify:jspecify:0.3.0"
@@ -56,7 +56,7 @@ netty-handler = { module = "io.netty:netty-handler", version.ref = "netty" }
 netty-transport-native-epoll = { module = "io.netty:netty-transport-native-epoll", version.ref = "netty" }
 netty-transport-native-kqueue = { module = "io.netty:netty-transport-native-kqueue", version.ref = "netty" }
 netty-transport-native-iouring = { module = "io.netty:netty-transport-native-io_uring", version.ref = "netty" }
-nightconfig = "com.electronwill.night-config:toml:3.6.7"
+nightconfig = "com.electronwill.night-config:toml:3.8.3"
 slf4j = "org.slf4j:slf4j-api:2.0.17"
 snakeyaml = "org.yaml:snakeyaml:1.33"
 spotbugs-annotations = "com.github.spotbugs:spotbugs-annotations:4.7.3"
