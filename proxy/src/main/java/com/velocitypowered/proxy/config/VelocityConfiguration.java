@@ -998,22 +998,28 @@ public class VelocityConfiguration implements ProxyConfig {
     }
   }
 
-    /**
-     * Configuration for packet limiting.
-     *
-     * @param interval the interval in seconds to measure packets over
-     * @param pps      the maximum number of packets per second allowed
-     * @param bytes    the maximum number of bytes per second allowed
-     */
+  /**
+   * Configuration for packet limiting.
+   *
+   * @param interval the interval in seconds to measure packets over
+   * @param pps      the maximum number of packets per second allowed
+   * @param bytes    the maximum number of bytes per second allowed
+   */
   public record PacketLimiterConfig(int interval, int pps, int bytes) {
     public static PacketLimiterConfig DEFAULT = new PacketLimiterConfig(7, 500, -1);
 
+    /**
+     * returns a PacketLimiterConfig from a config section, or the default if the section is null.
+     *
+     * @param config the configuration object to parse
+     * @return the packet limiter config, or the default if {@code config} is null
+     */
     public static PacketLimiterConfig fromConfig(CommentedConfig config) {
       if (config != null) {
         return new PacketLimiterConfig(
             config.getIntOrElse("interval", DEFAULT.interval()),
-            config.getIntOrElse("pps", DEFAULT.pps()),
-            config.getIntOrElse("bytes", DEFAULT.bytes())
+            config.getIntOrElse("packets-per-second", DEFAULT.pps()),
+            config.getIntOrElse("bytes-per-second", DEFAULT.bytes())
         );
       } else {
         return DEFAULT;

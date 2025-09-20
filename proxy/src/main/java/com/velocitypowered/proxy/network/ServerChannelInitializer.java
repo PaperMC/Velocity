@@ -77,12 +77,12 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
     VelocityConfiguration.PacketLimiterConfig packetLimiterConfig =
         server.getConfiguration().getPacketLimiterConfig();
     int configuredInterval = packetLimiterConfig.interval();
-    int configuredPPS = packetLimiterConfig.pps();
+    int configuredPacketsPerSecond = packetLimiterConfig.pps();
     int configuredBytes = packetLimiterConfig.bytes();
 
-    if (configuredInterval > 0 && (configuredBytes > 0 ||  configuredPPS > 0)) {
+    if (configuredInterval > 0 && (configuredBytes > 0 ||  configuredPacketsPerSecond > 0)) {
       ch.pipeline().get(MinecraftVarintFrameDecoder.class).setPacketLimiter(
-          new SimpleBytesPerSecondLimiter(configuredPPS, configuredBytes, configuredInterval)
+          new SimpleBytesPerSecondLimiter(configuredPacketsPerSecond, configuredBytes, configuredInterval)
       );
     }
     if (this.server.getConfiguration().isProxyProtocol()) {

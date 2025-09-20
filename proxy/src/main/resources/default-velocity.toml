@@ -75,9 +75,9 @@ sample-players-in-ping = false
 enable-player-address-logging = true
 
 [packet-limiter]
-interval = 3000
-pps = 100
-bytes = 1000
+interval = 7
+packets-per-second = 500
+bytes-per-second = -1
 
 [servers]
 # Configure your servers here. Each key represents the server's name, and the value
