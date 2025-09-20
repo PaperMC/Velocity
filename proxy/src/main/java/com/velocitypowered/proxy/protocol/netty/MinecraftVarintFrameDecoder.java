@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.protocol.netty;
 import static io.netty.util.ByteProcessor.FIND_NON_NUL;
 
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.proxy.network.limiter.PacketLimiter;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -32,6 +33,7 @@ import io.netty.handler.codec.CorruptedFrameException;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Frames Minecraft server packets which are prefixed by a 21-bit VarInt encoding.
@@ -52,6 +54,8 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
   private final ProtocolUtils.Direction direction;
   private final StateRegistry.PacketRegistry.ProtocolRegistry registry;
   private StateRegistry state;
+  @Nullable
+  private PacketLimiter packetLimiter;
 
   /**
    * Creates a new {@code MinecraftVarintFrameDecoder} decoding packets from the specified {@code Direction}.
@@ -131,6 +135,15 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
 
     // note that zero-length packets are ignored
     if (length > 0) {
+      // If enabled, rate-limit serverbound payload bytes based on frame length
+      if (packetLimiter != null) {
+        if (!packetLimiter.account(length)) {
+          throw new QuietDecoderException(
+              "Rate limit exceeded while processing packets for %s".formatted(
+                  ctx.channel().remoteAddress()));
+        }
+      }
+
       if (in.readableBytes() < length) {
         in.resetReaderIndex();
       } else {
@@ -239,5 +252,9 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
 
   public void setState(StateRegistry stateRegistry) {
     this.state = stateRegistry;
+  }
+
+  public void setPacketLimiter(@Nullable PacketLimiter packetLimiter) {
+    this.packetLimiter = packetLimiter;
   }
 }
