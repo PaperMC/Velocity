@@ -46,8 +46,8 @@ public final class SimpleBytesPerSecondLimiter implements PacketLimiter {
       throw new IllegalArgumentException("windowSeconds must be > 0");
     }
     this.bytesPerSecond = bytesPerSecond;
-    this.packetsCounter = packetsPerSecond > 0 ? new IntervalledCounter(windowSeconds) : null;
-    this.bytesCounter = bytesPerSecond > 0 ? new IntervalledCounter(windowSeconds) : null;
+    this.packetsCounter = packetsPerSecond > 0 ? new IntervalledCounter((long) (windowSeconds * 1.0e9)) : null;
+    this.bytesCounter = bytesPerSecond > 0 ? new IntervalledCounter((long) (windowSeconds * 1.0e9)) : null;
 
   }
 
