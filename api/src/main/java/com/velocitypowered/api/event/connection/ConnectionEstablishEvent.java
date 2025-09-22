@@ -10,6 +10,7 @@ package com.velocitypowered.api.event.connection;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
+import com.velocitypowered.api.network.HandshakeIntent;
 import com.velocitypowered.api.proxy.InboundConnection;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -21,29 +22,15 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @AwaitingEvent
 public class ConnectionEstablishEvent implements ResultedEvent<ResultedEvent.GenericResult> {
   private final InboundConnection connection;
-  private final Intention intention;
+  private final HandshakeIntent intention;
   private GenericResult result = GenericResult.allowed();
 
   public ConnectionEstablishEvent(
           final @NonNull InboundConnection connection,
-          final @Nullable Intention intention
+          final @Nullable HandshakeIntent intention
   ) {
     this.connection = Preconditions.checkNotNull(connection, "connection");
     this.intention = intention;
-  }
-
-  /**
-   * The intention of the connection.
-   */
-  public enum Intention {
-    /**
-     * The user intends to ping the server to fetch the status.
-     */
-    STATUS,
-    /**
-     * The user intends to log in to the server.
-     */
-    LOGIN,
   }
 
   /**
@@ -56,11 +43,11 @@ public class ConnectionEstablishEvent implements ResultedEvent<ResultedEvent.Gen
   }
 
   /**
-   * Returns the intention for which the connection is being established, if known.
+   * Returns the intention for which the connection is being established.
    *
    * @return the intention
    */
-  public @Nullable Intention getIntention() {
+  public HandshakeIntent getIntention() {
     return this.intention;
   }
 

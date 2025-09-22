@@ -95,36 +95,35 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     } else {
       final InitialInboundConnection ic = new InitialInboundConnection(connection,
               cleanVhost(handshake.getServerAddress()), handshake);
-        // Handle connection establish event.
-        connection.setAutoReading(false);
-        server.getEventManager()
-                .fire(new ConnectionEstablishEvent(
-                        ic, getIntentionForStatus(handshake.getNextStatus())))
-                .thenAcceptAsync(result -> {
-                    // Clean up the disabling of auto-read.
-                    connection.setAutoReading(true);
+      // Handle connection establish event.
+      connection.setAutoReading(false);
+      server.getEventManager()
+          .fire(new ConnectionEstablishEvent(ic, handshake.getIntent()))
+          .thenAcceptAsync(result -> {
+            // Clean up the disabling of auto-read.
+            connection.setAutoReading(true);
 
-                    if (!result.getResult().isAllowed()) {
-                        connection.close(true);
-                    } else {
-                        if (handshake.getIntent() == HandshakeIntent.TRANSFER
-                                && !server.getConfiguration().isAcceptTransfers()) {
-                            ic.disconnect(Component.translatable("multiplayer.disconnect.transfers_disabled"));
-                            return true;
-                        }
-                        connection.setProtocolVersion(handshake.getProtocolVersion());
-                        connection.setAssociation(ic);
+            if (!result.getResult().isAllowed()) {
+              connection.close(true);
+            } else {
+              if (handshake.getIntent() == HandshakeIntent.TRANSFER
+                      && !server.getConfiguration().isAcceptTransfers()) {
+                ic.disconnect(Component.translatable("multiplayer.disconnect.transfers_disabled"));
+                return;
+              }
+              connection.setProtocolVersion(handshake.getProtocolVersion());
+              connection.setAssociation(ic);
 
-                        switch (nextState) {
-                            case STATUS -> connection.setActiveSessionHandler(StateRegistry.STATUS,
-                                    new StatusSessionHandler(server, ic));
-                            case LOGIN -> this.handleLogin(handshake, ic);
-                            default ->
-                                // If you get this, it's a bug in Velocity.
-                                    throw new AssertionError("getStateForProtocol provided invalid state!");
-                        }
-                    }
-                });
+              switch (nextState) {
+                case STATUS -> connection.setActiveSessionHandler(StateRegistry.STATUS,
+                      new StatusSessionHandler(server, ic));
+                case LOGIN -> this.handleLogin(handshake, ic);
+                default ->
+                  // If you get this, it's a bug in Velocity.
+                  throw new AssertionError("getStateForProtocol provided invalid state!");
+              }
+            }
+          });
     }
 
     return true;
