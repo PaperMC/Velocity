@@ -33,6 +33,7 @@ import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.config.BackendServerConfig;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
@@ -297,8 +298,12 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     }
 
     if (!options.isIgnoreConfigServers()) {
-      for (Map.Entry<String, String> entry : configuration.getServers().entrySet()) {
-        servers.register(new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue())));
+      for (Map.Entry<String, BackendServerConfig> entry : configuration.getServers().entrySet()) {
+        servers.register(new ServerInfo(
+                entry.getKey(),
+                AddressUtil.parseAddress(entry.getValue().getAddress()),
+                entry.getValue().getForwardingMode())
+        );
       }
     }
 
@@ -489,8 +494,12 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     // Re-register servers. If a server is being replaced, make sure to note what players need to
     // move back to a fallback server.
     Collection<ConnectedPlayer> evacuate = new ArrayList<>();
-    for (Map.Entry<String, String> entry : newConfiguration.getServers().entrySet()) {
-      ServerInfo newInfo = new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue()));
+    for (Map.Entry<String, BackendServerConfig> entry : newConfiguration.getServers().entrySet()) {
+      ServerInfo newInfo = new ServerInfo(
+              entry.getKey(),
+              AddressUtil.parseAddress(entry.getValue().getAddress()),
+              entry.getValue().getForwardingMode()
+      );
       Optional<RegisteredServer> rs = servers.getServer(entry.getKey());
       if (rs.isEmpty()) {
         servers.register(newInfo);

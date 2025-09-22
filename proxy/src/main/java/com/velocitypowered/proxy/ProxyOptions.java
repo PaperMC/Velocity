@@ -18,6 +18,7 @@
 package com.velocitypowered.proxy;
 
 import com.velocitypowered.api.proxy.server.ServerInfo;
+import com.velocitypowered.api.proxy.server.ServerInfoForwardingMode;
 import com.velocitypowered.proxy.util.AddressUtil;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -105,17 +106,23 @@ public final class ProxyOptions {
 
     @Override
     public ServerInfo convert(String s) {
-      String[] split = s.split(":", 2);
-      if (split.length < 2) {
-        throw new ValueConversionException("Invalid server format. Use <name>:<address>");
+      String[] split = s.split(":", 3);
+      if (split.length < 3) {
+        throw new ValueConversionException("Invalid server format. Use <name>:<address>:<forwardingmode>");
       }
       InetSocketAddress address;
+      ServerInfoForwardingMode mode;
       try {
         address = AddressUtil.parseAddress(split[1]);
       } catch (IllegalStateException e) {
         throw new ValueConversionException("Invalid hostname for server flag with name: " + split[0]);
       }
-      return new ServerInfo(split[0], address);
+      try {
+        mode = ServerInfoForwardingMode.valueOf(split[2]);
+      } catch (IllegalStateException e) {
+        throw new ValueConversionException("Invalid forwarding mode for server flag with name: " + split[0]);
+      }
+      return new ServerInfo(split[0], address, mode);
     }
 
     @Override

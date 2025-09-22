@@ -24,13 +24,16 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.annotations.Expose;
+import com.velocitypowered.api.proxy.config.BackendServerConfig;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
+import com.velocitypowered.api.proxy.server.ServerInfoForwardingMode;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.config.migration.ConfigurationMigration;
 import com.velocitypowered.proxy.config.migration.ForwardingMigration;
 import com.velocitypowered.proxy.config.migration.KeyAuthenticationMigration;
 import com.velocitypowered.proxy.config.migration.MotdMigration;
 import com.velocitypowered.proxy.config.migration.TransferIntegrationMigration;
+import com.velocitypowered.proxy.config.server.BackendServerConfigImpl;
 import com.velocitypowered.proxy.util.AddressUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
@@ -175,9 +178,9 @@ public class VelocityConfiguration implements ProxyConfig {
       logger.warn("You don't have any servers configured.");
     }
 
-    for (Map.Entry<String, String> entry : servers.getServers().entrySet()) {
+    for (Map.Entry<String, BackendServerConfig> entry : servers.getServers().entrySet()) {
       try {
-        AddressUtil.parseAddress(entry.getValue());
+        AddressUtil.parseAddress(entry.getValue().getAddress());
       } catch (IllegalArgumentException e) {
         logger.error("Server {} does not have a valid IP address.", entry.getKey(), e);
         valid = false;
@@ -311,7 +314,7 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   @Override
-  public Map<String, String> getServers() {
+  public Map<String, BackendServerConfig> getServers() {
     return servers.getServers();
   }
 
@@ -560,9 +563,7 @@ public class VelocityConfiguration implements ProxyConfig {
 
       // Throw an exception if the forwarding-secret file is empty and the proxy is using a
       // forwarding mode that requires it.
-      if (forwardingSecret.length == 0
-              && (forwardingMode == PlayerInfoForwarding.MODERN
-              || forwardingMode == PlayerInfoForwarding.BUNGEEGUARD)) {
+      if (forwardingSecret.length == 0) {
         throw new RuntimeException("The forwarding-secret file must not be empty.");
       }
 
@@ -611,10 +612,10 @@ public class VelocityConfiguration implements ProxyConfig {
 
   private static class Servers {
 
-    private Map<String, String> servers = ImmutableMap.of(
-        "lobby", "127.0.0.1:30066",
-        "factions", "127.0.0.1:30067",
-        "minigames", "127.0.0.1:30068"
+    private Map<String, BackendServerConfig> servers = ImmutableMap.of(
+        "lobby", new BackendServerConfigImpl("127.0.0.1:30066"),
+        "factions", new BackendServerConfigImpl("127.0.0.1:30067", ServerInfoForwardingMode.MODERN),
+        "minigames", new BackendServerConfigImpl("127.0.0.1:30068", ServerInfoForwardingMode.LEGACY)
     );
     private List<String> attemptConnectionOrder = ImmutableList.of("lobby");
 
@@ -623,14 +624,31 @@ public class VelocityConfiguration implements ProxyConfig {
 
     private Servers(CommentedConfig config) {
       if (config != null) {
-        Map<String, String> servers = new HashMap<>();
+        Map<String, BackendServerConfig> servers = new HashMap<>();
         for (UnmodifiableConfig.Entry entry : config.entrySet()) {
-          if (entry.getValue() instanceof String) {
-            servers.put(cleanServerName(entry.getKey()), entry.getValue());
+          if (entry.getValue() instanceof com.electronwill.nightconfig.core.CommentedConfig c) {
+            String address = null;
+            ServerInfoForwardingMode forwardingMode = null;
+            for (UnmodifiableConfig.Entry entry2 : c.entrySet()) {
+              if (entry2.getKey().equalsIgnoreCase("address")) {
+                address = entry2.getValue();
+              }
+              if (entry2.getKey().equalsIgnoreCase("forwarding-mode")) {
+                forwardingMode = ServerInfoForwardingMode.valueOf(ServerInfoForwardingMode.class, entry2.getValue());
+              }
+            }
+            if (address == null || forwardingMode == null) {
+              throw new IllegalArgumentException(
+                      "Server entry " + entry.getKey() + " is missing address or mode!");
+            }
+            servers.put(cleanServerName(entry.getKey()), new BackendServerConfigImpl(address, forwardingMode));
+            //support for old server config system (forwarding mode will be followup)
+          } else if (entry.getValue() instanceof String v) {
+            servers.put(cleanServerName(entry.getKey()), new BackendServerConfigImpl(v));
           } else {
             if (!entry.getKey().equalsIgnoreCase("try")) {
               throw new IllegalArgumentException(
-                  "Server entry " + entry.getKey() + " is not a string!");
+                  "Server entry " + entry.getKey() + " is not a server!");
             }
           }
         }
@@ -639,16 +657,16 @@ public class VelocityConfiguration implements ProxyConfig {
       }
     }
 
-    private Servers(Map<String, String> servers, List<String> attemptConnectionOrder) {
+    private Servers(Map<String, BackendServerConfig> servers, List<String> attemptConnectionOrder) {
       this.servers = servers;
       this.attemptConnectionOrder = attemptConnectionOrder;
     }
 
-    private Map<String, String> getServers() {
+    private Map<String, BackendServerConfig> getServers() {
       return servers;
     }
 
-    public void setServers(Map<String, String> servers) {
+    public void setServers(Map<String, BackendServerConfig> servers) {
       this.servers = servers;
     }
 

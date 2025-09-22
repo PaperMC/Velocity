@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
+import com.velocitypowered.api.proxy.server.ServerInfoForwardingMode;
 import com.velocitypowered.proxy.server.ServerMap;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -32,11 +33,12 @@ class ServerMapTest {
 
   private static final InetSocketAddress TEST_ADDRESS = new InetSocketAddress(
       InetAddress.getLoopbackAddress(), 25565);
+  private static final ServerInfoForwardingMode TEST_MODE = ServerInfoForwardingMode.FOLLOWUP;
 
   @Test
   void respectsCaseInsensitivity() {
     ServerMap map = new ServerMap(null);
-    ServerInfo info = new ServerInfo("TestServer", TEST_ADDRESS);
+    ServerInfo info = new ServerInfo("TestServer", TEST_ADDRESS, TEST_MODE);
     RegisteredServer connection = map.register(info);
 
     assertEquals(Optional.of(connection), map.getServer("TestServer"));
@@ -47,17 +49,17 @@ class ServerMapTest {
   @Test
   void rejectsRepeatedRegisterAttempts() {
     ServerMap map = new ServerMap(null);
-    ServerInfo info = new ServerInfo("TestServer", TEST_ADDRESS);
+    ServerInfo info = new ServerInfo("TestServer", TEST_ADDRESS, TEST_MODE);
     map.register(info);
 
-    ServerInfo willReject = new ServerInfo("TESTSERVER", TEST_ADDRESS);
+    ServerInfo willReject = new ServerInfo("TESTSERVER", TEST_ADDRESS, TEST_MODE);
     assertThrows(IllegalArgumentException.class, () -> map.register(willReject));
   }
 
   @Test
   void allowsSameServerLaxRegistrationCheck() {
     ServerMap map = new ServerMap(null);
-    ServerInfo info = new ServerInfo("TestServer", TEST_ADDRESS);
+    ServerInfo info = new ServerInfo("TestServer", TEST_ADDRESS, TEST_MODE);
     RegisteredServer connection = map.register(info);
     assertEquals(connection, map.register(info));
   }
