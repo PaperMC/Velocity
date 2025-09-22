@@ -11,9 +11,13 @@ package com.velocitypowered.api.proxy.server;
  * Supported server info forwarding methods.
  */
 public enum ServerInfoForwardingMode {
+    /**
+     * This type will follow the value of the player-info-forwarding-mode in the velocity configuration.
+     */
     FOLLOWUP,
     MODERN,
     BUNGEEGUARD,
-    LEGACY
+    LEGACY,
+    NONE
 }
 

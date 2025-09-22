@@ -84,7 +84,17 @@ public interface ProxyConfig {
    *
    * @return registered servers map
    */
-  Map<String, BackendServerConfig> getServers();
+  Map<String, String> getServers();
+
+  /**
+   * Get a Map of all servers registered in <code>velocity.toml</code>. This method does
+   * <strong>not</strong> return all the servers currently in memory, although in most cases it
+   * does. For a view of all registered servers, see {@link ProxyServer#getAllServers()}.
+   *
+   * @return registered servers map with, instead of the only address, the Backend Server Object for each
+   *     of them which contains the address of the server and its info forwarding mode.
+   */
+  Map<String, BackendServerConfig> getBackendServers();
 
   /**
    * Get the order of servers that players will be connected to.

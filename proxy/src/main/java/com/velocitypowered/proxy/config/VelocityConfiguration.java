@@ -178,7 +178,7 @@ public class VelocityConfiguration implements ProxyConfig {
       logger.warn("You don't have any servers configured.");
     }
 
-    for (Map.Entry<String, BackendServerConfig> entry : servers.getServers().entrySet()) {
+    for (Map.Entry<String, BackendServerConfig> entry : servers.getBackendServers().entrySet()) {
       try {
         AddressUtil.parseAddress(entry.getValue().getAddress());
       } catch (IllegalArgumentException e) {
@@ -314,8 +314,13 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   @Override
-  public Map<String, BackendServerConfig> getServers() {
+  public Map<String, String> getServers() {
     return servers.getServers();
+  }
+
+  @Override
+  public Map<String, BackendServerConfig> getBackendServers() {
+    return servers.getBackendServers();
   }
 
   @Override
@@ -563,7 +568,9 @@ public class VelocityConfiguration implements ProxyConfig {
 
       // Throw an exception if the forwarding-secret file is empty and the proxy is using a
       // forwarding mode that requires it.
-      if (forwardingSecret.length == 0) {
+      if (forwardingSecret.length == 0
+              && (forwardingMode == PlayerInfoForwarding.MODERN
+              || forwardingMode == PlayerInfoForwarding.BUNGEEGUARD)) {
         throw new RuntimeException("The forwarding-secret file must not be empty.");
       }
 
@@ -628,7 +635,7 @@ public class VelocityConfiguration implements ProxyConfig {
         for (UnmodifiableConfig.Entry entry : config.entrySet()) {
           if (entry.getValue() instanceof com.electronwill.nightconfig.core.CommentedConfig c) {
             String address = null;
-            ServerInfoForwardingMode forwardingMode = null;
+            ServerInfoForwardingMode forwardingMode = ServerInfoForwardingMode.FOLLOWUP;
             for (UnmodifiableConfig.Entry entry2 : c.entrySet()) {
               if (entry2.getKey().equalsIgnoreCase("address")) {
                 address = entry2.getValue();
@@ -637,9 +644,9 @@ public class VelocityConfiguration implements ProxyConfig {
                 forwardingMode = ServerInfoForwardingMode.valueOf(ServerInfoForwardingMode.class, entry2.getValue());
               }
             }
-            if (address == null || forwardingMode == null) {
+            if (address == null) {
               throw new IllegalArgumentException(
-                      "Server entry " + entry.getKey() + " is missing address or mode!");
+                      "Server entry " + entry.getKey() + " is missing address!");
             }
             servers.put(cleanServerName(entry.getKey()), new BackendServerConfigImpl(address, forwardingMode));
             //support for old server config system (forwarding mode will be followup)
@@ -662,7 +669,13 @@ public class VelocityConfiguration implements ProxyConfig {
       this.attemptConnectionOrder = attemptConnectionOrder;
     }
 
-    private Map<String, BackendServerConfig> getServers() {
+    private Map<String, String> getServers() {
+      Map<String, String> serverAddresses = new HashMap<>();
+      servers.forEach((k, v) -> serverAddresses.put(k, v.getAddress()));
+      return serverAddresses;
+    }
+
+    private Map<String, BackendServerConfig> getBackendServers() {
       return servers;
     }
 

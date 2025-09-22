@@ -40,6 +40,7 @@ public class ServerForwardingModeUtil {
       case LEGACY -> PlayerInfoForwarding.LEGACY;
       case MODERN -> PlayerInfoForwarding.MODERN;
       case BUNGEEGUARD -> PlayerInfoForwarding.BUNGEEGUARD;
+      case NONE -> PlayerInfoForwarding.NONE;
     };
   }
 
