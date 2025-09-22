@@ -21,35 +21,36 @@ import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.packet.chat.CommandHandler;
+import com.velocitypowered.proxy.protocol.packet.chat.RateLimitedCommandHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderV2;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 
-public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
+public class KeyedCommandHandler extends RateLimitedCommandHandler<KeyedPlayerCommandPacket> {
 
   private final ConnectedPlayer player;
   private final VelocityServer server;
 
   public KeyedCommandHandler(ConnectedPlayer player, VelocityServer server) {
+    super(player, server);
     this.player = player;
     this.server = server;
   }
 
   @Override
-  public Class<KeyedPlayerCommand> packetClass() {
-    return KeyedPlayerCommand.class;
+  public Class<KeyedPlayerCommandPacket> packetClass() {
+    return KeyedPlayerCommandPacket.class;
   }
 
   @Override
-  public void handlePlayerCommandInternal(KeyedPlayerCommand packet) {
-    queueCommandResult(this.server, this.player, event -> {
+  public void handlePlayerCommandInternal(KeyedPlayerCommandPacket packet) {
+    queueCommandResult(this.server, this.player, (event, newLastSeenMessages) -> {
       CommandExecuteEvent.CommandResult result = event.getResult();
       IdentifiedKey playerKey = player.getIdentifiedKey();
       if (result == CommandExecuteEvent.CommandResult.denied()) {
         if (playerKey != null) {
           if (!packet.isUnsigned()
-              && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+              && playerKey.getKeyRevision().noLessThan(IdentifiedKey.Revision.LINKED_V2)) {
             logger.fatal("A plugin tried to deny a command with signable component(s). "
                 + "This is not supported. "
                 + "Disconnecting player " + player.getUsername() + ". Command packet: " + packet);
@@ -72,7 +73,7 @@ public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
           return CompletableFuture.completedFuture(packet);
         } else {
           if (!packet.isUnsigned() && playerKey != null
-              && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+              && playerKey.getKeyRevision().noLessThan(IdentifiedKey.Revision.LINKED_V2)) {
             logger.fatal("A plugin tried to change a command with signed component(s). "
                 + "This is not supported. "
                 + "Disconnecting player " + player.getUsername() + ". Command packet: " + packet);
@@ -92,7 +93,7 @@ public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
           }
 
           if (!packet.isUnsigned() && playerKey != null
-              && playerKey.getKeyRevision().compareTo(IdentifiedKey.Revision.LINKED_V2) >= 0) {
+              && playerKey.getKeyRevision().noLessThan(IdentifiedKey.Revision.LINKED_V2)) {
             logger.fatal("A plugin tried to change a command with signed component(s). "
                 + "This is not supported. "
                 + "Disconnecting player " + player.getUsername() + ". Command packet: " + packet);
@@ -111,6 +112,6 @@ public class KeyedCommandHandler implements CommandHandler<KeyedPlayerCommand> {
         }
         return null;
       });
-    }, packet.getCommand(), packet.getTimestamp());
+    }, packet.getCommand(), packet.getTimestamp(), null, new CommandExecuteEvent.InvocationInfo(CommandExecuteEvent.SignedState.UNSUPPORTED, CommandExecuteEvent.Source.PLAYER));
   }
 }

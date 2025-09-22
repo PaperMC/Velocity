@@ -17,9 +17,11 @@
 
 package com.velocitypowered.proxy;
 
+import com.velocitypowered.proxy.util.VelocityProperties;
 import io.netty.util.ResourceLeakDetector;
 import io.netty.util.ResourceLeakDetector.Level;
 import java.text.DecimalFormat;
+import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -41,13 +43,18 @@ public class Velocity {
 
     // If Velocity's natives are being extracted to a different temporary directory, make sure the
     // Netty natives are extracted there as well
-    if (System.getProperty("velocity.natives-tmpdir") != null) {
+    if (VelocityProperties.hasProperty("velocity.natives-tmpdir")) {
       System.setProperty("io.netty.native.workdir", System.getProperty("velocity.natives-tmpdir"));
+    }
+
+    // Restore allocator used before Netty 4.2 due to oom issues with the adaptive allocator
+    if (System.getProperty("io.netty.allocator.type") == null) {
+      System.setProperty("io.netty.allocator.type", "pooled");
     }
 
     // Disable the resource leak detector by default as it reduces performance. Allow the user to
     // override this if desired.
-    if (System.getProperty("io.netty.leakDetection.level") == null) {
+    if (!VelocityProperties.hasProperty("io.netty.leakDetection.level")) {
       ResourceLeakDetector.setLevel(Level.DISABLED);
     }
   }
@@ -63,14 +70,14 @@ public class Velocity {
       return;
     }
 
-    long startTime = System.currentTimeMillis();
+    long startTime = System.nanoTime();
 
     VelocityServer server = new VelocityServer(options);
     server.start();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> server.shutdown(false),
         "Shutdown thread"));
 
-    double bootTime = (System.currentTimeMillis() - startTime) / 1000d;
+    double bootTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime) / 1000d;
     logger.info("Done ({}s)!", new DecimalFormat("#.##").format(bootTime));
     server.getConsoleCommandSource().start();
 

@@ -23,8 +23,6 @@ import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import it.unimi.dsi.fastutil.Pair;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.Key;
@@ -111,64 +109,12 @@ public enum EncryptionUtils {
     }
   }
 
-  /**
-   * Generates a signature for input data.
-   *
-   * @param algorithm the signature algorithm
-   * @param base      the private key to sign with
-   * @param toSign    the byte array(s) of data to sign
-   * @return the generated signature
-   */
-  public static byte[] generateSignature(String algorithm, PrivateKey base, byte[]... toSign) {
-    Preconditions.checkArgument(toSign.length > 0);
-    try {
-      Signature construct = Signature.getInstance(algorithm);
-      construct.initSign(base);
-      for (byte[] bytes : toSign) {
-        construct.update(bytes);
-      }
-      return construct.sign();
-    } catch (GeneralSecurityException e) {
-      throw new IllegalArgumentException("Invalid signature parameters");
-    }
-  }
-
-  /**
-   * Encodes a long array as Big-endian byte array.
-   *
-   * @param bits the long (array) of numbers to encode
-   * @return the encoded bytes
-   */
-  public static byte[] longToBigEndianByteArray(long... bits) {
-    ByteBuffer ret = ByteBuffer.allocate(8 * bits.length).order(ByteOrder.BIG_ENDIAN);
-    for (long put : bits) {
-      ret.putLong(put);
-    }
-    return ret.array();
-  }
-
   public static String encodeUrlEncoded(byte[] data) {
     return MIME_SPECIAL_ENCODER.encodeToString(data);
   }
 
   public static byte[] decodeUrlEncoded(String toParse) {
     return Base64.getMimeDecoder().decode(toParse);
-  }
-
-  /**
-   * Parse a cer-encoded RSA key into its key bytes.
-   *
-   * @param toParse     the cer-encoded key String
-   * @param descriptors the type of key
-   * @return the parsed key bytes
-   */
-  public static byte[] parsePemEncoded(String toParse, Pair<String, String> descriptors) {
-    int startIdx = toParse.indexOf(descriptors.first());
-    Preconditions.checkArgument(startIdx >= 0);
-    int firstLen = descriptors.first().length();
-    int endIdx = toParse.indexOf(descriptors.second(), firstLen + startIdx) + 1;
-    Preconditions.checkArgument(endIdx > 0);
-    return decodeUrlEncoded(toParse.substring(startIdx + firstLen, endIdx));
   }
 
   /**

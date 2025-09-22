@@ -12,6 +12,7 @@ import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.InboundConnection;
 import java.util.Optional;
+import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -33,17 +34,32 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
 
   private final InboundConnection connection;
   private final String username;
+  private final @Nullable UUID uuid;
   private PreLoginComponentResult result;
+
+  /**
+   * Creates a new instance, without an associated UUID.
+   *
+   * @param connection the connection logging into the proxy
+   * @param username the player's username
+   * @deprecated use {@link #PreLoginEvent(InboundConnection, String, UUID)}
+   */
+  @Deprecated
+  public PreLoginEvent(final InboundConnection connection, final String username) {
+    this(connection, username, null);
+  }
 
   /**
    * Creates a new instance.
    *
    * @param connection the connection logging into the proxy
    * @param username the player's username
+   * @param uuid the player's uuid, if known
    */
-  public PreLoginEvent(InboundConnection connection, String username) {
+  public PreLoginEvent(final InboundConnection connection, final String username, final @Nullable UUID uuid) {
     this.connection = Preconditions.checkNotNull(connection, "connection");
     this.username = Preconditions.checkNotNull(username, "username");
+    this.uuid = uuid;
     this.result = PreLoginComponentResult.allowed();
   }
 
@@ -55,13 +71,25 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
     return username;
   }
 
+  /**
+   * Returns the UUID of the connecting player.
+   * <p>This value is {@code null} on 1.19.2 and lower,
+   * up to 1.20.1 it is optional and from 1.20.2 it will always be available.</p>
+   *
+   * @return the uuid
+   * @sinceMinecraft 1.19.3
+   */
+  public @Nullable UUID getUniqueId() {
+    return uuid;
+  }
+
   @Override
   public PreLoginComponentResult getResult() {
     return result;
   }
 
   @Override
-  public void setResult(@NonNull PreLoginComponentResult result) {
+  public void setResult(final @NonNull PreLoginComponentResult result) {
     this.result = Preconditions.checkNotNull(result, "result");
   }
 
@@ -115,16 +143,12 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
 
     @Override
     public String toString() {
-      switch (result) {
-        case ALLOWED:
-          return "allowed";
-        case FORCE_OFFLINE:
-          return "allowed with force offline mode";
-        case FORCE_ONLINE:
-          return "allowed with online mode";
-        default:
-          return "denied";
-      }
+      return switch (result) {
+        case ALLOWED -> "allowed";
+        case FORCE_OFFLINE -> "allowed with force offline mode";
+        case FORCE_ONLINE -> "allowed with online mode";
+        default -> "denied";
+      };
     }
 
     /**

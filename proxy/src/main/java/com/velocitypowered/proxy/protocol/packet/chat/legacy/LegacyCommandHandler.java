@@ -20,29 +20,31 @@ package com.velocitypowered.proxy.protocol.packet.chat.legacy;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.packet.chat.CommandHandler;
+import com.velocitypowered.proxy.protocol.packet.chat.RateLimitedCommandHandler;
+
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
-public class LegacyCommandHandler implements CommandHandler<LegacyChat> {
+public class LegacyCommandHandler extends RateLimitedCommandHandler<LegacyChatPacket> {
 
   private final ConnectedPlayer player;
   private final VelocityServer server;
 
   public LegacyCommandHandler(ConnectedPlayer player, VelocityServer server) {
+    super(player, server);
     this.player = player;
     this.server = server;
   }
 
   @Override
-  public Class<LegacyChat> packetClass() {
-    return LegacyChat.class;
+  public Class<LegacyChatPacket> packetClass() {
+    return LegacyChatPacket.class;
   }
 
   @Override
-  public void handlePlayerCommandInternal(LegacyChat packet) {
+  public void handlePlayerCommandInternal(LegacyChatPacket packet) {
     String command = packet.getMessage().substring(1);
-    queueCommandResult(this.server, this.player, event -> {
+    queueCommandResult(this.server, this.player, (event, newLastSeenMessages) -> {
       CommandExecuteEvent.CommandResult result = event.getResult();
       if (result == CommandExecuteEvent.CommandResult.denied()) {
         return CompletableFuture.completedFuture(null);
@@ -62,6 +64,6 @@ public class LegacyCommandHandler implements CommandHandler<LegacyChat> {
         }
         return null;
       });
-    }, command, Instant.now());
+    }, command, Instant.now(), null, new CommandExecuteEvent.InvocationInfo(CommandExecuteEvent.SignedState.UNSUPPORTED, CommandExecuteEvent.Source.PLAYER));
   }
 }

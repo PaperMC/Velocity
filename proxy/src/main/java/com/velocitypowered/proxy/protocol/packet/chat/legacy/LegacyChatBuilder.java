@@ -38,13 +38,13 @@ public class LegacyChatBuilder extends ChatBuilderV2 {
         : senderIdentity.uuid()) : sender.getUniqueId();
     Component msg = component == null ? Component.text(message) : component;
 
-    return new LegacyChat(ProtocolUtils.getJsonChatSerializer(version).serialize(msg), type.getId(),
+    return new LegacyChatPacket(ProtocolUtils.getJsonChatSerializer(version).serialize(msg), type.getId(),
         identity);
   }
 
   @Override
   public MinecraftPacket toServer() {
-    LegacyChat chat = new LegacyChat();
+    LegacyChatPacket chat = new LegacyChatPacket();
     chat.setMessage(message);
     return chat;
   }

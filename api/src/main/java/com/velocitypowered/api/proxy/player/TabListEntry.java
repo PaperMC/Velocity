@@ -80,7 +80,7 @@ public interface TabListEntry extends KeyIdentifiable {
    *  <li>150-300 will display 4 bars</li>
    *  <li>300-600 will display 3 bars</li>
    *  <li>600-1000 will display 2 bars</li>
-   *  <li>A latency move than 1 second will display 1 bar</li>
+   *  <li>A latency greater than 1 second will display 1 bar</li>
    * </ul>
    *
    * @return latency set for {@code this} entry
@@ -140,6 +140,48 @@ public interface TabListEntry extends KeyIdentifiable {
   }
 
   /**
+   * Returns the order/priority of this entry in the tab list.
+   *
+   * @return order of this entry
+   * @sinceMinecraft 1.21.2
+   */
+  default int getListOrder() {
+    return 0;
+  }
+
+  /**
+   * Sets the order/priority of this entry in the tab list.
+   *
+   * @param order order of this entry
+   * @return {@code this}, for chaining
+   * @sinceMinecraft 1.21.2
+   */
+  default TabListEntry setListOrder(int order) {
+    return this;
+  }
+
+  /**
+   * Returns whether this entry's hat layer is shown in the tab list.
+   *
+   * @return whether to show this entry's hat layer
+   * @sinceMinecraft 1.21.4
+   */
+  default boolean isShowHat() {
+    return true;
+  }
+
+  /**
+   * Sets whether to show this entry's hat layer in the tab list.
+   *
+   * @param showHat whether to show this entry's hat layer
+   * @return {@code this}, for chaining
+   * @sinceMinecraft 1.21.4
+   */
+  default TabListEntry setShowHat(boolean showHat) {
+    return this;
+  }
+
+  /**
    * Returns a {@link Builder} to create a {@link TabListEntry}.
    *
    * @return {@link TabListEntry} builder
@@ -161,6 +203,8 @@ public interface TabListEntry extends KeyIdentifiable {
     private int latency = 0;
     private int gameMode = 0;
     private boolean listed = true;
+    private int listOrder = 0;
+    private boolean showHat;
 
     private @Nullable ChatSession chatSession;
 
@@ -243,14 +287,39 @@ public interface TabListEntry extends KeyIdentifiable {
     }
 
     /**
-     * Sets wether this entry should be visible.
+     * Sets whether this entry should be visible.
      *
      * @param listed to set
-     * @return ${code this}, for chaining
+     * @return {@code this}, for chaining
      * @see TabListEntry#isListed()
      */
     public Builder listed(boolean listed) {
       this.listed = listed;
+      return this;
+    }
+
+    /**
+     * Sets the order/priority of this entry in the tab list.
+     *
+     * @param order to set
+     * @return {@code this}, for chaining
+     * @sinceMinecraft 1.21.2
+     * @see TabListEntry#getListOrder()
+     */
+    public Builder listOrder(int order) {
+      this.listOrder = order;
+      return this;
+    }
+
+    /**
+     * Sets whether this entry's hat layer should be shown in the tab list.
+     *
+     * @param showHat to set
+     * @return {@code this}, for chaining
+     * @see TabListEntry#isShowHat()
+     */
+    public Builder showHat(boolean showHat) {
+      this.showHat = showHat;
       return this;
     }
 
@@ -266,7 +335,7 @@ public interface TabListEntry extends KeyIdentifiable {
       if (profile == null) {
         throw new IllegalStateException("The GameProfile must be set when building a TabListEntry");
       }
-      return tabList.buildEntry(profile, displayName, latency, gameMode, chatSession, listed);
+      return tabList.buildEntry(profile, displayName, latency, gameMode, chatSession, listed, listOrder, showHat);
     }
   }
 }

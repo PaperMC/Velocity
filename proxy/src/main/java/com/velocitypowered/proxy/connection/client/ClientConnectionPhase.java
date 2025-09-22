@@ -19,7 +19,7 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHandshakeClientPhase;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 
 /**
  * Provides connection phase specific actions.
@@ -38,7 +38,7 @@ public interface ClientConnectionPhase {
    * @return true if handled, false otherwise.
    */
   default boolean handle(ConnectedPlayer player,
-      PluginMessage message,
+      PluginMessagePacket message,
       VelocityServerConnection server) {
     return false;
   }

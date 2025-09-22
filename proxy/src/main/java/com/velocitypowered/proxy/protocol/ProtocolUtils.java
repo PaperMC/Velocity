@@ -25,7 +25,6 @@ import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
-import com.velocitypowered.proxy.protocol.util.VelocityLegacyHoverEventSerializer;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
@@ -34,17 +33,21 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.nbt.BinaryTag;
 import net.kyori.adventure.nbt.BinaryTagIO;
+import net.kyori.adventure.nbt.BinaryTagType;
+import net.kyori.adventure.nbt.BinaryTagTypes;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.serializer.json.JSONOptions;
+import net.kyori.adventure.text.serializer.json.legacyimpl.NBTLegacyHoverEventSerializer;
+import net.kyori.option.OptionSchema;
 
 /**
  * Utilities for writing and reading data in the Minecraft protocol.
@@ -55,24 +58,101 @@ public enum ProtocolUtils {
   private static final GsonComponentSerializer PRE_1_16_SERIALIZER =
       GsonComponentSerializer.builder()
           .downsampleColors()
-          .emitLegacyHoverEvent()
-          .legacyHoverEventSerializer(VelocityLegacyHoverEventSerializer.INSTANCE)
+          .legacyHoverEventSerializer(NBTLegacyHoverEventSerializer.get())
+          .options(
+              OptionSchema.globalSchema().stateBuilder()
+              // before 1.16
+              .value(JSONOptions.EMIT_RGB, Boolean.FALSE)
+              .value(JSONOptions.EMIT_HOVER_EVENT_TYPE, JSONOptions.HoverEventValueMode.VALUE_FIELD)
+              .value(JSONOptions.EMIT_CLICK_EVENT_TYPE, JSONOptions.ClickEventValueMode.CAMEL_CASE)
+              // before 1.20.3
+              .value(JSONOptions.EMIT_COMPACT_TEXT_COMPONENT, Boolean.FALSE)
+              .value(JSONOptions.EMIT_HOVER_SHOW_ENTITY_ID_AS_INT_ARRAY, Boolean.FALSE)
+              .value(JSONOptions.VALIDATE_STRICT_EVENTS, Boolean.FALSE)
+              // before 1.21.5
+              .value(JSONOptions.EMIT_CHANGE_PAGE_CLICK_EVENT_PAGE_AS_STRING, Boolean.TRUE)
+              .build()
+          )
+          .build();
+  private static final GsonComponentSerializer PRE_1_20_3_SERIALIZER =
+          GsonComponentSerializer.builder()
+          .legacyHoverEventSerializer(NBTLegacyHoverEventSerializer.get())
+          .options(
+              OptionSchema.globalSchema().stateBuilder()
+              // after 1.16
+              .value(JSONOptions.EMIT_RGB, Boolean.TRUE)
+              .value(JSONOptions.EMIT_HOVER_EVENT_TYPE, JSONOptions.HoverEventValueMode.CAMEL_CASE)
+              .value(JSONOptions.EMIT_CLICK_EVENT_TYPE, JSONOptions.ClickEventValueMode.CAMEL_CASE)
+              .value(JSONOptions.EMIT_HOVER_SHOW_ENTITY_KEY_AS_TYPE_AND_UUID_AS_ID, true)
+              // before 1.20.3
+              .value(JSONOptions.EMIT_COMPACT_TEXT_COMPONENT, Boolean.FALSE)
+              .value(JSONOptions.EMIT_HOVER_SHOW_ENTITY_ID_AS_INT_ARRAY, Boolean.FALSE)
+              .value(JSONOptions.VALIDATE_STRICT_EVENTS, Boolean.FALSE)
+              // before 1.21.5
+              .value(JSONOptions.EMIT_CHANGE_PAGE_CLICK_EVENT_PAGE_AS_STRING, Boolean.TRUE)
+              .build()
+          )
+          .build();
+  private static final GsonComponentSerializer PRE_1_21_5_SERIALIZER =
+      GsonComponentSerializer.builder()
+          .legacyHoverEventSerializer(NBTLegacyHoverEventSerializer.get())
+          .options(
+              OptionSchema.globalSchema().stateBuilder()
+              // after 1.16
+              .value(JSONOptions.EMIT_RGB, Boolean.TRUE)
+              .value(JSONOptions.EMIT_HOVER_EVENT_TYPE, JSONOptions.HoverEventValueMode.CAMEL_CASE)
+              .value(JSONOptions.EMIT_CLICK_EVENT_TYPE, JSONOptions.ClickEventValueMode.CAMEL_CASE)
+              .value(JSONOptions.EMIT_HOVER_SHOW_ENTITY_KEY_AS_TYPE_AND_UUID_AS_ID, true)
+              // after 1.20.3
+              .value(JSONOptions.EMIT_COMPACT_TEXT_COMPONENT, Boolean.TRUE)
+              .value(JSONOptions.EMIT_HOVER_SHOW_ENTITY_ID_AS_INT_ARRAY, Boolean.TRUE)
+              .value(JSONOptions.VALIDATE_STRICT_EVENTS, Boolean.TRUE)
+              // before 1.21.5
+              .value(JSONOptions.EMIT_CHANGE_PAGE_CLICK_EVENT_PAGE_AS_STRING, Boolean.TRUE)
+              .build()
+          )
           .build();
   private static final GsonComponentSerializer MODERN_SERIALIZER =
       GsonComponentSerializer.builder()
-          .legacyHoverEventSerializer(VelocityLegacyHoverEventSerializer.INSTANCE)
+          .legacyHoverEventSerializer(NBTLegacyHoverEventSerializer.get())
+          .options(
+              OptionSchema.globalSchema().stateBuilder()
+              // after 1.16
+              .value(JSONOptions.EMIT_RGB, Boolean.TRUE)
+              .value(JSONOptions.EMIT_HOVER_EVENT_TYPE, JSONOptions.HoverEventValueMode.SNAKE_CASE)
+              .value(JSONOptions.EMIT_CLICK_EVENT_TYPE, JSONOptions.ClickEventValueMode.SNAKE_CASE)
+              // after 1.20.3
+              .value(JSONOptions.EMIT_COMPACT_TEXT_COMPONENT, Boolean.TRUE)
+              .value(JSONOptions.EMIT_HOVER_SHOW_ENTITY_ID_AS_INT_ARRAY, Boolean.TRUE)
+              // after 1.21.5
+              .value(JSONOptions.EMIT_HOVER_SHOW_ENTITY_KEY_AS_TYPE_AND_UUID_AS_ID, Boolean.FALSE)
+              .value(JSONOptions.VALIDATE_STRICT_EVENTS, Boolean.TRUE)
+              .value(JSONOptions.EMIT_CHANGE_PAGE_CLICK_EVENT_PAGE_AS_STRING, Boolean.FALSE)
+              .build()
+          )
           .build();
 
   public static final int DEFAULT_MAX_STRING_SIZE = 65536; // 64KiB
+  private static final int MAXIMUM_VARINT_SIZE = 5;
+  private static final BinaryTagType<? extends BinaryTag>[] BINARY_TAG_TYPES = new BinaryTagType[] {
+      BinaryTagTypes.END, BinaryTagTypes.BYTE, BinaryTagTypes.SHORT, BinaryTagTypes.INT,
+      BinaryTagTypes.LONG, BinaryTagTypes.FLOAT, BinaryTagTypes.DOUBLE,
+      BinaryTagTypes.BYTE_ARRAY, BinaryTagTypes.STRING, BinaryTagTypes.LIST,
+      BinaryTagTypes.COMPOUND, BinaryTagTypes.INT_ARRAY, BinaryTagTypes.LONG_ARRAY};
   private static final QuietDecoderException BAD_VARINT_CACHED =
       new QuietDecoderException("Bad VarInt decoded");
-  private static final int[] VARINT_EXACT_BYTE_LENGTHS = new int[33];
+  private static final int[] VAR_INT_LENGTHS = new int[65];
 
   static {
     for (int i = 0; i <= 32; ++i) {
-      VARINT_EXACT_BYTE_LENGTHS[i] = (int) Math.ceil((31d - (i - 1)) / 7d);
+      VAR_INT_LENGTHS[i] = (int) Math.ceil((31d - (i - 1)) / 7d);
     }
-    VARINT_EXACT_BYTE_LENGTHS[32] = 1; // Special case for the number 0.
+    VAR_INT_LENGTHS[32] = 1; // Special case for the number 0.
+  }
+
+  private static DecoderException badVarint() {
+    return MinecraftDecoder.DEBUG ? new CorruptedFrameException("Bad VarInt decoded")
+        : BAD_VARINT_CACHED;
   }
 
   /**
@@ -82,33 +162,29 @@ public enum ProtocolUtils {
    * @return the decoded VarInt
    */
   public static int readVarInt(ByteBuf buf) {
-    int read = readVarIntSafely(buf);
-    if (read == Integer.MIN_VALUE) {
-      throw MinecraftDecoder.DEBUG ? new CorruptedFrameException("Bad VarInt decoded")
-          : BAD_VARINT_CACHED;
+    int readable = buf.readableBytes();
+    if (readable == 0) {
+      // special case for empty buffer
+      throw badVarint();
     }
-    return read;
-  }
 
-  /**
-   * Reads a Minecraft-style VarInt from the specified {@code buf}. The difference between this
-   * method and {@link #readVarInt(ByteBuf)} is that this function returns a sentinel value if the
-   * varint is invalid.
-   *
-   * @param buf the buffer to read from
-   * @return the decoded VarInt, or {@code Integer.MIN_VALUE} if the varint is invalid
-   */
-  public static int readVarIntSafely(ByteBuf buf) {
-    int i = 0;
-    int maxRead = Math.min(5, buf.readableBytes());
-    for (int j = 0; j < maxRead; j++) {
-      int k = buf.readByte();
+    // we can read at least one byte, and this should be a common case
+    int k = buf.readByte();
+    if ((k & 0x80) != 128) {
+      return k;
+    }
+
+    // in case decoding one byte was not enough, use a loop to decode up to the next 4 bytes
+    int maxRead = Math.min(MAXIMUM_VARINT_SIZE, readable);
+    int i = k & 0x7F;
+    for (int j = 1; j < maxRead; j++) {
+      k = buf.readByte();
       i |= (k & 0x7F) << j * 7;
       if ((k & 0x80) != 128) {
         return i;
       }
     }
-    return Integer.MIN_VALUE;
+    throw badVarint();
   }
 
   /**
@@ -118,7 +194,7 @@ public enum ProtocolUtils {
    * @return the byte size of {@code value} if encoded as a VarInt
    */
   public static int varIntBytes(int value) {
-    return VARINT_EXACT_BYTE_LENGTHS[Integer.numberOfLeadingZeros(value)];
+    return VAR_INT_LENGTHS[Integer.numberOfLeadingZeros(value)];
   }
 
   /**
@@ -142,6 +218,8 @@ public enum ProtocolUtils {
 
   private static void writeVarIntFull(ByteBuf buf, int value) {
     // See https://steinborn.me/posts/performance/how-fast-can-you-write-a-varint/
+
+    // This essentially is an unrolled version of the "traditional" VarInt encoding.
     if ((value & (0xFFFFFFFF << 7)) == 0) {
       buf.writeByte(value);
     } else if ((value & (0xFFFFFFFF << 14)) == 0) {
@@ -201,8 +279,7 @@ public enum ProtocolUtils {
     checkFrame(buf.isReadable(length),
         "Trying to read a string that is too long (wanted %s, only have %s)", length,
         buf.readableBytes());
-    String str = buf.toString(buf.readerIndex(), length, StandardCharsets.UTF_8);
-    buf.skipBytes(length);
+    String str = buf.readString(length, StandardCharsets.UTF_8);
     checkFrame(str.length() <= cap, "Got a too-long string (got %s, max %s)", str.length(), cap);
     return str;
   }
@@ -367,29 +444,57 @@ public enum ProtocolUtils {
    * Reads a {@link net.kyori.adventure.nbt.CompoundBinaryTag} from the {@code buf}.
    *
    * @param buf    the buffer to read from
-   * @param reader the NBT reader to use
+   * @param reader the {@link BinaryTagIO.Reader} to use
    * @return {@link net.kyori.adventure.nbt.CompoundBinaryTag} the CompoundTag from the buffer
    */
-  public static CompoundBinaryTag readCompoundTag(ByteBuf buf, BinaryTagIO.Reader reader) {
-    try {
-      return reader.read((DataInput) new ByteBufInputStream(buf));
-    } catch (IOException thrown) {
+  public static CompoundBinaryTag readCompoundTag(ByteBuf buf, ProtocolVersion version,
+                                                  BinaryTagIO.Reader reader) {
+    BinaryTag binaryTag = readBinaryTag(buf, version, reader);
+    if (binaryTag.type() != BinaryTagTypes.COMPOUND) {
       throw new DecoderException(
-          "Unable to parse NBT CompoundTag, full error: " + thrown.getMessage());
+          "Expected root tag to be CompoundTag, but is " + binaryTag.getClass().getSimpleName());
+    }
+    return (CompoundBinaryTag) binaryTag;
+  }
+
+  /**
+   * Reads a {@link net.kyori.adventure.nbt.BinaryTag} from the {@code buf}.
+   *
+   * @param buf    the buffer to read from
+   * @param reader the {@link BinaryTagIO.Reader} to use
+   * @return {@link net.kyori.adventure.nbt.BinaryTag} the BinaryTag from the buffer
+   */
+  public static BinaryTag readBinaryTag(ByteBuf buf, ProtocolVersion version,
+                                        BinaryTagIO.Reader reader) {
+    BinaryTagType<?> type = BINARY_TAG_TYPES[buf.readByte()];
+    if (version.lessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
+      buf.skipBytes(buf.readUnsignedShort());
+    }
+    try {
+      return type.read(new ByteBufInputStream(buf));
+    } catch (IOException thrown) {
+      throw new DecoderException("Unable to parse BinaryTag, full error: " + thrown.getMessage());
     }
   }
 
   /**
-   * Writes a CompoundTag to the {@code buf}.
+   * Writes a {@link net.kyori.adventure.nbt.BinaryTag} to the {@code buf}.
    *
-   * @param buf         the buffer to write to
-   * @param compoundTag the CompoundTag to write
+   * @param buf the buffer to write to
+   * @param tag the BinaryTag to write
    */
-  public static void writeCompoundTag(ByteBuf buf, CompoundBinaryTag compoundTag) {
+  public static <T extends BinaryTag> void writeBinaryTag(ByteBuf buf, ProtocolVersion version,
+                                                          T tag) {
+    BinaryTagType<T> type = (BinaryTagType<T>) tag.type();
+    buf.writeByte(type.id());
     try {
-      BinaryTagIO.writer().write(compoundTag, (DataOutput) new ByteBufOutputStream(buf));
+      if (version.lessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
+        // Empty name
+        buf.writeShort(0);
+      }
+      type.write(tag, new ByteBufOutputStream(buf));
     } catch (IOException e) {
-      throw new EncoderException("Unable to encode NBT CompoundTag");
+      throw new EncoderException("Unable to encode BinaryTag");
     }
   }
 
@@ -637,8 +742,14 @@ public enum ProtocolUtils {
    * @return the appropriate {@link GsonComponentSerializer}
    */
   public static GsonComponentSerializer getJsonChatSerializer(ProtocolVersion version) {
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_16) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_21_5)) {
       return MODERN_SERIALIZER;
+    }
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
+      return PRE_1_21_5_SERIALIZER;
+    }
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16)) {
+      return PRE_1_20_3_SERIALIZER;
     }
     return PRE_1_16_SERIALIZER;
   }
@@ -665,7 +776,7 @@ public enum ProtocolUtils {
     long expiry = buf.readLong();
     byte[] key = ProtocolUtils.readByteArray(buf);
     byte[] signature = ProtocolUtils.readByteArray(buf, 4096);
-    IdentifiedKey.Revision revision = version.compareTo(ProtocolVersion.MINECRAFT_1_19) == 0
+    IdentifiedKey.Revision revision = version.noGreaterOrLessThan(ProtocolVersion.MINECRAFT_1_19)
         ? IdentifiedKey.Revision.GENERIC_V1 : IdentifiedKey.Revision.LINKED_V2;
     return new IdentifiedKeyImpl(revision, key, expiry, signature);
   }

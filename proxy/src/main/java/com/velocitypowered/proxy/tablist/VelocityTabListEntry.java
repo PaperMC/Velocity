@@ -17,11 +17,13 @@
 
 package com.velocitypowered.proxy.tablist;
 
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.ChatSession;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
-import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfo;
+import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfoPacket;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -37,14 +39,16 @@ public class VelocityTabListEntry implements TabListEntry {
   private int latency;
   private int gameMode;
   private boolean listed;
+  private int listOrder;
+  private boolean showHat;
   private @Nullable ChatSession session;
 
   /**
    * Constructs the instance.
    */
   public VelocityTabListEntry(VelocityTabList tabList, GameProfile profile, Component displayName,
-      int latency,
-      int gameMode, @Nullable ChatSession session, boolean listed) {
+                              int latency,
+                              int gameMode, @Nullable ChatSession session, boolean listed, int listOrder, boolean showHat) {
     this.tabList = tabList;
     this.profile = profile;
     this.displayName = displayName;
@@ -52,6 +56,8 @@ public class VelocityTabListEntry implements TabListEntry {
     this.gameMode = gameMode;
     this.session = session;
     this.listed = listed;
+    this.listOrder = listOrder;
+    this.showHat = showHat;
   }
 
   @Override
@@ -77,9 +83,14 @@ public class VelocityTabListEntry implements TabListEntry {
   @Override
   public TabListEntry setDisplayName(@Nullable Component displayName) {
     this.displayName = displayName;
-    UpsertPlayerInfo.Entry upsertEntry = this.tabList.createRawEntry(this);
-    upsertEntry.setDisplayName(displayName);
-    this.tabList.emitActionRaw(UpsertPlayerInfo.Action.UPDATE_DISPLAY_NAME, upsertEntry);
+    UpsertPlayerInfoPacket.Entry upsertEntry = this.tabList.createRawEntry(this);
+    upsertEntry.setDisplayName(
+            displayName == null
+                    ?
+                    null :
+                    new ComponentHolder(this.tabList.getPlayer().getProtocolVersion(), displayName)
+    );
+    this.tabList.emitActionRaw(UpsertPlayerInfoPacket.Action.UPDATE_DISPLAY_NAME, upsertEntry);
     return this;
   }
 
@@ -95,9 +106,9 @@ public class VelocityTabListEntry implements TabListEntry {
   @Override
   public TabListEntry setLatency(int latency) {
     this.latency = latency;
-    UpsertPlayerInfo.Entry upsertEntry = this.tabList.createRawEntry(this);
+    UpsertPlayerInfoPacket.Entry upsertEntry = this.tabList.createRawEntry(this);
     upsertEntry.setLatency(latency);
-    this.tabList.emitActionRaw(UpsertPlayerInfo.Action.UPDATE_LATENCY, upsertEntry);
+    this.tabList.emitActionRaw(UpsertPlayerInfoPacket.Action.UPDATE_LATENCY, upsertEntry);
     return this;
   }
 
@@ -113,9 +124,9 @@ public class VelocityTabListEntry implements TabListEntry {
   @Override
   public TabListEntry setGameMode(int gameMode) {
     this.gameMode = gameMode;
-    UpsertPlayerInfo.Entry upsertEntry = this.tabList.createRawEntry(this);
+    UpsertPlayerInfoPacket.Entry upsertEntry = this.tabList.createRawEntry(this);
     upsertEntry.setGameMode(gameMode);
-    this.tabList.emitActionRaw(UpsertPlayerInfo.Action.UPDATE_GAME_MODE, upsertEntry);
+    this.tabList.emitActionRaw(UpsertPlayerInfoPacket.Action.UPDATE_GAME_MODE, upsertEntry);
     return this;
   }
 
@@ -135,13 +146,53 @@ public class VelocityTabListEntry implements TabListEntry {
   @Override
   public VelocityTabListEntry setListed(boolean listed) {
     this.listed = listed;
-    UpsertPlayerInfo.Entry upsertEntry = this.tabList.createRawEntry(this);
+    UpsertPlayerInfoPacket.Entry upsertEntry = this.tabList.createRawEntry(this);
     upsertEntry.setListed(listed);
-    this.tabList.emitActionRaw(UpsertPlayerInfo.Action.UPDATE_LISTED, upsertEntry);
+    this.tabList.emitActionRaw(UpsertPlayerInfoPacket.Action.UPDATE_LISTED, upsertEntry);
     return this;
   }
 
   void setListedWithoutUpdate(boolean listed) {
     this.listed = listed;
+  }
+
+  @Override
+  public int getListOrder() {
+    return listOrder;
+  }
+
+  @Override
+  public VelocityTabListEntry setListOrder(int listOrder) {
+    this.listOrder = listOrder;
+    if (tabList.getPlayer().getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_2)) {
+      UpsertPlayerInfoPacket.Entry upsertEntry = this.tabList.createRawEntry(this);
+      upsertEntry.setListOrder(listOrder);
+      tabList.emitActionRaw(UpsertPlayerInfoPacket.Action.UPDATE_LIST_ORDER, upsertEntry);
+    }
+    return this;
+  }
+
+  void setListOrderWithoutUpdate(int listOrder) {
+    this.listOrder = listOrder;
+  }
+
+  @Override
+  public boolean isShowHat() {
+    return showHat;
+  }
+
+  @Override
+  public VelocityTabListEntry setShowHat(boolean showHat) {
+    this.showHat = showHat;
+    if (tabList.getPlayer().getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_4)) {
+      UpsertPlayerInfoPacket.Entry upsertEntry = this.tabList.createRawEntry(this);
+      upsertEntry.setShowHat(showHat);
+      tabList.emitActionRaw(UpsertPlayerInfoPacket.Action.UPDATE_HAT, upsertEntry);
+    }
+    return this;
+  }
+
+  void setShowHatWithoutUpdate(boolean showHat) {
+    this.showHat = showHat;
   }
 }

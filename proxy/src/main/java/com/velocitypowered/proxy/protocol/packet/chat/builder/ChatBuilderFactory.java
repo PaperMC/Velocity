@@ -30,9 +30,9 @@ public class ChatBuilderFactory {
 
   public ChatBuilderFactory(ProtocolVersion version) {
     this.version = version;
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_19_3) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
       this.builderFunction = SessionChatBuilder::new;
-    } else if (version.compareTo(ProtocolVersion.MINECRAFT_1_19) >= 0) {
+    } else if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
       this.builderFunction = KeyedChatBuilder::new;
     } else {
       this.builderFunction = LegacyChatBuilder::new;

@@ -28,6 +28,6 @@ class NativeZlibInflate {
 
   static native long free(long ctx);
 
-  static  native boolean process(long ctx, long sourceAddress, int sourceLength,
+  static native boolean process(long ctx, long sourceAddress, int sourceLength,
       long destinationAddress, int destinationLength) throws DataFormatException;
 }

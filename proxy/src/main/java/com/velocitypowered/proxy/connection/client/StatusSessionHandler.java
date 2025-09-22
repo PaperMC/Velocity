@@ -23,10 +23,10 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.util.VelocityInboundConnection;
 import com.velocitypowered.proxy.protocol.packet.LegacyDisconnect;
-import com.velocitypowered.proxy.protocol.packet.LegacyPing;
-import com.velocitypowered.proxy.protocol.packet.StatusPing;
-import com.velocitypowered.proxy.protocol.packet.StatusRequest;
-import com.velocitypowered.proxy.protocol.packet.StatusResponse;
+import com.velocitypowered.proxy.protocol.packet.LegacyPingPacket;
+import com.velocitypowered.proxy.protocol.packet.StatusPingPacket;
+import com.velocitypowered.proxy.protocol.packet.StatusRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.StatusResponsePacket;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
 import org.apache.logging.log4j.LogManager;
@@ -61,16 +61,20 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(LegacyPing packet) {
+  public boolean handle(LegacyPingPacket packet) {
     if (this.pingReceived) {
       throw EXPECTED_AWAITING_REQUEST;
     }
     this.pingReceived = true;
     server.getServerListPingHandler().getInitialPing(this.inbound)
         .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
-        .thenAcceptAsync(event -> connection.closeWith(
-                LegacyDisconnect.fromServerPing(event.getPing(), packet.getVersion())),
-            connection.eventLoop())
+        .thenAcceptAsync(event -> {
+          if (event.getResult().isAllowed()) {
+            connection.closeWith(LegacyDisconnect.fromServerPing(event.getPing(), packet.getVersion()));
+          } else {
+            connection.close();
+          }
+        }, connection.eventLoop())
         .exceptionally((ex) -> {
           logger.error("Exception while handling legacy ping {}", packet, ex);
           return null;
@@ -79,13 +83,13 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(StatusPing packet) {
+  public boolean handle(StatusPingPacket packet) {
     connection.closeWith(packet);
     return true;
   }
 
   @Override
-  public boolean handle(StatusRequest packet) {
+  public boolean handle(StatusRequestPacket packet) {
     if (this.pingReceived) {
       throw EXPECTED_AWAITING_REQUEST;
     }
@@ -95,10 +99,14 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
         .thenCompose(ping -> server.getEventManager().fire(new ProxyPingEvent(inbound, ping)))
         .thenAcceptAsync(
             (event) -> {
-              StringBuilder json = new StringBuilder();
-              VelocityServer.getPingGsonInstance(connection.getProtocolVersion())
-                  .toJson(event.getPing(), json);
-              connection.write(new StatusResponse(json));
+              if (event.getResult().isAllowed()) {
+                final StringBuilder json = new StringBuilder();
+                VelocityServer.getPingGsonInstance(connection.getProtocolVersion())
+                        .toJson(event.getPing(), json);
+                connection.write(new StatusResponsePacket(json));
+              } else {
+                connection.close();
+              }
             },
             connection.eventLoop())
         .exceptionally((ex) -> {

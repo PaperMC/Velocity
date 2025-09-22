@@ -23,11 +23,13 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public interface CommandHandler<T extends MinecraftPacket> {
 
@@ -53,11 +55,14 @@ public interface CommandHandler<T extends MinecraftPacket> {
   }
 
   default void queueCommandResult(VelocityServer server, ConnectedPlayer player,
-      Function<CommandExecuteEvent, CompletableFuture<MinecraftPacket>> futurePacketCreator,
-      String message, Instant timestamp) {
-    player.getChatQueue().queuePacket(
-        server.getCommandManager().callCommandEvent(player, message)
-            .thenComposeAsync(futurePacketCreator)
+      BiFunction<CommandExecuteEvent, LastSeenMessages, CompletableFuture<MinecraftPacket>> futurePacketCreator,
+      String message, Instant timestamp, @Nullable LastSeenMessages lastSeenMessages,
+                                  CommandExecuteEvent.InvocationInfo invocationInfo) {
+      CompletableFuture<CommandExecuteEvent> eventFuture = server.getCommandManager().callCommandEvent(player, message,
+              invocationInfo);
+      player.getChatQueue().queuePacket(
+        newLastSeenMessages -> eventFuture
+            .thenComposeAsync(event -> futurePacketCreator.apply(event, newLastSeenMessages))
             .thenApply(pkt -> {
               if (server.getConfiguration().isLogCommandExecutions()) {
                 logger.info("{} -> executed command /{}", player, message);
@@ -68,6 +73,6 @@ public interface CommandHandler<T extends MinecraftPacket> {
               player.sendMessage(
                   Component.translatable("velocity.command.generic-error", NamedTextColor.RED));
               return null;
-            }), timestamp);
+            }), timestamp, lastSeenMessages);
   }
 }
