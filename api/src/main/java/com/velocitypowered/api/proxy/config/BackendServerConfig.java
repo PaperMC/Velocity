@@ -36,14 +36,4 @@ public interface BackendServerConfig {
 
   ServerInfoForwardingMode getForwardingMode();
 
-  /**
-   * Set the address of the backend server.
-   */
-  void setAddress(String address);
-
-  /**
-   * Set the forwarding mode of the backend server.
-   */
-  void setForwardingMode(ServerInfoForwardingMode forwardingMode);
-
 }

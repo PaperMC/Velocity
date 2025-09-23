@@ -46,7 +46,6 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
 import com.velocitypowered.proxy.protocol.util.ByteBufDataOutput;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
-import com.velocitypowered.proxy.util.ServerForwardingModeUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
@@ -162,11 +161,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   private void startHandshake() {
     final MinecraftConnection mc = ensureConnected();
 
-    PlayerInfoForwarding forwardingMode =
-            ServerForwardingModeUtil.toPlayerInfoForwarding(
-                    server.getConfiguration(),
-                    registeredServer.getServerInfo().getServerInfoForwardingMode()
-            );
+    PlayerInfoForwarding forwardingMode = registeredServer.getConfiguredPlayerInfoForwarding();
 
     // Initiate the handshake.
     ProtocolVersion protocolVersion = proxyPlayer.getConnection().getProtocolVersion();

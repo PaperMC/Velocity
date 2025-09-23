@@ -35,6 +35,7 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
@@ -88,6 +89,21 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   @Override
   public ServerInfo getServerInfo() {
     return serverInfo;
+  }
+
+  /**
+   * Converts server info forward mode to Player info forwarding.
+   *
+   * @return player info forwarding
+   */
+  public PlayerInfoForwarding getConfiguredPlayerInfoForwarding() {
+    return switch (serverInfo.getServerInfoForwardingMode()) {
+      case FOLLOWUP -> server.getConfiguration().getPlayerInfoForwardingMode();
+      case LEGACY -> PlayerInfoForwarding.LEGACY;
+      case MODERN -> PlayerInfoForwarding.MODERN;
+      case BUNGEEGUARD -> PlayerInfoForwarding.BUNGEEGUARD;
+      case NONE -> PlayerInfoForwarding.NONE;
+    };
   }
 
   @Override

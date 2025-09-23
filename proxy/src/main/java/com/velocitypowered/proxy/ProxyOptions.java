@@ -106,21 +106,27 @@ public final class ProxyOptions {
 
     @Override
     public ServerInfo convert(String s) {
-      String[] split = s.split(":", 3);
-      if (split.length < 3) {
-        throw new ValueConversionException("Invalid server format. Use <name>:<address>:<forwardingmode>");
+      String[] split = s.split(":", 4);
+      if (split.length < 2) {
+        throw new ValueConversionException("Invalid server format. Use <name>:<host>:[port]:[forwardingmode]");
       }
       InetSocketAddress address;
-      ServerInfoForwardingMode mode;
+      ServerInfoForwardingMode mode = ServerInfoForwardingMode.FOLLOWUP;
       try {
-        address = AddressUtil.parseAddress(split[1]);
+        if (split.length >= 3) {
+          address = AddressUtil.parseAddress(split[1] + ":" + split[2]);
+        } else {
+          address = AddressUtil.parseAddress(split[1]);
+        }
       } catch (IllegalStateException e) {
         throw new ValueConversionException("Invalid hostname for server flag with name: " + split[0]);
       }
-      try {
-        mode = ServerInfoForwardingMode.valueOf(split[2]);
-      } catch (IllegalStateException e) {
-        throw new ValueConversionException("Invalid forwarding mode for server flag with name: " + split[0]);
+      if (split.length == 4) {
+        try {
+          mode = ServerInfoForwardingMode.valueOf(split[3].toUpperCase());
+        } catch (IllegalStateException e) {
+          throw new ValueConversionException("Invalid forwarding mode for server flag with name: " + split[0]);
+        }
       }
       return new ServerInfo(split[0], address, mode);
     }
@@ -132,7 +138,7 @@ public final class ProxyOptions {
 
     @Override
     public String valuePattern() {
-      return "name>:<address";
+      return "name>:<host>:[port]:[forwardingmode]";
     }
   }
 }

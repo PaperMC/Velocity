@@ -31,12 +31,12 @@ public class BackendServerConfigImpl implements BackendServerConfig {
   /**
    * The address of the backend server.
    */
-  private String address;
+  private final String address;
 
   /**
    * The forwarding mode of the backend server.
    */
-  private ServerInfoForwardingMode forwardingMode;
+  private final ServerInfoForwardingMode forwardingMode;
 
   /**
    * Creates a new backend server configuration instance representing
@@ -71,16 +71,6 @@ public class BackendServerConfigImpl implements BackendServerConfig {
 
   public ServerInfoForwardingMode getForwardingMode() {
     return forwardingMode;
-  }
-
-  public void setAddress(String address) {
-    requireNonNull(address, "address");
-    this.address = address;
-  }
-
-  public  void setForwardingMode(ServerInfoForwardingMode forwardingMode) {
-    requireNonNull(forwardingMode, "forwardingMode");
-    this.forwardingMode = forwardingMode;
   }
 
   @Override
