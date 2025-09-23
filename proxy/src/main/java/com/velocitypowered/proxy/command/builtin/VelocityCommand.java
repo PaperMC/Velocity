@@ -62,6 +62,7 @@ import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.translation.Argument;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -165,9 +166,9 @@ public final class VelocityCommand {
           .build();
       final Component copyright = Component
           .translatable("velocity.command.version-copyright",
-              Component.text(version.getVendor()),
-                  Component.text(version.getName()),
-                  Component.text(LocalDate.now().getYear()));
+              Argument.string("vendor", version.getVendor()),
+                  Argument.string("name", version.getName()),
+                  Argument.component("year", Component.text(LocalDate.now().getYear())));
       source.sendMessage(velocity);
       source.sendMessage(copyright);
 
@@ -220,7 +221,7 @@ public final class VelocityCommand {
       final TranslatableComponent output = Component.translatable()
           .key("velocity.command.plugins-list")
           .color(NamedTextColor.YELLOW)
-          .arguments(listBuilder.build())
+          .arguments(Argument.component("plugins", listBuilder.build()))
           .build();
       source.sendMessage(output);
       return Command.SINGLE_SUCCESS;
@@ -236,7 +237,7 @@ public final class VelocityCommand {
         hoverText.append(Component.newline());
         hoverText.append(Component.translatable(
             "velocity.command.plugin-tooltip-website",
-            Component.text(url)));
+            Argument.component("url", Component.text(url))));
       });
       if (!description.getAuthors().isEmpty()) {
         hoverText.append(Component.newline());
@@ -246,7 +247,7 @@ public final class VelocityCommand {
         } else {
           hoverText.append(
               Component.translatable("velocity.command.plugin-tooltip-author",
-                  Component.text(String.join(", ", description.getAuthors()))
+                  Argument.string("authors", String.join(", ", description.getAuthors()))
               )
           );
         }
