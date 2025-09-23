@@ -41,10 +41,10 @@ public class LegacyTitlePacket extends GenericTitlePacket {
 
     switch (getAction()) {
       case SET_TITLE, SET_SUBTITLE, SET_ACTION_BAR -> {
-          if (component == null) {
-              throw new IllegalStateException("No component found for " + getAction());
-          }
-          component.write(buf);
+        if (component == null) {
+          throw new IllegalStateException("No component found for " + getAction());
+        }
+        component.write(buf);
       }
       case SET_TIMES -> {
         buf.writeInt(fadeIn);
