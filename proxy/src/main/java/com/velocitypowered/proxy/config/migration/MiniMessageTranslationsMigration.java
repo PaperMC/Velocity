@@ -35,7 +35,8 @@ import org.apache.logging.log4j.Logger;
 public final class MiniMessageTranslationsMigration implements ConfigurationMigration {
   @Override
   public boolean shouldMigrate(final CommentedFileConfig config) {
-    return configVersion(config) < 2.8;
+    // Checking whether translations should be migrated would be just as costly as attempting to migrate them directly.
+    return true;
   }
 
   @Override
@@ -60,6 +61,5 @@ public final class MiniMessageTranslationsMigration implements ConfigurationMigr
         Files.writeString(path, content, StandardCharsets.UTF_8);
       }
     }
-    config.set("config-version", "2.8");
   }
 }
