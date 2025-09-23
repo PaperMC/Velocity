@@ -20,6 +20,8 @@ package com.velocitypowered.proxy.connection.client;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.connection.ConnectionHandshakeEvent;
+import com.velocitypowered.api.network.HandshakeIntent;
+import com.velocitypowered.api.network.ProtocolState;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
@@ -92,6 +94,11 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     } else {
       final InitialInboundConnection ic = new InitialInboundConnection(connection,
               cleanVhost(handshake.getServerAddress()), handshake);
+      if (handshake.getIntent() == HandshakeIntent.TRANSFER
+              && !server.getConfiguration().isAcceptTransfers()) {
+        ic.disconnect(Component.translatable("multiplayer.disconnect.transfers_disabled"));
+        return true;
+      }
       connection.setProtocolVersion(handshake.getProtocolVersion());
       connection.setAssociation(ic);
 
@@ -111,13 +118,15 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   private static @Nullable StateRegistry getStateForProtocol(int status) {
     return switch (status) {
       case StateRegistry.STATUS_ID -> StateRegistry.STATUS;
-      case StateRegistry.LOGIN_ID -> StateRegistry.LOGIN;
+      case StateRegistry.LOGIN_ID, StateRegistry.TRANSFER_ID -> StateRegistry.LOGIN;
       default -> null;
     };
   }
 
   private void handleLogin(HandshakePacket handshake, InitialInboundConnection ic) {
-    if (!ProtocolVersion.isSupported(handshake.getProtocolVersion())) {
+    if (!handshake.getProtocolVersion().isSupported()) {
+      // Bump connection into correct protocol state so that we can send the disconnect packet.
+      connection.setState(StateRegistry.LOGIN);
       ic.disconnectQuietly(Component.translatable()
               .key("multiplayer.disconnect.outdated_client")
               .arguments(Component.text(ProtocolVersion.SUPPORTED_VERSION_STRING))
@@ -147,7 +156,8 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     }
 
     final LoginInboundConnection lic = new LoginInboundConnection(ic);
-    server.getEventManager().fireAndForget(new ConnectionHandshakeEvent(lic));
+    server.getEventManager().fireAndForget(
+            new ConnectionHandshakeEvent(lic, handshake.getIntent()));
     connection.setActiveSessionHandler(StateRegistry.LOGIN,
         new InitialLoginSessionHandler(server, connection, lic));
   }
@@ -234,6 +244,11 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
+    public Optional<String> getRawVirtualHost() {
+      return getVirtualHost().map(InetSocketAddress::getHostName);
+    }
+
+    @Override
     public boolean isActive() {
       return !connection.isClosed();
     }
@@ -245,9 +260,9 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
     @Override
     public String toString() {
-      boolean isPlayerAddressLoggingEnabled = connection.server.getConfiguration()
+      final boolean isPlayerAddressLoggingEnabled = connection.server.getConfiguration()
           .isPlayerAddressLoggingEnabled();
-      String playerIp =
+      final String playerIp =
           isPlayerAddressLoggingEnabled
               ? this.getRemoteAddress().toString() : "<ip address withheld>";
       return "[legacy connection] " + playerIp;
@@ -256,6 +271,16 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     @Override
     public MinecraftConnection getConnection() {
       return connection;
+    }
+
+    @Override
+    public ProtocolState getProtocolState() {
+      return connection.getState().toProtocolState();
+    }
+
+    @Override
+    public HandshakeIntent getHandshakeIntent() {
+      return HandshakeIntent.STATUS;
     }
   }
 }

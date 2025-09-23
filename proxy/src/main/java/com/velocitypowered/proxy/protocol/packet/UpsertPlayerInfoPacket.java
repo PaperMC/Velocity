@@ -188,6 +188,16 @@ public class UpsertPlayerInfoPacket implements MinecraftPacket {
       if (info.displayName != null) {
         info.displayName.write(buf);
       }
+    }),
+    UPDATE_LIST_ORDER((version, buf, info) -> { // read
+      info.listOrder = ProtocolUtils.readVarInt(buf);
+    }, (version, buf, info) -> { // write
+      ProtocolUtils.writeVarInt(buf, info.listOrder);
+    }),
+    UPDATE_HAT((version, buf, info) -> { // read
+      info.showHat = buf.readBoolean();
+    }, (version, buf, info) -> { // write
+      buf.writeBoolean(info.showHat);
     });
 
     private final Read read;
@@ -218,6 +228,8 @@ public class UpsertPlayerInfoPacket implements MinecraftPacket {
     private int gameMode;
     @Nullable
     private ComponentHolder displayName;
+    private boolean showHat;
+    private int listOrder;
     @Nullable
     private RemoteChatSession chatSession;
 
@@ -250,6 +262,14 @@ public class UpsertPlayerInfoPacket implements MinecraftPacket {
       return displayName;
     }
 
+    public boolean isShowHat() {
+      return showHat;
+    }
+
+    public int getListOrder() {
+      return listOrder;
+    }
+
     @Nullable
     public RemoteChatSession getChatSession() {
       return chatSession;
@@ -275,6 +295,14 @@ public class UpsertPlayerInfoPacket implements MinecraftPacket {
       this.displayName = displayName;
     }
 
+    public void setShowHat(boolean showHat) {
+      this.showHat = showHat;
+    }
+
+    public void setListOrder(int listOrder) {
+      this.listOrder = listOrder;
+    }
+
     public void setChatSession(@Nullable RemoteChatSession chatSession) {
       this.chatSession = chatSession;
     }
@@ -288,6 +316,7 @@ public class UpsertPlayerInfoPacket implements MinecraftPacket {
           ", latency=" + latency +
           ", gameMode=" + gameMode +
           ", displayName=" + displayName +
+          ", listOrder=" + listOrder +
           ", chatSession=" + chatSession +
           '}';
     }

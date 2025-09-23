@@ -17,6 +17,8 @@
 
 package com.velocitypowered.proxy.connection.client;
 
+import com.velocitypowered.api.network.HandshakeIntent;
+import com.velocitypowered.api.network.ProtocolState;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -63,6 +65,11 @@ public final class InitialInboundConnection implements VelocityInboundConnection
   }
 
   @Override
+  public Optional<String> getRawVirtualHost() {
+    return Optional.of(handshake.getServerAddress());
+  }
+
+  @Override
   public boolean isActive() {
     return connection.getChannel().isActive();
   }
@@ -87,6 +94,16 @@ public final class InitialInboundConnection implements VelocityInboundConnection
     return connection;
   }
 
+  @Override
+  public ProtocolState getProtocolState() {
+    return connection.getState().toProtocolState();
+  }
+
+  @Override
+  public HandshakeIntent getHandshakeIntent() {
+    return handshake.getIntent();
+  }
+
   /**
    * Disconnects the connection from the server.
    *
@@ -98,7 +115,7 @@ public final class InitialInboundConnection implements VelocityInboundConnection
     if (connection.server.getConfiguration().isLogPlayerConnections()) {
       logger.info(Component.text(this + " has disconnected: ").append(translated));
     }
-    connection.closeWith(DisconnectPacket.create(translated, getProtocolVersion(), true));
+    connection.closeWith(DisconnectPacket.create(translated, getProtocolVersion(), connection.getState()));
   }
 
   /**
@@ -109,6 +126,6 @@ public final class InitialInboundConnection implements VelocityInboundConnection
   public void disconnectQuietly(Component reason) {
     Component translated = GlobalTranslator.render(reason, ClosestLocaleMatcher.INSTANCE
         .lookupClosest(Locale.getDefault()));
-    connection.closeWith(DisconnectPacket.create(translated, getProtocolVersion(), true));
+    connection.closeWith(DisconnectPacket.create(translated, getProtocolVersion(), connection.getState()));
   }
 }

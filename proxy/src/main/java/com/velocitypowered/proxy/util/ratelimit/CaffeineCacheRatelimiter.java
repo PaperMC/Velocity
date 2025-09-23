@@ -22,15 +22,15 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Ticker;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import java.net.InetAddress;
 import java.util.concurrent.TimeUnit;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A simple rate-limiter based on a Caffeine {@link Cache}.
  */
-public class CaffeineCacheRatelimiter implements Ratelimiter {
+public class CaffeineCacheRatelimiter<T> implements Ratelimiter<T> {
 
-  private final Cache<InetAddress, Long> expiringCache;
+  private final Cache<T, Long> expiringCache;
   private final long timeoutNanos;
 
   CaffeineCacheRatelimiter(long time, TimeUnit unit) {
@@ -49,16 +49,15 @@ public class CaffeineCacheRatelimiter implements Ratelimiter {
   }
 
   /**
-   * Attempts to rate-limit the client.
+   * Attempts to rate-limit the object.
    *
-   * @param address the address to rate limit
-   * @return true if we should allow the client, false if we should rate-limit
+   * @param key the object to rate limit
+   * @return true if we should allow the object, false if we should rate-limit
    */
   @Override
-  public boolean attempt(InetAddress address) {
-    Preconditions.checkNotNull(address, "address");
+  public boolean attempt(@NotNull  T key) {
     long expectedNewValue = System.nanoTime() + timeoutNanos;
-    long last = expiringCache.get(address, (address1) -> expectedNewValue);
+    long last = expiringCache.get(key, (key1) -> expectedNewValue);
     return expectedNewValue == last;
   }
 }

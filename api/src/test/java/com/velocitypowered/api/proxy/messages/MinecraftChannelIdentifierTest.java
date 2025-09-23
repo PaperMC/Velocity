@@ -48,16 +48,24 @@ class MinecraftChannelIdentifierTest {
   }
 
   @Test
+  void fromIdentifierDefaultNamespace() {
+    assertEquals("minecraft", from("test").getNamespace());
+    assertEquals("minecraft", from(":test").getNamespace());
+  }
+
+  @Test
+  void fromIdentifierAllowsEmptyName() {
+    from("minecraft:");
+    from(":");
+    from("");
+  }
+
+  @Test
   void fromIdentifierThrowsOnBadValues() {
     assertAll(
-        () -> assertThrows(IllegalArgumentException.class, () -> from("")),
-        () -> assertThrows(IllegalArgumentException.class, () -> from(":")),
-        () -> assertThrows(IllegalArgumentException.class, () -> from(":a")),
-        () -> assertThrows(IllegalArgumentException.class, () -> from("a:")),
         () -> assertThrows(IllegalArgumentException.class, () -> from("hello:$$$$$$")),
+        () -> assertThrows(IllegalArgumentException.class, () -> from("he/llo:wor/ld")),
         () -> assertThrows(IllegalArgumentException.class, () -> from("hello::"))
     );
   }
-
-
 }

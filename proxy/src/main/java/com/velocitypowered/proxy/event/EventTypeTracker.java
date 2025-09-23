@@ -33,8 +33,9 @@ class EventTypeTracker {
   }
 
   public Collection<Class<?>> getFriendsOf(final Class<?> eventType) {
-    if (friends.containsKey(eventType)) {
-      return friends.get(eventType);
+    ImmutableSet<Class<?>> existingFriends = friends.get(eventType);
+    if (existingFriends != null) {
+      return existingFriends;
     }
 
     final Collection<Class<?>> types = getEventTypes(eventType);

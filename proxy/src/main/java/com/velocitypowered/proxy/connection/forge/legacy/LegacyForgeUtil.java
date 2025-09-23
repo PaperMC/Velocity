@@ -64,6 +64,7 @@ class LegacyForgeUtil {
     if (discriminator == MOD_LIST_DISCRIMINATOR) {
       ImmutableList.Builder<ModInfo.Mod> mods = ImmutableList.builder();
       int modCount = ProtocolUtils.readVarInt(contents);
+      Preconditions.checkArgument(modCount < 1024, "Oversized mods list");
 
       for (int index = 0; index < modCount; index++) {
         String id = ProtocolUtils.readString(contents);

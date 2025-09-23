@@ -24,6 +24,7 @@ import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
+import com.velocitypowered.api.event.player.CookieReceiveEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -41,6 +42,7 @@ import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.LoginAcknowledgedPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
 import io.netty.buffer.ByteBuf;
 import java.util.Objects;
@@ -94,8 +96,8 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
 
       // Initiate a regular connection and move over to it.
       ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.getGameProfile(),
-          mcConnection, inbound.getVirtualHost().orElse(null), onlineMode,
-          inbound.getIdentifiedKey());
+          mcConnection, inbound.getVirtualHost().orElse(null), inbound.getRawVirtualHost().orElse(null), onlineMode,
+          inbound.getHandshakeIntent(), inbound.getIdentifiedKey());
       this.connectedPlayer = player;
       if (!server.canRegisterConnection(player)) {
         player.disconnect0(
@@ -104,7 +106,9 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
         return CompletableFuture.completedFuture(null);
       }
 
-      logger.info("{} has connected", player);
+      if (server.getConfiguration().isLogPlayerConnections()) {
+        logger.info("{} has connected", player);
+      }
 
       return server.getEventManager()
           .fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
@@ -176,15 +180,33 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
       inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_player_data"));
     } else {
       loginState = State.ACKNOWLEDGED;
-      mcConnection.setActiveSessionHandler(StateRegistry.CONFIG,
-          new ClientConfigSessionHandler(server, connectedPlayer));
+      mcConnection.setActiveSessionHandler(StateRegistry.CONFIG, new ClientConfigSessionHandler(server, connectedPlayer));
 
-      server.getEventManager().fire(new PostLoginEvent(connectedPlayer))
-          .thenCompose((ignored) -> connectToInitialServer(connectedPlayer)).exceptionally((ex) -> {
-            logger.error("Exception while connecting {} to initial server", connectedPlayer, ex);
-            return null;
-          });
+      server.getEventManager().fire(new PostLoginEvent(connectedPlayer)).thenCompose(ignored -> {
+        return connectToInitialServer(connectedPlayer);
+      }).exceptionally((ex) -> {
+        logger.error("Exception while connecting {} to initial server", connectedPlayer, ex);
+        return null;
+      });
     }
+    return true;
+  }
+
+  @Override
+  public boolean handle(ServerboundCookieResponsePacket packet) {
+    server.getEventManager()
+        .fire(new CookieReceiveEvent(connectedPlayer, packet.getKey(), packet.getPayload()))
+        .thenAcceptAsync(event -> {
+          if (event.getResult().isAllowed()) {
+            // The received cookie must have been requested by a proxy plugin in login phase,
+            // because if a backend server requests a cookie in login phase, the client is already
+            // in config phase. Therefore, the only way, we receive a CookieResponsePacket from a
+            // client in login phase is when a proxy plugin requested a cookie in login phase.
+            throw new IllegalStateException(
+                "A cookie was requested by a proxy plugin in login phase but the response wasn't handled");
+          }
+        }, mcConnection.eventLoop());
+
     return true;
   }
 
@@ -204,8 +226,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
         player.disconnect0(reason.get(), true);
       } else {
         if (!server.registerConnection(player)) {
-          player.disconnect0(Component.translatable("velocity.error.already-connected-proxy"),
-              true);
+          player.disconnect0(Component.translatable("velocity.error.already-connected-proxy"), true);
           return;
         }
 
@@ -218,13 +239,13 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
         loginState = State.SUCCESS_SENT;
         if (inbound.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
           loginState = State.ACKNOWLEDGED;
-          mcConnection.setActiveSessionHandler(StateRegistry.PLAY,
-              new InitialConnectSessionHandler(player, server));
-          server.getEventManager().fire(new PostLoginEvent(player))
-              .thenCompose((ignored) -> connectToInitialServer(player)).exceptionally((ex) -> {
-                logger.error("Exception while connecting {} to initial server", player, ex);
-                return null;
-              });
+          mcConnection.setActiveSessionHandler(StateRegistry.PLAY, new InitialConnectSessionHandler(player, server));
+          server.getEventManager().fire(new PostLoginEvent(player)).thenCompose((ignored) -> {
+            return connectToInitialServer(player);
+          }).exceptionally((ex) -> {
+            logger.error("Exception while connecting {} to initial server", player, ex);
+            return null;
+          });
         }
       }
     }, mcConnection.eventLoop()).exceptionally((ex) -> {

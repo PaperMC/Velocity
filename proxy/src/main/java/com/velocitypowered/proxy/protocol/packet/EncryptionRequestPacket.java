@@ -31,6 +31,7 @@ public class EncryptionRequestPacket implements MinecraftPacket {
   private String serverId = "";
   private byte[] publicKey = EMPTY_BYTE_ARRAY;
   private byte[] verifyToken = EMPTY_BYTE_ARRAY;
+  private boolean shouldAuthenticate = true;
 
   public byte[] getPublicKey() {
     return publicKey.clone();
@@ -63,6 +64,9 @@ public class EncryptionRequestPacket implements MinecraftPacket {
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       publicKey = ProtocolUtils.readByteArray(buf, 256);
       verifyToken = ProtocolUtils.readByteArray(buf, 16);
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
+        shouldAuthenticate = buf.readBoolean();
+      }
     } else {
       publicKey = ProtocolUtils.readByteArray17(buf);
       verifyToken = ProtocolUtils.readByteArray17(buf);
@@ -76,6 +80,9 @@ public class EncryptionRequestPacket implements MinecraftPacket {
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       ProtocolUtils.writeByteArray(buf, publicKey);
       ProtocolUtils.writeByteArray(buf, verifyToken);
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
+        buf.writeBoolean(shouldAuthenticate);
+      }
     } else {
       ProtocolUtils.writeByteArray17(publicKey, buf, false);
       ProtocolUtils.writeByteArray17(verifyToken, buf, false);

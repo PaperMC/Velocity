@@ -42,6 +42,13 @@ public interface ProxyServer extends Audience {
   void shutdown();
 
   /**
+   * Returns whether the proxy is currently shutting down.
+   *
+   * @return {@code true} if the proxy is shutting down, {@code false} otherwise
+   */
+  boolean isShuttingDown();
+
+  /**
    * Closes all listening endpoints for this server.
    * This includes the main minecraft listener and query channel.
    */

@@ -22,6 +22,10 @@ import com.velocitypowered.proxy.protocol.packet.AvailableCommandsPacket;
 import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
 import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
+import com.velocitypowered.proxy.protocol.packet.DialogClearPacket;
+import com.velocitypowered.proxy.protocol.packet.DialogShowPacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionResponsePacket;
@@ -45,12 +49,15 @@ import com.velocitypowered.proxy.protocol.packet.RespawnPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerDataPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.ServerboundCustomClickActionPacket;
 import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusPingPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.TransferPacket;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfoPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatAcknowledgementPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatCompletionPacket;
@@ -61,7 +68,10 @@ import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChatPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChatPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommandPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ActiveFeaturesPacket;
+import com.velocitypowered.proxy.protocol.packet.config.ClientboundCustomReportDetailsPacket;
+import com.velocitypowered.proxy.protocol.packet.config.ClientboundServerLinksPacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
+import com.velocitypowered.proxy.protocol.packet.config.KnownPacksPacket;
 import com.velocitypowered.proxy.protocol.packet.config.RegistrySyncPacket;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.TagsUpdatePacket;
@@ -329,4 +339,45 @@ public interface MinecraftSessionHandler {
   default boolean handle(BundleDelimiterPacket bundleDelimiterPacket) {
     return false;
   }
+
+  default boolean handle(TransferPacket transfer) {
+    return false;
+  }
+
+  default boolean handle(KnownPacksPacket packet) {
+    return false;
+  }
+
+  default boolean handle(ClientboundStoreCookiePacket packet) {
+    return false;
+  }
+
+  default boolean handle(ClientboundCookieRequestPacket packet) {
+    return false;
+  }
+
+  default boolean handle(ServerboundCookieResponsePacket packet) {
+    return false;
+  }
+
+  default boolean handle(ClientboundCustomReportDetailsPacket packet) {
+    return false;
+  }
+
+  default boolean handle(ClientboundServerLinksPacket packet) {
+    return false;
+  }
+
+  default boolean handle(DialogClearPacket packet) {
+    return false;
+  }
+
+  default boolean handle(DialogShowPacket packet) {
+    return false;
+  }
+
+  default boolean handle(ServerboundCustomClickActionPacket packet) {
+    return false;
+  }
+
 }

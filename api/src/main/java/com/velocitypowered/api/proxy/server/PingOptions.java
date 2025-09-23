@@ -15,6 +15,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import net.kyori.adventure.builder.AbstractBuilder;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Contains the parameters used to ping a {@link RegisteredServer}.
@@ -30,10 +31,12 @@ public final class PingOptions {
   public static final PingOptions DEFAULT = PingOptions.builder().build();
   private final ProtocolVersion protocolVersion;
   private final long timeout;
+  private final String virtualHost;
 
   private PingOptions(final Builder builder) {
     this.protocolVersion = builder.protocolVersion;
     this.timeout = builder.timeout;
+    this.virtualHost = builder.virtualHost;
   }
 
   /**
@@ -55,6 +58,16 @@ public final class PingOptions {
   }
 
   /**
+   * The virtual host to pass to the server for the ping.
+   *
+   * @return the virtual hostname to pass to the server for the ping
+   * @since 3.4.0
+   */
+  public @Nullable String getVirtualHost() {
+    return this.virtualHost;
+  }
+
+  /**
    * Create a new builder to assign values to a new PingOptions.
    *
    * @return a new {@link PingOptions.Builder}
@@ -68,10 +81,9 @@ public final class PingOptions {
     if (o == null) {
       return false;
     }
-    if (!(o instanceof PingOptions)) {
+    if (!(o instanceof final PingOptions other)) {
       return false;
     }
-    final PingOptions other = (PingOptions) o;
     return Objects.equals(this.protocolVersion, other.protocolVersion)
             && Objects.equals(this.timeout, other.timeout);
   }
@@ -97,6 +109,7 @@ public final class PingOptions {
   public static final class Builder implements AbstractBuilder<PingOptions> {
     private ProtocolVersion protocolVersion = ProtocolVersion.UNKNOWN;
     private long timeout = 0;
+    private String virtualHost = null;
 
     private Builder() {
     }
@@ -143,6 +156,18 @@ public final class PingOptions {
     public Builder timeout(final long time, final @NotNull TimeUnit timeunit) {
       checkNotNull(timeunit, "timeunit cannot be null");
       this.timeout = timeunit.toMillis(time);
+      return this;
+    }
+
+    /**
+     * Sets the virtual host to pass to the server for the ping.
+     *
+     * @param virtualHost the virtual hostname to pass to the server for the ping
+     * @return this builder
+     * @since 3.4.0
+     */
+    public Builder virtualHost(final @Nullable String virtualHost) {
+      this.virtualHost = virtualHost;
       return this;
     }
 

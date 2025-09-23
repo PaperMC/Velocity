@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.tablist;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.player.ChatSession;
 import com.velocitypowered.api.proxy.player.TabListEntry;
@@ -89,7 +90,7 @@ public class VelocityTabList implements InternalTabList {
     } else {
       entry = new VelocityTabListEntry(this, entry1.getProfile(),
           entry1.getDisplayNameComponent().orElse(null),
-          entry1.getLatency(), entry1.getGameMode(), entry1.getChatSession(), entry1.isListed());
+          entry1.getLatency(), entry1.getGameMode(), entry1.getChatSession(), entry1.isListed(), entry1.getListOrder(), entry1.isShowHat());
     }
 
     EnumSet<UpsertPlayerInfoPacket.Action> actions = EnumSet
@@ -128,6 +129,16 @@ public class VelocityTabList implements InternalTabList {
           actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LISTED);
           playerInfoEntry.setListed(entry.isListed());
         }
+        if (!Objects.equals(previousEntry.getListOrder(), entry.getListOrder())
+            && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_2)) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LIST_ORDER);
+          playerInfoEntry.setListOrder(entry.getListOrder());
+        }
+        if (!Objects.equals(previousEntry.isShowHat(), entry.isShowHat())
+                && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_4)) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_HAT);
+          playerInfoEntry.setShowHat(entry.isShowHat());
+        }
         if (!Objects.equals(previousEntry.getChatSession(), entry.getChatSession())) {
           ChatSession from = entry.getChatSession();
           if (from != null) {
@@ -162,11 +173,22 @@ public class VelocityTabList implements InternalTabList {
         }
         playerInfoEntry.setLatency(entry.getLatency());
         playerInfoEntry.setListed(entry.isListed());
+        if (entry.getListOrder() != 0
+            && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_2)) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LIST_ORDER);
+          playerInfoEntry.setListOrder(entry.getListOrder());
+        }
+        if (!entry.isShowHat() && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_4)) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_HAT);
+          playerInfoEntry.setShowHat(entry.isShowHat());
+        }
       }
       return entry;
     });
 
-    this.connection.write(new UpsertPlayerInfoPacket(actions, List.of(playerInfoEntry)));
+    if (!actions.isEmpty()) {
+      this.connection.write(new UpsertPlayerInfoPacket(actions, List.of(playerInfoEntry)));
+    }
   }
 
   @Override
@@ -205,9 +227,9 @@ public class VelocityTabList implements InternalTabList {
   @Override
   public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
       int gameMode,
-      @Nullable ChatSession chatSession, boolean listed) {
+      @Nullable ChatSession chatSession, boolean listed, int listOrder, boolean showHat) {
     return new VelocityTabListEntry(this, profile, displayName, latency, gameMode, chatSession,
-        listed);
+        listed, listOrder, showHat);
   }
 
   @Override
@@ -244,7 +266,9 @@ public class VelocityTabList implements InternalTabList {
                 0,
                 -1,
                 null,
-                false
+                false,
+                0,
+                true
             )
         );
       } else {
@@ -271,6 +295,9 @@ public class VelocityTabList implements InternalTabList {
     }
     if (actions.contains(UpsertPlayerInfoPacket.Action.UPDATE_LISTED)) {
       currentEntry.setListedWithoutUpdate(entry.isListed());
+    }
+    if (actions.contains(UpsertPlayerInfoPacket.Action.UPDATE_LIST_ORDER)) {
+      currentEntry.setListOrderWithoutUpdate(entry.getListOrder());
     }
   }
 

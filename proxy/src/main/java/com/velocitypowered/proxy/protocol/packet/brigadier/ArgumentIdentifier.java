@@ -58,6 +58,13 @@ public class ArgumentIdentifier {
     this.versionById = ImmutableMap.copyOf(temp);
   }
 
+  @Override
+  public String toString() {
+    return "ArgumentIdentifier{" +
+        "identifier='" + identifier + '\'' +
+        '}';
+  }
+
   public String getIdentifier() {
     return identifier;
   }

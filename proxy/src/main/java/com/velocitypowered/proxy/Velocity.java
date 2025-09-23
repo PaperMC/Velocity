@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy;
 
+import com.velocitypowered.proxy.util.VelocityProperties;
 import io.netty.util.ResourceLeakDetector;
 import io.netty.util.ResourceLeakDetector.Level;
 import java.text.DecimalFormat;
@@ -42,13 +43,18 @@ public class Velocity {
 
     // If Velocity's natives are being extracted to a different temporary directory, make sure the
     // Netty natives are extracted there as well
-    if (System.getProperty("velocity.natives-tmpdir") != null) {
+    if (VelocityProperties.hasProperty("velocity.natives-tmpdir")) {
       System.setProperty("io.netty.native.workdir", System.getProperty("velocity.natives-tmpdir"));
+    }
+
+    // Restore allocator used before Netty 4.2 due to oom issues with the adaptive allocator
+    if (System.getProperty("io.netty.allocator.type") == null) {
+      System.setProperty("io.netty.allocator.type", "pooled");
     }
 
     // Disable the resource leak detector by default as it reduces performance. Allow the user to
     // override this if desired.
-    if (System.getProperty("io.netty.leakDetection.level") == null) {
+    if (!VelocityProperties.hasProperty("io.netty.leakDetection.level")) {
       ResourceLeakDetector.setLevel(Level.DISABLED);
     }
   }

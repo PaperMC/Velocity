@@ -17,18 +17,18 @@
 
 package com.velocitypowered.proxy.util.ratelimit;
 
-import java.net.InetAddress;
+import org.jetbrains.annotations.NotNull;
 
 /**
- * Allows rate limiting of clients.
+ * Allows rate limiting of objects.
  */
-public interface Ratelimiter {
+public interface Ratelimiter<T> {
 
   /**
-   * Determines whether or not to allow the connection.
-   *
-   * @param address the address to rate limit
-   * @return true if allowed, false if not
-   */
-  boolean attempt(InetAddress address);
+  * Attempts to rate-limit the object.
+  *
+  * @param key the object to rate limit
+  * @return true if we should allow the object, false if we should rate-limit
+  */
+  boolean attempt(@NotNull T key);
 }

@@ -34,21 +34,25 @@ public class ClientSettingsPacket implements MinecraftPacket {
   private byte difficulty; // 1.7 Protocol
   private short skinParts;
   private int mainHand;
-  private boolean chatFilteringEnabled; // Added in 1.17
+  private boolean textFilteringEnabled; // Added in 1.17
   private boolean clientListingAllowed; // Added in 1.18, overwrites server-list "anonymous" mode
+  private int particleStatus; // Added in 1.21.2
 
   public ClientSettingsPacket() {
   }
 
   public ClientSettingsPacket(String locale, byte viewDistance, int chatVisibility, boolean chatColors,
-                              short skinParts, int mainHand, boolean chatFilteringEnabled, boolean clientListingAllowed) {
+                              short skinParts, int mainHand, boolean textFilteringEnabled, boolean clientListingAllowed,
+                              int particleStatus) {
     this.locale = locale;
     this.viewDistance = viewDistance;
     this.chatVisibility = chatVisibility;
     this.chatColors = chatColors;
     this.skinParts = skinParts;
     this.mainHand = mainHand;
+    this.textFilteringEnabled = textFilteringEnabled;
     this.clientListingAllowed = clientListingAllowed;
+    this.particleStatus = particleStatus;
   }
 
   public String getLocale() {
@@ -102,12 +106,12 @@ public class ClientSettingsPacket implements MinecraftPacket {
     this.mainHand = mainHand;
   }
 
-  public boolean isChatFilteringEnabled() {
-    return chatFilteringEnabled;
+  public boolean isTextFilteringEnabled() {
+    return textFilteringEnabled;
   }
 
-  public void setChatFilteringEnabled(boolean chatFilteringEnabled) {
-    this.chatFilteringEnabled = chatFilteringEnabled;
+  public void setTextFilteringEnabled(boolean textFilteringEnabled) {
+    this.textFilteringEnabled = textFilteringEnabled;
   }
 
   public boolean isClientListingAllowed() {
@@ -118,12 +122,20 @@ public class ClientSettingsPacket implements MinecraftPacket {
     this.clientListingAllowed = clientListingAllowed;
   }
 
+  public int getParticleStatus() {
+    return particleStatus;
+  }
+
+  public void setParticleStatus(int particleStatus) {
+    this.particleStatus = particleStatus;
+  }
+
   @Override
   public String toString() {
     return "ClientSettings{" + "locale='" + locale + '\'' + ", viewDistance=" + viewDistance +
         ", chatVisibility=" + chatVisibility + ", chatColors=" + chatColors + ", skinParts=" +
-        skinParts + ", mainHand=" + mainHand + ", chatFilteringEnabled=" + chatFilteringEnabled +
-        ", clientListingAllowed=" + clientListingAllowed + '}';
+        skinParts + ", mainHand=" + mainHand + ", chatFilteringEnabled=" + textFilteringEnabled +
+        ", clientListingAllowed=" + clientListingAllowed +  ", particleStatus=" + particleStatus + '}';
   }
 
   @Override
@@ -143,10 +155,14 @@ public class ClientSettingsPacket implements MinecraftPacket {
       this.mainHand = ProtocolUtils.readVarInt(buf);
 
       if (version.noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
-        this.chatFilteringEnabled = buf.readBoolean();
+        this.textFilteringEnabled = buf.readBoolean();
 
         if (version.noLessThan(ProtocolVersion.MINECRAFT_1_18)) {
           this.clientListingAllowed = buf.readBoolean();
+
+          if (version.noLessThan(ProtocolVersion.MINECRAFT_1_21_2)) {
+            this.particleStatus = ProtocolUtils.readVarInt(buf);
+          }
         }
       }
     }
@@ -172,10 +188,14 @@ public class ClientSettingsPacket implements MinecraftPacket {
       ProtocolUtils.writeVarInt(buf, mainHand);
 
       if (version.noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
-        buf.writeBoolean(chatFilteringEnabled);
+        buf.writeBoolean(textFilteringEnabled);
 
         if (version.noLessThan(ProtocolVersion.MINECRAFT_1_18)) {
           buf.writeBoolean(clientListingAllowed);
+        }
+
+        if (version.noLessThan(ProtocolVersion.MINECRAFT_1_21_2)) {
+          ProtocolUtils.writeVarInt(buf, particleStatus);
         }
       }
     }
@@ -201,8 +221,9 @@ public class ClientSettingsPacket implements MinecraftPacket {
         && difficulty == that.difficulty
         && skinParts == that.skinParts
         && mainHand == that.mainHand
-        && chatFilteringEnabled == that.chatFilteringEnabled
+        && textFilteringEnabled == that.textFilteringEnabled
         && clientListingAllowed == that.clientListingAllowed
+        && particleStatus == that.particleStatus
         && Objects.equals(locale, that.locale);
   }
 
@@ -216,7 +237,8 @@ public class ClientSettingsPacket implements MinecraftPacket {
         difficulty,
         skinParts,
         mainHand,
-        chatFilteringEnabled,
-        clientListingAllowed);
+            textFilteringEnabled,
+        clientListingAllowed,
+        particleStatus);
   }
 }
