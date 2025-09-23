@@ -301,8 +301,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       for (Map.Entry<String, BackendServerConfig> entry : configuration.getBackendServers().entrySet()) {
         servers.register(new ServerInfo(
                 entry.getKey(),
-                AddressUtil.parseAddress(entry.getValue().getAddress()),
-                entry.getValue().getForwardingMode())
+                AddressUtil.parseAddress(entry.getValue().address()),
+                entry.getValue().forwardingMode())
         );
       }
     }
@@ -497,8 +497,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     for (Map.Entry<String, BackendServerConfig> entry : newConfiguration.getBackendServers().entrySet()) {
       ServerInfo newInfo = new ServerInfo(
               entry.getKey(),
-              AddressUtil.parseAddress(entry.getValue().getAddress()),
-              entry.getValue().getForwardingMode()
+              AddressUtil.parseAddress(entry.getValue().address()),
+              entry.getValue().forwardingMode()
       );
       Optional<RegisteredServer> rs = servers.getServer(entry.getKey());
       if (rs.isEmpty()) {

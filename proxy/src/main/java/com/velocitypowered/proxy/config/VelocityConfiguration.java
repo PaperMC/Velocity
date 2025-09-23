@@ -33,7 +33,6 @@ import com.velocitypowered.proxy.config.migration.ForwardingMigration;
 import com.velocitypowered.proxy.config.migration.KeyAuthenticationMigration;
 import com.velocitypowered.proxy.config.migration.MotdMigration;
 import com.velocitypowered.proxy.config.migration.TransferIntegrationMigration;
-import com.velocitypowered.proxy.config.server.BackendServerConfigImpl;
 import com.velocitypowered.proxy.util.AddressUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
@@ -180,13 +179,13 @@ public class VelocityConfiguration implements ProxyConfig {
 
     for (Map.Entry<String, BackendServerConfig> entry : servers.getBackendServers().entrySet()) {
       try {
-        AddressUtil.parseAddress(entry.getValue().getAddress());
+        AddressUtil.parseAddress(entry.getValue().address());
       } catch (IllegalArgumentException e) {
         logger.error("Server {} does not have a valid IP address.", entry.getKey(), e);
         valid = false;
       }
 
-      ServerInfoForwardingMode mode = entry.getValue().getForwardingMode();
+      ServerInfoForwardingMode mode = entry.getValue().forwardingMode();
       if (mode == ServerInfoForwardingMode.MODERN
               || mode == ServerInfoForwardingMode.BUNGEEGUARD) {
         if (forwardingSecret == null || forwardingSecret.length == 0) {
@@ -630,9 +629,9 @@ public class VelocityConfiguration implements ProxyConfig {
   private static class Servers {
 
     private Map<String, BackendServerConfig> servers = ImmutableMap.of(
-        "lobby", new BackendServerConfigImpl("127.0.0.1:30066"),
-        "factions", new BackendServerConfigImpl("127.0.0.1:30067", ServerInfoForwardingMode.MODERN),
-        "minigames", new BackendServerConfigImpl("127.0.0.1:30068", ServerInfoForwardingMode.LEGACY)
+        "lobby", new BackendServerConfig("127.0.0.1:30066"),
+        "factions", new BackendServerConfig("127.0.0.1:30067", ServerInfoForwardingMode.MODERN),
+        "minigames", new BackendServerConfig("127.0.0.1:30068", ServerInfoForwardingMode.LEGACY)
     );
     private List<String> attemptConnectionOrder = ImmutableList.of("lobby");
 
@@ -658,10 +657,10 @@ public class VelocityConfiguration implements ProxyConfig {
               throw new IllegalArgumentException(
                       "Server entry " + entry.getKey() + " is missing address!");
             }
-            servers.put(cleanServerName(entry.getKey()), new BackendServerConfigImpl(address, forwardingMode));
+            servers.put(cleanServerName(entry.getKey()), new BackendServerConfig(address, forwardingMode));
             //support for old server config system (forwarding mode will be followup)
           } else if (entry.getValue() instanceof String v) {
-            servers.put(cleanServerName(entry.getKey()), new BackendServerConfigImpl(v));
+            servers.put(cleanServerName(entry.getKey()), new BackendServerConfig(v));
           } else {
             if (!entry.getKey().equalsIgnoreCase("try")) {
               throw new IllegalArgumentException(
@@ -681,7 +680,7 @@ public class VelocityConfiguration implements ProxyConfig {
 
     private Map<String, String> getServers() {
       Map<String, String> serverAddresses = new HashMap<>();
-      servers.forEach((k, v) -> serverAddresses.put(k, v.getAddress()));
+      servers.forEach((k, v) -> serverAddresses.put(k, v.address()));
       return serverAddresses;
     }
 

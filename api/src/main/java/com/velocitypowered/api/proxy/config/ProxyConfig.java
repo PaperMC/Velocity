@@ -80,10 +80,11 @@ public interface ProxyConfig {
   /**
    * Get a Map of all servers registered in <code>velocity.toml</code>. This method does
    * <strong>not</strong> return all the servers currently in memory, although in most cases it
-   * does. For a view of all registered servers, see {@link ProxyServer#getAllServers()}.<br><br>
-   * <b>DEPRECATED:</b> use getBackendServers() instead.
+   * does. For a view of all registered servers, see {@link ProxyServer#getAllServers()}.
    *
    * @return registered servers map
+   *
+   * @deprecated use {@link #getBackendServers()} instead.
    */
   @Deprecated(forRemoval = true)
   Map<String, String> getServers();
