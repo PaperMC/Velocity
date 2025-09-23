@@ -174,7 +174,7 @@ public class VelocityConfiguration implements ProxyConfig {
         break;
     }
 
-    if (servers.getServers().isEmpty()) {
+    if (servers.getBackendServers().isEmpty()) {
       logger.warn("You don't have any servers configured.");
     }
 
@@ -184,6 +184,16 @@ public class VelocityConfiguration implements ProxyConfig {
       } catch (IllegalArgumentException e) {
         logger.error("Server {} does not have a valid IP address.", entry.getKey(), e);
         valid = false;
+      }
+
+      ServerInfoForwardingMode mode = entry.getValue().getForwardingMode();
+      if (mode == ServerInfoForwardingMode.MODERN
+              || mode == ServerInfoForwardingMode.BUNGEEGUARD) {
+        if (forwardingSecret == null || forwardingSecret.length == 0) {
+          logger.error("You don't have a forwarding secret set. This is required if "
+                  + "you are using MODERN or BUNGEEGUARD forwarding modes.");
+          valid = false;
+        }
       }
     }
 

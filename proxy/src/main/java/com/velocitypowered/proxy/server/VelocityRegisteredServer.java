@@ -33,10 +33,8 @@ import com.velocitypowered.api.proxy.messages.PluginMessageEncoder;
 import com.velocitypowered.api.proxy.server.PingOptions;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
-import com.velocitypowered.api.proxy.server.ServerInfoForwardingMode;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
@@ -85,20 +83,6 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   public VelocityRegisteredServer(@Nullable VelocityServer server, ServerInfo serverInfo) {
     this.server = server;
     this.serverInfo = Preconditions.checkNotNull(serverInfo, "serverInfo");
-    validateForwardingRequisites();
-  }
-
-  private void validateForwardingRequisites() {
-    ServerInfoForwardingMode mode = serverInfo.getServerInfoForwardingMode();
-    if (mode != ServerInfoForwardingMode.MODERN
-            && mode != ServerInfoForwardingMode.BUNGEEGUARD) {
-      return;
-    }
-    VelocityConfiguration configuration = server.getConfiguration();
-    if (configuration.getForwardingSecret() == null || configuration.getForwardingSecret().length == 0) {
-      throw new IllegalStateException("You don't have a forwarding secret set. This is required if "
-              + "you are using MODERN or BUNGEEGUARD forwarding modes.");
-    }
   }
 
   @Override

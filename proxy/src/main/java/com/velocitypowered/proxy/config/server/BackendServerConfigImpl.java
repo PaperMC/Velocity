@@ -17,6 +17,8 @@
 
 package com.velocitypowered.proxy.config.server;
 
+import static java.util.Objects.requireNonNull;
+
 import com.velocitypowered.api.proxy.config.BackendServerConfig;
 import com.velocitypowered.api.proxy.server.ServerInfoForwardingMode;
 import java.util.Objects;
@@ -36,14 +38,29 @@ public class BackendServerConfigImpl implements BackendServerConfig {
    */
   private ServerInfoForwardingMode forwardingMode;
 
-  private BackendServerConfigImpl() {}
-
+  /**
+   * Creates a new backend server configuration instance representing
+   * the configured server in the config.
+   *
+   * @param address the address of the backend server
+   *
+   * @param forwardingMode the server's forwarding mode
+   */
   public BackendServerConfigImpl(String address, ServerInfoForwardingMode forwardingMode) {
+    requireNonNull(address, "address");
+    requireNonNull(forwardingMode, "forwardingMode");
     this.address = address;
     this.forwardingMode = forwardingMode;
   }
 
+  /**
+   * Creates a new backend server configuration instance representing
+   * the configured server in the config.
+   *
+   * @param address the address of the backend server
+   */
   public BackendServerConfigImpl(String address) {
+    requireNonNull(address, "address");
     this.address = address;
     this.forwardingMode = ServerInfoForwardingMode.FOLLOWUP;
   }
@@ -57,10 +74,12 @@ public class BackendServerConfigImpl implements BackendServerConfig {
   }
 
   public void setAddress(String address) {
+    requireNonNull(address, "address");
     this.address = address;
   }
 
   public  void setForwardingMode(ServerInfoForwardingMode forwardingMode) {
+    requireNonNull(forwardingMode, "forwardingMode");
     this.forwardingMode = forwardingMode;
   }
 
