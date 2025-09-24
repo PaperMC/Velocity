@@ -8,7 +8,9 @@
 package com.velocitypowered.api.proxy.server;
 
 /**
- * Supported server info forwarding methods.
+ * Supported per-server player info forwarding methods.
+ *
+ * @since 3.4.0
  */
 public enum ServerInfoForwardingMode {
     /**

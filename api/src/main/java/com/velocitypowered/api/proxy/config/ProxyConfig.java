@@ -83,10 +83,9 @@ public interface ProxyConfig {
    * does. For a view of all registered servers, see {@link ProxyServer#getAllServers()}.
    *
    * @return registered servers map
-   *
    * @deprecated use {@link #getBackendServers()} instead.
    */
-  @Deprecated(forRemoval = true)
+  @Deprecated(forRemoval = true, since = "3.4.0")
   Map<String, String> getServers();
 
   /**
@@ -96,6 +95,8 @@ public interface ProxyConfig {
    *
    * @return registered servers map with, instead of the only address, the Backend Server Object for each
    *     of them which contains the address of the server and its info forwarding mode.
+   * @since 3.4.0
+   * @see com.velocitypowered.api.proxy.server.ServerInfoForwardingMode
    */
   Map<String, BackendServerConfig> getBackendServers();
 
