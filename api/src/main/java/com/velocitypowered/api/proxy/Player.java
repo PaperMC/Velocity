@@ -383,11 +383,20 @@ public interface Player extends
   /**
    * {@inheritDoc}
    *
-   * <b>This method is not currently implemented in Velocity
-   * and will not perform any actions.</b>
+   * <p><b>Note</b>: Due to <a href="https://bugs.mojang.com/browse/MC/issues/MC-146721">MC-146721</a>, stereo sounds are always played globally in 1.14+.
+   *
+   * <p><b>Note</b>: Due to <a href="https://bugs.mojang.com/browse/MC/issues/MC-138832">MC-138832</a>, the volume and pitch are ignored when using this method in 1.14 to 1.16.5.
+   *
+   * <p>Note: This method is currently only implemented for players on 1.19.3+
+   * and requires a present {@link #getCurrentServer} for the emitting player as well as this player.
+   *
+   * @param sound the sound to play
+   * @since 3.4.0
+   * @sinceMinecraft 1.19.3
    */
   @Override
   default void playSound(@NotNull Sound sound) {
+    this.playSound(sound, Sound.Emitter.self());
   }
 
   /**
