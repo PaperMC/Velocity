@@ -383,27 +383,25 @@ public interface Player extends
   /**
    * {@inheritDoc}
    *
-   * <p><b>Note</b>: Due to <a href="https://bugs.mojang.com/browse/MC/issues/MC-146721">MC-146721</a>, stereo sounds are always played globally in 1.14+.
    *
-   * <p><b>Note</b>: Due to <a href="https://bugs.mojang.com/browse/MC/issues/MC-138832">MC-138832</a>, the volume and pitch are ignored when using this method in 1.14 to 1.16.5.
-   *
-   * <p>Note: This method is currently only implemented for players on 1.19.3+
-   * and requires a present {@link #getCurrentServer} for the emitting player as well as this player.
-   *
-   * @param sound the sound to play
-   * @since 3.4.0
-   * @sinceMinecraft 1.19.3
+   * @apiNote <b>This method is not currently implemented in Velocity
+   *     and will not perform any actions.</b>
+   * @see #playSound(Sound, Sound.Emitter)
+   * @see <a href="https://docs.papermc.io/velocity/dev/pitfalls/#audience-operations-are-not-fully-supported">
+   *   Unsupported Adventure Operations</a>
    */
   @Override
   default void playSound(@NotNull Sound sound) {
-    this.playSound(sound, Sound.Emitter.self());
   }
 
   /**
    * {@inheritDoc}
    *
-   * <b>This method is not currently implemented in Velocity
-   * and will not perform any actions.</b>
+   * @apiNote <b>This method is not currently implemented in Velocity
+   *     and will not perform any actions.</b>
+   * @see #playSound(Sound, Sound.Emitter)
+   * @see <a href="https://docs.papermc.io/velocity/dev/pitfalls/#audience-operations-are-not-fully-supported">
+   *   Unsupported Adventure Operations</a>
    */
   @Override
   default void playSound(@NotNull Sound sound, double x, double y, double z) {
@@ -416,13 +414,12 @@ public interface Player extends
    *
    * <p><b>Note</b>: Due to <a href="https://bugs.mojang.com/browse/MC/issues/MC-138832">MC-138832</a>, the volume and pitch are ignored when using this method in 1.14 to 1.16.5.
    *
-   * <p>Note: This method is currently only implemented for players on 1.19.3+
-   * and requires a present {@link #getCurrentServer} for the emitting player as well as this player.
-   *
    * @param sound the sound to play
    * @param emitter the emitter of the sound; may be another player of this player's server
    * @since 3.4.0
    * @sinceMinecraft 1.19.3
+   * @apiNote This method is currently only implemented for players on 1.19.3+
+   *     and requires a present {@link #getCurrentServer} for the emitting player as well as this player.
    */
   @Override
   default void playSound(@NotNull Sound sound, @NotNull Sound.Emitter emitter) {
@@ -431,11 +428,10 @@ public interface Player extends
   /**
    * {@inheritDoc}
    *
-   * <p>Note: This method is currently only implemented for players on 1.19.3+.
-   *
    * @param stop the sound and/or a sound source, to stop
    * @since 3.4.0
    * @sinceMinecraft 1.19.3
+   * @apiNote This method is currently only implemented for players on 1.19.3+.
    */
   @Override
   default void stopSound(@NotNull SoundStop stop) {
@@ -446,6 +442,9 @@ public interface Player extends
    *
    * <b>This method is not currently implemented in Velocity
    * and will not perform any actions.</b>
+   *
+   * @see <a href="https://docs.papermc.io/velocity/dev/pitfalls/#audience-operations-are-not-fully-supported">
+   *   Unsupported Adventure Operations</a>
    */
   @Override
   default void openBook(@NotNull Book book) {
