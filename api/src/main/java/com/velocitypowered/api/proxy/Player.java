@@ -29,6 +29,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
+import net.kyori.adventure.dialog.DialogLike;
 import net.kyori.adventure.identity.Identified;
 import net.kyori.adventure.inventory.Book;
 import net.kyori.adventure.key.Key;
@@ -448,6 +449,32 @@ public interface Player extends
    */
   @Override
   default void openBook(@NotNull Book book) {
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <b>This method is not currently implemented in Velocity
+   * and will not perform any actions.</b>
+   *
+   * @see <a href="https://docs.papermc.io/velocity/dev/pitfalls/#audience-operations-are-not-fully-supported">
+   *   Unsupported Adventure Operations</a>
+   */
+  @Override
+  default void showDialog(@NotNull DialogLike dialog) {
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <b>This method is not currently implemented in Velocity
+   * and will not perform any actions.</b>
+   *
+   * @see <a href="https://docs.papermc.io/velocity/dev/pitfalls/#audience-operations-are-not-fully-supported">
+   *   Unsupported Adventure Operations</a>
+   */
+  @Override
+  default void closeDialog() {
   }
 
   /**
