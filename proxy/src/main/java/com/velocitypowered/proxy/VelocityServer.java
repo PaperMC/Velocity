@@ -24,6 +24,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.event.proxy.ProxyPreShutdownEvent;
 import com.velocitypowered.api.event.proxy.ProxyReloadEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -150,6 +151,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       )
       .registerTypeHierarchyAdapter(Favicon.class, FaviconSerializer.INSTANCE)
       .create();
+  private static final int PRE_SHUTDOWN_TIMEOUT =
+            Integer.getInteger("velocity.pre-shutdown-timeout", 10);
 
   private final ConnectionManager cm;
   private final ProxyOptions options;
@@ -578,6 +581,20 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       // Shutdown the connection manager, this should be
       // done first to refuse new connections
       cm.shutdown();
+
+      try {
+        eventManager.fire(new ProxyPreShutdownEvent())
+                .toCompletableFuture()
+                .get(PRE_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS);
+      } catch (TimeoutException ignored) {
+        logger.warn("Your plugins took over {} seconds during pre shutdown.",
+                PRE_SHUTDOWN_TIMEOUT);
+      } catch (ExecutionException ee) {
+        logger.error("Exception in ProxyPreShutdownEvent handler; continuing shutdown.", ee);
+      } catch (InterruptedException ignored) {
+        Thread.currentThread().interrupt();
+        logger.warn("Interrupted while waiting for ProxyPreShutdownEvent; continuing shutdown.");
+      }
 
       ImmutableList<ConnectedPlayer> players = ImmutableList.copyOf(connectionsByUuid.values());
       for (ConnectedPlayer player : players) {

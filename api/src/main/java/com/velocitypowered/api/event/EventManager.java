@@ -60,7 +60,8 @@ public interface EventManager {
    *
    * @param plugin the plugin to associate with the handler
    * @param eventClass the class for the event handler to register
-   * @param postOrder the relative order in which events should be posted to the handler
+   * @param postOrder the relative order in which events should be posted to the handler. The higher
+   *     the priority, the earlier the event handler will be called
    * @param handler the handler to register
    * @param <E> the event type to handle
    */
