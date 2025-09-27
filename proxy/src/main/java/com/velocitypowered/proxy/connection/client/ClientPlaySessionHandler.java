@@ -21,7 +21,6 @@ import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.construc
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.suggestion.Suggestion;
-import com.velocitypowered.api.command.VelocityBrigadierMessage;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.CookieReceiveEvent;
 import com.velocitypowered.api.event.player.PlayerChannelRegisterEvent;
@@ -87,6 +86,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -698,10 +698,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
           for (Suggestion suggestion : suggestions.getList()) {
             String offer = suggestion.getText();
             ComponentHolder tooltip = null;
-            if (suggestion.getTooltip() != null
-                && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
-              tooltip = new ComponentHolder(player.getProtocolVersion(),
-                  ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent());
+            if (suggestion.getTooltip() instanceof ComponentLike componentLike) {
+              tooltip = new ComponentHolder(player.getProtocolVersion(), componentLike.asComponent());
+            } else if (suggestion.getTooltip() != null) {
+              tooltip = new ComponentHolder(player.getProtocolVersion(), Component.text(suggestion.getTooltip().getString()));
             }
             offers.add(new Offer(offer, tooltip));
           }
@@ -765,10 +765,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 offer = offer.substring(command.length());
               }
               ComponentHolder tooltip = null;
-              if (suggestion.getTooltip() != null
-                  && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
-                tooltip = new ComponentHolder(player.getProtocolVersion(),
-                    ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent());
+              if (suggestion.getTooltip() instanceof ComponentLike componentLike) {
+                tooltip = new ComponentHolder(player.getProtocolVersion(), componentLike.asComponent());
+              } else if (suggestion.getTooltip() != null) {
+                tooltip = new ComponentHolder(player.getProtocolVersion(), Component.text(suggestion.getTooltip().getString()));
               }
               response.getOffers().add(new Offer(offer, tooltip));
             }

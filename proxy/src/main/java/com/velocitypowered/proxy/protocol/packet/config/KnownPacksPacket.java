@@ -36,7 +36,7 @@ public class KnownPacksPacket implements MinecraftPacket {
     public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
                        ProtocolVersion protocolVersion) {
         final int packCount = ProtocolUtils.readVarInt(buf);
-        if (packCount > MAX_LENGTH_PACKS) {
+        if (direction == ProtocolUtils.Direction.SERVERBOUND && packCount > MAX_LENGTH_PACKS) {
           throw TOO_MANY_PACKS;
         }
 

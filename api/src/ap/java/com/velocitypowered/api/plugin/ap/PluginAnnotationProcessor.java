@@ -14,7 +14,6 @@ import com.velocitypowered.api.plugin.Plugin;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Objects;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -68,8 +67,8 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
 
       Name qualifiedName = ((TypeElement) element).getQualifiedName();
 
-      if (Objects.equals(pluginClassFound, qualifiedName.toString())) {
-        if (!warnedAboutMultiplePlugins) {
+      if (pluginClassFound != null) {
+        if (!pluginClassFound.equals(qualifiedName.toString()) && !warnedAboutMultiplePlugins) {
           environment.getMessager()
               .printMessage(Diagnostic.Kind.WARNING, "Velocity does not yet currently support "
                   + "multiple plugins. We are using " + pluginClassFound
