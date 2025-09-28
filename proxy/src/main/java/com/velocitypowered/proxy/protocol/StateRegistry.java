@@ -458,7 +458,8 @@ public enum StateRegistry {
           map(0x65, MINECRAFT_1_20_3, true),
           map(0x67, MINECRAFT_1_20_5, true),
           map(0x6E, MINECRAFT_1_21_2, true),
-          map(0x6D, MINECRAFT_1_21_5, true));
+          map(0x6D, MINECRAFT_1_21_5, true),
+          map(0x72, MINECRAFT_1_21_9, true));
       clientbound.register(
           ClientboundStopSoundPacket.class, ClientboundStopSoundPacket::new,
           map(0x5F, MINECRAFT_1_19_3, true),
@@ -467,7 +468,8 @@ public enum StateRegistry {
           map(0x68, MINECRAFT_1_20_3, true),
           map(0x6A, MINECRAFT_1_20_5, true),
           map(0x71, MINECRAFT_1_21_2, true),
-          map(0x70, MINECRAFT_1_21_5, true));
+          map(0x70, MINECRAFT_1_21_5, true),
+          map(0x75, MINECRAFT_1_21_9, true));
       clientbound.register(
           PluginMessagePacket.class,
           PluginMessagePacket::new,
