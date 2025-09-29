@@ -60,8 +60,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   private PermissionFunction permissionFunction = ALWAYS_TRUE;
   private final @NotNull Pointers pointers = ConsoleCommandSource.super.pointers().toBuilder()
       .withDynamic(PermissionChecker.POINTER, this::getPermissionChecker)
-      .withDynamic(Identity.LOCALE, () -> ClosestLocaleMatcher.INSTANCE
-          .lookupClosest(Locale.getDefault()))
+      .withDynamic(Identity.LOCALE, Locale::getDefault)
       .withStatic(FacetPointers.TYPE, Type.CONSOLE)
       .build();
 

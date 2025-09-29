@@ -36,6 +36,11 @@ public class ClosestLocaleTranslator implements Translator {
   private final Map<String, Locale> byLanguage;
   private final LoadingCache<Locale, Locale> closest;
 
+  /**
+   * Creates a ClosestLocaleTranslator.
+   *
+   * @param delegate the delegate translator
+   */
   public ClosestLocaleTranslator(final Translator delegate) {
     this.delegate = delegate;
     this.byLanguage = new ConcurrentHashMap<>();
@@ -61,6 +66,11 @@ public class ClosestLocaleTranslator implements Translator {
 
   public Locale lookupClosest(final Locale locale) {
     return closest.get(locale);
+  }
+
+  @Override
+  public boolean canTranslate(@NotNull String key, @NotNull Locale locale) {
+    return this.delegate.canTranslate(key, this.lookupClosest(locale));
   }
 
   @Override

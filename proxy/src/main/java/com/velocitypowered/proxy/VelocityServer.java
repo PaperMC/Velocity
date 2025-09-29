@@ -376,17 +376,18 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
           try (final Stream<Path> files = Files.walk(langPath)) {
             files.filter(Files::isRegularFile).forEach(file -> {
               final String filename = com.google.common.io.Files
-                      .getNameWithoutExtension(file.getFileName().toString());
+                  .getNameWithoutExtension(file.getFileName().toString());
               final String localeName = filename.replace("messages_", "")
-                      .replace("messages", "")
-                      .replace('_', '-');
+                  .replace("messages", "")
+                  .replace('_', '-');
               final Locale locale = localeName.isBlank()
-                      ? Locale.US
-                      : Locale.forLanguageTag(localeName);
+                  ? Locale.US
+                  : Locale.forLanguageTag(localeName);
 
-            translationRegistry.registerAll(locale, file, false);
-            closestLocaleTranslator.registerKnown(locale);
-          });
+              translationRegistry.registerAll(locale, file, false);
+              closestLocaleTranslator.registerKnown(locale);
+            });
+          }
         } catch (IOException e) {
           logger.error("Encountered an I/O error whilst loading translations", e);
         }
