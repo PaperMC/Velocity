@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,9 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Tests for {@link VelocityArgumentCommandNode}.
+ */
 @SuppressWarnings("unchecked")
 public class VelocityArgumentCommandNodeTests {
 
@@ -46,13 +49,13 @@ public class VelocityArgumentCommandNodeTests {
   void setUp() {
     final CommandDispatcher<Object> dispatcher = new CommandDispatcher<>();
     this.contextBuilder = new CommandContextBuilder<>(dispatcher, new Object(),
-            dispatcher.getRoot(), 0);
+        dispatcher.getRoot(), 0);
   }
 
   @Test
   void testParse() throws CommandSyntaxException {
     final VelocityArgumentCommandNode<Object, String[]> node =
-            velocityArgument("foo", STRING_ARRAY).build();
+        velocityArgument("foo", STRING_ARRAY).build();
     final StringReader reader = new StringReader("hello world");
     node.parse(reader, this.contextBuilder);
 
@@ -66,17 +69,17 @@ public class VelocityArgumentCommandNodeTests {
 
     assertTrue(this.contextBuilder.getArguments().containsKey("foo"));
     final ParsedArgument<Object, String[]> parsed =
-            (ParsedArgument<Object, String[]>) this.contextBuilder.getArguments().get("foo");
-    assertArrayEquals(new String[] { "hello", "world" }, parsed.getResult());
+        (ParsedArgument<Object, String[]>) this.contextBuilder.getArguments().get("foo");
+    assertArrayEquals(new String[]{"hello", "world"}, parsed.getResult());
     assertEquals(expectedRange, parsed.getRange());
   }
 
   @Test
   void testDefaultSuggestions() throws CommandSyntaxException {
     final VelocityArgumentCommandNode<Object, String[]> node =
-            velocityArgument("foo", STRING_ARRAY).build();
+        velocityArgument("foo", STRING_ARRAY).build();
     final Suggestions result = node.listSuggestions(
-            this.contextBuilder.build(""), new SuggestionsBuilder("", 0)).join();
+        this.contextBuilder.build(""), new SuggestionsBuilder("", 0)).join();
 
     assertTrue(result.isEmpty());
   }
@@ -86,15 +89,15 @@ public class VelocityArgumentCommandNodeTests {
   @Test
   void testCustomSuggestions() throws CommandSyntaxException {
     final VelocityArgumentCommandNode<Object, String[]> node =
-            velocityArgument("foo", STRING_ARRAY)
-              .suggests((context, builder) -> {
-                builder.suggest("bar");
-                builder.suggest("baz");
-                return builder.buildFuture();
-              })
+        velocityArgument("foo", STRING_ARRAY)
+            .suggests((context, builder) -> {
+              builder.suggest("bar");
+              builder.suggest("baz");
+              return builder.buildFuture();
+            })
             .build();
     final Suggestions result = node.listSuggestions(
-            this.contextBuilder.build(""), new SuggestionsBuilder("", 0)).join();
+        this.contextBuilder.build(""), new SuggestionsBuilder("", 0)).join();
 
     assertEquals("bar", result.getList().get(0).getText());
     assertEquals("baz", result.getList().get(1).getText());

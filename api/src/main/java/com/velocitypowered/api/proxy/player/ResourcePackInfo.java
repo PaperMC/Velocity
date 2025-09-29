@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -7,10 +7,22 @@
 
 package com.velocitypowered.api.proxy.player;
 
+import java.util.UUID;
+import net.kyori.adventure.resource.ResourcePackRequestLike;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public interface ResourcePackInfo {
+/**
+ * Represents the information for a resource pack to apply that can be sent to the client.
+ */
+public interface ResourcePackInfo extends ResourcePackRequestLike {
+
+  /**
+   * Gets the id of this resource-pack.
+   *
+   * @return the id of the resource-pack
+   */
+  UUID getId();
 
   /**
    * Gets the link the resource-pack can be found at.
@@ -42,8 +54,7 @@ public interface ResourcePackInfo {
    *
    * @return the hash if present or null otherwise
    */
-  @Nullable
-  byte[] getHash();
+  byte @Nullable [] getHash();
 
   /**
    * Gets the {@link Origin} of this resource-pack.
@@ -75,12 +86,12 @@ public interface ResourcePackInfo {
   ResourcePackInfo.Builder asBuilder();
 
   /**
-   * Returns a copy of this {@link ResourcePackInfo} instance as a builder with the new URL as the pack URL so that
-   * it can be modified.
+   * Returns a copy of this {@link ResourcePackInfo} instance as a builder, using the new URL.
+   * <p/>
    * It is <b>not</b> guaranteed that
-   * {@code resourcePackInfo.asBuilder(resourcePackInfo.getUrl()).build().equals(resourcePackInfo)} is true.
-   * That is due to the transient {@link ResourcePackInfo#getOrigin()} and
-   * {@link ResourcePackInfo#getOriginalOrigin()} fields.
+   * {@code resourcePackInfo.asBuilder(resourcePackInfo.getUrl()).build().equals(resourcePackInfo)}
+   * is true, because the {@link ResourcePackInfo#getOrigin()} and
+   * {@link ResourcePackInfo#getOriginalOrigin()} fields are transient.
    *
    * @param newUrl The new URL to use in the updated builder.
    *
@@ -88,7 +99,17 @@ public interface ResourcePackInfo {
    */
   ResourcePackInfo.Builder asBuilder(String newUrl);
 
+  /**
+   * Builder for {@link ResourcePackInfo} instances.
+   */
   interface Builder {
+
+    /**
+     * Sets the id of the resource pack.
+     *
+     * @param id the id the resource-pack
+     */
+    Builder setId(UUID id);
 
     /**
      * Sets the resource-pack as required to play on the network.

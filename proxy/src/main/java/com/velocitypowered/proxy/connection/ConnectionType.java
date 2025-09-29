@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,13 +42,13 @@ public interface ConnectionType {
   BackendConnectionPhase getInitialBackendPhase();
 
   /**
-   * Adds properties to the {@link GameProfile} if required. If any properties
-   * are added, the returned {@link GameProfile} will be a copy.
+   * Adds properties to the {@link GameProfile} if required. If any properties are added, the
+   * returned {@link GameProfile} will be a copy.
    *
-   * @param original The original {@link GameProfile}
+   * @param original       The original {@link GameProfile}
    * @param forwardingType The Velocity {@link PlayerInfoForwarding}
    * @return The {@link GameProfile} with the properties added in.
    */
   GameProfile addGameProfileTokensIfRequired(GameProfile original,
-                                             PlayerInfoForwarding forwardingType);
+      PlayerInfoForwarding forwardingType);
 }

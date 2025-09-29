@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,9 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
+/**
+ * Implements deflate compression by wrapping {@link Deflater} and {@link Inflater}.
+ */
 public class JavaVelocityCompressor implements VelocityCompressor {
 
   public static final VelocityCompressorFactory FACTORY = JavaVelocityCompressor::new;
@@ -54,7 +57,8 @@ public class JavaVelocityCompressor implements VelocityCompressor {
     inflater.setInput(source.nioBuffer());
 
     try {
-      while (!inflater.finished() && inflater.getBytesWritten() < uncompressedSize) {
+      final int readable = source.readableBytes();
+      while (!inflater.finished() && inflater.getBytesRead() < readable) {
         if (!destination.isWritable()) {
           destination.ensureWritable(ZLIB_BUFFER_SIZE);
         }

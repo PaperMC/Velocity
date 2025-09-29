@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,9 @@ import java.util.Map;
 import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Implements {@link PluginDescription}.
+ */
 public class VelocityPluginDescription implements PluginDescription {
 
   private final String id;
@@ -44,14 +47,15 @@ public class VelocityPluginDescription implements PluginDescription {
 
   /**
    * Creates a new plugin description.
-   * @param id the ID
-   * @param name the name of the plugin
-   * @param version the plugin version
-   * @param description a description of the plugin
-   * @param url the website for the plugin
-   * @param authors the authors of this plugin
+   *
+   * @param id           the ID
+   * @param name         the name of the plugin
+   * @param version      the plugin version
+   * @param description  a description of the plugin
+   * @param url          the website for the plugin
+   * @param authors      the authors of this plugin
    * @param dependencies the dependencies for this plugin
-   * @param source the original source for the plugin
+   * @param source       the original source for the plugin
    */
   public VelocityPluginDescription(String id, @Nullable String name, @Nullable String version,
       @Nullable String description, @Nullable String url,

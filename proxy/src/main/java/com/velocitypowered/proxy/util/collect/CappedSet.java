@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2019-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,8 +38,9 @@ public final class CappedSet<T> extends ForwardingSet<T> {
 
   /**
    * Creates a capped collection backed by a {@link HashSet}.
+   *
    * @param maxSize the maximum size of the collection
-   * @param <T> the type of elements in the collection
+   * @param <T>     the type of elements in the collection
    * @return the new collection
    */
   public static <T> Set<T> create(int maxSize) {

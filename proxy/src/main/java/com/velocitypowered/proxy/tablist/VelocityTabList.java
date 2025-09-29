@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,46 +18,58 @@
 package com.velocitypowered.proxy.tablist;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ProxyServer;
-import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
-import com.velocitypowered.api.proxy.player.TabList;
+import com.velocitypowered.api.proxy.player.ChatSession;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.packet.HeaderAndFooter;
-import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
+import com.velocitypowered.proxy.console.VelocityConsole;
+import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfoPacket;
+import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfoPacket;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
+import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.adventure.text.Component;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class VelocityTabList implements TabList {
+/**
+ * Base class for handling tab lists.
+ */
+public class VelocityTabList implements InternalTabList {
 
-  protected final ConnectedPlayer player;
-  protected final MinecraftConnection connection;
-  protected final ProxyServer proxyServer;
-  protected final Map<UUID, VelocityTabListEntry> entries = new ConcurrentHashMap<>();
+  private static final Logger logger = LogManager.getLogger(VelocityConsole.class);
+  private final ConnectedPlayer player;
+  private final MinecraftConnection connection;
+  private final Map<UUID, VelocityTabListEntry> entries;
 
   /**
-  * Creates a new VelocityTabList.
-  */
-  public VelocityTabList(final ConnectedPlayer player, final ProxyServer proxyServer) {
+   * Constructs the instance.
+   *
+   * @param player player associated with this tab list
+   */
+  public VelocityTabList(ConnectedPlayer player) {
     this.player = player;
-    this.proxyServer = proxyServer;
     this.connection = player.getConnection();
+    this.entries = Maps.newConcurrentMap();
   }
 
-  @Deprecated
+  @Override
+  public Player getPlayer() {
+    return player;
+  }
+
   @Override
   public void setHeaderAndFooter(Component header, Component footer) {
     Preconditions.checkNotNull(header, "header");
@@ -67,181 +79,232 @@ public class VelocityTabList implements TabList {
 
   @Override
   public void clearHeaderAndFooter() {
-    connection.write(HeaderAndFooter.reset());
+    this.player.clearPlayerListHeaderAndFooter();
   }
 
   @Override
-  public void addEntry(TabListEntry entry) {
-    Preconditions.checkNotNull(entry, "entry");
-    Preconditions.checkArgument(entry.getTabList().equals(this),
-        "The provided entry was not created by this tab list");
-    Preconditions.checkArgument(!entries.containsKey(entry.getProfile().getId()),
-        "this TabList already contains an entry with the same uuid");
-    Preconditions.checkArgument(entry instanceof VelocityTabListEntry,
-        "Not a Velocity tab list entry");
+  public void addEntry(TabListEntry entry1) {
+    VelocityTabListEntry entry;
+    if (entry1 instanceof VelocityTabListEntry) {
+      entry = (VelocityTabListEntry) entry1;
+    } else {
+      entry = new VelocityTabListEntry(this, entry1.getProfile(),
+          entry1.getDisplayNameComponent().orElse(null),
+          entry1.getLatency(), entry1.getGameMode(), entry1.getChatSession(), entry1.isListed(), entry1.getListOrder(), entry1.isShowHat());
+    }
 
-    PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
-    connection.write(
-        new PlayerListItem(PlayerListItem.ADD_PLAYER, Collections.singletonList(packetItem)));
-    entries.put(entry.getProfile().getId(), (VelocityTabListEntry) entry);
+    EnumSet<UpsertPlayerInfoPacket.Action> actions = EnumSet
+            .noneOf(UpsertPlayerInfoPacket.Action.class);
+    UpsertPlayerInfoPacket.Entry playerInfoEntry = new UpsertPlayerInfoPacket
+            .Entry(entry.getProfile().getId());
+
+    Preconditions.checkNotNull(entry.getProfile(), "Profile cannot be null");
+    Preconditions.checkNotNull(entry.getProfile().getId(), "Profile ID cannot be null");
+
+    this.entries.compute(entry.getProfile().getId(), (uuid, previousEntry) -> {
+      if (previousEntry != null) {
+        // we should merge entries here
+        if (previousEntry.equals(entry)) {
+          return previousEntry; // nothing else to do, this entry is perfect
+        }
+        if (!Objects.equals(previousEntry.getDisplayNameComponent().orElse(null),
+                entry.getDisplayNameComponent().orElse(null))) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_DISPLAY_NAME);
+          playerInfoEntry.setDisplayName(entry.getDisplayNameComponent().isEmpty()
+                  ?
+                  null :
+                  new ComponentHolder(player.getProtocolVersion(),
+                          entry.getDisplayNameComponent().get())
+          );
+        }
+        if (!Objects.equals(previousEntry.getLatency(), entry.getLatency())) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LATENCY);
+          playerInfoEntry.setLatency(entry.getLatency());
+        }
+        if (!Objects.equals(previousEntry.getGameMode(), entry.getGameMode())) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_GAME_MODE);
+          playerInfoEntry.setGameMode(entry.getGameMode());
+        }
+        if (!Objects.equals(previousEntry.isListed(), entry.isListed())) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LISTED);
+          playerInfoEntry.setListed(entry.isListed());
+        }
+        if (!Objects.equals(previousEntry.getListOrder(), entry.getListOrder())
+            && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_2)) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LIST_ORDER);
+          playerInfoEntry.setListOrder(entry.getListOrder());
+        }
+        if (!Objects.equals(previousEntry.isShowHat(), entry.isShowHat())
+                && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_4)) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_HAT);
+          playerInfoEntry.setShowHat(entry.isShowHat());
+        }
+        if (!Objects.equals(previousEntry.getChatSession(), entry.getChatSession())) {
+          ChatSession from = entry.getChatSession();
+          if (from != null) {
+            actions.add(UpsertPlayerInfoPacket.Action.INITIALIZE_CHAT);
+            playerInfoEntry.setChatSession(
+                    new RemoteChatSession(from.getSessionId(), from.getIdentifiedKey()));
+          }
+        }
+      } else {
+        actions.addAll(EnumSet.of(UpsertPlayerInfoPacket.Action.ADD_PLAYER,
+                UpsertPlayerInfoPacket.Action.UPDATE_LATENCY,
+                UpsertPlayerInfoPacket.Action.UPDATE_LISTED));
+        playerInfoEntry.setProfile(entry.getProfile());
+        if (entry.getDisplayNameComponent().isPresent()) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_DISPLAY_NAME);
+          playerInfoEntry.setDisplayName(entry.getDisplayNameComponent().isEmpty()
+                  ?
+                  null :
+                  new ComponentHolder(player.getProtocolVersion(),
+                          entry.getDisplayNameComponent().get())
+          );
+        }
+        if (entry.getChatSession() != null) {
+          actions.add(UpsertPlayerInfoPacket.Action.INITIALIZE_CHAT);
+          ChatSession from = entry.getChatSession();
+          playerInfoEntry.setChatSession(
+                  new RemoteChatSession(from.getSessionId(), from.getIdentifiedKey()));
+        }
+        if (entry.getGameMode() != -1 && entry.getGameMode() != 256) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_GAME_MODE);
+          playerInfoEntry.setGameMode(entry.getGameMode());
+        }
+        playerInfoEntry.setLatency(entry.getLatency());
+        playerInfoEntry.setListed(entry.isListed());
+        if (entry.getListOrder() != 0
+            && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_2)) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LIST_ORDER);
+          playerInfoEntry.setListOrder(entry.getListOrder());
+        }
+        if (!entry.isShowHat() && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_4)) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_HAT);
+          playerInfoEntry.setShowHat(entry.isShowHat());
+        }
+      }
+      return entry;
+    });
+
+    if (!actions.isEmpty()) {
+      this.connection.write(new UpsertPlayerInfoPacket(actions, List.of(playerInfoEntry)));
+    }
   }
 
   @Override
   public Optional<TabListEntry> removeEntry(UUID uuid) {
-    Preconditions.checkNotNull(uuid, "uuid");
-
-    TabListEntry entry = entries.remove(uuid);
-    if (entry != null) {
-      PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
-      connection.write(
-          new PlayerListItem(PlayerListItem.REMOVE_PLAYER, Collections.singletonList(packetItem)));
-    }
-
-    return Optional.ofNullable(entry);
+    this.connection.write(new RemovePlayerInfoPacket(List.of(uuid)));
+    return Optional.ofNullable(this.entries.remove(uuid));
   }
 
   @Override
   public boolean containsEntry(UUID uuid) {
-    Preconditions.checkNotNull(uuid, "uuid");
-    return entries.containsKey(uuid);
+    return this.entries.containsKey(uuid);
   }
 
-  /**
-   * Clears all entries from the tab list. Note that the entries are written with {@link
-   * MinecraftConnection#delayedWrite(Object)}, so make sure to do an explicit {@link
-   * MinecraftConnection#flush()}.
-   */
-  public void clearAll() {
-    Collection<VelocityTabListEntry> listEntries = entries.values();
-    if (listEntries.isEmpty()) {
-      return;
-    }
-    List<PlayerListItem.Item> items = new ArrayList<>(listEntries.size());
-    for (TabListEntry value : listEntries) {
-      items.add(PlayerListItem.Item.from(value));
-    }
-    entries.clear();
-    connection.delayedWrite(new PlayerListItem(PlayerListItem.REMOVE_PLAYER, items));
+  @Override
+  public Optional<TabListEntry> getEntry(UUID uuid) {
+    return Optional.ofNullable(this.entries.get(uuid));
   }
 
   @Override
   public Collection<TabListEntry> getEntries() {
-    return Collections.unmodifiableCollection(this.entries.values());
+    return List.copyOf(this.entries.values());
   }
 
   @Override
-  public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency, int gameMode) {
-    return buildEntry(profile, displayName, latency, gameMode, null);
+  public void clearAll() {
+    this.connection.delayedWrite(new RemovePlayerInfoPacket(
+            new ArrayList<>(this.entries.keySet())));
+    clearAllSilent();
   }
 
   @Override
-  public TabListEntry buildEntry(GameProfile profile,
-                                 net.kyori.adventure.text.@Nullable Component displayName,
-                                 int latency, int gameMode, @Nullable IdentifiedKey key) {
-    return new VelocityTabListEntry(this, profile, displayName, latency, gameMode, key);
+  public void clearAllSilent() {
+    this.entries.clear();
   }
 
-  /**
-   * Processes a tab list entry packet from the backend.
-   *
-   * @param packet the packet to process
-   */
-  public void processBackendPacket(PlayerListItem packet) {
-    // Packets are already forwarded on, so no need to do that here
-    for (PlayerListItem.Item item : packet.getItems()) {
-      UUID uuid = item.getUuid();
-      assert uuid != null : "1.7 tab list entry given to modern tab list handler!";
+  @Override
+  public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
+      int gameMode,
+      @Nullable ChatSession chatSession, boolean listed, int listOrder, boolean showHat) {
+    return new VelocityTabListEntry(this, profile, displayName, latency, gameMode, chatSession,
+        listed, listOrder, showHat);
+  }
 
-      if (packet.getAction() != PlayerListItem.ADD_PLAYER && !entries.containsKey(uuid)) {
-        // Sometimes UPDATE_GAMEMODE is sent before ADD_PLAYER so don't want to warn here
-        continue;
-      }
-
-      switch (packet.getAction()) {
-        case PlayerListItem.ADD_PLAYER: {
-          // ensure that name and properties are available
-          String name = item.getName();
-          List<GameProfile.Property> properties = item.getProperties();
-          if (name == null || properties == null) {
-            throw new IllegalStateException("Got null game profile for ADD_PLAYER");
-          }
-          // Verify key
-          IdentifiedKey providedKey = item.getPlayerKey();
-          Optional<Player> connected = proxyServer.getPlayer(uuid);
-          if (connected.isPresent()) {
-            IdentifiedKey expectedKey = connected.get().getIdentifiedKey();
-            if (providedKey != null) {
-              if (!Objects.equals(expectedKey, providedKey)) {
-                throw new IllegalStateException("Server provided incorrect player key in playerlist for "
-                        + name + " UUID: " + uuid);
-              }
-            } else {
-              // Substitute the key
-              // It shouldn't be propagated to remove the signature.
-              providedKey = expectedKey;
-            }
-          }
-
-          entries.putIfAbsent(item.getUuid(), (VelocityTabListEntry) TabListEntry.builder()
-              .tabList(this)
-              .profile(new GameProfile(uuid, name, properties))
-              .displayName(item.getDisplayName())
-              .latency(item.getLatency())
-              .playerKey(providedKey)
-              .gameMode(item.getGameMode())
-              .build());
-          break;
-        }
-        case PlayerListItem.REMOVE_PLAYER:
-          entries.remove(uuid);
-          break;
-        case PlayerListItem.UPDATE_DISPLAY_NAME: {
-          VelocityTabListEntry entry = entries.get(uuid);
-          if (entry != null) {
-            entry.setDisplayNameInternal(item.getDisplayName());
-          }
-          break;
-        }
-        case PlayerListItem.UPDATE_LATENCY: {
-          VelocityTabListEntry entry = entries.get(uuid);
-          if (entry != null) {
-            entry.setLatencyInternal(item.getLatency());
-          }
-          break;
-        }
-        case PlayerListItem.UPDATE_GAMEMODE: {
-          VelocityTabListEntry entry = entries.get(uuid);
-          if (entry != null) {
-            entry.setGameModeInternal(item.getGameMode());
-          }
-          break;
-        }
-        default:
-          // Nothing we can do here
-          break;
-      }
+  @Override
+  public void processUpdate(UpsertPlayerInfoPacket infoPacket) {
+    for (UpsertPlayerInfoPacket.Entry entry : infoPacket.getEntries()) {
+      processUpsert(infoPacket.getActions(), entry);
     }
   }
 
-  void updateEntry(int action, TabListEntry entry) {
-    if (entries.containsKey(entry.getProfile().getId())) {
-      PlayerListItem.Item packetItem = PlayerListItem.Item.from(entry);
+  protected UpsertPlayerInfoPacket.Entry createRawEntry(VelocityTabListEntry entry) {
+    Preconditions.checkNotNull(entry, "entry");
+    Preconditions.checkNotNull(entry.getProfile(), "Profile cannot be null");
+    Preconditions.checkNotNull(entry.getProfile().getId(), "Profile ID cannot be null");
+    return new UpsertPlayerInfoPacket.Entry(entry.getProfile().getId());
+  }
 
-      IdentifiedKey selectedKey = packetItem.getPlayerKey();
-      Optional<Player> existing = proxyServer.getPlayer(entry.getProfile().getId());
-      if (existing.isPresent()) {
-        selectedKey = existing.get().getIdentifiedKey();
-      }
+  protected void emitActionRaw(UpsertPlayerInfoPacket.Action action,
+                               UpsertPlayerInfoPacket.Entry entry) {
+    this.connection.write(new UpsertPlayerInfoPacket(EnumSet.of(action), List.of(entry)));
+  }
 
-      if (selectedKey != null
-              && selectedKey.getKeyRevision().getApplicableTo().contains(connection.getProtocolVersion())
-              && Objects.equals(selectedKey.getSignatureHolder(), entry.getProfile().getId())) {
-        packetItem.setPlayerKey(selectedKey);
+  private void processUpsert(EnumSet<UpsertPlayerInfoPacket.Action> actions,
+      UpsertPlayerInfoPacket.Entry entry) {
+    Preconditions.checkNotNull(entry.getProfileId(), "Profile ID cannot be null");
+    UUID profileId = entry.getProfileId();
+    VelocityTabListEntry currentEntry = this.entries.get(profileId);
+    if (actions.contains(UpsertPlayerInfoPacket.Action.ADD_PLAYER)) {
+      if (currentEntry == null) {
+        this.entries.put(profileId,
+            currentEntry = new VelocityTabListEntry(
+                this,
+                entry.getProfile(),
+                null,
+                0,
+                -1,
+                null,
+                false,
+                0,
+                true
+            )
+        );
       } else {
-        packetItem.setPlayerKey(null);
+        logger.debug("Received an add player packet for an existing entry; this does nothing.");
       }
+    } else if (currentEntry == null) {
+      logger.debug(
+          "Received a partial player before an ADD_PLAYER action; profile could not be built. {}",
+          entry);
+      return;
+    }
+    if (actions.contains(UpsertPlayerInfoPacket.Action.UPDATE_GAME_MODE)) {
+      currentEntry.setGameModeWithoutUpdate(entry.getGameMode());
+    }
+    if (actions.contains(UpsertPlayerInfoPacket.Action.UPDATE_LATENCY)) {
+      currentEntry.setLatencyWithoutUpdate(entry.getLatency());
+    }
+    if (actions.contains(UpsertPlayerInfoPacket.Action.UPDATE_DISPLAY_NAME)) {
+      currentEntry.setDisplayNameWithoutUpdate(entry.getDisplayName() != null
+          ? entry.getDisplayName().getComponent() : null);
+    }
+    if (actions.contains(UpsertPlayerInfoPacket.Action.INITIALIZE_CHAT)) {
+      currentEntry.setChatSession(entry.getChatSession());
+    }
+    if (actions.contains(UpsertPlayerInfoPacket.Action.UPDATE_LISTED)) {
+      currentEntry.setListedWithoutUpdate(entry.isListed());
+    }
+    if (actions.contains(UpsertPlayerInfoPacket.Action.UPDATE_LIST_ORDER)) {
+      currentEntry.setListOrderWithoutUpdate(entry.getListOrder());
+    }
+  }
 
-      connection.write(new PlayerListItem(action, Collections.singletonList(packetItem)));
+  @Override
+  public void processRemove(RemovePlayerInfoPacket infoPacket) {
+    for (UUID uuid : infoPacket.getProfilesToRemove()) {
+      this.entries.remove(uuid);
     }
   }
 }

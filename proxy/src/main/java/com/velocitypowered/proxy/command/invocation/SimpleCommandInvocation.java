@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,8 +28,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Implements {@link SimpleCommand.Invocation}.
+ */
 public final class SimpleCommandInvocation extends AbstractCommandInvocation<String[]>
-        implements SimpleCommand.Invocation {
+    implements SimpleCommand.Invocation {
 
   public static final Factory FACTORY = new Factory();
 
@@ -37,11 +40,11 @@ public final class SimpleCommandInvocation extends AbstractCommandInvocation<Str
 
     @Override
     public SimpleCommand.Invocation create(
-            final CommandSource source, final List<? extends ParsedCommandNode<?>> nodes,
-            final Map<String, ? extends ParsedArgument<?, ?>> arguments) {
+        final CommandSource source, final List<? extends ParsedCommandNode<?>> nodes,
+        final Map<String, ? extends ParsedArgument<?, ?>> arguments) {
       final String alias = VelocityCommands.readAlias(nodes);
       final String[] args = VelocityCommands.readArguments(
-              arguments, String[].class, StringArrayArgumentType.EMPTY);
+          arguments, String[].class, StringArrayArgumentType.EMPTY);
       return new SimpleCommandInvocation(source, alias, args);
     }
   }
@@ -49,7 +52,7 @@ public final class SimpleCommandInvocation extends AbstractCommandInvocation<Str
   private final String alias;
 
   SimpleCommandInvocation(final CommandSource source, final String alias,
-                          final String[] arguments) {
+      final String[] arguments) {
     super(source, arguments);
     this.alias = Preconditions.checkNotNull(alias, "alias");
   }
@@ -85,9 +88,9 @@ public final class SimpleCommandInvocation extends AbstractCommandInvocation<Str
   @Override
   public String toString() {
     return "SimpleCommandInvocation{"
-            + "source='" + this.source() + '\''
-            + ", alias='" + this.alias + '\''
-            + ", arguments='" + Arrays.toString(this.arguments()) + '\''
-            + '}';
+        + "source='" + this.source() + '\''
+        + ", alias='" + this.alias + '\''
+        + ", arguments='" + Arrays.toString(this.arguments()) + '\''
+        + '}';
   }
 }

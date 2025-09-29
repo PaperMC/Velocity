@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ import java.util.concurrent.locks.Lock;
  * Registers {@link SimpleCommand}s in a root node.
  */
 public final class SimpleCommandRegistrar
-        extends InvocableCommandRegistrar<SimpleCommand, SimpleCommand.Invocation, String[]> {
+    extends InvocableCommandRegistrar<SimpleCommand, SimpleCommand.Invocation, String[]> {
 
   public SimpleCommandRegistrar(final RootCommandNode<CommandSource> root, final Lock lock) {
     super(root, lock, SimpleCommandInvocation.FACTORY, StringArrayArgumentType.INSTANCE);

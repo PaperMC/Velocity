@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,12 +20,14 @@ package com.velocitypowered.proxy.connection.util;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.ConnectionRequestBuilder.Status;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import com.velocitypowered.proxy.protocol.packet.Disconnect;
+import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 
+/**
+ * Common connection request results.
+ */
 public class ConnectionRequestResults {
 
   private ConnectionRequestResults() {
@@ -38,6 +40,7 @@ public class ConnectionRequestResults {
 
   /**
    * Returns a plain result (one with a status but no reason).
+   *
    * @param status the status to use
    * @param server the server to use
    * @return the result
@@ -50,24 +53,27 @@ public class ConnectionRequestResults {
 
   /**
    * Returns a disconnect result with a reason.
+   *
    * @param component the reason for disconnecting from the server
-   * @param server the server to use
+   * @param server    the server to use
    * @return the result
    */
   public static Impl forDisconnect(Component component, RegisteredServer server) {
     return new Impl(Status.SERVER_DISCONNECTED, component, server, true);
   }
 
-  public static Impl forDisconnect(Disconnect disconnect, RegisteredServer server) {
-    Component deserialized = GsonComponentSerializer.gson().deserialize(disconnect.getReason());
-    return forDisconnect(deserialized, server);
+  public static Impl forDisconnect(DisconnectPacket disconnect, RegisteredServer server) {
+    return forDisconnect(disconnect.getReason().getComponent(), server);
   }
 
-  public static Impl forUnsafeDisconnect(Disconnect disconnect, RegisteredServer server) {
-    Component deserialized = GsonComponentSerializer.gson().deserialize(disconnect.getReason());
-    return new Impl(Status.SERVER_DISCONNECTED, deserialized, server, false);
+  public static Impl forUnsafeDisconnect(DisconnectPacket disconnect, RegisteredServer server) {
+    return new Impl(Status.SERVER_DISCONNECTED, disconnect.getReason().getComponent(), server,
+        false);
   }
 
+  /**
+   * Base implementation.
+   */
   public static class Impl implements ConnectionRequestBuilder.Result {
 
     private final Status status;
@@ -100,6 +106,7 @@ public class ConnectionRequestResults {
 
     /**
      * Returns whether or not it is safe to attempt a reconnect.
+     *
      * @return whether we can try to reconnect
      */
     public boolean isSafe() {

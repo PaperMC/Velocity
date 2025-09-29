@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,8 +34,7 @@ import net.kyori.adventure.platform.facet.FacetPointers.Type;
 import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.kyori.adventure.translation.GlobalTranslator;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.minecrell.terminalconsole.SimpleTerminalConsole;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -47,26 +46,33 @@ import org.jline.reader.Candidate;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 
+/**
+ * Implements the Velocity console, including sending commands and being the recipient
+ * of messages from plugins.
+ */
 public final class VelocityConsole extends SimpleTerminalConsole implements ConsoleCommandSource {
 
   private static final Logger logger = LogManager.getLogger(VelocityConsole.class);
+  private static final ComponentLogger componentLogger = ComponentLogger
+          .logger(VelocityConsole.class);
 
   private final VelocityServer server;
   private PermissionFunction permissionFunction = ALWAYS_TRUE;
   private final @NotNull Pointers pointers = ConsoleCommandSource.super.pointers().toBuilder()
-          .withDynamic(PermissionChecker.POINTER, this::getPermissionChecker)
-          .withDynamic(Identity.LOCALE, Locale::getDefault)
-          .withStatic(FacetPointers.TYPE, Type.CONSOLE)
-          .build();
+      .withDynamic(PermissionChecker.POINTER, this::getPermissionChecker)
+      .withDynamic(Identity.LOCALE, () -> ClosestLocaleMatcher.INSTANCE
+          .lookupClosest(Locale.getDefault()))
+      .withStatic(FacetPointers.TYPE, Type.CONSOLE)
+      .build();
 
   public VelocityConsole(VelocityServer server) {
     this.server = server;
   }
 
   @Override
-  public void sendMessage(@NonNull Identity identity, @NonNull Component message, @NonNull MessageType messageType) {
-    Component translated = GlobalTranslator.render(message, Locale.getDefault());
-    logger.info(LegacyComponentSerializer.legacySection().serialize(translated));
+  public void sendMessage(@NonNull Identity identity, @NonNull Component message,
+      @NonNull MessageType messageType) {
+    componentLogger.info(message);
   }
 
   @Override
@@ -129,6 +135,10 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
       if (!this.server.getCommandManager().executeAsync(this, command).join()) {
         sendMessage(Component.translatable("velocity.command.command-does-not-exist",
             NamedTextColor.RED));
+        return;
+      }
+      if (server.getConfiguration().isLogCommandExecutions()) {
+        logger.info("CONSOLE -> executed command /{}", command);
       }
     } catch (Exception e) {
       logger.error("An error occurred while running this command.", e);

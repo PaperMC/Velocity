@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,8 @@ package com.velocitypowered.proxy.protocol.packet.title;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public abstract class GenericTitlePacket implements MinecraftPacket {
 
@@ -40,8 +40,8 @@ public abstract class GenericTitlePacket implements MinecraftPacket {
     }
 
     public int getAction(ProtocolVersion version) {
-      return version.compareTo(ProtocolVersion.MINECRAFT_1_11) < 0
-              ? action > 2 ? action - 1 : action : action;
+      return version.lessThan(ProtocolVersion.MINECRAFT_1_11)
+          ? action > 2 ? action - 1 : action : action;
     }
   }
 
@@ -56,11 +56,11 @@ public abstract class GenericTitlePacket implements MinecraftPacket {
     return action;
   }
 
-  public String getComponent() {
+  public ComponentHolder getComponent() {
     throw new UnsupportedOperationException("Invalid function for this TitlePacket ActionType");
   }
 
-  public void setComponent(String component) {
+  public void setComponent(ComponentHolder component) {
     throw new UnsupportedOperationException("Invalid function for this TitlePacket ActionType");
   }
 
@@ -89,23 +89,22 @@ public abstract class GenericTitlePacket implements MinecraftPacket {
   }
 
 
-
   @Override
   public final void decode(ByteBuf buf, ProtocolUtils.Direction direction,
-                           ProtocolVersion version) {
+      ProtocolVersion version) {
     throw new UnsupportedOperationException(); // encode only
   }
 
   /**
    * Creates a version and type dependent TitlePacket.
    *
-   * @param type       Action the packet should invoke
-   * @param version    Protocol version of the target player
+   * @param type    Action the packet should invoke
+   * @param version Protocol version of the target player
    * @return GenericTitlePacket instance that follows the invoker type/version
    */
   public static GenericTitlePacket constructTitlePacket(ActionType type, ProtocolVersion version) {
     GenericTitlePacket packet = null;
-    if (version.compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
       switch (type) {
         case SET_ACTION_BAR:
           packet = new TitleActionbarPacket();

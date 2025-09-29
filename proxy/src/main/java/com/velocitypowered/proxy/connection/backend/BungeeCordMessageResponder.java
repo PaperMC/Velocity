@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2019-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.connection.backend;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
+import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -28,25 +29,30 @@ import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
+import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.util.ByteBufDataInput;
 import com.velocitypowered.proxy.protocol.util.ByteBufDataOutput;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import java.util.Optional;
 import java.util.StringJoiner;
-import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.ComponentSerializer;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
-@SuppressFBWarnings(value = "OS_OPEN_STREAM", justification = "Most methods in this class open "
-    + "instances of ByteBufDataOutput backed by heap-allocated ByteBufs. Closing them does "
-    + "nothing.")
+/**
+ * Handles messages coming from servers trying to communicate with the BungeeCord plugin
+ * messaging channel interface.
+ */
+@SuppressFBWarnings(
+    value = "OS_OPEN_STREAM",
+    justification = "Most methods in this class open "
+      + "instances of ByteBufDataOutput backed by heap-allocated ByteBufs. Closing them does "
+      + "nothing."
+)
 public class BungeeCordMessageResponder {
 
   private static final MinecraftChannelIdentifier MODERN_CHANNEL = MinecraftChannelIdentifier
@@ -62,7 +68,7 @@ public class BungeeCordMessageResponder {
     this.player = player;
   }
 
-  public static boolean isBungeeCordMessage(PluginMessage message) {
+  public static boolean isBungeeCordMessage(PluginMessagePacket message) {
     return MODERN_CHANNEL.getId().equals(message.getChannel()) || LEGACY_CHANNEL.getId()
         .equals(message.getChannel());
   }
@@ -137,7 +143,7 @@ public class BungeeCordMessageResponder {
         out.writeUTF("PlayerList");
         out.writeUTF(info.getServerInfo().getName());
 
-        StringJoiner joiner = new StringJoiner(", ");
+        final StringJoiner joiner = new StringJoiner(", ");
         for (Player online : info.getPlayersConnected()) {
           joiner.add(online.getUsername());
         }
@@ -181,10 +187,9 @@ public class BungeeCordMessageResponder {
 
     Component messageComponent = serializer.deserialize(message);
     if (target.equals("ALL")) {
-      proxy.sendMessage(Identity.nil(), messageComponent);
+      proxy.sendMessage(messageComponent);
     } else {
-      proxy.getPlayer(target).ifPresent(player -> player.sendMessage(Identity.nil(),
-          messageComponent));
+      proxy.getPlayer(target).ifPresent(player -> player.sendMessage(messageComponent));
     }
   }
 
@@ -256,6 +261,13 @@ public class BungeeCordMessageResponder {
     });
   }
 
+  private void processKickRaw(ByteBufDataInput in) {
+    proxy.getPlayer(in.readUTF()).ifPresent(player -> {
+      String kickReason = in.readUTF();
+      player.disconnect(GsonComponentSerializer.gson().deserialize(kickReason));
+    });
+  }
+
   private void processForwardToPlayer(ByteBufDataInput in) {
     Optional<Player> player = proxy.getPlayer(in.readUTF());
     if (player.isPresent()) {
@@ -269,7 +281,7 @@ public class BungeeCordMessageResponder {
     ByteBuf toForward = in.unwrap().copy();
     final ServerInfo currentUserServer = player.getCurrentServer()
         .map(ServerConnection::getServerInfo).orElse(null);
-    if (target.equals("ALL")) {
+    if (target.equals("ALL") || target.equals("ONLINE")) {
       try {
         for (RegisteredServer rs : proxy.getAllServers()) {
           if (!rs.getServerInfo().equals(currentUserServer)) {
@@ -290,9 +302,24 @@ public class BungeeCordMessageResponder {
     }
   }
 
-  static String getBungeeCordChannel(ProtocolVersion version) {
-    return version.compareTo(ProtocolVersion.MINECRAFT_1_13) >= 0 ? MODERN_CHANNEL.getId()
-        : LEGACY_CHANNEL.getId();
+  private void processGetPlayerServer(ByteBufDataInput in) {
+    proxy.getPlayer(in.readUTF()).ifPresent(player -> {
+      player.getCurrentServer().ifPresent(server -> {
+        ByteBuf buf = Unpooled.buffer();
+        ByteBufDataOutput out = new ByteBufDataOutput(buf);
+
+        out.writeUTF("GetPlayerServer");
+        out.writeUTF(player.getUsername());
+        out.writeUTF(server.getServerInfo().getName());
+
+        sendResponseOnConnection(buf);
+      });
+    });
+  }
+
+  static ChannelIdentifier getBungeeCordChannel(ProtocolVersion version) {
+    return version.noLessThan(ProtocolVersion.MINECRAFT_1_13) ? MODERN_CHANNEL
+        : LEGACY_CHANNEL;
   }
 
   // Note: this method will always release the buffer!
@@ -303,12 +330,12 @@ public class BungeeCordMessageResponder {
   // Note: this method will always release the buffer!
   private static void sendServerResponse(ConnectedPlayer player, ByteBuf buf) {
     MinecraftConnection serverConnection = player.ensureAndGetCurrentServer().ensureConnected();
-    String chan = getBungeeCordChannel(serverConnection.getProtocolVersion());
-    PluginMessage msg = new PluginMessage(chan, buf);
+    ChannelIdentifier chan = getBungeeCordChannel(serverConnection.getProtocolVersion());
+    PluginMessagePacket msg = new PluginMessagePacket(chan.getId(), buf);
     serverConnection.write(msg);
   }
 
-  boolean process(PluginMessage message) {
+  boolean process(PluginMessagePacket message) {
     if (!proxy.getConfiguration().isBungeePluginChannelEnabled()) {
       return false;
     }
@@ -320,6 +347,9 @@ public class BungeeCordMessageResponder {
     ByteBufDataInput in = new ByteBufDataInput(message.content());
     String subChannel = in.readUTF();
     switch (subChannel) {
+      case "GetPlayerServer":
+        this.processGetPlayerServer(in);
+        break;
       case "ForwardToPlayer":
         this.processForwardToPlayer(in);
         break;
@@ -367,6 +397,9 @@ public class BungeeCordMessageResponder {
         break;
       case "KickPlayer":
         this.processKick(in);
+        break;
+      case "KickPlayerRaw":
+        this.processKickRaw(in);
         break;
       default:
         // Do nothing, unknown command

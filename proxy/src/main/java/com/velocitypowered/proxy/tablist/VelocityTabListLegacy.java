@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2019-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,13 @@ package com.velocitypowered.proxy.tablist;
 
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
+import com.velocitypowered.api.proxy.player.ChatSession;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.packet.PlayerListItem;
-import com.velocitypowered.proxy.protocol.packet.PlayerListItem.Item;
+import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItemPacket;
+import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItemPacket.Item;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -32,7 +34,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class VelocityTabListLegacy extends VelocityTabList {
+/**
+ * Exposes the legacy 1.7 tab list to plugins.
+ */
+public class VelocityTabListLegacy extends KeyedVelocityTabList {
 
   private final Map<String, UUID> nameMapping = new ConcurrentHashMap<>();
 
@@ -65,35 +70,41 @@ public class VelocityTabListLegacy extends VelocityTabList {
   @Override
   public void clearAll() {
     for (TabListEntry value : entries.values()) {
-      connection.delayedWrite(new PlayerListItem(PlayerListItem.REMOVE_PLAYER,
-          Collections.singletonList(PlayerListItem.Item.from(value))));
+      connection.delayedWrite(new LegacyPlayerListItemPacket(
+          LegacyPlayerListItemPacket.REMOVE_PLAYER,
+          Collections.singletonList(LegacyPlayerListItemPacket.Item.from(value))));
     }
+    clearAllSilent();
+  }
+
+  @Override
+  public void clearAllSilent() {
     entries.clear();
     nameMapping.clear();
   }
 
   @Override
-  public void processBackendPacket(PlayerListItem packet) {
+  public void processLegacy(LegacyPlayerListItemPacket packet) {
     Item item = packet.getItems().get(0); // Only one item per packet in 1.7
 
     switch (packet.getAction()) {
-      case PlayerListItem.ADD_PLAYER:
+      case LegacyPlayerListItemPacket.ADD_PLAYER:
         if (nameMapping.containsKey(item.getName())) { // ADD_PLAYER also used for updating ping
-          VelocityTabListEntry entry = entries.get(nameMapping.get(item.getName()));
+          KeyedVelocityTabListEntry entry = entries.get(nameMapping.get(item.getName()));
           if (entry != null) {
             entry.setLatencyInternal(item.getLatency());
           }
         } else {
           UUID uuid = UUID.randomUUID(); // Use a fake uuid to preserve function of custom entries
           nameMapping.put(item.getName(), uuid);
-          entries.put(uuid, (VelocityTabListEntry) TabListEntry.builder()
+          entries.put(uuid, (KeyedVelocityTabListEntry) TabListEntry.builder()
               .tabList(this)
               .profile(new GameProfile(uuid, item.getName(), ImmutableList.of()))
               .latency(item.getLatency())
               .build());
         }
         break;
-      case PlayerListItem.REMOVE_PLAYER:
+      case LegacyPlayerListItemPacket.REMOVE_PLAYER:
         UUID removedUuid = nameMapping.remove(item.getName());
         if (removedUuid != null) {
           entries.remove(removedUuid);
@@ -109,11 +120,13 @@ public class VelocityTabListLegacy extends VelocityTabList {
   void updateEntry(int action, TabListEntry entry) {
     if (entries.containsKey(entry.getProfile().getId())) {
       switch (action) {
-        case PlayerListItem.UPDATE_LATENCY:
-        case PlayerListItem.UPDATE_DISPLAY_NAME: // Add here because we removed beforehand
+        case LegacyPlayerListItemPacket.UPDATE_LATENCY:
+        // Add here because we removed beforehand
+        case LegacyPlayerListItemPacket.UPDATE_DISPLAY_NAME:
           connection
-              .write(new PlayerListItem(PlayerListItem.ADD_PLAYER, // ADD_PLAYER also updates ping
-                  Collections.singletonList(PlayerListItem.Item.from(entry))));
+              .write(new LegacyPlayerListItemPacket(LegacyPlayerListItemPacket.ADD_PLAYER,
+                  // ADD_PLAYER also updates ping
+                  Collections.singletonList(LegacyPlayerListItemPacket.Item.from(entry))));
           break;
         default:
           // Can't do anything else
@@ -123,8 +136,21 @@ public class VelocityTabListLegacy extends VelocityTabList {
   }
 
   @Override
+  public TabListEntry buildEntry(GameProfile profile,
+                                 net.kyori.adventure.text.@Nullable Component displayName,
+                                 int latency, int gameMode, @Nullable IdentifiedKey key) {
+    return new VelocityTabListEntryLegacy(this, profile, displayName, latency, gameMode);
+  }
+
+  @Override
   public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
-      int gameMode) {
+                                 int gameMode, @Nullable ChatSession chatSession, boolean listed) {
+    return new VelocityTabListEntryLegacy(this, profile, displayName, latency, gameMode);
+  }
+
+  @Override
+  public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
+                                 int gameMode, @Nullable ChatSession chatSession, boolean listed, int listOrder, boolean showHat) {
     return new VelocityTabListEntryLegacy(this, profile, displayName, latency, gameMode);
   }
 }

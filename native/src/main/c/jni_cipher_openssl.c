@@ -32,6 +32,15 @@ Java_com_velocitypowered_natives_encryption_OpenSslCipherImpl_init(JNIEnv *env,
         return 0;
     }
 
+    // But, you're saying, *why* are we using the key as the IV? After all, reusing the key as
+    // the IV defeats the entire point - we might as well just initialize it to all zeroes.
+    //
+    // You can blame Mojang. For the record, we also don't consider the Minecraft protocol
+    // encryption scheme to be secure, and it has reached the point where any serious cryptographic
+    // protocol needs a refresh. There are multiple obvious weaknesses, and this is far from the
+    // most serious.
+    //
+    // If you are using Minecraft in a security-sensitive application, *I don't know what to say.*
     int result = EVP_CipherInit(ctx, EVP_aes_128_cfb8(), (byte*) keyBytes, (byte*) keyBytes,
         encrypt);
     if (result != 1) {

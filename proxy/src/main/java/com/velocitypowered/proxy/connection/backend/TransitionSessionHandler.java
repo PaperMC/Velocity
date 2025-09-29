@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2019-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeHands
 
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.event.player.ServerPostConnectEvent;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
@@ -32,11 +33,11 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
-import com.velocitypowered.proxy.protocol.packet.Disconnect;
-import com.velocitypowered.proxy.protocol.packet.JoinGame;
-import com.velocitypowered.proxy.protocol.packet.KeepAlive;
-import com.velocitypowered.proxy.protocol.packet.PluginMessage;
-import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
+import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
+import com.velocitypowered.proxy.protocol.packet.JoinGamePacket;
+import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
+import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
@@ -56,8 +57,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
   /**
    * Creates the new transition handler.
-   * @param server the Velocity server instance
-   * @param serverConn the server connection
+   *
+   * @param server       the Velocity server instance
+   * @param serverConn   the server connection
    * @param resultFuture the result future
    */
   TransitionSessionHandler(VelocityServer server,
@@ -81,18 +83,17 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(KeepAlive packet) {
+  public boolean handle(KeepAlivePacket packet) {
     serverConn.ensureConnected().write(packet);
     return true;
   }
 
   @Override
-  public boolean handle(JoinGame packet) {
+  public boolean handle(JoinGamePacket packet) {
     MinecraftConnection smc = serverConn.ensureConnected();
-    RegisteredServer previousServer = serverConn.getPreviousServer().orElse(null);
-    VelocityServerConnection existingConnection = serverConn.getPlayer().getConnectedServer();
-
+    final RegisteredServer previousServer = serverConn.getPreviousServer().orElse(null);
     final ConnectedPlayer player = serverConn.getPlayer();
+    final VelocityServerConnection existingConnection = player.getConnectedServer();
 
     if (existingConnection != null) {
       // Shut down the existing server connection.
@@ -102,6 +103,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
       // Send keep alive to try to avoid timeouts
       player.sendKeepAlive();
     }
+
+    // Reset Tablist header and footer to prevent desync
+    player.clearPlayerListHeaderAndFooter();
 
     // The goods are in hand! We got JoinGame. Let's transition completely to the new state.
     smc.setAutoReading(false);
@@ -117,30 +121,41 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
           // Change the client to use the ClientPlaySessionHandler if required.
           ClientPlaySessionHandler playHandler;
-          if (player.getConnection().getSessionHandler() instanceof ClientPlaySessionHandler) {
-            playHandler = (ClientPlaySessionHandler) player.getConnection().getSessionHandler();
+          if (player.getConnection()
+              .getActiveSessionHandler() instanceof ClientPlaySessionHandler) {
+            playHandler =
+                (ClientPlaySessionHandler) player.getConnection().getActiveSessionHandler();
           } else {
             playHandler = new ClientPlaySessionHandler(server, player);
-            player.getConnection().setSessionHandler(playHandler);
+            player.getConnection().setActiveSessionHandler(StateRegistry.PLAY, playHandler);
           }
+          assert playHandler != null;
           playHandler.handleBackendJoinGame(packet, serverConn);
 
           // Set the new play session handler for the server. We will have nothing more to do
           // with this connection once this task finishes up.
-          smc.setSessionHandler(new BackendPlaySessionHandler(server, serverConn));
-
-          // Clean up disabling auto-read while the connected event was being processed.
-          smc.setAutoReading(true);
+          smc.setActiveSessionHandler(StateRegistry.PLAY,
+              new BackendPlaySessionHandler(server, serverConn));
 
           // Now set the connected server.
           serverConn.getPlayer().setConnectedServer(serverConn);
+
+          // Clean up disabling auto-read while the connected event was being processed.
+          // Do this after setting the connection, so no incoming packets are processed before
+          // the API knows which server the player is connected to.
+          smc.setAutoReading(true);
+
+          // Send client settings. In 1.20.2+ this is done in the config state.
+          if (smc.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_2)
+              && player.getClientSettingsPacket() != null) {
+            serverConn.ensureConnected().write(player.getClientSettingsPacket());
+          }
 
           // We're done! :)
           server.getEventManager().fireAndForget(new ServerPostConnectEvent(player,
               previousServer));
           resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
-        }, smc.eventLoop())
-        .exceptionally(exc -> {
+        }, smc.eventLoop()).exceptionally(exc -> {
           logger.error("Unable to switch to new server {} for {}",
               serverConn.getServerInfo().getName(),
               player.getUsername(), exc);
@@ -153,7 +168,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(Disconnect packet) {
+  public boolean handle(DisconnectPacket packet) {
     final MinecraftConnection connection = serverConn.ensureConnected();
     serverConn.disconnect();
 
@@ -171,15 +186,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
-  public boolean handle(PluginMessage packet) {
+  public boolean handle(PluginMessagePacket packet) {
     if (bungeecordMessageResponder.process(packet)) {
       return true;
-    }
-
-    if (PluginMessageUtil.isRegister(packet)) {
-      serverConn.getPlayer().getKnownChannels().addAll(PluginMessageUtil.getChannels(packet));
-    } else if (PluginMessageUtil.isUnregister(packet)) {
-      serverConn.getPlayer().getKnownChannels().removeAll(PluginMessageUtil.getChannels(packet));
     }
 
     // We always need to handle plugin messages, for Forge compatibility.

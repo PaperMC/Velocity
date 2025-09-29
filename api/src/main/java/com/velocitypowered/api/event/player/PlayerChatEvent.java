@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -28,6 +28,7 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
 
   /**
    * Constructs a PlayerChatEvent.
+   *
    * @param player the player sending the message
    * @param message the message being sent
    */
@@ -50,6 +51,13 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
     return result;
   }
 
+  /**
+   * Set result for the event.
+   *
+   * @param result the result of event
+   * @deprecated for 1.19.1 and newer, set this as denied will kick users
+   */
+  @Deprecated
   @Override
   public void setResult(ChatResult result) {
     this.result = Preconditions.checkNotNull(result, "result");
@@ -96,6 +104,7 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
 
     /**
      * Allows the message to be sent, without modification.
+     *
      * @return the allowed result
      */
     public static ChatResult allowed() {
@@ -104,6 +113,7 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
 
     /**
      * Prevents the message from being sent.
+     *
      * @return the denied result
      */
     public static ChatResult denied() {
@@ -111,7 +121,8 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
     }
 
     /**
-     * Allows the message to be sent, but silently replaced with another.
+     * Allows the message to be sent, but silently replaces it with another.
+     *
      * @param message the message to use instead
      * @return a result with a new message
      */

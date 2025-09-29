@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2022 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -40,6 +40,19 @@ public interface ProxyServer extends Audience {
    * Shuts down the proxy, kicking players with the default reason.
    */
   void shutdown();
+
+  /**
+   * Returns whether the proxy is currently shutting down.
+   *
+   * @return {@code true} if the proxy is shutting down, {@code false} otherwise
+   */
+  boolean isShuttingDown();
+
+  /**
+   * Closes all listening endpoints for this server.
+   * This includes the main minecraft listener and query channel.
+   */
+  void closeListeners();
 
   /**
    * Retrieves the player currently connected to this proxy by their Minecraft username. The search

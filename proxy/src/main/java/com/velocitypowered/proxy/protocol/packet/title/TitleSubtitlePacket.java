@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2021 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,11 +20,12 @@ package com.velocitypowered.proxy.protocol.packet.title;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 
 public class TitleSubtitlePacket extends GenericTitlePacket {
 
-  private String component;
+  private ComponentHolder component;
 
   public TitleSubtitlePacket() {
     setAction(ActionType.SET_SUBTITLE);
@@ -32,16 +33,16 @@ public class TitleSubtitlePacket extends GenericTitlePacket {
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    ProtocolUtils.writeString(buf, component);
+    component.write(buf);
   }
 
   @Override
-  public String getComponent() {
+  public ComponentHolder getComponent() {
     return component;
   }
 
   @Override
-  public void setComponent(String component) {
+  public void setComponent(ComponentHolder component) {
     this.component = component;
   }
 

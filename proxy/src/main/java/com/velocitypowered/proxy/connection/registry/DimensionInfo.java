@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,12 @@
 package com.velocitypowered.proxy.connection.registry;
 
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.network.ProtocolVersion;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents basic information for a Minecraft dimension.
+ */
 public final class DimensionInfo {
 
   private final String registryIdentifier;
@@ -29,17 +33,19 @@ public final class DimensionInfo {
 
   /**
    * Initializes a new {@link DimensionInfo} instance.
+   *
    * @param registryIdentifier the identifier for the dimension from the registry
-   * @param levelName the level name as displayed in the F3 menu and logs
-   * @param isFlat if true will set world lighting below surface-level to not display fog
-   * @param isDebugType if true constrains the world to the very limited debug-type world
+   * @param levelName          the level name as displayed in the F3 menu and logs
+   * @param isFlat             if true will set world lighting below surface-level to not display
+   *                           fog
+   * @param isDebugType        if true constrains the world to the very limited debug-type world
    */
   public DimensionInfo(String registryIdentifier, @Nullable String levelName,
-      boolean isFlat, boolean isDebugType) {
-    this.registryIdentifier = Preconditions.checkNotNull(
-        registryIdentifier, "registryIdentifier cannot be null");
-    Preconditions.checkArgument(registryIdentifier.length() > 0,
-        "registryIdentifier cannot be empty");
+                       boolean isFlat, boolean isDebugType, ProtocolVersion protocolVersion) {
+    this.registryIdentifier = Preconditions.checkNotNull(registryIdentifier, "registryIdentifier cannot be null");
+    if (protocolVersion.lessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
+      Preconditions.checkArgument(!registryIdentifier.isEmpty(), "registryIdentifier cannot be empty");
+    }
     this.levelName = levelName;
     this.isFlat = isFlat;
     this.isDebugType = isDebugType;

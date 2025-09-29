@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,9 @@ import com.velocitypowered.natives.Native;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 
+/**
+ * Additional utilities for {@link ByteBuf}.
+ */
 public class MoreByteBufUtils {
   private MoreByteBufUtils() {
     throw new AssertionError();
@@ -49,18 +52,13 @@ public class MoreByteBufUtils {
 
   private static boolean isCompatible(Native nativeStuff, ByteBuf buf) {
     BufferPreference preferred = nativeStuff.preferredBufferType();
-    switch (preferred) {
-      case DIRECT_PREFERRED:
-      case HEAP_PREFERRED:
+    return switch (preferred) {
+      case DIRECT_PREFERRED, HEAP_PREFERRED ->
         // The native prefers this type, but doesn't strictly require we provide it.
-        return true;
-      case DIRECT_REQUIRED:
-        return buf.hasMemoryAddress();
-      case HEAP_REQUIRED:
-        return buf.hasArray();
-      default:
-        throw new AssertionError("Preferred buffer type unknown");
-    }
+        true;
+      case DIRECT_REQUIRED -> buf.hasMemoryAddress();
+      case HEAP_REQUIRED -> buf.hasArray();
+    };
   }
 
   /**
@@ -74,15 +72,9 @@ public class MoreByteBufUtils {
    */
   public static ByteBuf preferredBuffer(ByteBufAllocator alloc, Native nativeStuff,
       int initialCapacity) {
-    switch (nativeStuff.preferredBufferType()) {
-      case HEAP_REQUIRED:
-      case HEAP_PREFERRED:
-        return alloc.heapBuffer(initialCapacity);
-      case DIRECT_PREFERRED:
-      case DIRECT_REQUIRED:
-        return alloc.directBuffer(initialCapacity);
-      default:
-        throw new AssertionError("Preferred buffer type unknown");
-    }
+    return switch (nativeStuff.preferredBufferType()) {
+      case HEAP_REQUIRED, HEAP_PREFERRED -> alloc.heapBuffer(initialCapacity);
+      case DIRECT_PREFERRED, DIRECT_REQUIRED -> alloc.directBuffer(initialCapacity);
+    };
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -9,7 +9,6 @@ package com.velocitypowered.api.event.command;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.annotations.Beta;
 import com.mojang.brigadier.tree.RootCommandNode;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.Player;
@@ -21,7 +20,6 @@ import com.velocitypowered.api.proxy.Player;
  * client.
  */
 @AwaitingEvent
-@Beta
 public class PlayerAvailableCommandsEvent {
 
   private final Player player;
@@ -29,6 +27,7 @@ public class PlayerAvailableCommandsEvent {
 
   /**
    * Constructs an available commands event.
+   *
    * @param player the targeted player
    * @param rootNode the Brigadier root node
    */

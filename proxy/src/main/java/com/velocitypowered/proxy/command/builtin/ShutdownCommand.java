@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,41 +17,62 @@
 
 package com.velocitypowered.proxy.command.builtin;
 
+import com.google.gson.JsonSyntaxException;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.proxy.VelocityServer;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 
-public final class ShutdownCommand  {
-  private ShutdownCommand() {}
+/**
+ * Shuts down the proxy.
+ */
+public final class ShutdownCommand {
+
+  private ShutdownCommand() {
+  }
 
   /**
    * Creates a Velocity Shutdown Command.
+   *
    * @param server the proxy instance
    * @return the Shutdown Command
    */
   public static BrigadierCommand command(final VelocityServer server) {
     return new BrigadierCommand(LiteralArgumentBuilder.<CommandSource>literal("shutdown")
-      .requires(source -> source == server.getConsoleCommandSource())
-      .executes(context -> {
-        server.shutdown(true);
-        return Command.SINGLE_SUCCESS;
-      })
-      .then(RequiredArgumentBuilder.<CommandSource, String>argument("reason", StringArgumentType.greedyString())
+        .requires(source -> source instanceof ConsoleCommandSource)
         .executes(context -> {
-          String reason = context.getArgument("reason", String.class);
-          server.shutdown(true, MiniMessage.miniMessage().deserialize(
-              MiniMessage.miniMessage().serialize(
-                  LegacyComponentSerializer.legacy('&').deserialize(reason)
-              )
-          ));
+          server.shutdown(true);
           return Command.SINGLE_SUCCESS;
         })
-      ).build());
+        .then(RequiredArgumentBuilder.<CommandSource, String>argument("reason",
+                StringArgumentType.greedyString())
+            .executes(context -> {
+              String reason = context.getArgument("reason", String.class);
+              Component reasonComponent = null;
+
+              if (reason.startsWith("{") || reason.startsWith("[") || reason.startsWith("\"")) {
+                try {
+                  reasonComponent = GsonComponentSerializer.gson()
+                      .deserializeOrNull(reason);
+                } catch (JsonSyntaxException expected) {
+
+                }
+              }
+
+              if (reasonComponent == null) {
+                reasonComponent = MiniMessage.miniMessage().deserialize(reason);
+              }
+
+              server.shutdown(true, reasonComponent);
+              return Command.SINGLE_SUCCESS;
+            })
+        ).build());
   }
 }

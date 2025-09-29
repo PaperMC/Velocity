@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2019-2021 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -48,16 +48,24 @@ class MinecraftChannelIdentifierTest {
   }
 
   @Test
+  void fromIdentifierDefaultNamespace() {
+    assertEquals("minecraft", from("test").getNamespace());
+    assertEquals("minecraft", from(":test").getNamespace());
+  }
+
+  @Test
+  void fromIdentifierAllowsEmptyName() {
+    from("minecraft:");
+    from(":");
+    from("");
+  }
+
+  @Test
   void fromIdentifierThrowsOnBadValues() {
     assertAll(
-        () -> assertThrows(IllegalArgumentException.class, () -> from("")),
-        () -> assertThrows(IllegalArgumentException.class, () -> from(":")),
-        () -> assertThrows(IllegalArgumentException.class, () -> from(":a")),
-        () -> assertThrows(IllegalArgumentException.class, () -> from("a:")),
         () -> assertThrows(IllegalArgumentException.class, () -> from("hello:$$$$$$")),
+        () -> assertThrows(IllegalArgumentException.class, () -> from("he/llo:wor/ld")),
         () -> assertThrows(IllegalArgumentException.class, () -> from("hello::"))
     );
   }
-
-
 }

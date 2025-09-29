@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,9 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Backend channel initializer.
+ */
 @SuppressWarnings("WeakerAccess")
 public class BackendChannelInitializer extends ChannelInitializer<Channel> {
 
@@ -46,9 +49,9 @@ public class BackendChannelInitializer extends ChannelInitializer<Channel> {
   }
 
   @Override
-  protected void initChannel(Channel ch) throws Exception {
+  protected void initChannel(Channel ch) {
     ch.pipeline()
-        .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder())
+        .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder(ProtocolUtils.Direction.CLIENTBOUND))
         .addLast(READ_TIMEOUT,
             new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(),
                 TimeUnit.MILLISECONDS))

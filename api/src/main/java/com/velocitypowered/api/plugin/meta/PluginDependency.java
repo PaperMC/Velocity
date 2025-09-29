@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -27,6 +27,7 @@ public final class PluginDependency {
 
   /**
    * Creates a new instance.
+   *
    * @param id the plugin ID
    * @param version an optional version
    * @param optional whether or not this dependency is optional

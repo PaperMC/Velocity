@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,12 +28,15 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.CorruptedFrameException;
 
+/**
+ * Decodes Minecraft packets.
+ */
 public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
   public static final boolean DEBUG = Boolean.getBoolean("velocity.packet-decode-logging");
   private static final QuietRuntimeException DECODE_FAILED =
-      new QuietRuntimeException("A packet did not decode successfully (invalid data). If you are a "
-          + "developer, launch Velocity with -Dvelocity.packet-decode-logging=true to see more.");
+      new QuietRuntimeException("A packet did not decode successfully (invalid data). For more "
+          + "information, launch Velocity with -Dvelocity.packet-decode-logging=true to see more.");
 
   private final ProtocolUtils.Direction direction;
   private StateRegistry state;
@@ -46,15 +49,14 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
    */
   public MinecraftDecoder(ProtocolUtils.Direction direction) {
     this.direction = Preconditions.checkNotNull(direction, "direction");
-    this.registry = direction.getProtocolRegistry(StateRegistry.HANDSHAKE,
-        ProtocolVersion.MINIMUM_VERSION);
+    this.registry = StateRegistry.HANDSHAKE.getProtocolRegistry(
+        direction, ProtocolVersion.MINIMUM_VERSION);
     this.state = StateRegistry.HANDSHAKE;
   }
 
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-    if (msg instanceof ByteBuf) {
-      ByteBuf buf = (ByteBuf) msg;
+    if (msg instanceof ByteBuf buf) {
       tryDecode(ctx, buf);
     } else {
       ctx.fireChannelRead(msg);
@@ -133,15 +135,19 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
   private String getExtraConnectionDetail(int packetId) {
     return "Direction " + direction + " Protocol " + registry.version + " State " + state
-        + " ID " + Integer.toHexString(packetId);
+        + " ID 0x" + Integer.toHexString(packetId);
   }
 
   public void setProtocolVersion(ProtocolVersion protocolVersion) {
-    this.registry = direction.getProtocolRegistry(state, protocolVersion);
+    this.registry = state.getProtocolRegistry(direction, protocolVersion);
   }
 
   public void setState(StateRegistry state) {
     this.state = state;
     this.setProtocolVersion(registry.version);
+  }
+
+  public ProtocolUtils.Direction getDirection() {
+    return direction;
   }
 }

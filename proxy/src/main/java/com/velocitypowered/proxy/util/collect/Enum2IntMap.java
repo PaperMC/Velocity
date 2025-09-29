@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,9 +21,11 @@ import java.util.EnumSet;
 
 /**
  * An immutable map of {@link Enum} entries to {@code int}s.
+ *
  * @param <E> the enum type
  */
 public final class Enum2IntMap<E extends Enum<E>> {
+
   private final int[] mappings;
 
   private Enum2IntMap(int[] mappings) {
@@ -34,7 +36,13 @@ public final class Enum2IntMap<E extends Enum<E>> {
     return mappings[key.ordinal()];
   }
 
+  /**
+   * A builder for {@link Enum2IntMap}.
+   *
+   * @param <E> the enum type to use
+   */
   public static class Builder<E extends Enum<E>> {
+
     private final int[] mappings;
     private final EnumSet<E> populated;
     private int defaultValue = -1;
@@ -46,7 +54,8 @@ public final class Enum2IntMap<E extends Enum<E>> {
 
     /**
      * Adds a mapping to the map.
-     * @param key the key to use
+     *
+     * @param key   the key to use
      * @param value the value to associate with the key
      * @return {@code this}, for chaining
      */
@@ -68,6 +77,7 @@ public final class Enum2IntMap<E extends Enum<E>> {
 
     /**
      * Fetches a mapping from the map.
+     *
      * @param key the key to use
      * @return the value in the map
      */
@@ -80,6 +90,7 @@ public final class Enum2IntMap<E extends Enum<E>> {
 
     /**
      * Builds the map.
+     *
      * @return the built map
      */
     public Enum2IntMap<E> build() {

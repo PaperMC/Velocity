@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,8 @@
 
 package com.velocitypowered.proxy.network.netty;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.netty.resolver.AddressResolver;
@@ -36,6 +36,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * An implementation of {@code InetNameResolver} that performs blocking DNS name lookups
+ * in a separate thread, avoiding blocking the Netty threads for an extended period of time
+ * and without the downsides of Netty's native DNS resolver.
+ */
 public final class SeparatePoolInetNameResolver extends InetNameResolver {
 
   private final ExecutorService resolveExecutor;
@@ -46,8 +51,8 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
   /**
    * Creates a new instance of {@code SeparatePoolInetNameResolver}.
    *
-   * @param executor the {@link EventExecutor} which is used to notify the listeners of the {@link
-   *                 Future} returned by {@link #resolve(String)}
+   * @param executor the {@link EventExecutor} which is used to notify the listeners of the
+   *                 {@link Future} returned by {@link #resolve(String)}
    */
   public SeparatePoolInetNameResolver(EventExecutor executor) {
     super(executor);
@@ -57,7 +62,7 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
             .setDaemon(true)
             .build());
     this.delegate = new DefaultNameResolver(executor);
-    this.cache = CacheBuilder.newBuilder()
+    this.cache = Caffeine.newBuilder()
         .expireAfterWrite(30, TimeUnit.SECONDS)
         .build();
   }

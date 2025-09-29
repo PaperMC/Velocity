@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,9 @@
 
 package com.velocitypowered.proxy.network;
 
+/**
+ * Constants used for the pipeline.
+ */
 public class Connections {
 
   public static final String CIPHER_DECODER = "cipher-decoder";
@@ -32,6 +35,8 @@ public class Connections {
   public static final String MINECRAFT_DECODER = "minecraft-decoder";
   public static final String MINECRAFT_ENCODER = "minecraft-encoder";
   public static final String READ_TIMEOUT = "read-timeout";
+  public static final String PLAY_PACKET_QUEUE_OUTBOUND = "play-packet-queue-outbound";
+  public static final String PLAY_PACKET_QUEUE_INBOUND = "play-packet-queue-inbound";
 
   private Connections() {
     throw new AssertionError();

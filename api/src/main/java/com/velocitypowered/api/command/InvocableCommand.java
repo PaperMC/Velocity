@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2020-2021 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -21,7 +21,8 @@ import java.util.concurrent.CompletableFuture;
  *
  * @param <I> the type of the command invocation object
  */
-public interface InvocableCommand<I extends CommandInvocation<?>> extends Command {
+public sealed interface InvocableCommand<I extends CommandInvocation<?>> extends Command
+        permits RawCommand, SimpleCommand {
 
   /**
    * Executes the command for the specified invocation.

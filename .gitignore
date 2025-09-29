@@ -5,6 +5,7 @@
 *.iml
 .idea_modules/
 atlassian-ide-plugin.xml
+.fleet/
 
 ### Eclipse ###
 .metadata
@@ -81,10 +82,14 @@ gradle-app.setting
 ### Other trash ###
 logs/
 /velocity.toml
+/forwarding.secret
+forwarding.secret
+velocity.toml
 server-icon.png
 /bin/
 run/
 plugins/
+lang/
 
 ### Natives stuff ###
 native/mbedtls

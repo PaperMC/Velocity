@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Velocity Contributors
+ * Copyright (C) 2021 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,17 +40,19 @@ public final class BrigadierCommandRegistrar extends AbstractCommandRegistrar<Br
     // Register it (if valid), since it's probably what the user expects.
     // If invalid, the metadata contains the same alias, but in lowercase.
     final LiteralCommandNode<CommandSource> literal = command.getNode();
+    final LiteralCommandNode<CommandSource> wrapped =
+        (LiteralCommandNode<CommandSource>) VelocityCommands.wrap(literal, meta.getPlugin());
     final String primaryAlias = literal.getName();
     if (VelocityCommands.isValidAlias(primaryAlias)) {
       // Register directly without copying
-      this.register(literal);
+      this.register(wrapped);
     }
 
     for (final String alias : meta.getAliases()) {
       if (primaryAlias.equals(alias)) {
         continue;
       }
-      this.register(literal, alias);
+      this.register(wrapped, alias);
     }
 
     // Brigadier commands don't support hinting, ignore

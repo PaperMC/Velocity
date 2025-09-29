@@ -1,0 +1,69 @@
+name: Bug Report
+description: Report issues with Velocity not working properly.
+labels: ["type: bug"]
+body:
+  - type: textarea
+    attributes:
+      label: Expected Behavior
+      description: What you expected to work and how.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Actual Behavior
+      description: What actually happens.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Steps to Reproduce
+      description: Information on how we can reproduce this bug on our own, this can be e.g. just an explanation, a video or your Velocity config.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Plugin List
+      description: |
+        All plugins running on your proxy and the backend server you're experiencing this issue on.
+        Use `/velocity plugins` to list plugins on Velocity and `/plugins` to list plugins on your backend server.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Velocity Version
+      description: |
+        The full, unmodified output of running `/velocity info`.
+        *"Latest"* is not a version. We require you to paste the text, not a screenshot.
+        <details>
+        <summary>Example</summary>
+        
+        ```
+        [17:44:10 INFO]: Velocity 3.3.0-SNAPSHOT (git-9d25d309-b400)  
+        [17:44:10 INFO]: Copyright 2018-2023 Velocity Contributors. Velocity is licensed under the terms of the GNU General Public License v3.  
+        [17:44:10 INFO]: PaperMC - GitHub  
+        ```
+        </details>
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Additional Information
+      description: Anything else you think is helpful.
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        Before submitting this issue, please ensure the following:
+
+        1. You are running the latest version of Velocity from [our downloads page](https://papermc.io/downloads/velocity).
+        2. You searched for and ensured there isn't already an open issue regarding this.
+
+        If you think you have a bug, but are not sure, feel free to ask in the `#velocity-help` channel on our
+        [Discord](https://discord.gg/papermc).
