@@ -538,6 +538,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       serverBossBars.clear();
       player.clearPlayerListHeaderAndFooterSilent();
       player.getTabList().clearAllSilent();
+      if (player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
+        player.getBossBarManager().dropPackets();
+      }
     }
 
     player.switchToConfigState();
@@ -577,7 +580,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
     destination.setEntityId(joinGame.getEntityId()); // used for sound api
 
-    // Remove previous boss bars. These don't get cleared when sending JoinGame, thus the need to
+    // Remove previous boss bars. These don't get cleared when sending JoinGame (up until 1.20.2), thus the need to
     // track them.
     for (UUID serverBossBar : serverBossBars) {
       BossBarPacket deletePacket = new BossBarPacket();
@@ -610,6 +613,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       player.getConnection().delayedWrite(
           GenericTitlePacket.constructTitlePacket(GenericTitlePacket.ActionType.RESET,
               player.getProtocolVersion()));
+    }
+
+    if (player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
+      player.getBossBarManager().sendBossBars();
     }
 
     // Flush everything
