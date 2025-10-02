@@ -45,7 +45,7 @@ public final class PlayerClientLoadedWorldEvent {
 
   /**
    * True if the event was triggered because the server has not been notified by the player
-   * withing {@link PlayerClientLoadedWorldEvent#TIMEOUT} after the player joined the server.
+   * within {@link PlayerClientLoadedWorldEvent#TIMEOUT} after the player joined the server.
    *
    * @return true if the event was triggered because of a timeout
    */
