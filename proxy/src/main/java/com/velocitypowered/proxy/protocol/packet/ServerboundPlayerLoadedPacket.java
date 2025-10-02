@@ -24,19 +24,20 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
 public class ServerboundPlayerLoadedPacket implements MinecraftPacket {
-    public static final ServerboundPlayerLoadedPacket INSTANCE = new ServerboundPlayerLoadedPacket();
 
-    private ServerboundPlayerLoadedPacket() {}
+  public static final ServerboundPlayerLoadedPacket INSTANCE = new ServerboundPlayerLoadedPacket();
 
-    @Override
-    public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {}
+  private ServerboundPlayerLoadedPacket() {}
 
-    @Override
-    public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {}
+  @Override
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {}
 
-    @Override
-    public boolean handle(MinecraftSessionHandler handler) {
-        return false;
-    }
+  @Override
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {}
+
+  @Override
+  public boolean handle(MinecraftSessionHandler handler) {
+    return handler.handle(this);
+  }
 
 }
