@@ -22,17 +22,19 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatAcknowledgementPacket;
-import com.velocitypowered.proxy.protocol.packet.chat.CommandHandler;
 import java.util.concurrent.CompletableFuture;
+
+import com.velocitypowered.proxy.protocol.packet.chat.RateLimitedCommandHandler;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class SessionCommandHandler implements CommandHandler<SessionPlayerCommandPacket> {
+public class SessionCommandHandler extends RateLimitedCommandHandler<SessionPlayerCommandPacket> {
 
   private final ConnectedPlayer player;
   private final VelocityServer server;
 
   public SessionCommandHandler(ConnectedPlayer player, VelocityServer server) {
+    super(player, server);
     this.player = player;
     this.server = server;
   }

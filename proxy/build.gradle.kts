@@ -1,9 +1,11 @@
 import com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer
+import io.papermc.fill.model.BuildChannel
 
 plugins {
     application
     id("velocity-init-manifest")
     alias(libs.plugins.shadow)
+    alias(libs.plugins.fill)
 }
 
 application {
@@ -100,10 +102,29 @@ tasks {
     runShadow {
         workingDir = file("run").also(File::mkdirs)
         standardInput = System.`in`
+        jvmArgs("-Dvelocity.packet-decode-logging=true")
     }
     named<JavaExec>("run") {
         workingDir = file("run").also(File::mkdirs)
         standardInput = System.`in` // Doesn't work?
+    }
+}
+
+val projectVersion = version as String
+fill {
+    project("velocity")
+
+    build {
+        channel = BuildChannel.STABLE
+        versionFamily("3.0.0")
+        version(projectVersion)
+
+        downloads {
+            register("server:default") {
+                file = tasks.shadowJar.flatMap { it.archiveFile }
+                nameResolver.set { project, _, version, build -> "$project-$version-$build.jar" }
+            }
+        }
     }
 }
 
@@ -121,6 +142,9 @@ dependencies {
     implementation(libs.netty.transport.native.epoll)
     implementation(variantOf(libs.netty.transport.native.epoll) { classifier("linux-x86_64") })
     implementation(variantOf(libs.netty.transport.native.epoll) { classifier("linux-aarch_64") })
+    implementation(libs.netty.transport.native.iouring)
+    implementation(variantOf(libs.netty.transport.native.iouring) { classifier("linux-x86_64") })
+    implementation(variantOf(libs.netty.transport.native.iouring) { classifier("linux-aarch_64") })
     implementation(libs.netty.transport.native.kqueue)
     implementation(variantOf(libs.netty.transport.native.kqueue) { classifier("osx-x86_64") })
     implementation(variantOf(libs.netty.transport.native.kqueue) { classifier("osx-aarch_64") })

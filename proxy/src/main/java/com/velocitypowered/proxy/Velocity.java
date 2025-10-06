@@ -47,6 +47,11 @@ public class Velocity {
       System.setProperty("io.netty.native.workdir", System.getProperty("velocity.natives-tmpdir"));
     }
 
+    // Restore allocator used before Netty 4.2 due to oom issues with the adaptive allocator
+    if (System.getProperty("io.netty.allocator.type") == null) {
+      System.setProperty("io.netty.allocator.type", "pooled");
+    }
+
     // Disable the resource leak detector by default as it reduces performance. Allow the user to
     // override this if desired.
     if (!VelocityProperties.hasProperty("io.netty.leakDetection.level")) {

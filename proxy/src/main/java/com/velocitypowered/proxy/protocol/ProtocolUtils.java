@@ -44,10 +44,11 @@ import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.BinaryTagType;
 import net.kyori.adventure.nbt.BinaryTagTypes;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.json.JSONOptions;
 import net.kyori.adventure.text.serializer.json.legacyimpl.NBTLegacyHoverEventSerializer;
-import net.kyori.option.OptionState;
+import net.kyori.option.OptionSchema;
 
 /**
  * Utilities for writing and reading data in the Minecraft protocol.
@@ -60,14 +61,17 @@ public enum ProtocolUtils {
           .downsampleColors()
           .legacyHoverEventSerializer(NBTLegacyHoverEventSerializer.get())
           .options(
-              OptionState.optionState()
+              OptionSchema.globalSchema().stateBuilder()
               // before 1.16
               .value(JSONOptions.EMIT_RGB, Boolean.FALSE)
-              .value(JSONOptions.EMIT_HOVER_EVENT_TYPE, JSONOptions.HoverEventValueMode.LEGACY_ONLY)
+              .value(JSONOptions.EMIT_HOVER_EVENT_TYPE, JSONOptions.HoverEventValueMode.VALUE_FIELD)
+              .value(JSONOptions.EMIT_CLICK_EVENT_TYPE, JSONOptions.ClickEventValueMode.CAMEL_CASE)
               // before 1.20.3
               .value(JSONOptions.EMIT_COMPACT_TEXT_COMPONENT, Boolean.FALSE)
               .value(JSONOptions.EMIT_HOVER_SHOW_ENTITY_ID_AS_INT_ARRAY, Boolean.FALSE)
               .value(JSONOptions.VALIDATE_STRICT_EVENTS, Boolean.FALSE)
+              // before 1.21.5
+              .value(JSONOptions.EMIT_CHANGE_PAGE_CLICK_EVENT_PAGE_AS_STRING, Boolean.TRUE)
               .build()
           )
           .build();
@@ -75,14 +79,37 @@ public enum ProtocolUtils {
           GsonComponentSerializer.builder()
           .legacyHoverEventSerializer(NBTLegacyHoverEventSerializer.get())
           .options(
-              OptionState.optionState()
+              OptionSchema.globalSchema().stateBuilder()
               // after 1.16
               .value(JSONOptions.EMIT_RGB, Boolean.TRUE)
-              .value(JSONOptions.EMIT_HOVER_EVENT_TYPE, JSONOptions.HoverEventValueMode.MODERN_ONLY)
+              .value(JSONOptions.EMIT_HOVER_EVENT_TYPE, JSONOptions.HoverEventValueMode.CAMEL_CASE)
+              .value(JSONOptions.EMIT_CLICK_EVENT_TYPE, JSONOptions.ClickEventValueMode.CAMEL_CASE)
+              .value(JSONOptions.EMIT_HOVER_SHOW_ENTITY_KEY_AS_TYPE_AND_UUID_AS_ID, true)
               // before 1.20.3
               .value(JSONOptions.EMIT_COMPACT_TEXT_COMPONENT, Boolean.FALSE)
               .value(JSONOptions.EMIT_HOVER_SHOW_ENTITY_ID_AS_INT_ARRAY, Boolean.FALSE)
               .value(JSONOptions.VALIDATE_STRICT_EVENTS, Boolean.FALSE)
+              // before 1.21.5
+              .value(JSONOptions.EMIT_CHANGE_PAGE_CLICK_EVENT_PAGE_AS_STRING, Boolean.TRUE)
+              .build()
+          )
+          .build();
+  private static final GsonComponentSerializer PRE_1_21_5_SERIALIZER =
+      GsonComponentSerializer.builder()
+          .legacyHoverEventSerializer(NBTLegacyHoverEventSerializer.get())
+          .options(
+              OptionSchema.globalSchema().stateBuilder()
+              // after 1.16
+              .value(JSONOptions.EMIT_RGB, Boolean.TRUE)
+              .value(JSONOptions.EMIT_HOVER_EVENT_TYPE, JSONOptions.HoverEventValueMode.CAMEL_CASE)
+              .value(JSONOptions.EMIT_CLICK_EVENT_TYPE, JSONOptions.ClickEventValueMode.CAMEL_CASE)
+              .value(JSONOptions.EMIT_HOVER_SHOW_ENTITY_KEY_AS_TYPE_AND_UUID_AS_ID, true)
+              // after 1.20.3
+              .value(JSONOptions.EMIT_COMPACT_TEXT_COMPONENT, Boolean.TRUE)
+              .value(JSONOptions.EMIT_HOVER_SHOW_ENTITY_ID_AS_INT_ARRAY, Boolean.TRUE)
+              .value(JSONOptions.VALIDATE_STRICT_EVENTS, Boolean.TRUE)
+              // before 1.21.5
+              .value(JSONOptions.EMIT_CHANGE_PAGE_CLICK_EVENT_PAGE_AS_STRING, Boolean.TRUE)
               .build()
           )
           .build();
@@ -90,14 +117,18 @@ public enum ProtocolUtils {
       GsonComponentSerializer.builder()
           .legacyHoverEventSerializer(NBTLegacyHoverEventSerializer.get())
           .options(
-              OptionState.optionState()
+              OptionSchema.globalSchema().stateBuilder()
               // after 1.16
               .value(JSONOptions.EMIT_RGB, Boolean.TRUE)
-              .value(JSONOptions.EMIT_HOVER_EVENT_TYPE, JSONOptions.HoverEventValueMode.MODERN_ONLY)
+              .value(JSONOptions.EMIT_HOVER_EVENT_TYPE, JSONOptions.HoverEventValueMode.SNAKE_CASE)
+              .value(JSONOptions.EMIT_CLICK_EVENT_TYPE, JSONOptions.ClickEventValueMode.SNAKE_CASE)
               // after 1.20.3
               .value(JSONOptions.EMIT_COMPACT_TEXT_COMPONENT, Boolean.TRUE)
               .value(JSONOptions.EMIT_HOVER_SHOW_ENTITY_ID_AS_INT_ARRAY, Boolean.TRUE)
+              // after 1.21.5
+              .value(JSONOptions.EMIT_HOVER_SHOW_ENTITY_KEY_AS_TYPE_AND_UUID_AS_ID, Boolean.FALSE)
               .value(JSONOptions.VALIDATE_STRICT_EVENTS, Boolean.TRUE)
+              .value(JSONOptions.EMIT_CHANGE_PAGE_CLICK_EVENT_PAGE_AS_STRING, Boolean.FALSE)
               .build()
           )
           .build();
@@ -249,8 +280,7 @@ public enum ProtocolUtils {
     checkFrame(buf.isReadable(length),
         "Trying to read a string that is too long (wanted %s, only have %s)", length,
         buf.readableBytes());
-    String str = buf.toString(buf.readerIndex(), length, StandardCharsets.UTF_8);
-    buf.skipBytes(length);
+    String str = buf.readString(length, StandardCharsets.UTF_8);
     checkFrame(str.length() <= cap, "Got a too-long string (got %s, max %s)", str.length(), cap);
     return str;
   }
@@ -285,6 +315,16 @@ public enum ProtocolUtils {
    */
   public static void writeKey(ByteBuf buf, Key key) {
     writeString(buf, key.asString());
+  }
+
+  /**
+   * Writes the key to the buffer, dropping the "minecraft:" namespace when present.
+   *
+   * @param buf the buffer to write to
+   * @param key the key to write
+   */
+  public static void writeMinimalKey(ByteBuf buf, Key key) {
+    writeString(buf, key.asMinimalString());
   }
 
   /**
@@ -713,8 +753,11 @@ public enum ProtocolUtils {
    * @return the appropriate {@link GsonComponentSerializer}
    */
   public static GsonComponentSerializer getJsonChatSerializer(ProtocolVersion version) {
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_21_5)) {
       return MODERN_SERIALIZER;
+    }
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
+      return PRE_1_21_5_SERIALIZER;
     }
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_16)) {
       return PRE_1_20_3_SERIALIZER;
@@ -747,6 +790,40 @@ public enum ProtocolUtils {
     IdentifiedKey.Revision revision = version.noGreaterOrLessThan(ProtocolVersion.MINECRAFT_1_19)
         ? IdentifiedKey.Revision.GENERIC_V1 : IdentifiedKey.Revision.LINKED_V2;
     return new IdentifiedKeyImpl(revision, key, expiry, signature);
+  }
+
+  /**
+   * Reads a {@link Sound.Source} from the buffer.
+   *
+   * @param buf the buffer
+   * @param version the protocol version
+   * @return the sound source
+   */
+  public static Sound.Source readSoundSource(ByteBuf buf, ProtocolVersion version) {
+    int ordinal = readVarInt(buf);
+
+    if (version.lessThan(ProtocolVersion.MINECRAFT_1_21_5)
+        && ordinal == Sound.Source.UI.ordinal()) {
+      throw new UnsupportedOperationException("UI sound-source is only supported in 1.21.5+");
+    }
+
+    return Sound.Source.values()[ordinal];
+  }
+
+  /**
+   * Writes a {@link Sound.Source} to the buffer.
+   *
+   * @param buf the buffer
+   * @param version the protocol version
+   * @param source the sound source to write
+   */
+  public static void writeSoundSource(ByteBuf buf, ProtocolVersion version, Sound.Source source) {
+    if (version.lessThan(ProtocolVersion.MINECRAFT_1_21_5)
+        && source == Sound.Source.UI) {
+      throw new UnsupportedOperationException("UI sound-source is only supported in 1.21.5+");
+    }
+
+    writeVarInt(buf, source.ordinal());
   }
 
   /**

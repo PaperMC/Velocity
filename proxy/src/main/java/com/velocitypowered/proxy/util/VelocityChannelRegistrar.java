@@ -79,10 +79,10 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
    *
    * @return all legacy channel IDs
    */
-  public Collection<String> getLegacyChannelIds() {
-    Collection<String> ids = new HashSet<>();
+  public Collection<ChannelIdentifier> getLegacyChannelIds() {
+    Collection<ChannelIdentifier> ids = new HashSet<>();
     for (ChannelIdentifier value : identifierMap.values()) {
-      ids.add(value.getId());
+      ids.add(new LegacyChannelIdentifier(value.getId()));
     }
     return ids;
   }
@@ -92,13 +92,13 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
    *
    * @return the channel IDs for Minecraft 1.13 and above
    */
-  public Collection<String> getModernChannelIds() {
-    Collection<String> ids = new HashSet<>();
+  public Collection<ChannelIdentifier> getModernChannelIds() {
+    Collection<ChannelIdentifier> ids = new HashSet<>();
     for (ChannelIdentifier value : identifierMap.values()) {
       if (value instanceof MinecraftChannelIdentifier) {
-        ids.add(value.getId());
+        ids.add(value);
       } else {
-        ids.add(PluginMessageUtil.transformLegacyToModernChannel(value.getId()));
+        ids.add(MinecraftChannelIdentifier.from(PluginMessageUtil.transformLegacyToModernChannel(value.getId())));
       }
     }
     return ids;
@@ -114,7 +114,7 @@ public class VelocityChannelRegistrar implements ChannelRegistrar {
    * @param protocolVersion the protocol version in use
    * @return the list of channels to register
    */
-  public Collection<String> getChannelsForProtocol(ProtocolVersion protocolVersion) {
+  public Collection<ChannelIdentifier> getChannelsForProtocol(ProtocolVersion protocolVersion) {
     if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_13)) {
       return getModernChannelIds();
     }

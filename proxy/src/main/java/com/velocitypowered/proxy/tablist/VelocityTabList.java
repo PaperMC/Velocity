@@ -90,7 +90,7 @@ public class VelocityTabList implements InternalTabList {
     } else {
       entry = new VelocityTabListEntry(this, entry1.getProfile(),
           entry1.getDisplayNameComponent().orElse(null),
-          entry1.getLatency(), entry1.getGameMode(), entry1.getChatSession(), entry1.isListed(), entry1.getListOrder());
+          entry1.getLatency(), entry1.getGameMode(), entry1.getChatSession(), entry1.isListed(), entry1.getListOrder(), entry1.isShowHat());
     }
 
     EnumSet<UpsertPlayerInfoPacket.Action> actions = EnumSet
@@ -134,6 +134,11 @@ public class VelocityTabList implements InternalTabList {
           actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LIST_ORDER);
           playerInfoEntry.setListOrder(entry.getListOrder());
         }
+        if (!Objects.equals(previousEntry.isShowHat(), entry.isShowHat())
+                && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_4)) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_HAT);
+          playerInfoEntry.setShowHat(entry.isShowHat());
+        }
         if (!Objects.equals(previousEntry.getChatSession(), entry.getChatSession())) {
           ChatSession from = entry.getChatSession();
           if (from != null) {
@@ -172,6 +177,10 @@ public class VelocityTabList implements InternalTabList {
             && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_2)) {
           actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LIST_ORDER);
           playerInfoEntry.setListOrder(entry.getListOrder());
+        }
+        if (!entry.isShowHat() && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_4)) {
+          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_HAT);
+          playerInfoEntry.setShowHat(entry.isShowHat());
         }
       }
       return entry;
@@ -218,9 +227,9 @@ public class VelocityTabList implements InternalTabList {
   @Override
   public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
       int gameMode,
-      @Nullable ChatSession chatSession, boolean listed, int listOrder) {
+      @Nullable ChatSession chatSession, boolean listed, int listOrder, boolean showHat) {
     return new VelocityTabListEntry(this, profile, displayName, latency, gameMode, chatSession,
-        listed, listOrder);
+        listed, listOrder, showHat);
   }
 
   @Override
@@ -258,7 +267,8 @@ public class VelocityTabList implements InternalTabList {
                 -1,
                 null,
                 false,
-                0
+                0,
+                true
             )
         );
       } else {

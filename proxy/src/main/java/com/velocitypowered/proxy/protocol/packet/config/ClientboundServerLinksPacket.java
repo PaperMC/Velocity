@@ -68,12 +68,6 @@ public class ClientboundServerLinksPacket implements MinecraftPacket {
 
     public record ServerLink(int id, ComponentHolder displayName, String url) {
 
-        public ServerLink(com.velocitypowered.api.util.ServerLink link, ProtocolVersion protocolVersion) {
-            this(link.getBuiltInType().map(Enum::ordinal).orElse(-1),
-                link.getCustomLabel().map(c -> new ComponentHolder(protocolVersion, c)).orElse(null),
-                link.getUrl().toString());
-        }
-
         private static ServerLink read(ByteBuf buf, ProtocolVersion version) {
             if (buf.readBoolean()) {
                 return new ServerLink(ProtocolUtils.readVarInt(buf), null, ProtocolUtils.readString(buf));

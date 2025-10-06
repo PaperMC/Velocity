@@ -66,6 +66,11 @@ kick-existing-players = false
 #                  configuration is used if no servers could be contacted.
 ping-passthrough = "DISABLED"
 
+# If enabled (default is false), then a sample of the online players on the proxy will be visible
+# when hovering over the player count in the server list.
+# This doesn't have any effect when ping passthrough is set to either "description" or "all".
+sample-players-in-ping = false
+
 # If not enabled (default is true) player IP addresses will be replaced by <ip address withheld> in logs
 enable-player-address-logging = true
 
@@ -150,6 +155,27 @@ accepts-transfers = false
 # strategy of having a single thread accepting connections and distributing them to worker
 # threads. Disabled by default. Requires Linux or macOS.
 enable-reuse-port = false
+
+# How fast (in milliseconds) are clients allowed to send commands after the last command
+# By default this is 50ms (20 commands per second)
+command-rate-limit = 50
+
+# Should we forward commands to the backend upon being rate limited?
+# This will forward the command to the server instead of processing it on the proxy.
+# Since most server implementations have a rate limit, this will prevent the player
+# from being able to send excessive commands to the server.
+forward-commands-if-rate-limited = true
+
+# How many commands are allowed to be sent after the rate limit is hit before the player is kicked?
+# Setting this to 0 or lower will disable this feature.
+kick-after-rate-limited-commands = 0
+
+# How fast (in milliseconds) are clients allowed to send tab completions after the last tab completion
+tab-complete-rate-limit = 10
+
+# How many tab completions are allowed to be sent after the rate limit is hit before the player is kicked?
+# Setting this to 0 or lower will disable this feature.
+kick-after-rate-limited-tab-completes = 0
 
 [query]
 # Whether to enable responding to GameSpy 4 query responses or not.

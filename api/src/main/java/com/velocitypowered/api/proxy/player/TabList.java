@@ -40,6 +40,7 @@ public interface TabList {
    * Adds a {@link TabListEntry} to the {@link Player}'s tab list.
    *
    * @param entry to add to the tab list
+   * @throws IllegalArgumentException on versions below 1.19.3, if an entry with the same UUID already exists
    */
   void addEntry(TabListEntry entry);
 
@@ -47,6 +48,7 @@ public interface TabList {
    * Adds a {@link Iterable} of {@link TabListEntry}'s to the {@link Player}'s tab list.
    *
    * @param entries to add to the tab list
+   * @throws IllegalArgumentException on versions below 1.19.3, if an entry with the same UUID already exists
    */
   default void addEntries(Iterable<TabListEntry> entries) {
     for (TabListEntry entry : entries) {
@@ -58,6 +60,7 @@ public interface TabList {
    * Adds an array of {@link TabListEntry}'s to the {@link Player}'s tab list.
    *
    * @param entries to add to the tab list
+   * @throws IllegalArgumentException on versions below 1.19.3, if an entry with the same UUID already exists
    */
   default void addEntries(TabListEntry... entries) {
     for (TabListEntry entry : entries) {
@@ -187,6 +190,26 @@ public interface TabList {
    * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
    */
   @Deprecated
+  default TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
+                          int gameMode, @Nullable ChatSession chatSession, boolean listed, int listOrder) {
+    return buildEntry(profile, displayName, latency, gameMode, chatSession, listed, listOrder, true);
+  }
+
+  /**
+   * Represents an entry in a {@link Player}'s tab list.
+   *
+   * @param profile     the profile
+   * @param displayName the display name
+   * @param latency     the latency
+   * @param gameMode    the game mode
+   * @param chatSession the chat session
+   * @param listed      the visible status of entry
+   * @param listOrder   the order/priority of entry in the tab list
+   * @param showHat     the visibility of this entry's hat layer
+   * @return the entry
+   * @deprecated Internal usage. Use {@link TabListEntry.Builder} instead.
+   */
+  @Deprecated
   TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
-                          int gameMode, @Nullable ChatSession chatSession, boolean listed, int listOrder);
+                          int gameMode, @Nullable ChatSession chatSession, boolean listed, int listOrder, boolean showHat);
 }

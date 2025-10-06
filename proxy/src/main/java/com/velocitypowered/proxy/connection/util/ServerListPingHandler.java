@@ -30,10 +30,12 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 /**
  * Common utilities for handling server list ping results.
@@ -51,11 +53,27 @@ public class ServerListPingHandler {
       version = ProtocolVersion.MAXIMUM_VERSION;
     }
     VelocityConfiguration configuration = server.getConfiguration();
+    List<ServerPing.SamplePlayer> samplePlayers;
+    if (configuration.getSamplePlayersInPing()) {
+      List<ServerPing.SamplePlayer> unshuffledPlayers = server.getAllPlayers().stream()
+              .map(p -> {
+                if (p.getPlayerSettings().isClientListingAllowed()) {
+                  return new ServerPing.SamplePlayer(p.getUsername(), p.getUniqueId());
+                } else {
+                  return ServerPing.SamplePlayer.ANONYMOUS;
+                }
+              })
+              .collect(Collectors.toList());
+      Collections.shuffle(unshuffledPlayers);
+      samplePlayers = unshuffledPlayers.subList(0, Math.min(12, server.getPlayerCount()));
+    } else {
+      samplePlayers = ImmutableList.of();
+    }
     return new ServerPing(
         new ServerPing.Version(version.getProtocol(),
             "Velocity " + ProtocolVersion.SUPPORTED_VERSION_STRING),
         new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(),
-            ImmutableList.of()),
+            samplePlayers),
         configuration.getMotd(),
         configuration.getFavicon().orElse(null),
         configuration.isAnnounceForge() ? ModInfo.DEFAULT : null
