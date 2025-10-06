@@ -52,6 +52,7 @@ import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponsePacket.Offer;
+import com.velocitypowered.proxy.protocol.packet.TeamPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatAcknowledgementPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatTimeKeeper;
@@ -107,6 +108,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   private boolean spawned = false;
   private final List<UUID> serverBossBars = new ArrayList<>();
   private final Set<String> serverObjectives = new HashSet<>();
+  private final Set<String> serverTeams = new HashSet<>();
   private final Queue<PluginMessagePacket> loginPluginMessages = new ConcurrentLinkedQueue<>();
   private final VelocityServer server;
   private @Nullable TabCompleteRequestPacket outstandingTabComplete;
@@ -541,6 +543,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       spawned = false;
       serverBossBars.clear();
       serverObjectives.clear();
+      serverTeams.clear();
       player.clearPlayerListHeaderAndFooterSilent();
       player.getTabList().clearAllSilent();
     }
@@ -598,6 +601,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       player.getConnection().delayedWrite(deletePacket);
     }
     serverObjectives.clear();
+    for (String serverObjective : serverTeams) {
+      TeamPacket deletePacket = new TeamPacket();
+      deletePacket.setName(serverObjective);
+      deletePacket.setMode(TeamPacket.REMOVE);
+      player.getConnection().delayedWrite(deletePacket);
+    }
+    serverTeams.clear();
 
     // Tell the server about the proxy's plugin message channels.
     ProtocolVersion serverVersion = serverMc.getProtocolVersion();
@@ -675,6 +685,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   public Set<String> getServerObjectives() {
     return serverObjectives;
+  }
+
+  public Set<String> getServerTeams() {
+    return serverTeams;
   }
 
   private boolean handleCommandTabComplete(TabCompleteRequestPacket packet) {

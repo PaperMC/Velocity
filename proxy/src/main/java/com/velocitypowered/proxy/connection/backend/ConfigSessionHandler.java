@@ -60,6 +60,7 @@ import com.velocitypowered.proxy.protocol.packet.config.RegistrySyncPacket;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.TagsUpdatePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.io.IOException;
@@ -67,8 +68,6 @@ import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import net.kyori.adventure.key.Key;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -332,8 +331,21 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   public boolean handle(KnownPacksPacket packet) {
     // Server expects us to reply to this packet
     if (serverConn.getPlayer().getConnection().getState() != StateRegistry.CONFIG) {
-      List<KnownPacksPacket.KnownPack> clientPacks = List.of(new KnownPacksPacket.KnownPack("minecraft", "core", serverConn.getPlayer().getProtocolVersion().getVersionIntroducedIn()));
-      serverConn.ensureConnected().write(new KnownPacksPacket(Arrays.stream(packet.getPacks()).distinct().filter(clientPacks::contains).toArray(KnownPacksPacket.KnownPack[]::new)));
+      List<KnownPacksPacket.KnownPack> clientPacks = List.of(
+              new KnownPacksPacket.KnownPack(
+                      "minecraft",
+                      "core",
+                      serverConn.getPlayer().getProtocolVersion().getVersionIntroducedIn()
+              )
+      );
+      serverConn.ensureConnected().write(
+              new KnownPacksPacket(
+                      Arrays.stream(packet.getPacks())
+                              .distinct()
+                              .filter(clientPacks::contains)
+                              .toArray(KnownPacksPacket.KnownPack[]::new)
+              )
+      );
       return true;
     }
     return false; // forward
