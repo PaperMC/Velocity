@@ -92,6 +92,8 @@ public class VelocityConfiguration implements ProxyConfig {
   private net.kyori.adventure.text.@MonotonicNonNull Component motdAsComponent;
   private @Nullable Favicon favicon;
   @Expose
+  private long unknownPingDefault = -1;
+  @Expose
   private boolean forceKeyAuthentication = true; // Added in 1.19
 
   private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
@@ -107,7 +109,7 @@ public class VelocityConfiguration implements ProxyConfig {
       boolean preventClientProxyConnections, boolean announceForge,
       PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
       boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough,
-      boolean samplePlayersInPing, boolean enablePlayerAddressLogging, Servers servers,
+      boolean samplePlayersInPing, boolean enablePlayerAddressLogging, long unknownPingDefault, Servers servers,
       ForcedHosts forcedHosts, Advanced advanced, Query query, Metrics metrics,
       boolean forceKeyAuthentication) {
     this.bind = bind;
@@ -122,6 +124,7 @@ public class VelocityConfiguration implements ProxyConfig {
     this.pingPassthrough = pingPassthrough;
     this.samplePlayersInPing = samplePlayersInPing;
     this.enablePlayerAddressLogging = enablePlayerAddressLogging;
+    this.unknownPingDefault = unknownPingDefault;
     this.servers = servers;
     this.forcedHosts = forcedHosts;
     this.advanced = advanced;
@@ -413,6 +416,10 @@ public class VelocityConfiguration implements ProxyConfig {
     return enablePlayerAddressLogging;
   }
 
+  public long getUnknownPingDefault() {
+    return unknownPingDefault;
+  }
+
   public boolean isBungeePluginChannelEnabled() {
     return advanced.isBungeePluginMessageChannel();
   }
@@ -465,6 +472,7 @@ public class VelocityConfiguration implements ProxyConfig {
         .add("query", query)
         .add("favicon", favicon)
         .add("enablePlayerAddressLogging", enablePlayerAddressLogging)
+        .add("unknownPingDefault", unknownPingDefault)
         .add("forceKeyAuthentication", forceKeyAuthentication)
         .toString();
   }
@@ -557,6 +565,7 @@ public class VelocityConfiguration implements ProxyConfig {
       final boolean kickExisting = config.getOrElse("kick-existing-players", false);
       final boolean enablePlayerAddressLogging = config.getOrElse(
               "enable-player-address-logging", true);
+      final int unknownPingDefault = config.getOrElse("unknown-ping-default", -1);
 
       // Throw an exception if the forwarding-secret file is empty and the proxy is using a
       // forwarding mode that requires it.
@@ -579,6 +588,7 @@ public class VelocityConfiguration implements ProxyConfig {
               pingPassthroughMode,
               samplePlayersInPing,
               enablePlayerAddressLogging,
+              unknownPingDefault,
               new Servers(serversConfig),
               new ForcedHosts(forcedHostsConfig),
               new Advanced(advancedConfig),

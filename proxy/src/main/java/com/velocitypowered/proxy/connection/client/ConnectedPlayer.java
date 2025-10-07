@@ -318,6 +318,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   @Override
   public long getPing() {
+    final long defaultPing = server.getConfiguration().getUnknownPingDefault();
+    if (this.ping < 0) {
+      return defaultPing;
+    }
     return this.ping;
   }
 

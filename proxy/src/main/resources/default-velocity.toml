@@ -74,6 +74,10 @@ sample-players-in-ping = false
 # If not enabled (default is true) player IP addresses will be replaced by <ip address withheld> in logs
 enable-player-address-logging = true
 
+# What ping should be used for a player if their ping is not yet known? By default, this is -1.
+# Changing this may cause issues with implementations that expect a negative ping to mean "unknown".
+unknown-ping-default = -1
+
 [servers]
 # Configure your servers here. Each key represents the server's name, and the value
 # represents the IP address of the server to connect to.
