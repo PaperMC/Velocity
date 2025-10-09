@@ -696,22 +696,34 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             return;
           }
 
-          List<Offer> offers = new ArrayList<>();
-          for (Suggestion suggestion : suggestions.getList()) {
-            String offer = suggestion.getText();
-            ComponentHolder tooltip = null;
-            if (suggestion.getTooltip() instanceof ComponentLike componentLike) {
-              tooltip = new ComponentHolder(player.getProtocolVersion(), componentLike.asComponent());
-            } else if (suggestion.getTooltip() != null) {
-              tooltip = new ComponentHolder(player.getProtocolVersion(), Component.text(suggestion.getTooltip().getString()));
+          int startPos = -1;
+          for (var suggestion : suggestions.getList()) {
+            if (startPos == -1 || startPos > suggestion.getRange().getStart()) {
+              startPos = suggestion.getRange().getStart();
             }
-            offers.add(new Offer(offer, tooltip));
           }
-          int startPos = packet.getCommand().lastIndexOf(' ') + 1;
+
           if (startPos > 0) {
+            List<Offer> offers = new ArrayList<>();
+            for (Suggestion suggestion : suggestions.getList()) {
+              String offer;
+              if (suggestion.getRange().getStart() == startPos) {
+                offer = suggestion.getText();
+              } else {
+                offer = command.substring(startPos, suggestion.getRange().getStart()) + suggestion.getText();
+              }
+              ComponentHolder tooltip = null;
+              if (suggestion.getTooltip() instanceof ComponentLike componentLike) {
+                tooltip = new ComponentHolder(player.getProtocolVersion(), componentLike.asComponent());
+              } else if (suggestion.getTooltip() != null) {
+                tooltip = new ComponentHolder(player.getProtocolVersion(), Component.text(suggestion.getTooltip().getString()));
+              }
+              offers.add(new Offer(offer, tooltip));
+            }
+
             TabCompleteResponsePacket resp = new TabCompleteResponsePacket();
             resp.setTransactionId(packet.getTransactionId());
-            resp.setStart(startPos);
+            resp.setStart(startPos + 1);
             resp.setLength(packet.getCommand().length() - startPos);
             resp.getOffers().addAll(offers);
             player.getConnection().write(resp);
