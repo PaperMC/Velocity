@@ -29,6 +29,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
+import net.kyori.adventure.dialog.DialogLike;
 import net.kyori.adventure.identity.Identified;
 import net.kyori.adventure.inventory.Book;
 import net.kyori.adventure.key.Key;
@@ -48,7 +49,7 @@ public interface Player extends
     /* Fundamental Velocity interfaces */
     CommandSource, InboundConnection, ChannelMessageSource, ChannelMessageSink,
     /* Adventure-specific interfaces */
-    Identified, HoverEventSource<HoverEvent.ShowEntity>, Keyed, KeyIdentifiable {
+    Identified, HoverEventSource<HoverEvent.ShowEntity>, Keyed, KeyIdentifiable, Sound.Emitter {
 
   /**
    * Returns the player's current username.
@@ -383,8 +384,12 @@ public interface Player extends
   /**
    * {@inheritDoc}
    *
-   * <b>This method is not currently implemented in Velocity
-   * and will not perform any actions.</b>
+   *
+   * @apiNote <b>This method is not currently implemented in Velocity
+   *     and will not perform any actions.</b>
+   * @see #playSound(Sound, Sound.Emitter)
+   * @see <a href="https://docs.papermc.io/velocity/dev/pitfalls/#audience-operations-are-not-fully-supported">
+   *   Unsupported Adventure Operations</a>
    */
   @Override
   default void playSound(@NotNull Sound sound) {
@@ -393,8 +398,11 @@ public interface Player extends
   /**
    * {@inheritDoc}
    *
-   * <b>This method is not currently implemented in Velocity
-   * and will not perform any actions.</b>
+   * @apiNote <b>This method is not currently implemented in Velocity
+   *     and will not perform any actions.</b>
+   * @see #playSound(Sound, Sound.Emitter)
+   * @see <a href="https://docs.papermc.io/velocity/dev/pitfalls/#audience-operations-are-not-fully-supported">
+   *   Unsupported Adventure Operations</a>
    */
   @Override
   default void playSound(@NotNull Sound sound, double x, double y, double z) {
@@ -403,18 +411,28 @@ public interface Player extends
   /**
    * {@inheritDoc}
    *
-   * <b>This method is not currently implemented in Velocity
-   * and will not perform any actions.</b>
+   * <p><b>Note</b>: Due to <a href="https://bugs.mojang.com/browse/MC/issues/MC-146721">MC-146721</a>, stereo sounds are always played globally in 1.14+.
+   *
+   * <p><b>Note</b>: Due to <a href="https://bugs.mojang.com/browse/MC/issues/MC-138832">MC-138832</a>, the volume and pitch are ignored when using this method in 1.14 to 1.16.5.
+   *
+   * @param sound the sound to play
+   * @param emitter the emitter of the sound; may be another player of this player's server
+   * @since 3.4.0
+   * @sinceMinecraft 1.19.3
+   * @apiNote This method is currently only implemented for players on 1.19.3+
+   *     and requires a present {@link #getCurrentServer} for the emitting player as well as this player.
    */
   @Override
-  default void playSound(@NotNull Sound sound, Sound.Emitter emitter) {
+  default void playSound(@NotNull Sound sound, @NotNull Sound.Emitter emitter) {
   }
 
   /**
    * {@inheritDoc}
    *
-   * <b>This method is not currently implemented in Velocity
-   * and will not perform any actions.</b>
+   * @param stop the sound and/or a sound source, to stop
+   * @since 3.4.0
+   * @sinceMinecraft 1.19.3
+   * @apiNote This method is currently only implemented for players on 1.19.3+.
    */
   @Override
   default void stopSound(@NotNull SoundStop stop) {
@@ -425,9 +443,38 @@ public interface Player extends
    *
    * <b>This method is not currently implemented in Velocity
    * and will not perform any actions.</b>
+   *
+   * @see <a href="https://docs.papermc.io/velocity/dev/pitfalls/#audience-operations-are-not-fully-supported">
+   *   Unsupported Adventure Operations</a>
    */
   @Override
   default void openBook(@NotNull Book book) {
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <b>This method is not currently implemented in Velocity
+   * and will not perform any actions.</b>
+   *
+   * @see <a href="https://docs.papermc.io/velocity/dev/pitfalls/#audience-operations-are-not-fully-supported">
+   *   Unsupported Adventure Operations</a>
+   */
+  @Override
+  default void showDialog(@NotNull DialogLike dialog) {
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <b>This method is not currently implemented in Velocity
+   * and will not perform any actions.</b>
+   *
+   * @see <a href="https://docs.papermc.io/velocity/dev/pitfalls/#audience-operations-are-not-fully-supported">
+   *   Unsupported Adventure Operations</a>
+   */
+  @Override
+  default void closeDialog() {
   }
 
   /**

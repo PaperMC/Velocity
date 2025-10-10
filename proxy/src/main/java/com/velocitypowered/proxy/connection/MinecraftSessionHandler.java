@@ -23,6 +23,8 @@ import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
 import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundSoundEntityPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundStopSoundPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
 import com.velocitypowered.proxy.protocol.packet.DialogClearPacket;
 import com.velocitypowered.proxy.protocol.packet.DialogShowPacket;
@@ -70,6 +72,8 @@ import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerComma
 import com.velocitypowered.proxy.protocol.packet.config.ActiveFeaturesPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ClientboundCustomReportDetailsPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ClientboundServerLinksPacket;
+import com.velocitypowered.proxy.protocol.packet.config.CodeOfConductAcceptPacket;
+import com.velocitypowered.proxy.protocol.packet.config.CodeOfConductPacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.KnownPacksPacket;
 import com.velocitypowered.proxy.protocol.packet.config.RegistrySyncPacket;
@@ -380,4 +384,19 @@ public interface MinecraftSessionHandler {
     return false;
   }
 
+  default boolean handle(CodeOfConductPacket packet) {
+    return false;
+  }
+
+  default boolean handle(CodeOfConductAcceptPacket packet) {
+    return false;
+  }
+
+  default boolean handle(ClientboundSoundEntityPacket packet) {
+    return false;
+  }
+
+  default boolean handle(ClientboundStopSoundPacket packet) {
+    return false;
+  }
 }

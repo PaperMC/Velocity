@@ -575,6 +575,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       }
     }
 
+    destination.setEntityId(joinGame.getEntityId()); // used for sound api
+
     // Remove previous boss bars. These don't get cleared when sending JoinGame, thus the need to
     // track them.
     for (UUID serverBossBar : serverBossBars) {

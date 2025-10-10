@@ -15,34 +15,31 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.protocol.packet;
+package com.velocitypowered.proxy.protocol.packet.config;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
+import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 
-public class ServerboundCustomClickActionPacket extends DeferredByteBufHolder implements MinecraftPacket {
+public class CodeOfConductAcceptPacket implements MinecraftPacket {
 
-  public ServerboundCustomClickActionPacket() {
-    super(null);
+  public static final CodeOfConductAcceptPacket INSTANCE = new CodeOfConductAcceptPacket();
+
+  private CodeOfConductAcceptPacket() {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    replace(buf.readRetainedSlice(buf.readableBytes()));
+  public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    buf.writeBytes(content());
+  public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
   }
 
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
   }
-
 }

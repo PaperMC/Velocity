@@ -44,6 +44,7 @@ import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.BinaryTagType;
 import net.kyori.adventure.nbt.BinaryTagTypes;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.json.JSONOptions;
 import net.kyori.adventure.text.serializer.json.legacyimpl.NBTLegacyHoverEventSerializer;
@@ -314,6 +315,16 @@ public enum ProtocolUtils {
    */
   public static void writeKey(ByteBuf buf, Key key) {
     writeString(buf, key.asString());
+  }
+
+  /**
+   * Writes the key to the buffer, dropping the "minecraft:" namespace when present.
+   *
+   * @param buf the buffer to write to
+   * @param key the key to write
+   */
+  public static void writeMinimalKey(ByteBuf buf, Key key) {
+    writeString(buf, key.asMinimalString());
   }
 
   /**
@@ -779,6 +790,40 @@ public enum ProtocolUtils {
     IdentifiedKey.Revision revision = version.noGreaterOrLessThan(ProtocolVersion.MINECRAFT_1_19)
         ? IdentifiedKey.Revision.GENERIC_V1 : IdentifiedKey.Revision.LINKED_V2;
     return new IdentifiedKeyImpl(revision, key, expiry, signature);
+  }
+
+  /**
+   * Reads a {@link Sound.Source} from the buffer.
+   *
+   * @param buf the buffer
+   * @param version the protocol version
+   * @return the sound source
+   */
+  public static Sound.Source readSoundSource(ByteBuf buf, ProtocolVersion version) {
+    int ordinal = readVarInt(buf);
+
+    if (version.lessThan(ProtocolVersion.MINECRAFT_1_21_5)
+        && ordinal == Sound.Source.UI.ordinal()) {
+      throw new UnsupportedOperationException("UI sound-source is only supported in 1.21.5+");
+    }
+
+    return Sound.Source.values()[ordinal];
+  }
+
+  /**
+   * Writes a {@link Sound.Source} to the buffer.
+   *
+   * @param buf the buffer
+   * @param version the protocol version
+   * @param source the sound source to write
+   */
+  public static void writeSoundSource(ByteBuf buf, ProtocolVersion version, Sound.Source source) {
+    if (version.lessThan(ProtocolVersion.MINECRAFT_1_21_5)
+        && source == Sound.Source.UI) {
+      throw new UnsupportedOperationException("UI sound-source is only supported in 1.21.5+");
+    }
+
+    writeVarInt(buf, source.ordinal());
   }
 
   /**
