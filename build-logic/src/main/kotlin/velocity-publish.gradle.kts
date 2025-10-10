@@ -3,26 +3,16 @@ plugins {
     `maven-publish`
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-            groupId = "com.velocitypowered"
-            artifactId = "velocity-api"
-            version = "3.4.0-LMC" // or project.version
-        }
-    }
-
+extensions.configure<PublishingExtension> {
     repositories {
-        // PaperMC (releases/snapshots auto-selected by version suffix)
         maven {
-            name = if (project.version.toString().endsWith("SNAPSHOT")) "paperSnapshots" else "paper"
+            credentials(PasswordCredentials::class.java)
+
+            name = if (version.toString().endsWith("SNAPSHOT")) "paperSnapshots" else "paper" // "paper" is seemingly not defined
             val base = "https://artifactory.papermc.io/artifactory"
-            url = uri(
-                if (project.version.toString().endsWith("SNAPSHOT")) "$base/snapshots/"
-                else "$base/releases/"
-            )
-            credentials(PasswordCredentials::class)
+            val releasesRepoUrl = "$base/releases/"
+            val snapshotsRepoUrl = "$base/snapshots/"
+            setUrl(if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl)
         }
 
         // LifestealMC private repo
