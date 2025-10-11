@@ -210,7 +210,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
     if (!serverConnection.isClientLoaded()) {
       serverConnection.setClientLoaded(true);
-      server.getEventManager().fireAndForget(new PlayerClientLoadedWorldEvent(player, false));
+      server.getEventManager().fireAndForget(new PlayerClientLoadedWorldEvent(player));
     }
     return true;
   }

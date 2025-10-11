@@ -20,11 +20,9 @@ package com.velocitypowered.proxy.connection.client;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.CookieReceiveEvent;
 import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
-import com.velocitypowered.api.event.player.PlayerClientLoadedWorldEvent;
 import com.velocitypowered.api.event.player.configuration.PlayerConfigurationEvent;
 import com.velocitypowered.api.event.player.configuration.PlayerFinishConfigurationEvent;
 import com.velocitypowered.api.event.player.configuration.PlayerFinishedConfigurationEvent;
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -32,7 +30,6 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.player.resourcepack.ResourcePackResponseBundle;
-import com.velocitypowered.proxy.plugin.virtual.VelocityVirtualPlugin;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -346,17 +343,6 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
       player.getConnection().write(FinishedUpdatePacket.INSTANCE);
       player.getConnection().getChannel().pipeline().get(MinecraftEncoder.class).setState(StateRegistry.PLAY);
       server.getEventManager().fireAndForget(new PlayerFinishedConfigurationEvent(player, serverConn));
-      if (player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_4)) {
-        server.getScheduler().buildTask(VelocityVirtualPlugin.INSTANCE, () -> {
-          if (serverConn.isClientLoaded()) {
-            return;
-          }
-          serverConn.setClientLoaded(true);
-          server.getEventManager().fireAndForget(new PlayerClientLoadedWorldEvent(player, true));
-        })
-        .delay(PlayerClientLoadedWorldEvent.TIMEOUT)
-        .schedule();
-      }
     }, player.getConnection().eventLoop()).exceptionally(ex -> {
       logger.error("Error finishing configuration state:", ex);
       return null;
