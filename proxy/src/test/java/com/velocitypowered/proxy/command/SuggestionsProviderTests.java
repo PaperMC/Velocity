@@ -28,10 +28,9 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
+import com.velocitypowered.api.command.SimpleCommand;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-
-import com.velocitypowered.api.command.SimpleCommand;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -296,7 +295,9 @@ public class SuggestionsProviderTests extends CommandTestSuite {
     final var meta = manager.metaBuilder("offset").build();
     manager.register(meta, new SimpleCommand() {
       @Override
-      public void execute(final Invocation invocation) { fail(); }
+      public void execute(final Invocation invocation) {
+        fail();
+      }
 
       @Override
       public List<String> suggest(final Invocation invocation) {
