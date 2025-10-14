@@ -24,6 +24,9 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 public class KnownPacksPacket implements MinecraftPacket {
 
     private static final int MAX_LENGTH_PACKS = Integer.getInteger("velocity.max-known-packs", 64);
@@ -31,6 +34,14 @@ public class KnownPacksPacket implements MinecraftPacket {
         new QuietDecoderException("too many known packs");
 
     private KnownPack[] packs;
+
+    public KnownPacksPacket() {
+        packs = new KnownPack[0];
+    }
+
+    public KnownPacksPacket(KnownPack[] packs) {
+        this.packs = packs;
+    }
 
     @Override
     public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
@@ -64,6 +75,17 @@ public class KnownPacksPacket implements MinecraftPacket {
         return handler.handle(this);
     }
 
+    public KnownPack[] getPacks() {
+        return packs;
+    }
+
+    @Override
+    public String toString() {
+        return "KnownPacksPacket{" +
+                "packs=" + Arrays.toString(packs) +
+                '}';
+    }
+
     public record KnownPack(String namespace, String id, String version) {
         private static KnownPack read(ByteBuf buf) {
             return new KnownPack(ProtocolUtils.readString(buf), ProtocolUtils.readString(buf), ProtocolUtils.readString(buf));
@@ -73,6 +95,27 @@ public class KnownPacksPacket implements MinecraftPacket {
             ProtocolUtils.writeString(buf, namespace);
             ProtocolUtils.writeString(buf, id);
             ProtocolUtils.writeString(buf, version);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            KnownPack knownPack = (KnownPack) o;
+            return Objects.equals(id, knownPack.id) && Objects.equals(version, knownPack.version) && Objects.equals(namespace, knownPack.namespace);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(namespace, id, version);
+        }
+
+        @Override
+        public String toString() {
+            return "KnownPack{" +
+                    "namespace='" + namespace + '\'' +
+                    ", id='" + id + '\'' +
+                    ", version='" + version + '\'' +
+                    '}';
         }
     }
 }

@@ -155,8 +155,9 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
             logger.error("Exception while handling plugin message packet for {}", player, ex);
             return null;
           });
+      return true;
     }
-    return true;
+    return false;
   }
 
   @Override
@@ -171,18 +172,12 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(KnownPacksPacket packet) {
-    callConfigurationEvent().thenRun(() -> {
-      VelocityServerConnection targetServer =
-          player.getConnectionInFlightOrConnectedServer();
-      if (targetServer != null) {
-        targetServer.ensureConnected().write(packet);
-      }
-    }).exceptionally(ex -> {
-      logger.error("Error forwarding known packs response to backend:", ex);
-      return null;
-    });
+    if (player.getConnectionInFlight() != null) {
+      player.getConnectionInFlight().ensureConnected().write(packet);
+      return true;
+    }
 
-    return true;
+    return false;
   }
 
   @Override

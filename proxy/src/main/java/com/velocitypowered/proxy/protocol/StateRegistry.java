@@ -75,6 +75,7 @@ import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItemPacket;
 import com.velocitypowered.proxy.protocol.packet.LoginAcknowledgedPacket;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.ObjectivePacket;
 import com.velocitypowered.proxy.protocol.packet.PingIdentifyPacket;
 import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.RemovePlayerInfoPacket;
@@ -93,6 +94,7 @@ import com.velocitypowered.proxy.protocol.packet.StatusRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.TeamPacket;
 import com.velocitypowered.proxy.protocol.packet.TransferPacket;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfoPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatAcknowledgementPacket;
@@ -803,6 +805,46 @@ public enum StateRegistry {
           map(0x7B, MINECRAFT_1_21, false),
           map(0x82, MINECRAFT_1_21_2, false),
           map(0x87, MINECRAFT_1_21_9, false));
+      clientbound.register(
+          ObjectivePacket.class,
+          ObjectivePacket::new,
+          map(0x3B, MINECRAFT_1_8, false),
+          map(0x3F, MINECRAFT_1_9, false),
+          map(0x41, MINECRAFT_1_12, false),
+          map(0x42, MINECRAFT_1_12_1, false),
+          map(0x45, MINECRAFT_1_13, false),
+          map(0x49, MINECRAFT_1_14, false),
+          map(0x4A, MINECRAFT_1_15, false),
+          map(0x53, MINECRAFT_1_17, false),
+          map(0x56, MINECRAFT_1_19_1, false),
+          map(0x54, MINECRAFT_1_19_3, false),
+          map(0x58, MINECRAFT_1_19_4, false),
+          map(0x5A, MINECRAFT_1_20_2, false),
+          map(0x5C, MINECRAFT_1_20_3, false),
+          map(0x5E, MINECRAFT_1_20_5, false),
+          map(0x64, MINECRAFT_1_21_2, false),
+          map(0x63, MINECRAFT_1_21_5, false),
+          map(0x68, MINECRAFT_1_21_9, false));
+      clientbound.register(
+          TeamPacket.class,
+          TeamPacket::new,
+          map(0x3E, MINECRAFT_1_8, false),
+          map(0x41, MINECRAFT_1_9, false),
+          map(0x43, MINECRAFT_1_12, false),
+          map(0x44, MINECRAFT_1_12_1, false),
+          map(0x47, MINECRAFT_1_13, false),
+          map(0x4B, MINECRAFT_1_14, false),
+          map(0x4C, MINECRAFT_1_15, false),
+          map(0x55, MINECRAFT_1_17, false),
+          map(0x58, MINECRAFT_1_19_1, false),
+          map(0x56, MINECRAFT_1_19_3, false),
+          map(0x5A, MINECRAFT_1_19_4, false),
+          map(0x5C, MINECRAFT_1_20_2, false),
+          map(0x5E, MINECRAFT_1_20_3, false),
+          map(0x60, MINECRAFT_1_20_5, false),
+          map(0x67, MINECRAFT_1_21_2, false),
+          map(0x66, MINECRAFT_1_21_5, false),
+          map(0x6B, MINECRAFT_1_21_9, false));
     }
   },
   LOGIN {

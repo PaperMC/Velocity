@@ -38,6 +38,7 @@ import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
@@ -54,14 +55,18 @@ import com.velocitypowered.proxy.protocol.packet.config.ClientboundCustomReportD
 import com.velocitypowered.proxy.protocol.packet.config.ClientboundServerLinksPacket;
 import com.velocitypowered.proxy.protocol.packet.config.CodeOfConductPacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
+import com.velocitypowered.proxy.protocol.packet.config.KnownPacksPacket;
 import com.velocitypowered.proxy.protocol.packet.config.RegistrySyncPacket;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.TagsUpdatePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.key.Key;
 import org.apache.logging.log4j.LogManager;
@@ -232,25 +237,22 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   public boolean handle(FinishedUpdatePacket packet) {
     final MinecraftConnection smc = serverConn.ensureConnected();
     final ConnectedPlayer player = serverConn.getPlayer();
-    final ClientConfigSessionHandler configHandler = (ClientConfigSessionHandler) player.getConnection().getActiveSessionHandler();
 
     smc.getChannel().pipeline().get(MinecraftVarintFrameDecoder.class).setState(StateRegistry.PLAY);
     smc.getChannel().pipeline().get(MinecraftDecoder.class).setState(StateRegistry.PLAY);
-    //noinspection DataFlowIssue
-    configHandler.handleBackendFinishUpdate(serverConn).thenRunAsync(() -> {
-      smc.write(FinishedUpdatePacket.INSTANCE);
-      if (serverConn == player.getConnectedServer()) {
-        smc.setActiveSessionHandler(StateRegistry.PLAY);
-        player.sendPlayerListHeaderAndFooter(player.getPlayerListHeader(), player.getPlayerListFooter());
-        // The client cleared the tab list. TODO: Restore changes done via TabList API
-        player.getTabList().clearAllSilent();
-      } else {
-        smc.setActiveSessionHandler(StateRegistry.PLAY, new TransitionSessionHandler(server, serverConn, resultFuture));
+    if (player.getConnection().getActiveSessionHandler() instanceof ClientConfigSessionHandler configHandler) {
+      configHandler.handleBackendFinishUpdate(serverConn).thenRunAsync(this::finish, smc.eventLoop());
+    } else {
+      final String brand = serverConn.getPlayer().getClientBrand();
+      if (brand != null) {
+        final ByteBuf buf = Unpooled.buffer();
+        ProtocolUtils.writeString(buf, brand);
+        final PluginMessagePacket brandPacket = new PluginMessagePacket("minecraft:brand", buf);
+        smc.write(brandPacket);
       }
-      if (player.resourcePackHandler().getFirstAppliedPack() == null && resourcePackToApply != null) {
-        player.resourcePackHandler().queueResourcePack(resourcePackToApply);
-      }
-    }, smc.eventLoop());
+
+      finish();
+    }
     return true;
   }
 
@@ -326,6 +328,30 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
+  public boolean handle(KnownPacksPacket packet) {
+    // Server expects us to reply to this packet
+    if (serverConn.getPlayer().getConnection().getState() != StateRegistry.CONFIG) {
+      List<KnownPacksPacket.KnownPack> clientPacks = List.of(
+              new KnownPacksPacket.KnownPack(
+                      "minecraft",
+                      "core",
+                      serverConn.getPlayer().getProtocolVersion().getVersionIntroducedIn()
+              )
+      );
+      serverConn.ensureConnected().write(
+              new KnownPacksPacket(
+                      Arrays.stream(packet.getPacks())
+                              .distinct()
+                              .filter(clientPacks::contains)
+                              .toArray(KnownPacksPacket.KnownPack[]::new)
+              )
+      );
+      return true;
+    }
+    return false; // forward
+  }
+
+  @Override
   public boolean handle(ClientboundStoreCookiePacket packet) {
     server.getEventManager()
         .fire(new CookieStoreEvent(serverConn.getPlayer(), packet.getKey(), packet.getPayload()))
@@ -381,6 +407,24 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
         serverConn.getPlayer().getUsername(), cause);
     serverConn.getPlayer().disconnect(ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR);
     resultFuture.completeExceptionally(cause);
+  }
+
+  private void finish() {
+    final MinecraftConnection smc = serverConn.ensureConnected();
+    final ConnectedPlayer player = serverConn.getPlayer();
+
+    smc.write(FinishedUpdatePacket.INSTANCE);
+    if (serverConn == player.getConnectedServer()) {
+      smc.setActiveSessionHandler(StateRegistry.PLAY);
+      player.sendPlayerListHeaderAndFooter(player.getPlayerListHeader(), player.getPlayerListFooter());
+      // The client cleared the tab list. TODO: Restore changes done via TabList API
+      player.getTabList().clearAllSilent();
+    } else {
+      smc.setActiveSessionHandler(StateRegistry.PLAY, new TransitionSessionHandler(server, serverConn, resultFuture));
+    }
+    if (player.resourcePackHandler().getFirstAppliedPack() == null && resourcePackToApply != null) {
+      player.resourcePackHandler().queueResourcePack(resourcePackToApply);
+    }
   }
 
   /**
