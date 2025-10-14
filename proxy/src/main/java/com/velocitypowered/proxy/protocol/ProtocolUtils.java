@@ -62,6 +62,8 @@ public enum ProtocolUtils {
           .legacyHoverEventSerializer(NBTLegacyHoverEventSerializer.get())
           .options(
               OptionSchema.globalSchema().stateBuilder()
+              // general options
+              .value(JSONOptions.EMIT_CLICK_URL_HTTPS, Boolean.TRUE)
               // before 1.16
               .value(JSONOptions.EMIT_RGB, Boolean.FALSE)
               .value(JSONOptions.EMIT_HOVER_EVENT_TYPE, JSONOptions.HoverEventValueMode.VALUE_FIELD)
@@ -80,6 +82,8 @@ public enum ProtocolUtils {
           .legacyHoverEventSerializer(NBTLegacyHoverEventSerializer.get())
           .options(
               OptionSchema.globalSchema().stateBuilder()
+              // general options
+              .value(JSONOptions.EMIT_CLICK_URL_HTTPS, Boolean.TRUE)
               // after 1.16
               .value(JSONOptions.EMIT_RGB, Boolean.TRUE)
               .value(JSONOptions.EMIT_HOVER_EVENT_TYPE, JSONOptions.HoverEventValueMode.CAMEL_CASE)
@@ -99,6 +103,8 @@ public enum ProtocolUtils {
           .legacyHoverEventSerializer(NBTLegacyHoverEventSerializer.get())
           .options(
               OptionSchema.globalSchema().stateBuilder()
+              // general options
+              .value(JSONOptions.EMIT_CLICK_URL_HTTPS, Boolean.TRUE)
               // after 1.16
               .value(JSONOptions.EMIT_RGB, Boolean.TRUE)
               .value(JSONOptions.EMIT_HOVER_EVENT_TYPE, JSONOptions.HoverEventValueMode.CAMEL_CASE)
@@ -118,6 +124,8 @@ public enum ProtocolUtils {
           .legacyHoverEventSerializer(NBTLegacyHoverEventSerializer.get())
           .options(
               OptionSchema.globalSchema().stateBuilder()
+              // general options
+              .value(JSONOptions.EMIT_CLICK_URL_HTTPS, Boolean.TRUE)
               // after 1.16
               .value(JSONOptions.EMIT_RGB, Boolean.TRUE)
               .value(JSONOptions.EMIT_HOVER_EVENT_TYPE, JSONOptions.HoverEventValueMode.SNAKE_CASE)
