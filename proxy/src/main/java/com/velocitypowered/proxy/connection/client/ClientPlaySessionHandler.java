@@ -535,11 +535,12 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
       // Config state clears everything in the client. No need to clear later.
       spawned = false;
-      serverBossBars.clear();
       player.clearPlayerListHeaderAndFooterSilent();
       player.getTabList().clearAllSilent();
       if (player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
         player.getBossBarManager().dropPackets();
+      } else {
+        serverBossBars.clear();
       }
     }
 
@@ -579,16 +580,19 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
 
     destination.setEntityId(joinGame.getEntityId()); // used for sound api
-
-    // Remove previous boss bars. These don't get cleared when sending JoinGame (up until 1.20.2), thus the need to
-    // track them.
-    for (UUID serverBossBar : serverBossBars) {
-      BossBarPacket deletePacket = new BossBarPacket();
-      deletePacket.setUuid(serverBossBar);
-      deletePacket.setAction(BossBarPacket.REMOVE);
-      player.getConnection().delayedWrite(deletePacket);
+    if (player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
+      player.getBossBarManager().sendBossBars();
+    } else {
+      // Remove previous boss bars. These don't get cleared when sending JoinGame (up until 1.20.2),
+      // thus the need to track them.
+      for (UUID serverBossBar : serverBossBars) {
+        BossBarPacket deletePacket = new BossBarPacket();
+        deletePacket.setUuid(serverBossBar);
+        deletePacket.setAction(BossBarPacket.REMOVE);
+        player.getConnection().delayedWrite(deletePacket);
+      }
+      serverBossBars.clear();
     }
-    serverBossBars.clear();
 
     // Tell the server about the proxy's plugin message channels.
     ProtocolVersion serverVersion = serverMc.getProtocolVersion();
@@ -613,10 +617,6 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       player.getConnection().delayedWrite(
           GenericTitlePacket.constructTitlePacket(GenericTitlePacket.ActionType.RESET,
               player.getProtocolVersion()));
-    }
-
-    if (player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
-      player.getBossBarManager().sendBossBars();
     }
 
     // Flush everything

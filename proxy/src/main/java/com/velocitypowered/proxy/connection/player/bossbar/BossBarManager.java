@@ -27,7 +27,7 @@ import java.util.Set;
  * Handles dropping and resending boss bar packets on versions 1.20.2 and newer because the client now
  * deletes all boss bars during the login phase, and sending update packets would cause the client to be disconnected.
  */
-public class BossBarManager {
+public final class BossBarManager {
 
   private final ConnectedPlayer player;
   private final Set<VelocityBossBarImplementation> bossBars = new HashSet<>();
