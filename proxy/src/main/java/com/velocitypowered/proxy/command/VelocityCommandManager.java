@@ -35,7 +35,6 @@ import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.CommandResult;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.command.VelocityBrigadierMessage;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.PostCommandInvocationEvent;
 import com.velocitypowered.api.plugin.PluginManager;
@@ -59,6 +58,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -242,8 +242,8 @@ public class VelocityCommandManager implements CommandManager {
           CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand());
       if (isSyntaxError) {
         final Message message = e.getRawMessage();
-        if (message instanceof VelocityBrigadierMessage velocityMessage) {
-          source.sendMessage(velocityMessage.asComponent().applyFallbackStyle(NamedTextColor.RED));
+        if (message instanceof ComponentLike componentLike) {
+          source.sendMessage(componentLike.asComponent().applyFallbackStyle(NamedTextColor.RED));
         } else {
           source.sendMessage(Component.text(e.getMessage(), NamedTextColor.RED));
         }
@@ -300,27 +300,14 @@ public class VelocityCommandManager implements CommandManager {
     );
   }
 
-  /**
-   * Returns suggestions to fill in the given command.
-   *
-   * @param source  the source to execute the command for
-   * @param cmdLine the partially completed command
-   * @return a {@link CompletableFuture} eventually completed with a {@link List}, possibly empty
-   */
+  @Override
   public CompletableFuture<List<String>> offerSuggestions(final CommandSource source,
       final String cmdLine) {
     return offerBrigadierSuggestions(source, cmdLine)
         .thenApply(suggestions -> Lists.transform(suggestions.getList(), Suggestion::getText));
   }
 
-  /**
-   * Returns suggestions to fill in the given command.
-   *
-   * @param source  the source to execute the command for
-   * @param cmdLine the partially completed command
-   * @return a {@link CompletableFuture} eventually completed with {@link Suggestions}, possibly
-   *         empty
-   */
+  @Override
   public CompletableFuture<Suggestions> offerBrigadierSuggestions(
       final CommandSource source, final String cmdLine) {
     Preconditions.checkNotNull(source, "source");

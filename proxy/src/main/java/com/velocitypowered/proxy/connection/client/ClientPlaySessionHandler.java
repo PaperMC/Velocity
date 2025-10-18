@@ -21,7 +21,6 @@ import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.construc
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.suggestion.Suggestion;
-import com.velocitypowered.api.command.VelocityBrigadierMessage;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.CookieReceiveEvent;
 import com.velocitypowered.api.event.player.PlayerChannelRegisterEvent;
@@ -72,6 +71,7 @@ import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.util.CharacterUtil;
+import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -86,6 +86,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -392,6 +393,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(FinishedUpdatePacket packet) {
+    if (!player.getConnection().pendingConfigurationSwitch) {
+      throw new QuietRuntimeException("Not expecting reconfiguration");
+    }
     // Complete client switch
     player.getConnection().setActiveSessionHandler(StateRegistry.CONFIG);
     VelocityServerConnection serverConnection = player.getConnectedServer();
@@ -531,9 +535,13 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
       // Config state clears everything in the client. No need to clear later.
       spawned = false;
-      serverBossBars.clear();
       player.clearPlayerListHeaderAndFooterSilent();
       player.getTabList().clearAllSilent();
+      if (player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
+        player.getBossBarManager().dropPackets();
+      } else {
+        serverBossBars.clear();
+      }
     }
 
     player.switchToConfigState();
@@ -571,15 +579,20 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       }
     }
 
-    // Remove previous boss bars. These don't get cleared when sending JoinGame, thus the need to
-    // track them.
-    for (UUID serverBossBar : serverBossBars) {
-      BossBarPacket deletePacket = new BossBarPacket();
-      deletePacket.setUuid(serverBossBar);
-      deletePacket.setAction(BossBarPacket.REMOVE);
-      player.getConnection().delayedWrite(deletePacket);
+    destination.setEntityId(joinGame.getEntityId()); // used for sound api
+    if (player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
+      player.getBossBarManager().sendBossBars();
+    } else {
+      // Remove previous boss bars. These don't get cleared when sending JoinGame (up until 1.20.2),
+      // thus the need to track them.
+      for (UUID serverBossBar : serverBossBars) {
+        BossBarPacket deletePacket = new BossBarPacket();
+        deletePacket.setUuid(serverBossBar);
+        deletePacket.setAction(BossBarPacket.REMOVE);
+        player.getConnection().delayedWrite(deletePacket);
+      }
+      serverBossBars.clear();
     }
-    serverBossBars.clear();
 
     // Tell the server about the proxy's plugin message channels.
     ProtocolVersion serverVersion = serverMc.getProtocolVersion();
@@ -690,23 +703,35 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
             return;
           }
 
-          List<Offer> offers = new ArrayList<>();
-          for (Suggestion suggestion : suggestions.getList()) {
-            String offer = suggestion.getText();
-            ComponentHolder tooltip = null;
-            if (suggestion.getTooltip() != null
-                && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
-              tooltip = new ComponentHolder(player.getProtocolVersion(),
-                  ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent());
+          int startPos = -1;
+          for (var suggestion : suggestions.getList()) {
+            if (startPos == -1 || startPos > suggestion.getRange().getStart()) {
+              startPos = suggestion.getRange().getStart();
             }
-            offers.add(new Offer(offer, tooltip));
           }
-          int startPos = packet.getCommand().lastIndexOf(' ') + 1;
+
           if (startPos > 0) {
+            List<Offer> offers = new ArrayList<>();
+            for (Suggestion suggestion : suggestions.getList()) {
+              String offer;
+              if (suggestion.getRange().getStart() == startPos) {
+                offer = suggestion.getText();
+              } else {
+                offer = command.substring(startPos, suggestion.getRange().getStart()) + suggestion.getText();
+              }
+              ComponentHolder tooltip = null;
+              if (suggestion.getTooltip() instanceof ComponentLike componentLike) {
+                tooltip = new ComponentHolder(player.getProtocolVersion(), componentLike.asComponent());
+              } else if (suggestion.getTooltip() != null) {
+                tooltip = new ComponentHolder(player.getProtocolVersion(), Component.text(suggestion.getTooltip().getString()));
+              }
+              offers.add(new Offer(offer, tooltip));
+            }
+
             TabCompleteResponsePacket resp = new TabCompleteResponsePacket();
             resp.setTransactionId(packet.getTransactionId());
-            resp.setStart(startPos);
-            resp.setLength(packet.getCommand().length() - startPos);
+            resp.setStart(startPos + 1);
+            resp.setLength(packet.getCommand().length() - startPos - 1);
             resp.getOffers().addAll(offers);
             player.getConnection().write(resp);
           }
@@ -761,10 +786,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
                 offer = offer.substring(command.length());
               }
               ComponentHolder tooltip = null;
-              if (suggestion.getTooltip() != null
-                  && suggestion.getTooltip() instanceof VelocityBrigadierMessage) {
-                tooltip = new ComponentHolder(player.getProtocolVersion(),
-                    ((VelocityBrigadierMessage) suggestion.getTooltip()).asComponent());
+              if (suggestion.getTooltip() instanceof ComponentLike componentLike) {
+                tooltip = new ComponentHolder(player.getProtocolVersion(), componentLike.asComponent());
+              } else if (suggestion.getTooltip() != null) {
+                tooltip = new ComponentHolder(player.getProtocolVersion(), Component.text(suggestion.getTooltip().getString()));
               }
               response.getOffers().add(new Offer(offer, tooltip));
             }

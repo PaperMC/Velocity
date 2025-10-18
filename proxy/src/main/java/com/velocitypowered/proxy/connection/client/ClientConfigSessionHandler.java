@@ -40,6 +40,8 @@ import com.velocitypowered.proxy.protocol.packet.PingIdentifyPacket;
 import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.ServerboundCustomClickActionPacket;
+import com.velocitypowered.proxy.protocol.packet.config.CodeOfConductAcceptPacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.KnownPacksPacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
@@ -170,7 +172,11 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(KnownPacksPacket packet) {
     callConfigurationEvent().thenRun(() -> {
-      player.getConnectionInFlightOrConnectedServer().ensureConnected().write(packet);
+      VelocityServerConnection targetServer =
+          player.getConnectionInFlightOrConnectedServer();
+      if (targetServer != null) {
+        targetServer.ensureConnected().write(packet);
+      }
     }).exceptionally(ex -> {
       logger.error("Error forwarding known packs response to backend:", ex);
       return null;
@@ -199,6 +205,26 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
         }, player.getConnection().eventLoop());
 
     return true;
+  }
+
+  @Override
+  public boolean handle(ServerboundCustomClickActionPacket packet) {
+    if (player.getConnectionInFlight() != null) {
+      player.getConnectionInFlight().ensureConnected().write(packet.retain());
+      return true;
+    }
+
+    return false;
+  }
+
+  @Override
+  public boolean handle(CodeOfConductAcceptPacket packet) {
+    if (this.player.getConnectionInFlight() != null) {
+      this.player.getConnectionInFlight().ensureConnected().write(packet);
+      return true;
+    }
+
+    return false;
   }
 
   @Override

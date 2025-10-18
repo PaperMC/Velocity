@@ -24,9 +24,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.flattener.ComponentFlattener;
 import net.kyori.adventure.translation.GlobalTranslator;
-import net.kyori.adventure.translation.TranslationRegistry;
-import net.kyori.adventure.translation.Translator;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * Velocity Translation Mapper.
@@ -43,25 +40,9 @@ public enum TranslatableMapper implements BiConsumer<TranslatableComponent, Cons
           final TranslatableComponent translatableComponent,
           final Consumer<Component> componentConsumer
   ) {
-    for (final Translator source : GlobalTranslator.translator().sources()) {
-      if (source instanceof TranslationRegistry registry
-              && registry.contains(translatableComponent.key())) {
-        componentConsumer.accept(GlobalTranslator.render(translatableComponent,
-                ClosestLocaleMatcher.INSTANCE.lookupClosest(Locale.getDefault())));
-        return;
-      }
-    }
-    final @Nullable String fallback = translatableComponent.fallback();
-    if (fallback == null) {
-      return;
-    }
-    for (final Translator source : GlobalTranslator.translator().sources()) {
-      if (source instanceof TranslationRegistry registry && registry.contains(fallback)) {
-        componentConsumer.accept(
-                GlobalTranslator.render(Component.translatable(fallback),
-                        ClosestLocaleMatcher.INSTANCE.lookupClosest(Locale.getDefault())));
-        return;
-      }
+    final Locale locale = ClosestLocaleMatcher.INSTANCE.lookupClosest(Locale.getDefault());
+    if (GlobalTranslator.translator().canTranslate(translatableComponent.key(), locale)) {
+      componentConsumer.accept(GlobalTranslator.render(translatableComponent, locale));
     }
   }
 }

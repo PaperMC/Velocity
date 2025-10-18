@@ -53,15 +53,23 @@ public final class VelocityBossBarImplementation implements BossBar.Listener,
           viewer.getProtocolVersion(),
           viewer.translateMessage(this.bar.name())
       );
-      viewer.getConnection().write(BossBarPacket.createAddPacket(this.id, this.bar, name));
+      viewer.getBossBarManager().writeUpdate(this, BossBarPacket.createAddPacket(this.id, this.bar, name));
       return true;
     }
     return false;
   }
 
+  public void createDirect(final ConnectedPlayer viewer) {
+    final ComponentHolder name = new ComponentHolder(
+        viewer.getProtocolVersion(),
+        viewer.translateMessage(this.bar.name())
+    );
+    viewer.getConnection().write(BossBarPacket.createAddPacket(this.id, this.bar, name));
+  }
+
   public boolean viewerRemove(final ConnectedPlayer viewer) {
     if (this.viewers.remove(viewer)) {
-      viewer.getConnection().write(BossBarPacket.createRemovePacket(this.id, this.bar));
+      viewer.getBossBarManager().remove(this, BossBarPacket.createRemovePacket(this.id, this.bar));
       return true;
     }
     return false;
@@ -84,7 +92,7 @@ public final class VelocityBossBarImplementation implements BossBar.Listener,
           this.bar,
           new ComponentHolder(viewer.getProtocolVersion(), translated)
       );
-      viewer.getConnection().write(packet);
+      viewer.getBossBarManager().writeUpdate(this, packet);
     }
   }
 
@@ -96,7 +104,7 @@ public final class VelocityBossBarImplementation implements BossBar.Listener,
   ) {
     final BossBarPacket packet = BossBarPacket.createUpdateProgressPacket(this.id, this.bar);
     for (final ConnectedPlayer viewer : this.viewers) {
-      viewer.getConnection().write(packet);
+      viewer.getBossBarManager().writeUpdate(this, packet);
     }
   }
 
@@ -108,7 +116,7 @@ public final class VelocityBossBarImplementation implements BossBar.Listener,
   ) {
     final BossBarPacket packet = BossBarPacket.createUpdateStylePacket(this.id, this.bar);
     for (final ConnectedPlayer viewer : this.viewers) {
-      viewer.getConnection().write(packet);
+      viewer.getBossBarManager().writeUpdate(this, packet);
     }
   }
 
@@ -120,7 +128,7 @@ public final class VelocityBossBarImplementation implements BossBar.Listener,
   ) {
     final BossBarPacket packet = BossBarPacket.createUpdateStylePacket(this.id, this.bar);
     for (final ConnectedPlayer viewer : this.viewers) {
-      viewer.getConnection().write(packet);
+      viewer.getBossBarManager().writeUpdate(this, packet);
     }
   }
 
@@ -132,7 +140,7 @@ public final class VelocityBossBarImplementation implements BossBar.Listener,
   ) {
     final BossBarPacket packet = BossBarPacket.createUpdatePropertiesPacket(this.id, this.bar);
     for (final ConnectedPlayer viewer : this.viewers) {
-      viewer.getConnection().write(packet);
+      viewer.getBossBarManager().writeUpdate(this, packet);
     }
   }
 }

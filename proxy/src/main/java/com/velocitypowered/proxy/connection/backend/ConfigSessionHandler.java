@@ -40,6 +40,7 @@ import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
+import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
 import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
@@ -51,6 +52,7 @@ import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TransferPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ClientboundCustomReportDetailsPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ClientboundServerLinksPacket;
+import com.velocitypowered.proxy.protocol.packet.config.CodeOfConductPacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.RegistrySyncPacket;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
@@ -232,6 +234,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
     final ConnectedPlayer player = serverConn.getPlayer();
     final ClientConfigSessionHandler configHandler = (ClientConfigSessionHandler) player.getConnection().getActiveSessionHandler();
 
+    smc.getChannel().pipeline().get(MinecraftVarintFrameDecoder.class).setState(StateRegistry.PLAY);
     smc.getChannel().pipeline().get(MinecraftDecoder.class).setState(StateRegistry.PLAY);
     //noinspection DataFlowIssue
     configHandler.handleBackendFinishUpdate(serverConn).thenRunAsync(() -> {
@@ -353,6 +356,12 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
           }
         }, serverConn.ensureConnected().eventLoop());
 
+    return true;
+  }
+
+  @Override
+  public boolean handle(CodeOfConductPacket packet) {
+    this.serverConn.getPlayer().getConnection().write(packet.retain());
     return true;
   }
 

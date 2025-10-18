@@ -135,7 +135,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
   private String getExtraConnectionDetail(int packetId) {
     return "Direction " + direction + " Protocol " + registry.version + " State " + state
-        + " ID " + Integer.toHexString(packetId);
+        + " ID 0x" + Integer.toHexString(packetId);
   }
 
   public void setProtocolVersion(ProtocolVersion protocolVersion) {
