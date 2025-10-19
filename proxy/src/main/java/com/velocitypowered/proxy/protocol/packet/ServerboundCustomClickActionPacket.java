@@ -21,6 +21,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import io.netty.buffer.ByteBuf;
 
@@ -45,4 +46,8 @@ public class ServerboundCustomClickActionPacket extends DeferredByteBufHolder im
     return handler.handle(this);
   }
 
+  @Override
+  public int encodeSizeHint(Direction direction, ProtocolVersion version) {
+    return content().readableBytes();
+  }
 }

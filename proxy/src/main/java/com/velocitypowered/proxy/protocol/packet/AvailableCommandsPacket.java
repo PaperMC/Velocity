@@ -362,4 +362,12 @@ public class AvailableCommandsPacket implements MinecraftPacket {
       return builder.buildFuture();
     }
   }
+
+  @Override
+  public int encodeSizeHint(Direction direction, ProtocolVersion version) {
+    // This is a very complex packet to encode. Paper 1.21.10 + Velocity with Spark has a size of
+    // 30,334, but this is likely on the lower side. We'll use 128KiB as a more realistically-sized
+    // amount.
+    return 128 * 1024;
+  }
 }

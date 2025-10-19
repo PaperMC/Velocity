@@ -52,6 +52,7 @@ import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TransferPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ClientboundCustomReportDetailsPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ClientboundServerLinksPacket;
+import com.velocitypowered.proxy.protocol.packet.config.CodeOfConductPacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.RegistrySyncPacket;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
@@ -256,7 +257,13 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(DisconnectPacket packet) {
     serverConn.disconnect();
-    resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
+    // If the player receives a DisconnectPacket without a connection to a server in progress,
+    // it means that the backend server has kicked the player during reconfiguration
+    if (serverConn.getPlayer().getConnectionInFlight() != null) {
+      resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
+    } else {
+      serverConn.getPlayer().handleConnectionException(serverConn.getServer(), packet, true);
+    }
     return true;
   }
 
@@ -355,6 +362,12 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
           }
         }, serverConn.ensureConnected().eventLoop());
 
+    return true;
+  }
+
+  @Override
+  public boolean handle(CodeOfConductPacket packet) {
+    this.serverConn.getPlayer().getConnection().write(packet.retain());
     return true;
   }
 
