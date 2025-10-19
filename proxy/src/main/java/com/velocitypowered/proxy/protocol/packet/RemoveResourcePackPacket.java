@@ -20,44 +20,42 @@ package com.velocitypowered.proxy.protocol.packet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 import java.util.UUID;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class RemoveResourcePackPacket implements MinecraftPacket {
+public record RemoveResourcePackPacket(@Nullable UUID id) implements MinecraftPacket {
 
-  private UUID id;
-
-  public RemoveResourcePackPacket() {
-  }
-
-  public RemoveResourcePackPacket(UUID id) {
-    this.id = id;
-  }
-
-  public UUID getId() {
+  public @Nullable UUID getId() {
     return id;
-  }
-
-  @Override
-  public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    if (buf.readBoolean()) {
-      this.id = ProtocolUtils.readUuid(buf);
-    }
-  }
-
-  @Override
-  public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    buf.writeBoolean(id != null);
-
-    if (id != null) {
-      ProtocolUtils.writeUuid(buf, id);
-    }
   }
 
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<RemoveResourcePackPacket> {
+    @Override
+    public RemoveResourcePackPacket decode(ByteBuf buf, Direction direction,
+        ProtocolVersion protocolVersion) {
+      UUID id = null;
+      if (buf.readBoolean()) {
+        id = ProtocolUtils.readUuid(buf);
+      }
+      return new RemoveResourcePackPacket(id);
+    }
+
+    @Override
+    public void encode(RemoveResourcePackPacket packet, ByteBuf buf, Direction direction,
+        ProtocolVersion protocolVersion) {
+      buf.writeBoolean(packet.id != null);
+      if (packet.id != null) {
+        ProtocolUtils.writeUuid(buf, packet.id);
+      }
+    }
   }
 }

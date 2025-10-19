@@ -87,19 +87,19 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(final HandshakePacket handshake) {
-    final StateRegistry nextState = getStateForProtocol(handshake.getNextStatus());
+    final StateRegistry nextState = getStateForProtocol(handshake.nextStatus());
     if (nextState == null) {
-      LOGGER.error("{} provided invalid protocol {}", this, handshake.getNextStatus());
+      LOGGER.error("{} provided invalid protocol {}", this, handshake.nextStatus());
       connection.close(true);
     } else {
       final InitialInboundConnection ic = new InitialInboundConnection(connection,
-              cleanVhost(handshake.getServerAddress()), handshake);
-      if (handshake.getIntent() == HandshakeIntent.TRANSFER
+              cleanVhost(handshake.serverAddress()), handshake);
+      if (handshake.intent() == HandshakeIntent.TRANSFER
               && !server.getConfiguration().isAcceptTransfers()) {
         ic.disconnect(Component.translatable("multiplayer.disconnect.transfers_disabled"));
         return true;
       }
-      connection.setProtocolVersion(handshake.getProtocolVersion());
+      connection.setProtocolVersion(handshake.protocolVersion());
       connection.setAssociation(ic);
 
       switch (nextState) {
@@ -124,7 +124,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
   }
 
   private void handleLogin(HandshakePacket handshake, InitialInboundConnection ic) {
-    if (!handshake.getProtocolVersion().isSupported()) {
+    if (!handshake.protocolVersion().isSupported()) {
       // Bump connection into correct protocol state so that we can send the disconnect packet.
       connection.setState(StateRegistry.LOGIN);
       ic.disconnectQuietly(Component.translatable()
@@ -147,7 +147,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     // If the proxy is configured for modern forwarding, we must deny connections from 1.12.2
     // and lower, otherwise IP information will never get forwarded.
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
-        && handshake.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_13)) {
+        && handshake.protocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_13)) {
       // Bump connection into correct protocol state so that we can send the disconnect packet.
       connection.setState(StateRegistry.LOGIN);
       ic.disconnectQuietly(
@@ -157,21 +157,23 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
     final LoginInboundConnection lic = new LoginInboundConnection(ic);
     server.getEventManager().fireAndForget(
-            new ConnectionHandshakeEvent(lic, handshake.getIntent()));
+            new ConnectionHandshakeEvent(lic, handshake.intent()));
     connection.setActiveSessionHandler(StateRegistry.LOGIN,
         new InitialLoginSessionHandler(server, connection, lic));
   }
 
   private ConnectionType getHandshakeConnectionType(HandshakePacket handshake) {
-    if (handshake.getServerAddress().contains(ModernForgeConstants.MODERN_FORGE_TOKEN)
-            && handshake.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
-      return new ModernForgeConnectionType(handshake.getServerAddress());
+    final String serverAddress = handshake.serverAddress();
+    final ProtocolVersion protocolVersion = handshake.protocolVersion();
+    if (serverAddress.contains(ModernForgeConstants.MODERN_FORGE_TOKEN)
+            && protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
+      return new ModernForgeConnectionType(serverAddress);
     }
     // Determine if we're using Forge (1.8 to 1.12, may not be the case in 1.13).
-    if (handshake.getServerAddress().endsWith(LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN)
-        && handshake.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_13)) {
+    if (serverAddress.endsWith(LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN)
+        && protocolVersion.lessThan(ProtocolVersion.MINECRAFT_1_13)) {
       return ConnectionTypes.LEGACY_FORGE;
-    } else if (handshake.getProtocolVersion().noGreaterThan(ProtocolVersion.MINECRAFT_1_7_6)) {
+    } else if (protocolVersion.noGreaterThan(ProtocolVersion.MINECRAFT_1_7_6)) {
       // 1.7 Forge will not notify us during handshake. UNDETERMINED will listen for incoming
       // forge handshake attempts. Also sends a reset handshake packet on every transition.
       return ConnectionTypes.UNDETERMINED_17;

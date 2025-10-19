@@ -19,9 +19,7 @@ package com.velocitypowered.proxy.protocol.packet.title;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
-import io.netty.buffer.ByteBuf;
 
 public abstract class GenericTitlePacket implements MinecraftPacket {
 
@@ -45,10 +43,9 @@ public abstract class GenericTitlePacket implements MinecraftPacket {
     }
   }
 
+  private final ActionType action;
 
-  private ActionType action;
-
-  protected void setAction(ActionType action) {
+  protected GenericTitlePacket(ActionType action) {
     this.action = action;
   }
 
@@ -60,15 +57,7 @@ public abstract class GenericTitlePacket implements MinecraftPacket {
     throw new UnsupportedOperationException("Invalid function for this TitlePacket ActionType");
   }
 
-  public void setComponent(ComponentHolder component) {
-    throw new UnsupportedOperationException("Invalid function for this TitlePacket ActionType");
-  }
-
   public int getFadeIn() {
-    throw new UnsupportedOperationException("Invalid function for this TitlePacket ActionType");
-  }
-
-  public void setFadeIn(int fadeIn) {
     throw new UnsupportedOperationException("Invalid function for this TitlePacket ActionType");
   }
 
@@ -76,60 +65,69 @@ public abstract class GenericTitlePacket implements MinecraftPacket {
     throw new UnsupportedOperationException("Invalid function for this TitlePacket ActionType");
   }
 
-  public void setStay(int stay) {
-    throw new UnsupportedOperationException("Invalid function for this TitlePacket ActionType");
-  }
-
   public int getFadeOut() {
     throw new UnsupportedOperationException("Invalid function for this TitlePacket ActionType");
   }
 
-  public void setFadeOut(int fadeOut) {
-    throw new UnsupportedOperationException("Invalid function for this TitlePacket ActionType");
-  }
-
-
-  @Override
-  public final void decode(ByteBuf buf, ProtocolUtils.Direction direction,
-      ProtocolVersion version) {
-    throw new UnsupportedOperationException(); // encode only
-  }
-
   /**
-   * Creates a version and type dependent TitlePacket.
+   * Creates a version and type dependent TitlePacket for HIDE/RESET actions.
    *
-   * @param type    Action the packet should invoke
+   * @param type    Action the packet should invoke (HIDE or RESET)
    * @param version Protocol version of the target player
    * @return GenericTitlePacket instance that follows the invoker type/version
    */
-  public static GenericTitlePacket constructTitlePacket(ActionType type, ProtocolVersion version) {
-    GenericTitlePacket packet = null;
+  public static GenericTitlePacket createClearTitlePacket(ActionType type, ProtocolVersion version) {
+    if (type != ActionType.HIDE && type != ActionType.RESET) {
+      throw new IllegalArgumentException("createClearTitlePacket only accepts HIDE and RESET actions");
+    }
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
+      return new TitleClearPacket(type == ActionType.RESET);
+    } else {
+      return new LegacyTitlePacket(type, null, 0, 0, 0);
+    }
+  }
+
+  /**
+   * Creates a version and type dependent TitlePacket for component-based actions.
+   *
+   * @param type      Action the packet should invoke
+   * @param component Component to display
+   * @param version   Protocol version of the target player
+   * @return GenericTitlePacket instance that follows the invoker type/version
+   */
+  public static GenericTitlePacket createComponentTitlePacket(ActionType type,
+      ComponentHolder component, ProtocolVersion version) {
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
       switch (type) {
         case SET_ACTION_BAR:
-          packet = new TitleActionbarPacket();
-          break;
+          return new TitleActionbarPacket(component);
         case SET_SUBTITLE:
-          packet = new TitleSubtitlePacket();
-          break;
-        case SET_TIMES:
-          packet = new TitleTimesPacket();
-          break;
+          return new TitleSubtitlePacket(component);
         case SET_TITLE:
-          packet = new TitleTextPacket();
-          break;
-        case HIDE:
-        case RESET:
-          packet = new TitleClearPacket();
-          break;
+          return new TitleTextPacket(component);
         default:
-          throw new IllegalArgumentException("Invalid ActionType");
+          throw new IllegalArgumentException("Invalid ActionType for component title: " + type);
       }
     } else {
-      packet = new LegacyTitlePacket();
+      return new LegacyTitlePacket(type, component, 0, 0, 0);
     }
-    packet.setAction(type);
-    return packet;
   }
 
+  /**
+   * Creates a version dependent TitlePacket for times.
+   *
+   * @param fadeIn  Fade in time
+   * @param stay    Stay time
+   * @param fadeOut Fade out time
+   * @param version Protocol version of the target player
+   * @return GenericTitlePacket instance that follows the invoker type/version
+   */
+  public static GenericTitlePacket createTimesTitlePacket(int fadeIn, int stay, int fadeOut,
+      ProtocolVersion version) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
+      return new TitleTimesPacket(fadeIn, stay, fadeOut);
+    } else {
+      return new LegacyTitlePacket(ActionType.SET_TIMES, null, fadeIn, stay, fadeOut);
+    }
+  }
 }

@@ -20,10 +20,11 @@ package com.velocitypowered.proxy.protocol.packet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
+import com.velocitypowered.proxy.protocol.PacketCodec;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
-public class DialogClearPacket implements MinecraftPacket {
+public final class DialogClearPacket implements MinecraftPacket {
 
   public static final DialogClearPacket INSTANCE = new DialogClearPacket();
 
@@ -31,15 +32,20 @@ public class DialogClearPacket implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-  }
-
-  @Override
-  public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-  }
-
-  @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<DialogClearPacket> {
+    @Override
+    public DialogClearPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+                                    ProtocolVersion protocolVersion) {
+      return INSTANCE;
+    }
+
+    @Override
+    public void encode(DialogClearPacket packet, ByteBuf buf, ProtocolUtils.Direction direction,
+                       ProtocolVersion protocolVersion) {
+    }
   }
 }

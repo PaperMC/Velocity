@@ -21,122 +21,125 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_13;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9;
 
-import com.google.common.base.MoreObjects;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class TabCompleteRequestPacket implements MinecraftPacket {
+public final class TabCompleteRequestPacket implements MinecraftPacket {
 
   private static final int VANILLA_MAX_TAB_COMPLETE_LEN = 2048;
 
-  private @Nullable String command;
-  private int transactionId;
-  private boolean assumeCommand;
-  private boolean hasPosition;
-  private long position;
+  private final @Nullable String command;
+  private final int transactionId;
+  private final boolean assumeCommand;
+  private final boolean hasPosition;
+  private final long position;
 
-  public String getCommand() {
+  public TabCompleteRequestPacket() {
+    this(null, 0, false, false, 0);
+  }
+
+  public TabCompleteRequestPacket(@Nullable String command, int transactionId,
+                                   boolean assumeCommand, boolean hasPosition, long position) {
+    this.command = command;
+    this.transactionId = transactionId;
+    this.assumeCommand = assumeCommand;
+    this.hasPosition = hasPosition;
+    this.position = position;
+  }
+
+  public String command() {
     if (command == null) {
       throw new IllegalStateException("Command is not specified");
     }
     return command;
   }
 
-  public void setCommand(String command) {
-    this.command = command;
+  public String getCommand() {
+    return command();
   }
 
-  public boolean isAssumeCommand() {
+  public boolean assumeCommand() {
     return assumeCommand;
   }
 
-  public void setAssumeCommand(boolean assumeCommand) {
-    this.assumeCommand = assumeCommand;
+  public boolean isAssumeCommand() {
+    return assumeCommand();
   }
 
   public boolean hasPosition() {
     return hasPosition;
   }
 
-  public void setHasPosition(boolean hasPosition) {
-    this.hasPosition = hasPosition;
-  }
-
-  public long getPosition() {
+  public long position() {
     return position;
   }
 
-  public void setPosition(long position) {
-    this.position = position;
-  }
-
-  public int getTransactionId() {
+  public int transactionId() {
     return transactionId;
-  }
-
-  public void setTransactionId(int transactionId) {
-    this.transactionId = transactionId;
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("command", command)
-        .add("transactionId", transactionId)
-        .add("assumeCommand", assumeCommand)
-        .add("hasPosition", hasPosition)
-        .add("position", position)
-        .toString();
-  }
-
-  @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.noLessThan(MINECRAFT_1_13)) {
-      this.transactionId = ProtocolUtils.readVarInt(buf);
-      this.command = ProtocolUtils.readString(buf, VANILLA_MAX_TAB_COMPLETE_LEN);
-    } else {
-      this.command = ProtocolUtils.readString(buf, VANILLA_MAX_TAB_COMPLETE_LEN);
-      if (version.noLessThan(MINECRAFT_1_9)) {
-        this.assumeCommand = buf.readBoolean();
-      }
-      if (version.noLessThan(MINECRAFT_1_8)) {
-        this.hasPosition = buf.readBoolean();
-        if (hasPosition) {
-          this.position = buf.readLong();
-        }
-      }
-    }
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (command == null) {
-      throw new IllegalStateException("Command is not specified");
-    }
-
-    if (version.noLessThan(MINECRAFT_1_13)) {
-      ProtocolUtils.writeVarInt(buf, transactionId);
-      ProtocolUtils.writeString(buf, command);
-    } else {
-      ProtocolUtils.writeString(buf, command);
-      if (version.noLessThan(MINECRAFT_1_9)) {
-        buf.writeBoolean(assumeCommand);
-      }
-      if (version.noLessThan(MINECRAFT_1_8)) {
-        buf.writeBoolean(hasPosition);
-        if (hasPosition) {
-          buf.writeLong(position);
-        }
-      }
-    }
   }
 
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<TabCompleteRequestPacket> {
+    @Override
+    public TabCompleteRequestPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+                                            ProtocolVersion version) {
+      String command;
+      int transactionId = 0;
+      boolean assumeCommand = false;
+      boolean hasPosition = false;
+      long position = 0;
+
+      if (version.noLessThan(MINECRAFT_1_13)) {
+        transactionId = ProtocolUtils.readVarInt(buf);
+        command = ProtocolUtils.readString(buf, VANILLA_MAX_TAB_COMPLETE_LEN);
+      } else {
+        command = ProtocolUtils.readString(buf, VANILLA_MAX_TAB_COMPLETE_LEN);
+        if (version.noLessThan(MINECRAFT_1_9)) {
+          assumeCommand = buf.readBoolean();
+        }
+        if (version.noLessThan(MINECRAFT_1_8)) {
+          hasPosition = buf.readBoolean();
+          if (hasPosition) {
+            position = buf.readLong();
+          }
+        }
+      }
+
+      return new TabCompleteRequestPacket(command, transactionId, assumeCommand, hasPosition,
+          position);
+    }
+
+    @Override
+    public void encode(TabCompleteRequestPacket packet, ByteBuf buf,
+                       ProtocolUtils.Direction direction, ProtocolVersion version) {
+      if (packet.command == null) {
+        throw new IllegalStateException("Command is not specified");
+      }
+
+      if (version.noLessThan(MINECRAFT_1_13)) {
+        ProtocolUtils.writeVarInt(buf, packet.transactionId);
+        ProtocolUtils.writeString(buf, packet.command);
+      } else {
+        ProtocolUtils.writeString(buf, packet.command);
+        if (version.noLessThan(MINECRAFT_1_9)) {
+          buf.writeBoolean(packet.assumeCommand);
+        }
+        if (version.noLessThan(MINECRAFT_1_8)) {
+          buf.writeBoolean(packet.hasPosition);
+          if (packet.hasPosition) {
+            buf.writeLong(packet.position);
+          }
+        }
+      }
+    }
   }
 }

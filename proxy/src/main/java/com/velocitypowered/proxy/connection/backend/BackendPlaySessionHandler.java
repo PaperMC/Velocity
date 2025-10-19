@@ -420,7 +420,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ClientboundStoreCookiePacket packet) {
     server.getEventManager()
-        .fire(new CookieStoreEvent(serverConn.getPlayer(), packet.getKey(), packet.getPayload()))
+        .fire(new CookieStoreEvent(serverConn.getPlayer(), packet.key(), packet.payload()))
         .thenAcceptAsync(event -> {
           if (event.getResult().isAllowed()) {
             final Key resultedKey = event.getResult().getKey() == null

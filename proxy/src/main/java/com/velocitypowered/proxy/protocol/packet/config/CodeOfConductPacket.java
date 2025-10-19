@@ -20,24 +20,15 @@ package com.velocitypowered.proxy.protocol.packet.config;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
-import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DefaultByteBufHolder;
 
-public class CodeOfConductPacket extends DeferredByteBufHolder implements MinecraftPacket {
+public class CodeOfConductPacket extends DefaultByteBufHolder implements MinecraftPacket {
 
-  public CodeOfConductPacket() {
-    super(null);
-  }
-
-  @Override
-  public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    this.replace(buf.readRetainedSlice(buf.readableBytes()));
-  }
-
-  @Override
-  public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    buf.writeBytes(this.content());
+  public CodeOfConductPacket(ByteBuf buf) {
+    super(buf);
   }
 
   @Override
@@ -46,7 +37,61 @@ public class CodeOfConductPacket extends DeferredByteBufHolder implements Minecr
   }
 
   @Override
-  public int encodeSizeHint(Direction direction, ProtocolVersion version) {
-    return content().readableBytes();
+  public CodeOfConductPacket copy() {
+    return (CodeOfConductPacket) super.copy();
+  }
+
+  @Override
+  public CodeOfConductPacket duplicate() {
+    return (CodeOfConductPacket) super.duplicate();
+  }
+
+  @Override
+  public CodeOfConductPacket retainedDuplicate() {
+    return (CodeOfConductPacket) super.retainedDuplicate();
+  }
+
+  @Override
+  public CodeOfConductPacket replace(ByteBuf content) {
+    return (CodeOfConductPacket) super.replace(content);
+  }
+
+  @Override
+  public CodeOfConductPacket retain() {
+    return (CodeOfConductPacket) super.retain();
+  }
+
+  @Override
+  public CodeOfConductPacket retain(int increment) {
+    return (CodeOfConductPacket) super.retain(increment);
+  }
+
+  @Override
+  public CodeOfConductPacket touch() {
+    return (CodeOfConductPacket) super.touch();
+  }
+
+  @Override
+  public CodeOfConductPacket touch(Object hint) {
+    return (CodeOfConductPacket) super.touch(hint);
+  }
+
+  public static class Codec implements PacketCodec<CodeOfConductPacket> {
+    @Override
+    public CodeOfConductPacket decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
+      return new CodeOfConductPacket(buf.readRetainedSlice(buf.readableBytes()));
+    }
+
+    @Override
+    public void encode(CodeOfConductPacket packet, ByteBuf buf, Direction direction,
+                       ProtocolVersion protocolVersion) {
+      buf.writeBytes(packet.content());
+    }
+
+    @Override
+    public int encodeSizeHint(CodeOfConductPacket packet, Direction direction,
+        ProtocolVersion version) {
+      return packet.content().readableBytes();
+    }
   }
 }

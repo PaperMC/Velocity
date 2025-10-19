@@ -170,26 +170,26 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
                 .orElseGet(() -> registeredServer.getServerInfo().getAddress())
                 .getHostString();
 
-    HandshakePacket handshake = new HandshakePacket();
-    handshake.setIntent(HandshakeIntent.LOGIN);
-    handshake.setProtocolVersion(protocolVersion);
+    String serverAddress;
     if (forwardingMode == PlayerInfoForwarding.LEGACY) {
-      handshake.setServerAddress(createLegacyForwardingAddress());
+      serverAddress = createLegacyForwardingAddress();
     } else if (forwardingMode == PlayerInfoForwarding.BUNGEEGUARD) {
       byte[] secret = server.getConfiguration().getForwardingSecret();
-      handshake.setServerAddress(createBungeeGuardForwardingAddress(secret));
+      serverAddress = createBungeeGuardForwardingAddress(secret);
     } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {
-      handshake.setServerAddress(playerVhost + HANDSHAKE_HOSTNAME_TOKEN);
+      serverAddress = playerVhost + HANDSHAKE_HOSTNAME_TOKEN;
     } else if (proxyPlayer.getConnection().getType() instanceof ModernForgeConnectionType) {
-      handshake.setServerAddress(playerVhost + ((ModernForgeConnectionType) proxyPlayer
-              .getConnection().getType()).getModernToken());
+      serverAddress = playerVhost + ((ModernForgeConnectionType) proxyPlayer
+              .getConnection().getType()).getModernToken();
     } else {
-      handshake.setServerAddress(playerVhost);
+      serverAddress = playerVhost;
     }
 
-    handshake.setPort(proxyPlayer.getVirtualHost()
+    int port = proxyPlayer.getVirtualHost()
             .orElseGet(() -> registeredServer.getServerInfo().getAddress())
-            .getPort());
+            .getPort();
+
+    HandshakePacket handshake = new HandshakePacket(protocolVersion, serverAddress, port, HandshakeIntent.LOGIN);
     mc.delayedWrite(handshake);
 
     mc.setProtocolVersion(protocolVersion);

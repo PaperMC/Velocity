@@ -20,13 +20,14 @@ package com.velocitypowered.proxy.protocol.packet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.legacyping.LegacyMinecraftPingVersion;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class LegacyPingPacket implements MinecraftPacket {
+public final class LegacyPingPacket implements MinecraftPacket {
 
   private final LegacyMinecraftPingVersion version;
   private final @Nullable InetSocketAddress vhost;
@@ -41,26 +42,38 @@ public class LegacyPingPacket implements MinecraftPacket {
     this.vhost = vhost;
   }
 
-  public LegacyMinecraftPingVersion getVersion() {
+  public LegacyMinecraftPingVersion version() {
     return version;
   }
 
-  public @Nullable InetSocketAddress getVhost() {
+  public @Nullable InetSocketAddress vhost() {
     return vhost;
   }
 
-  @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    throw new UnsupportedOperationException();
+  public LegacyMinecraftPingVersion getVersion() {
+    return version();
   }
 
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    throw new UnsupportedOperationException();
+  public @Nullable InetSocketAddress getVhost() {
+    return vhost();
   }
 
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<LegacyPingPacket> {
+    @Override
+    public LegacyPingPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+                                    ProtocolVersion version) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void encode(LegacyPingPacket packet, ByteBuf buf, ProtocolUtils.Direction direction,
+                       ProtocolVersion version) {
+      throw new UnsupportedOperationException();
+    }
   }
 }

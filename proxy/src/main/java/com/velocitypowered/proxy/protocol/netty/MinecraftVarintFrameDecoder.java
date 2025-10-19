@@ -20,7 +20,7 @@ package com.velocitypowered.proxy.protocol.netty;
 import static io.netty.util.ByteProcessor.FIND_NON_NUL;
 
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
@@ -122,22 +122,21 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
     }
     final int payloadLength = length - ProtocolUtils.varIntBytes(packetId);
 
-    MinecraftPacket packet = registry.createPacket(packetId);
-
+    PacketCodec<?> codec = registry.getCodec(packetId);
     // We handle every packet in this phase, if you said something we don't know, something is really wrong
-    if (packet == null) {
+    if (codec == null) {
       throw UNKNOWN_PACKET;
     }
 
     // We 'technically' have the incoming bytes of a payload here, and so, these can actually parse
     // the packet if needed, so, we'll take advantage of the existing methods
-    int expectedMinLen = packet.decodeExpectedMinLength(in, direction, registry.version);
-    int expectedMaxLen = packet.decodeExpectedMaxLength(in, direction, registry.version);
+    int expectedMinLen = codec.decodeExpectedMinLength(in, direction, registry.version);
+    int expectedMaxLen = codec.decodeExpectedMaxLength(in, direction, registry.version);
     if (expectedMaxLen != -1 && payloadLength > expectedMaxLen) {
-      throw handleOverflow(packet, expectedMaxLen, in.readableBytes());
+      throw handleOverflow(expectedMaxLen, in.readableBytes());
     }
     if (payloadLength < expectedMinLen) {
-      throw handleUnderflow(packet, expectedMaxLen, in.readableBytes());
+      throw handleUnderflow(expectedMaxLen, in.readableBytes());
     }
 
     in.readerIndex(index);
@@ -224,18 +223,18 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
     return result | (tmp & 0x7F) << 14;
   }
 
-  private Exception handleOverflow(MinecraftPacket packet, int expected, int actual) {
+  private Exception handleOverflow(int expected, int actual) {
     if (MinecraftDecoder.DEBUG) {
-      return new CorruptedFrameException("Packet sent for " + packet.getClass() + " was too "
+      return new CorruptedFrameException("Packet sent for handshake was too "
           + "big (expected " + expected + " bytes, got " + actual + " bytes)");
     } else {
       return FRAME_DECODER_FAILED;
     }
   }
 
-  private Exception handleUnderflow(MinecraftPacket packet, int expected, int actual) {
+  private Exception handleUnderflow(int expected, int actual) {
     if (MinecraftDecoder.DEBUG) {
-      return new CorruptedFrameException("Packet sent for " + packet.getClass() + " was too "
+      return new CorruptedFrameException("Packet sent for handshake was too "
           + "small (expected " + expected + " bytes, got " + actual + " bytes)");
     } else {
       return FRAME_DECODER_FAILED;

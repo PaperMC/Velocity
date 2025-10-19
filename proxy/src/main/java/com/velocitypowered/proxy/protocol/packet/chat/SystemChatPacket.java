@@ -20,12 +20,17 @@ package com.velocitypowered.proxy.protocol.packet.chat;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
-public class SystemChatPacket implements MinecraftPacket {
+public final class SystemChatPacket implements MinecraftPacket {
+
+  private final ComponentHolder component;
+  private final ChatType type;
 
   public SystemChatPacket() {
+    this(null, ChatType.SYSTEM);
   }
 
   public SystemChatPacket(ComponentHolder component, ChatType type) {
@@ -33,48 +38,59 @@ public class SystemChatPacket implements MinecraftPacket {
     this.type = type;
   }
 
-  private ComponentHolder component;
-  private ChatType type;
-
-  public ChatType getType() {
+  public ChatType type() {
     return type;
   }
 
-  public ComponentHolder getComponent() {
+  public ComponentHolder component() {
     return component;
   }
 
-  @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    component = ComponentHolder.read(buf, version);
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19_1)){
-      type = buf.readBoolean() ? ChatType.GAME_INFO : ChatType.SYSTEM;
-    } else {
-      type = ChatType.values()[ProtocolUtils.readVarInt(buf)];
-    }
+  public ComponentHolder getComponent() {
+    return component();
   }
 
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    component.write(buf);
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19_1)) {
-      switch (type) {
-        case SYSTEM:
-          buf.writeBoolean(false);
-          break;
-        case GAME_INFO:
-          buf.writeBoolean(true);
-          break;
-        default:
-          throw new IllegalArgumentException("Invalid chat type");
-      }
-    } else {
-      ProtocolUtils.writeVarInt(buf, type.getId());
-    }
+  public ChatType getType() {
+    return type();
   }
 
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<SystemChatPacket> {
+    @Override
+    public SystemChatPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+                                    ProtocolVersion version) {
+      ComponentHolder component = ComponentHolder.read(buf, version);
+      ChatType type;
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19_1)) {
+        type = buf.readBoolean() ? ChatType.GAME_INFO : ChatType.SYSTEM;
+      } else {
+        type = ChatType.values()[ProtocolUtils.readVarInt(buf)];
+      }
+      return new SystemChatPacket(component, type);
+    }
+
+    @Override
+    public void encode(SystemChatPacket packet, ByteBuf buf, ProtocolUtils.Direction direction,
+                       ProtocolVersion version) {
+      packet.component.write(buf);
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19_1)) {
+        switch (packet.type) {
+          case SYSTEM:
+            buf.writeBoolean(false);
+            break;
+          case GAME_INFO:
+            buf.writeBoolean(true);
+            break;
+          default:
+            throw new IllegalArgumentException("Invalid chat type");
+        }
+      } else {
+        ProtocolUtils.writeVarInt(buf, packet.type.getId());
+      }
+    }
   }
 }

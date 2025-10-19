@@ -22,6 +22,7 @@ import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.chat.LastSeenMessages;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
@@ -33,29 +34,19 @@ import java.util.List;
 
 public class SessionPlayerCommandPacket implements MinecraftPacket {
 
-  protected String command;
-  protected Instant timeStamp;
-  protected long salt;
-  protected ArgumentSignatures argumentSignatures;
-  protected LastSeenMessages lastSeenMessages;
+  protected final String command;
+  protected final Instant timeStamp;
+  protected final long salt;
+  protected final ArgumentSignatures argumentSignatures;
+  protected final LastSeenMessages lastSeenMessages;
 
-  @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    int cap = protocolVersion.lessThan(ProtocolVersion.MINECRAFT_1_20_5) ? 256 : ProtocolUtils.DEFAULT_MAX_STRING_SIZE;
-    this.command = ProtocolUtils.readString(buf, cap);
-    this.timeStamp = Instant.ofEpochMilli(buf.readLong());
-    this.salt = buf.readLong();
-    this.argumentSignatures = new ArgumentSignatures(buf);
-    this.lastSeenMessages = new LastSeenMessages(buf, protocolVersion);
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    ProtocolUtils.writeString(buf, this.command);
-    buf.writeLong(this.timeStamp.toEpochMilli());
-    buf.writeLong(this.salt);
-    this.argumentSignatures.encode(buf);
-    this.lastSeenMessages.encode(buf, protocolVersion);
+  public SessionPlayerCommandPacket(String command, Instant timeStamp, long salt,
+      ArgumentSignatures argumentSignatures, LastSeenMessages lastSeenMessages) {
+    this.command = command;
+    this.timeStamp = timeStamp;
+    this.salt = salt;
+    this.argumentSignatures = argumentSignatures;
+    this.lastSeenMessages = lastSeenMessages;
   }
 
   public String getCommand() {
@@ -92,17 +83,33 @@ public class SessionPlayerCommandPacket implements MinecraftPacket {
 
   public SessionPlayerCommandPacket withLastSeenMessages(@Nullable LastSeenMessages lastSeenMessages) {
     if (lastSeenMessages == null) {
-      UnsignedPlayerCommandPacket packet = new UnsignedPlayerCommandPacket();
-      packet.command = command;
-      return packet;
+      return new UnsignedPlayerCommandPacket(command);
     }
-    SessionPlayerCommandPacket packet = new SessionPlayerCommandPacket();
-    packet.command = command;
-    packet.timeStamp = timeStamp;
-    packet.salt = salt;
-    packet.argumentSignatures = argumentSignatures;
-    packet.lastSeenMessages = lastSeenMessages;
-    return packet;
+    return new SessionPlayerCommandPacket(command, timeStamp, salt, argumentSignatures, lastSeenMessages);
+  }
+
+  public static class Codec implements PacketCodec<SessionPlayerCommandPacket> {
+    @Override
+    public SessionPlayerCommandPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      int cap = protocolVersion.lessThan(ProtocolVersion.MINECRAFT_1_20_5) ? 256 : ProtocolUtils.DEFAULT_MAX_STRING_SIZE;
+      String command = ProtocolUtils.readString(buf, cap);
+      Instant timeStamp = Instant.ofEpochMilli(buf.readLong());
+      long salt = buf.readLong();
+      ArgumentSignatures argumentSignatures = new ArgumentSignatures(buf);
+      LastSeenMessages lastSeenMessages = new LastSeenMessages(buf, protocolVersion);
+      return new SessionPlayerCommandPacket(command, timeStamp, salt, argumentSignatures, lastSeenMessages);
+    }
+
+    @Override
+    public void encode(SessionPlayerCommandPacket packet, ByteBuf buf,
+        ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+      ProtocolUtils.writeString(buf, packet.command);
+      buf.writeLong(packet.timeStamp.toEpochMilli());
+      buf.writeLong(packet.salt);
+      packet.argumentSignatures.encode(buf);
+      packet.lastSeenMessages.encode(buf, protocolVersion);
+    }
   }
 
   public static class ArgumentSignatures {

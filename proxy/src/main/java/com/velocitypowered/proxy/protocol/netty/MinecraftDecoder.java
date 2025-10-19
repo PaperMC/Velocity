@@ -71,18 +71,20 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
     int originalReaderIndex = buf.readerIndex();
     int packetId = ProtocolUtils.readVarInt(buf);
-    MinecraftPacket packet = this.registry.createPacket(packetId);
-    if (packet == null) {
+    com.velocitypowered.proxy.protocol.PacketCodec<? extends MinecraftPacket> codec =
+        this.registry.getCodec(packetId);
+    if (codec == null) {
       buf.readerIndex(originalReaderIndex);
       ctx.fireChannelRead(buf);
     } else {
       try {
-        doLengthSanityChecks(buf, packet);
+        doLengthSanityChecks(buf, codec);
 
+        MinecraftPacket packet;
         try {
-          packet.decode(buf, direction, registry.version);
+          packet = codec.decode(buf, direction, registry.version);
         } catch (Exception e) {
-          throw handleDecodeFailure(e, packet, packetId);
+          throw handleDecodeFailure(e, codec, packetId);
         }
 
         if (buf.isReadable()) {
@@ -95,14 +97,16 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
     }
   }
 
-  private void doLengthSanityChecks(ByteBuf buf, MinecraftPacket packet) throws Exception {
-    int expectedMinLen = packet.decodeExpectedMinLength(buf, direction, registry.version);
-    int expectedMaxLen = packet.decodeExpectedMaxLength(buf, direction, registry.version);
+  private void doLengthSanityChecks(ByteBuf buf,
+      com.velocitypowered.proxy.protocol.PacketCodec<? extends MinecraftPacket> codec)
+      throws Exception {
+    int expectedMinLen = codec.decodeExpectedMinLength(buf, direction, registry.version);
+    int expectedMaxLen = codec.decodeExpectedMaxLength(buf, direction, registry.version);
     if (expectedMaxLen != -1 && buf.readableBytes() > expectedMaxLen) {
-      throw handleOverflow(packet, expectedMaxLen, buf.readableBytes());
+      throw handleOverflow(codec, expectedMaxLen, buf.readableBytes());
     }
     if (buf.readableBytes() < expectedMinLen) {
-      throw handleUnderflow(packet, expectedMaxLen, buf.readableBytes());
+      throw handleUnderflow(codec, expectedMaxLen, buf.readableBytes());
     }
   }
 
@@ -115,19 +119,34 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
     }
   }
 
-  private Exception handleUnderflow(MinecraftPacket packet, int expected, int actual) {
+  private Exception handleOverflow(
+      com.velocitypowered.proxy.protocol.PacketCodec<? extends MinecraftPacket> codec,
+      int expected, int actual) {
     if (DEBUG) {
-      return new CorruptedFrameException("Packet sent for " + packet.getClass() + " was too "
+      return new CorruptedFrameException("Packet sent for " + codec.getClass() + " was too "
+          + "big (expected " + expected + " bytes, got " + actual + " bytes)");
+    } else {
+      return DECODE_FAILED;
+    }
+  }
+
+  private Exception handleUnderflow(
+      com.velocitypowered.proxy.protocol.PacketCodec<? extends MinecraftPacket> codec,
+      int expected, int actual) {
+    if (DEBUG) {
+      return new CorruptedFrameException("Packet sent for " + codec.getClass() + " was too "
           + "small (expected " + expected + " bytes, got " + actual + " bytes)");
     } else {
       return DECODE_FAILED;
     }
   }
 
-  private Exception handleDecodeFailure(Exception cause, MinecraftPacket packet, int packetId) {
+  private Exception handleDecodeFailure(Exception cause,
+      com.velocitypowered.proxy.protocol.PacketCodec<? extends MinecraftPacket> codec,
+      int packetId) {
     if (DEBUG) {
       return new CorruptedFrameException(
-          "Error decoding " + packet.getClass() + " " + getExtraConnectionDetail(packetId), cause);
+          "Error decoding " + codec.getClass() + " " + getExtraConnectionDetail(packetId), cause);
     } else {
       return DECODE_FAILED;
     }

@@ -19,37 +19,46 @@ package com.velocitypowered.proxy.protocol.packet.title;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
-public class TitleClearPacket extends GenericTitlePacket {
+public final class TitleClearPacket extends GenericTitlePacket {
 
-  public TitleClearPacket() {
-    setAction(ActionType.HIDE);
+  private final boolean reset;
+
+  public TitleClearPacket(boolean reset) {
+    super(reset ? ActionType.RESET : ActionType.HIDE);
+    this.reset = reset;
   }
 
-  @Override
-  public void setAction(ActionType action) {
-    if (action != ActionType.HIDE && action != ActionType.RESET) {
-      throw new IllegalArgumentException("TitleClearPacket only accepts CLEAR and RESET actions");
-    }
-    super.setAction(action);
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    buf.writeBoolean(getAction() == ActionType.RESET);
+  public boolean isReset() {
+    return reset;
   }
 
   @Override
   public String toString() {
     return "TitleClearPacket{"
-        + ", resetTimes=" + (getAction() == ActionType.RESET)
+        + "resetTimes=" + reset
         + '}';
   }
 
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<TitleClearPacket> {
+    @Override
+    public TitleClearPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      throw new UnsupportedOperationException(); // encode only
+    }
+
+    @Override
+    public void encode(TitleClearPacket packet, ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      buf.writeBoolean(packet.reset);
+    }
   }
 }

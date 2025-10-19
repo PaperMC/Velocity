@@ -101,17 +101,15 @@ public abstract sealed class ResourcePackHandler
   }
 
   protected void sendResourcePackRequestPacket(final @NotNull ResourcePackInfo queued) {
-    final ResourcePackRequestPacket request = new ResourcePackRequestPacket();
-    request.setId(queued.getId());
-    request.setUrl(queued.getUrl());
-    if (queued.getHash() != null) {
-      request.setHash(ByteBufUtil.hexDump(queued.getHash()));
-    } else {
-      request.setHash("");
-    }
-    request.setRequired(queued.getShouldForce());
-    request.setPrompt(queued.getPrompt() == null ? null :
-            new ComponentHolder(player.getProtocolVersion(), player.translateMessage(queued.getPrompt())));
+    final String hash = queued.getHash() != null ? ByteBufUtil.hexDump(queued.getHash()) : "";
+    final ComponentHolder prompt = queued.getPrompt() == null ? null :
+            new ComponentHolder(player.getProtocolVersion(), player.translateMessage(queued.getPrompt()));
+    final ResourcePackRequestPacket request = new ResourcePackRequestPacket(
+            queued.getId(),
+            queued.getUrl(),
+            hash,
+            queued.getShouldForce(),
+            prompt);
 
     player.getConnection().write(request);
   }

@@ -21,54 +21,42 @@ import com.google.common.collect.Lists;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
 
-public class RemovePlayerInfoPacket implements MinecraftPacket {
-
-  private Collection<UUID> profilesToRemove;
-
-  public RemovePlayerInfoPacket() {
-    this.profilesToRemove = new ArrayList<>();
-  }
-
-  public RemovePlayerInfoPacket(Collection<UUID> profilesToRemove) {
-    this.profilesToRemove = profilesToRemove;
-  }
+public record RemovePlayerInfoPacket(Collection<UUID> profilesToRemove) implements MinecraftPacket {
 
   public Collection<UUID> getProfilesToRemove() {
     return profilesToRemove;
   }
 
-  public void setProfilesToRemove(Collection<UUID> profilesToRemove) {
-    this.profilesToRemove = profilesToRemove;
-  }
-
-  @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
-      ProtocolVersion protocolVersion) {
-    int length = ProtocolUtils.readVarInt(buf);
-    Collection<UUID> profilesToRemove = Lists.newArrayListWithCapacity(length);
-    for (int idx = 0; idx < length; idx++) {
-      profilesToRemove.add(ProtocolUtils.readUuid(buf));
-    }
-    this.profilesToRemove = profilesToRemove;
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction,
-      ProtocolVersion protocolVersion) {
-    ProtocolUtils.writeVarInt(buf, this.profilesToRemove.size());
-    for (UUID uuid : this.profilesToRemove) {
-      ProtocolUtils.writeUuid(buf, uuid);
-    }
-  }
-
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<RemovePlayerInfoPacket> {
+    @Override
+    public RemovePlayerInfoPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      int length = ProtocolUtils.readVarInt(buf);
+      Collection<UUID> profilesToRemove = Lists.newArrayListWithCapacity(length);
+      for (int idx = 0; idx < length; idx++) {
+        profilesToRemove.add(ProtocolUtils.readUuid(buf));
+      }
+      return new RemovePlayerInfoPacket(profilesToRemove);
+    }
+
+    @Override
+    public void encode(RemovePlayerInfoPacket packet, ByteBuf buf,
+        ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+      ProtocolUtils.writeVarInt(buf, packet.profilesToRemove.size());
+      for (UUID uuid : packet.profilesToRemove) {
+        ProtocolUtils.writeUuid(buf, uuid);
+      }
+    }
   }
 }

@@ -17,36 +17,52 @@
 
 package com.velocitypowered.proxy.protocol.packet;
 
-import static com.velocitypowered.proxy.connection.VelocityConstants.EMPTY_BYTE_ARRAY;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
 
-public class EncryptionRequestPacket implements MinecraftPacket {
+public final class EncryptionRequestPacket implements MinecraftPacket {
 
-  private String serverId = "";
-  private byte[] publicKey = EMPTY_BYTE_ARRAY;
-  private byte[] verifyToken = EMPTY_BYTE_ARRAY;
-  private boolean shouldAuthenticate = true;
+  private final String serverId;
+  private final byte[] publicKey;
+  private final byte[] verifyToken;
+  private final boolean shouldAuthenticate;
 
-  public byte[] getPublicKey() {
+  public EncryptionRequestPacket(String serverId, byte[] publicKey, byte[] verifyToken,
+                                  boolean shouldAuthenticate) {
+    this.serverId = serverId;
+    this.publicKey = publicKey.clone();
+    this.verifyToken = verifyToken.clone();
+    this.shouldAuthenticate = shouldAuthenticate;
+  }
+
+  public String serverId() {
+    return serverId;
+  }
+
+  public byte[] publicKey() {
     return publicKey.clone();
   }
 
-  public void setPublicKey(byte[] publicKey) {
-    this.publicKey = publicKey.clone();
-  }
-
-  public byte[] getVerifyToken() {
+  public byte[] verifyToken() {
     return verifyToken.clone();
   }
 
-  public void setVerifyToken(byte[] verifyToken) {
-    this.verifyToken = verifyToken.clone();
+  public boolean shouldAuthenticate() {
+    return shouldAuthenticate;
+  }
+
+  public byte[] getPublicKey() {
+    return publicKey();
+  }
+
+  public byte[] getVerifyToken() {
+    return verifyToken();
   }
 
   @Override
@@ -58,39 +74,48 @@ public class EncryptionRequestPacket implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    this.serverId = ProtocolUtils.readString(buf, 20);
-
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
-      publicKey = ProtocolUtils.readByteArray(buf, 256);
-      verifyToken = ProtocolUtils.readByteArray(buf, 16);
-      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
-        shouldAuthenticate = buf.readBoolean();
-      }
-    } else {
-      publicKey = ProtocolUtils.readByteArray17(buf);
-      verifyToken = ProtocolUtils.readByteArray17(buf);
-    }
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    ProtocolUtils.writeString(buf, this.serverId);
-
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
-      ProtocolUtils.writeByteArray(buf, publicKey);
-      ProtocolUtils.writeByteArray(buf, verifyToken);
-      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
-        buf.writeBoolean(shouldAuthenticate);
-      }
-    } else {
-      ProtocolUtils.writeByteArray17(publicKey, buf, false);
-      ProtocolUtils.writeByteArray17(verifyToken, buf, false);
-    }
-  }
-
-  @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<EncryptionRequestPacket> {
+    @Override
+    public EncryptionRequestPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+                                           ProtocolVersion version) {
+      String serverId = ProtocolUtils.readString(buf, 20);
+      byte[] publicKey;
+      byte[] verifyToken;
+      boolean shouldAuthenticate = true;
+
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
+        publicKey = ProtocolUtils.readByteArray(buf, 256);
+        verifyToken = ProtocolUtils.readByteArray(buf, 16);
+        if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
+          shouldAuthenticate = buf.readBoolean();
+        }
+      } else {
+        publicKey = ProtocolUtils.readByteArray17(buf);
+        verifyToken = ProtocolUtils.readByteArray17(buf);
+      }
+
+      return new EncryptionRequestPacket(serverId, publicKey, verifyToken, shouldAuthenticate);
+    }
+
+    @Override
+    public void encode(EncryptionRequestPacket packet, ByteBuf buf, ProtocolUtils.Direction direction,
+                       ProtocolVersion version) {
+      ProtocolUtils.writeString(buf, packet.serverId);
+
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
+        ProtocolUtils.writeByteArray(buf, packet.publicKey);
+        ProtocolUtils.writeByteArray(buf, packet.verifyToken);
+        if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
+          buf.writeBoolean(packet.shouldAuthenticate);
+        }
+      } else {
+        ProtocolUtils.writeByteArray17(packet.publicKey, buf, false);
+        ProtocolUtils.writeByteArray17(packet.verifyToken, buf, false);
+      }
+    }
   }
 }

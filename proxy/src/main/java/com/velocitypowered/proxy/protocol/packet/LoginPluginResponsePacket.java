@@ -20,21 +20,18 @@ package com.velocitypowered.proxy.protocol.packet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
-import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DefaultByteBufHolder;
 import io.netty.buffer.Unpooled;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
-public class LoginPluginResponsePacket extends DeferredByteBufHolder implements MinecraftPacket {
+public final class LoginPluginResponsePacket extends DefaultByteBufHolder
+    implements MinecraftPacket {
 
-  private int id;
-  private boolean success;
-
-  public LoginPluginResponsePacket() {
-    super(Unpooled.EMPTY_BUFFER);
-  }
+  private final int id;
+  private final boolean success;
 
   public LoginPluginResponsePacket(int id, boolean success, @MonotonicNonNull ByteBuf buf) {
     super(buf);
@@ -42,20 +39,20 @@ public class LoginPluginResponsePacket extends DeferredByteBufHolder implements 
     this.success = success;
   }
 
-  public int getId() {
+  public int id() {
     return id;
   }
 
-  public void setId(int id) {
-    this.id = id;
-  }
-
-  public boolean isSuccess() {
+  public boolean success() {
     return success;
   }
 
-  public void setSuccess(boolean success) {
-    this.success = success;
+  public int getId() {
+    return id();
+  }
+
+  public boolean isSuccess() {
+    return success();
   }
 
   @Override
@@ -68,30 +65,35 @@ public class LoginPluginResponsePacket extends DeferredByteBufHolder implements 
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    this.id = ProtocolUtils.readVarInt(buf);
-    this.success = buf.readBoolean();
-    if (buf.isReadable()) {
-      this.replace(buf.readRetainedSlice(buf.readableBytes()));
-    } else {
-      this.replace(Unpooled.EMPTY_BUFFER);
-    }
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    ProtocolUtils.writeVarInt(buf, id);
-    buf.writeBoolean(success);
-    buf.writeBytes(content());
-  }
-
-  @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
   }
 
-  @Override
-  public int encodeSizeHint(Direction direction, ProtocolVersion version) {
-    return content().readableBytes();
+  public static class Codec implements PacketCodec<LoginPluginResponsePacket> {
+    @Override
+    public LoginPluginResponsePacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+                                             ProtocolVersion version) {
+      int id = ProtocolUtils.readVarInt(buf);
+      boolean success = buf.readBoolean();
+      ByteBuf data;
+      if (buf.isReadable()) {
+        data = buf.readRetainedSlice(buf.readableBytes());
+      } else {
+        data = Unpooled.EMPTY_BUFFER;
+      }
+      return new LoginPluginResponsePacket(id, success, data);
+    }
+
+    @Override
+    public void encode(LoginPluginResponsePacket packet, ByteBuf buf,
+                       ProtocolUtils.Direction direction, ProtocolVersion version) {
+      ProtocolUtils.writeVarInt(buf, packet.id);
+      buf.writeBoolean(packet.success);
+      buf.writeBytes(packet.content());
+    }
+
+    public int encodeSizeHint(LoginPluginResponsePacket packet, ProtocolUtils.Direction direction, ProtocolVersion version) {
+      return ProtocolUtils.varIntBytes(packet.id) + 1 + packet.content().readableBytes();
+    }
   }
 }

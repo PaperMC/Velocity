@@ -69,7 +69,7 @@ public final class VelocityBossBarImplementation implements BossBar.Listener,
 
   public boolean viewerRemove(final ConnectedPlayer viewer) {
     if (this.viewers.remove(viewer)) {
-      viewer.getBossBarManager().remove(this, BossBarPacket.createRemovePacket(this.id, this.bar));
+      viewer.getBossBarManager().remove(this, BossBarPacket.createRemovePacket(this.id));
       return true;
     }
     return false;

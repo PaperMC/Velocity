@@ -387,8 +387,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   public boolean handle(ResourcePackResponsePacket packet) {
     return player.resourcePackHandler().onResourcePackResponse(
         new ResourcePackResponseBundle(packet.getId(),
-            packet.getHash(),
-            packet.getStatus()));
+            packet.hash(),
+            packet.status()));
   }
 
   @Override
@@ -428,7 +428,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ServerboundCookieResponsePacket packet) {
     server.getEventManager()
-        .fire(new CookieReceiveEvent(player, packet.getKey(), packet.getPayload()))
+        .fire(new CookieReceiveEvent(player, packet.key(), packet.payload()))
         .thenAcceptAsync(event -> {
           if (event.getResult().isAllowed()) {
             final VelocityServerConnection serverConnection = player.getConnectedServer();
@@ -586,10 +586,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // Remove previous boss bars. These don't get cleared when sending JoinGame (up until 1.20.2),
       // thus the need to track them.
       for (UUID serverBossBar : serverBossBars) {
-        BossBarPacket deletePacket = new BossBarPacket();
-        deletePacket.setUuid(serverBossBar);
-        deletePacket.setAction(BossBarPacket.REMOVE);
-        player.getConnection().delayedWrite(deletePacket);
+        player.getConnection().delayedWrite(BossBarPacket.createRemovePacket(serverBossBar));
       }
       serverBossBars.clear();
     }
@@ -615,7 +612,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // Clear any title from the previous server.
     if (player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       player.getConnection().delayedWrite(
-          GenericTitlePacket.constructTitlePacket(GenericTitlePacket.ActionType.RESET,
+          GenericTitlePacket.createClearTitlePacket(GenericTitlePacket.ActionType.RESET,
               player.getProtocolVersion()));
     }
 
@@ -634,14 +631,15 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     // Most notably, by having the client accept the join game packet, we can work around the need
     // to perform entity ID rewrites, eliminating potential issues from rewriting packets and
     // improving compatibility with mods.
-    final RespawnPacket respawn = RespawnPacket.fromJoinGame(joinGame);
-
+    int dim = joinGame.getDimension();
     if (player.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_16)) {
       // Before Minecraft 1.16, we could not switch to the same dimension without sending an
       // additional respawn. On older versions of Minecraft this forces the client to perform
       // garbage collection which adds additional latency.
-      joinGame.setDimension(joinGame.getDimension() == 0 ? -1 : 0);
+      dim = joinGame.getDimension() == 0 ? -1 : 0;
     }
+    final RespawnPacket respawn = RespawnPacket.fromJoinGame(joinGame, dim);
+
     player.getConnection().delayedWrite(joinGame);
     player.getConnection().delayedWrite(respawn);
   }
@@ -655,8 +653,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     player.getConnection().delayedWrite(joinGame);
 
     // Send a respawn packet in a different dimension.
-    final RespawnPacket fakeSwitchPacket = RespawnPacket.fromJoinGame(joinGame);
-    fakeSwitchPacket.setDimension(joinGame.getDimension() == 0 ? -1 : 0);
+    final RespawnPacket fakeSwitchPacket = RespawnPacket.fromJoinGame(joinGame, joinGame.getDimension() == 0 ? -1 : 0);
     player.getConnection().delayedWrite(fakeSwitchPacket);
 
     // Now send a respawn packet in the correct dimension.
@@ -728,11 +725,9 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
               offers.add(new Offer(offer, tooltip));
             }
 
-            TabCompleteResponsePacket resp = new TabCompleteResponsePacket();
-            resp.setTransactionId(packet.getTransactionId());
-            resp.setStart(startPos + 1);
-            resp.setLength(packet.getCommand().length() - startPos - 1);
-            resp.getOffers().addAll(offers);
+            TabCompleteResponsePacket resp = new TabCompleteResponsePacket(
+                packet.transactionId(), startPos + 1, packet.getCommand().length() - startPos - 1, offers
+            );
             player.getConnection().write(resp);
           }
         }, player.getConnection().eventLoop()).exceptionally((ex) -> {
@@ -778,6 +773,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         .thenAcceptAsync(offers -> {
           boolean legacy =
               player.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_13);
+          List<Offer> extendedOffers = new ArrayList<>(response.offers());
           try {
             for (Suggestion suggestion : offers.getList()) {
               String offer = suggestion.getText();
@@ -791,10 +787,10 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
               } else if (suggestion.getTooltip() != null) {
                 tooltip = new ComponentHolder(player.getProtocolVersion(), Component.text(suggestion.getTooltip().getString()));
               }
-              response.getOffers().add(new Offer(offer, tooltip));
+              extendedOffers.add(new Offer(offer, tooltip));
             }
-            response.getOffers().sort(null);
-            player.getConnection().write(response);
+            extendedOffers.sort(null);
+            player.getConnection().write(response.withOffers(extendedOffers));
           } catch (Exception e) {
             logger.error("Unable to provide tab list completions for {} for command '{}'",
                 player.getUsername(), command,
@@ -811,17 +807,17 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   private void finishRegularTabComplete(TabCompleteRequestPacket request,
                                         TabCompleteResponsePacket response) {
-    List<String> offers = new ArrayList<>();
-    for (Offer offer : response.getOffers()) {
-      offers.add(offer.getText());
+    List<String> textOffers = new ArrayList<>();
+    for (Offer offer : response.offers()) {
+      textOffers.add(offer.getText());
     }
-    server.getEventManager().fire(new TabCompleteEvent(player, request.getCommand(), offers))
+    server.getEventManager().fire(new TabCompleteEvent(player, request.getCommand(), textOffers))
         .thenAcceptAsync(e -> {
-          response.getOffers().clear();
+          List<Offer> newOffers = new ArrayList<>();
           for (String s : e.getSuggestions()) {
-            response.getOffers().add(new Offer(s));
+            newOffers.add(new Offer(s));
           }
-          player.getConnection().write(response);
+          player.getConnection().write(response.withOffers(newOffers));
         }, player.getConnection().eventLoop()).exceptionally((ex) -> {
           logger.error(
               "Exception while finishing regular tab completion,"

@@ -20,42 +20,35 @@ package com.velocitypowered.proxy.protocol.packet.chat;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
-public class ChatAcknowledgementPacket implements MinecraftPacket {
-    int offset;
+public record ChatAcknowledgementPacket(int offset) implements MinecraftPacket {
 
-    public ChatAcknowledgementPacket(int offset) {
-        this.offset = offset;
-    }
+  @Override
+  public boolean handle(MinecraftSessionHandler handler) {
+    return handler.handle(this);
+  }
 
-    public ChatAcknowledgementPacket() {
+  @Override
+  public String toString() {
+    return "ChatAcknowledgement{" +
+        "offset=" + offset +
+        '}';
+  }
+
+  public static class Codec implements PacketCodec<ChatAcknowledgementPacket> {
+    @Override
+    public ChatAcknowledgementPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      return new ChatAcknowledgementPacket(ProtocolUtils.readVarInt(buf));
     }
 
     @Override
-    public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        offset = ProtocolUtils.readVarInt(buf);
+    public void encode(ChatAcknowledgementPacket packet, ByteBuf buf,
+        ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+      ProtocolUtils.writeVarInt(buf, packet.offset);
     }
-
-    @Override
-    public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        ProtocolUtils.writeVarInt(buf, offset);
-    }
-
-    @Override
-    public boolean handle(MinecraftSessionHandler handler) {
-        return handler.handle(this);
-    }
-
-    @Override
-    public String toString() {
-        return "ChatAcknowledgement{" +
-                "offset=" + offset +
-                '}';
-    }
-
-    public int offset() {
-        return offset;
-    }
+  }
 }

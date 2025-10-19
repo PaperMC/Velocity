@@ -20,19 +20,14 @@ package com.velocitypowered.proxy.protocol.packet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
-public class KeepAlivePacket implements MinecraftPacket {
-
-  private long randomId;
+public record KeepAlivePacket(long randomId) implements MinecraftPacket {
 
   public long getRandomId() {
     return randomId;
-  }
-
-  public void setRandomId(long randomId) {
-    this.randomId = randomId;
   }
 
   @Override
@@ -43,29 +38,35 @@ public class KeepAlivePacket implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_12_2)) {
-      randomId = buf.readLong();
-    } else if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
-      randomId = ProtocolUtils.readVarInt(buf);
-    } else {
-      randomId = buf.readInt();
-    }
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_12_2)) {
-      buf.writeLong(randomId);
-    } else if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
-      ProtocolUtils.writeVarInt(buf, (int) randomId);
-    } else {
-      buf.writeInt((int) randomId);
-    }
-  }
-
-  @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<KeepAlivePacket> {
+    @Override
+    public KeepAlivePacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      long randomId;
+      if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_12_2)) {
+        randomId = buf.readLong();
+      } else if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
+        randomId = ProtocolUtils.readVarInt(buf);
+      } else {
+        randomId = buf.readInt();
+      }
+      return new KeepAlivePacket(randomId);
+    }
+
+    @Override
+    public void encode(KeepAlivePacket packet, ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_12_2)) {
+        buf.writeLong(packet.randomId);
+      } else if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
+        ProtocolUtils.writeVarInt(buf, (int) packet.randomId);
+      } else {
+        buf.writeInt((int) packet.randomId);
+      }
+    }
   }
 }

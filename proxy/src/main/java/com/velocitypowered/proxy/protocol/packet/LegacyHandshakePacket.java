@@ -20,23 +20,33 @@ package com.velocitypowered.proxy.protocol.packet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
-public class LegacyHandshakePacket implements MinecraftPacket {
+public final class LegacyHandshakePacket implements MinecraftPacket {
 
-  @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    throw new UnsupportedOperationException();
-  }
+  public static final LegacyHandshakePacket INSTANCE = new LegacyHandshakePacket();
 
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    throw new UnsupportedOperationException();
+  private LegacyHandshakePacket() {
   }
 
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<LegacyHandshakePacket> {
+    @Override
+    public LegacyHandshakePacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+                                         ProtocolVersion version) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void encode(LegacyHandshakePacket packet, ByteBuf buf, ProtocolUtils.Direction direction,
+                       ProtocolVersion version) {
+      throw new UnsupportedOperationException();
+    }
   }
 }

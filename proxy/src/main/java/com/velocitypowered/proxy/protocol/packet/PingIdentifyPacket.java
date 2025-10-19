@@ -20,30 +20,28 @@ package com.velocitypowered.proxy.protocol.packet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
-public class PingIdentifyPacket implements MinecraftPacket {
-
-  private int id;
-
-  @Override
-  public String toString() {
-    return "Ping{" + "id=" + id + '}';
-  }
-
-  @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    id = buf.readInt();
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    buf.writeInt(id);
-  }
+public record PingIdentifyPacket(int id) implements MinecraftPacket {
 
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<PingIdentifyPacket> {
+    @Override
+    public PingIdentifyPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      return new PingIdentifyPacket(buf.readInt());
+    }
+
+    @Override
+    public void encode(PingIdentifyPacket packet, ByteBuf buf,
+        ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+      buf.writeInt(packet.id);
+    }
   }
 }

@@ -20,16 +20,15 @@ package com.velocitypowered.proxy.protocol.packet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class ServerboundCookieResponsePacket implements MinecraftPacket {
-
-  private Key key;
-  private byte @Nullable [] payload;
+public record ServerboundCookieResponsePacket(Key key,
+    byte @Nullable [] payload) implements MinecraftPacket {
 
   public Key getKey() {
     return key;
@@ -39,34 +38,32 @@ public class ServerboundCookieResponsePacket implements MinecraftPacket {
     return payload;
   }
 
-  public ServerboundCookieResponsePacket() {
-  }
-
-  public ServerboundCookieResponsePacket(final Key key, final byte @Nullable [] payload) {
-    this.key = key;
-    this.payload = payload;
-  }
-
-  @Override
-  public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    this.key = ProtocolUtils.readKey(buf);
-    if (buf.readBoolean()) {
-      this.payload = ProtocolUtils.readByteArray(buf, 5120);
-    }
-  }
-
-  @Override
-  public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    ProtocolUtils.writeKey(buf, key);
-    final boolean hasPayload = payload != null && payload.length > 0;
-    buf.writeBoolean(hasPayload);
-    if (hasPayload) {
-      ProtocolUtils.writeByteArray(buf, payload);
-    }
-  }
-
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<ServerboundCookieResponsePacket> {
+    @Override
+    public ServerboundCookieResponsePacket decode(ByteBuf buf, Direction direction,
+        ProtocolVersion protocolVersion) {
+      Key key = ProtocolUtils.readKey(buf);
+      byte[] payload = null;
+      if (buf.readBoolean()) {
+        payload = ProtocolUtils.readByteArray(buf, 5120);
+      }
+      return new ServerboundCookieResponsePacket(key, payload);
+    }
+
+    @Override
+    public void encode(ServerboundCookieResponsePacket packet, ByteBuf buf, Direction direction,
+        ProtocolVersion protocolVersion) {
+      ProtocolUtils.writeKey(buf, packet.key);
+      final boolean hasPayload = packet.payload != null && packet.payload.length > 0;
+      buf.writeBoolean(hasPayload);
+      if (hasPayload) {
+        ProtocolUtils.writeByteArray(buf, packet.payload);
+      }
+    }
   }
 }

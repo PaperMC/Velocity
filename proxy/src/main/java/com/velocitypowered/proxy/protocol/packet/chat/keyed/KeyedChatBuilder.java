@@ -17,7 +17,6 @@
 
 package com.velocitypowered.proxy.protocol.packet.chat.keyed;
 
-import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatType;
@@ -42,12 +41,13 @@ public class KeyedChatBuilder extends ChatBuilderV2 {
   @Override
   public MinecraftPacket toServer() {
     if (message.startsWith("/")) {
-      return new KeyedPlayerCommandPacket(message.substring(1), ImmutableList.of(), timestamp);
+      return new KeyedPlayerCommandPacket(false, message.substring(1), timestamp, 0L,
+          false, new com.velocitypowered.proxy.crypto.SignaturePair[0], null,
+          java.util.Collections.emptyMap());
     } else {
       // This will produce an error on the server, but needs to be here.
-      KeyedPlayerChatPacket v1Chat = new KeyedPlayerChatPacket(message);
-      v1Chat.setExpiry(this.timestamp);
-      return v1Chat;
+      return new KeyedPlayerChatPacket(message, false, false, timestamp, null, null,
+          new com.velocitypowered.proxy.crypto.SignaturePair[0], null);
     }
   }
 }

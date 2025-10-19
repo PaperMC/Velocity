@@ -21,36 +21,36 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.text.Component;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class DisconnectPacket implements MinecraftPacket {
+public final class DisconnectPacket implements MinecraftPacket {
 
-  private @Nullable ComponentHolder reason;
+  private final ComponentHolder reason;
   private final StateRegistry state;
 
-  public DisconnectPacket(StateRegistry state) {
-    this.state = state;
-  }
-
-  private DisconnectPacket(StateRegistry state, ComponentHolder reason) {
+  public DisconnectPacket(StateRegistry state, ComponentHolder reason) {
     this.state = state;
     this.reason = Preconditions.checkNotNull(reason, "reason");
   }
 
-  public ComponentHolder getReason() {
+  public ComponentHolder reason() {
     if (reason == null) {
       throw new IllegalStateException("No reason specified");
     }
     return reason;
   }
 
-  public void setReason(@Nullable ComponentHolder reason) {
-    this.reason = reason;
+  public ComponentHolder getReason() {
+    return reason();
+  }
+
+  public StateRegistry state() {
+    return state;
   }
 
   @Override
@@ -61,24 +61,36 @@ public class DisconnectPacket implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-	  reason = ComponentHolder.read(buf, state == StateRegistry.LOGIN
-              ? ProtocolVersion.MINECRAFT_1_20_2 : version);
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    getReason().write(buf);
-  }
-
-  @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
   }
 
-  public static DisconnectPacket create(Component component, ProtocolVersion version, StateRegistry state) {
+  public static DisconnectPacket create(Component component, ProtocolVersion version,
+      StateRegistry state) {
     Preconditions.checkNotNull(component, "component");
     return new DisconnectPacket(state, new ComponentHolder(state == StateRegistry.LOGIN
             ? ProtocolVersion.MINECRAFT_1_20_2 : version, component));
+  }
+
+  public static class Codec implements PacketCodec<DisconnectPacket> {
+    private final StateRegistry state;
+
+    public Codec(StateRegistry state) {
+      this.state = state;
+    }
+
+    @Override
+    public DisconnectPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      ComponentHolder reason = ComponentHolder.read(buf, state == StateRegistry.LOGIN
+              ? ProtocolVersion.MINECRAFT_1_20_2 : protocolVersion);
+      return new DisconnectPacket(state, reason);
+    }
+
+    @Override
+    public void encode(DisconnectPacket packet, ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      packet.reason().write(buf);
+    }
   }
 }

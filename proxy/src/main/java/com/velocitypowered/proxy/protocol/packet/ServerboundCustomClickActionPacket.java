@@ -20,25 +20,17 @@ package com.velocitypowered.proxy.protocol.packet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
-import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DefaultByteBufHolder;
 
-public class ServerboundCustomClickActionPacket extends DeferredByteBufHolder implements MinecraftPacket {
+public class ServerboundCustomClickActionPacket extends DefaultByteBufHolder
+    implements MinecraftPacket {
 
-  public ServerboundCustomClickActionPacket() {
-    super(null);
-  }
-
-  @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    replace(buf.readRetainedSlice(buf.readableBytes()));
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    buf.writeBytes(content());
+  public ServerboundCustomClickActionPacket(ByteBuf backing) {
+    super(backing);
   }
 
   @Override
@@ -47,7 +39,61 @@ public class ServerboundCustomClickActionPacket extends DeferredByteBufHolder im
   }
 
   @Override
-  public int encodeSizeHint(Direction direction, ProtocolVersion version) {
-    return content().readableBytes();
+  public ServerboundCustomClickActionPacket copy() {
+    return (ServerboundCustomClickActionPacket) super.copy();
+  }
+
+  @Override
+  public ServerboundCustomClickActionPacket duplicate() {
+    return (ServerboundCustomClickActionPacket) super.duplicate();
+  }
+
+  @Override
+  public ServerboundCustomClickActionPacket retainedDuplicate() {
+    return (ServerboundCustomClickActionPacket) super.retainedDuplicate();
+  }
+
+  @Override
+  public ServerboundCustomClickActionPacket replace(ByteBuf content) {
+    return (ServerboundCustomClickActionPacket) super.replace(content);
+  }
+
+  @Override
+  public ServerboundCustomClickActionPacket retain() {
+    return (ServerboundCustomClickActionPacket) super.retain();
+  }
+
+  @Override
+  public ServerboundCustomClickActionPacket retain(int increment) {
+    return (ServerboundCustomClickActionPacket) super.retain(increment);
+  }
+
+  @Override
+  public ServerboundCustomClickActionPacket touch() {
+    return (ServerboundCustomClickActionPacket) super.touch();
+  }
+
+  @Override
+  public ServerboundCustomClickActionPacket touch(Object hint) {
+    return (ServerboundCustomClickActionPacket) super.touch(hint);
+  }
+
+  public static class Codec implements PacketCodec<ServerboundCustomClickActionPacket> {
+    @Override
+    public ServerboundCustomClickActionPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      return new ServerboundCustomClickActionPacket(buf.readRetainedSlice(buf.readableBytes()));
+    }
+
+    @Override
+    public void encode(ServerboundCustomClickActionPacket packet, ByteBuf buf,
+        ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+      buf.writeBytes(packet.content());
+    }
+
+    @Override
+    public int encodeSizeHint(ServerboundCustomClickActionPacket packet, Direction direction, ProtocolVersion protocolVersion) {
+      return packet.content().readableBytes();
+    }
   }
 }

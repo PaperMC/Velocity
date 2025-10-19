@@ -38,25 +38,25 @@ public class ClientSettingsWrapper implements PlayerSettings {
 
   ClientSettingsWrapper(ClientSettingsPacket settings) {
     this.settings = settings;
-    this.parts = new SkinParts((byte) settings.getSkinParts());
+    this.parts = new SkinParts((byte) settings.skinParts());
   }
 
   @Override
   public Locale getLocale() {
     if (locale == null) {
-      locale = Locale.forLanguageTag(settings.getLocale().replaceAll("_", "-"));
+      locale = Locale.forLanguageTag(settings.locale().replaceAll("_", "-"));
     }
     return locale;
   }
 
   @Override
   public byte getViewDistance() {
-    return settings.getViewDistance();
+    return settings.viewDistance();
   }
 
   @Override
   public ChatMode getChatMode() {
-    return switch (settings.getChatVisibility()) {
+    return switch (settings.chatVisibility()) {
       case 1 -> ChatMode.COMMANDS_ONLY;
       case 2 -> ChatMode.HIDDEN;
       default -> ChatMode.SHOWN;
@@ -65,7 +65,7 @@ public class ClientSettingsWrapper implements PlayerSettings {
 
   @Override
   public boolean hasChatColors() {
-    return settings.isChatColors();
+    return settings.chatColors();
   }
 
   @Override
@@ -75,22 +75,22 @@ public class ClientSettingsWrapper implements PlayerSettings {
 
   @Override
   public MainHand getMainHand() {
-    return settings.getMainHand() == 1 ? MainHand.RIGHT : MainHand.LEFT;
+    return settings.mainHand() == 1 ? MainHand.RIGHT : MainHand.LEFT;
   }
 
   @Override
   public boolean isClientListingAllowed() {
-    return settings.isClientListingAllowed();
+    return settings.clientListingAllowed();
   }
 
   @Override
   public boolean isTextFilteringEnabled() {
-    return settings.isTextFilteringEnabled();
+    return settings.textFilteringEnabled();
   }
 
   @Override
   public ParticleStatus getParticleStatus() {
-    return switch (settings.getParticleStatus()) {
+    return switch (settings.particleStatus()) {
       case 1 -> ParticleStatus.DECREASED;
       case 2 -> ParticleStatus.MINIMAL;
       default -> ParticleStatus.ALL;

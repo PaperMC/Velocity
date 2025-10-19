@@ -21,63 +21,26 @@ import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent.Status
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 import java.util.UUID;
 
-public class ResourcePackResponsePacket implements MinecraftPacket {
+public record ResourcePackResponsePacket(UUID id, String hash,
+    Status status) implements MinecraftPacket {
 
-  private UUID id;
-  private String hash = "";
-  private @MonotonicNonNull Status status;
-
-  public ResourcePackResponsePacket() {
-  }
-
-  public ResourcePackResponsePacket(UUID id, String hash, @MonotonicNonNull Status status) {
-    this.id = id;
-    this.hash = hash;
-    this.status = status;
-  }
-
-  public Status getStatus() {
-    if (status == null) {
-      throw new IllegalStateException("Packet not yet deserialized");
-    }
-    return status;
+  public UUID getId() {
+    return id;
   }
 
   public String getHash() {
     return hash;
   }
 
-  public UUID getId() {
-    return id;
-  }
-
-  @Override
-  public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
-      this.id = ProtocolUtils.readUuid(buf);
-    }
-    if (protocolVersion.noGreaterThan(ProtocolVersion.MINECRAFT_1_9_4)) {
-      this.hash = ProtocolUtils.readString(buf);
-    }
-    this.status = Status.values()[ProtocolUtils.readVarInt(buf)];
-  }
-
-  @Override
-  public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
-      ProtocolUtils.writeUuid(buf, id);
-    }
-    if (protocolVersion.noGreaterThan(ProtocolVersion.MINECRAFT_1_9_4)) {
-      ProtocolUtils.writeString(buf, hash);
-    }
-    ProtocolUtils.writeVarInt(buf, status.ordinal());
+  public Status getStatus() {
+    return status;
   }
 
   @Override
@@ -85,12 +48,32 @@ public class ResourcePackResponsePacket implements MinecraftPacket {
     return handler.handle(this);
   }
 
-  @Override
-  public String toString() {
-    return "ResourcePackResponsePacket{" +
-            "id=" + id +
-            ", hash='" + hash + '\'' +
-            ", status=" + status +
-            '}';
+  public static class Codec implements PacketCodec<ResourcePackResponsePacket> {
+    @Override
+    public ResourcePackResponsePacket decode(ByteBuf buf, Direction direction,
+        ProtocolVersion protocolVersion) {
+      UUID id = null;
+      if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
+        id = ProtocolUtils.readUuid(buf);
+      }
+      String hash = "";
+      if (protocolVersion.noGreaterThan(ProtocolVersion.MINECRAFT_1_9_4)) {
+        hash = ProtocolUtils.readString(buf);
+      }
+      Status status = Status.values()[ProtocolUtils.readVarInt(buf)];
+      return new ResourcePackResponsePacket(id, hash, status);
+    }
+
+    @Override
+    public void encode(ResourcePackResponsePacket packet, ByteBuf buf, Direction direction,
+        ProtocolVersion protocolVersion) {
+      if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
+        ProtocolUtils.writeUuid(buf, packet.id);
+      }
+      if (protocolVersion.noGreaterThan(ProtocolVersion.MINECRAFT_1_9_4)) {
+        ProtocolUtils.writeString(buf, packet.hash);
+      }
+      ProtocolUtils.writeVarInt(buf, packet.status.ordinal());
+    }
   }
 }

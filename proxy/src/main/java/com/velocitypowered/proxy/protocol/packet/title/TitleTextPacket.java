@@ -19,21 +19,18 @@ package com.velocitypowered.proxy.protocol.packet.title;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 
-public class TitleTextPacket extends GenericTitlePacket {
+public final class TitleTextPacket extends GenericTitlePacket {
 
-  private ComponentHolder component;
+  private final ComponentHolder component;
 
-  public TitleTextPacket() {
-    setAction(ActionType.SET_TITLE);
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    component.write(buf);
+  public TitleTextPacket(ComponentHolder component) {
+    super(ActionType.SET_TITLE);
+    this.component = component;
   }
 
   @Override
@@ -42,19 +39,28 @@ public class TitleTextPacket extends GenericTitlePacket {
   }
 
   @Override
-  public void setComponent(ComponentHolder component) {
-    this.component = component;
-  }
-
-  @Override
   public String toString() {
     return "TitleTextPacket{"
-        + ", component='" + component + '\''
+        + "component='" + component + '\''
         + '}';
   }
 
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<TitleTextPacket> {
+    @Override
+    public TitleTextPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      throw new UnsupportedOperationException(); // encode only
+    }
+
+    @Override
+    public void encode(TitleTextPacket packet, ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      packet.component.write(buf);
+    }
   }
 }

@@ -20,38 +20,34 @@ package com.velocitypowered.proxy.protocol.packet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 
-public class ClientboundCookieRequestPacket implements MinecraftPacket {
-
-  private Key key;
+public record ClientboundCookieRequestPacket(Key key) implements MinecraftPacket {
 
   public Key getKey() {
     return key;
   }
 
-  public ClientboundCookieRequestPacket() {
-  }
-
-  public ClientboundCookieRequestPacket(final Key key) {
-    this.key = key;
-  }
-
-  @Override
-  public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    this.key = ProtocolUtils.readKey(buf);
-  }
-
-  @Override
-  public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    ProtocolUtils.writeKey(buf, key);
-  }
-
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<ClientboundCookieRequestPacket> {
+    @Override
+    public ClientboundCookieRequestPacket decode(ByteBuf buf, Direction direction,
+        ProtocolVersion protocolVersion) {
+      return new ClientboundCookieRequestPacket(ProtocolUtils.readKey(buf));
+    }
+
+    @Override
+    public void encode(ClientboundCookieRequestPacket packet, ByteBuf buf, Direction direction,
+        ProtocolVersion protocolVersion) {
+      ProtocolUtils.writeKey(buf, packet.key);
+    }
   }
 }

@@ -20,29 +20,38 @@ package com.velocitypowered.proxy.protocol.packet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
-public class LoginAcknowledgedPacket implements MinecraftPacket {
+public final class LoginAcknowledgedPacket implements MinecraftPacket {
 
-  @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
-                     ProtocolVersion protocolVersion) {
-  }
+  public static final LoginAcknowledgedPacket INSTANCE = new LoginAcknowledgedPacket();
 
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction,
-                     ProtocolVersion protocolVersion) {
-  }
-
-  @Override
-  public int decodeExpectedMaxLength(ByteBuf buf, ProtocolUtils.Direction direction,
-                               ProtocolVersion version) {
-    return 0;
+  private LoginAcknowledgedPacket() {
   }
 
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<LoginAcknowledgedPacket> {
+    @Override
+    public LoginAcknowledgedPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      return INSTANCE;
+    }
+
+    @Override
+    public void encode(LoginAcknowledgedPacket packet, ByteBuf buf,
+        ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+    }
+
+    @Override
+    public int decodeExpectedMaxLength(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      return 0;
+    }
   }
 }

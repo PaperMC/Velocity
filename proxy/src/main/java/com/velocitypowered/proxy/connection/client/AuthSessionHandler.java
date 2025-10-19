@@ -230,10 +230,9 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
           return;
         }
 
-        ServerLoginSuccessPacket success = new ServerLoginSuccessPacket();
-        success.setUsername(player.getUsername());
-        success.setProperties(player.getGameProfileProperties());
-        success.setUuid(player.getUniqueId());
+        ServerLoginSuccessPacket success = new ServerLoginSuccessPacket(
+            player.getUniqueId(), player.getUsername(), player.getGameProfileProperties()
+        );
         mcConnection.write(success);
 
         loginState = State.SUCCESS_SENT;

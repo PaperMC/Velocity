@@ -56,12 +56,10 @@ public class PingSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void activated() {
-    HandshakePacket handshake = new HandshakePacket();
-    handshake.setIntent(HandshakeIntent.STATUS);
-    handshake.setServerAddress(this.virtualHostString == null || this.virtualHostString.isEmpty()
-            ? server.getServerInfo().getAddress().getHostString() : this.virtualHostString);
-    handshake.setPort(server.getServerInfo().getAddress().getPort());
-    handshake.setProtocolVersion(version);
+    String serverAddress = this.virtualHostString == null || this.virtualHostString.isEmpty()
+            ? server.getServerInfo().getAddress().getHostString() : this.virtualHostString;
+    HandshakePacket handshake = new HandshakePacket(version, serverAddress,
+            server.getServerInfo().getAddress().getPort(), HandshakeIntent.STATUS);
     connection.delayedWrite(handshake);
 
     connection.setActiveSessionHandler(StateRegistry.STATUS);

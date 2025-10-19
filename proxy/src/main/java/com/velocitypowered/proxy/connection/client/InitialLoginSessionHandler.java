@@ -91,7 +91,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
   public boolean handle(ServerLoginPacket packet) {
     assertState(LoginState.LOGIN_PACKET_EXPECTED);
     this.currentState = LoginState.LOGIN_PACKET_RECEIVED;
-    IdentifiedKey playerKey = packet.getPlayerKey();
+    IdentifiedKey playerKey = packet.playerKey();
     if (playerKey != null) {
       if (playerKey.hasExpired()) {
         inbound.disconnect(
@@ -102,7 +102,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
       boolean isKeyValid;
       if (playerKey.getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
           && playerKey instanceof final IdentifiedKeyImpl keyImpl) {
-        isKeyValid = keyImpl.internalAddHolder(packet.getHolderUuid());
+        isKeyValid = keyImpl.internalAddHolder(packet.holderUuid());
       } else {
         isKeyValid = playerKey.isSignatureValid();
       }
@@ -120,7 +120,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
     inbound.setPlayerKey(playerKey);
     this.login = packet;
 
-    final PreLoginEvent event = new PreLoginEvent(inbound, login.getUsername(), login.getHolderUuid());
+    final PreLoginEvent event = new PreLoginEvent(inbound, login.getUsername(), login.holderUuid());
     server.getEventManager().fire(event).thenRunAsync(() -> {
       if (mcConnection.isClosed()) {
         // The player was disconnected
@@ -289,9 +289,8 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
     byte[] verify = new byte[4];
     ThreadLocalRandom.current().nextBytes(verify);
 
-    EncryptionRequestPacket request = new EncryptionRequestPacket();
-    request.setPublicKey(server.getServerKeyPair().getPublic().getEncoded());
-    request.setVerifyToken(verify);
+    EncryptionRequestPacket request = new EncryptionRequestPacket("",
+        server.getServerKeyPair().getPublic().getEncoded(), verify, true);
     return request;
   }
 

@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.protocol.packet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
@@ -28,59 +29,11 @@ import net.kyori.adventure.sound.SoundStop;
 
 import javax.annotation.Nullable;
 
-public class ClientboundStopSoundPacket implements MinecraftPacket {
-
-  private @Nullable Sound.Source source;
-  private @Nullable Key soundName;
-
-  public ClientboundStopSoundPacket() {}
+public record ClientboundStopSoundPacket(@Nullable Sound.Source source,
+                                         @Nullable Key soundName) implements MinecraftPacket {
 
   public ClientboundStopSoundPacket(SoundStop soundStop) {
     this(soundStop.source(), soundStop.sound());
-  }
-
-  public ClientboundStopSoundPacket(@Nullable Sound.Source source, @Nullable Key soundName) {
-    this.source = source;
-    this.soundName = soundName;
-  }
-
-  @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    int flagsBitmask = buf.readByte();
-
-    if ((flagsBitmask & 1) != 0) {
-      source = ProtocolUtils.readSoundSource(buf, protocolVersion);
-    } else {
-      source = null;
-    }
-
-    if ((flagsBitmask & 2) != 0) {
-      soundName = ProtocolUtils.readKey(buf);
-    } else {
-      soundName = null;
-    }
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    int flagsBitmask = 0;
-    if (source != null && soundName == null) {
-      flagsBitmask |= 1;
-    } else if (soundName != null && source == null) {
-      flagsBitmask |= 2;
-    } else if (source != null /*&& sound != null*/) {
-      flagsBitmask |= 3;
-    }
-
-    buf.writeByte(flagsBitmask);
-
-    if (source != null) {
-      ProtocolUtils.writeSoundSource(buf, protocolVersion, source);
-    }
-
-    if (soundName != null) {
-      ProtocolUtils.writeMinimalKey(buf, soundName);
-    }
   }
 
   @Override
@@ -88,22 +41,46 @@ public class ClientboundStopSoundPacket implements MinecraftPacket {
     return handler.handle(this);
   }
 
-  @Nullable
-  public Sound.Source getSource() {
-    return source;
-  }
+  public static class Codec implements PacketCodec<ClientboundStopSoundPacket> {
+    @Override
+    public ClientboundStopSoundPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+                                              ProtocolVersion protocolVersion) {
+      int flagsBitmask = buf.readByte();
 
-  public void setSource(@Nullable Sound.Source source) {
-    this.source = source;
-  }
+      Sound.Source source = null;
+      if ((flagsBitmask & 1) != 0) {
+        source = ProtocolUtils.readSoundSource(buf, protocolVersion);
+      }
 
-  @Nullable
-  public Key getSoundName() {
-    return soundName;
-  }
+      Key soundName = null;
+      if ((flagsBitmask & 2) != 0) {
+        soundName = ProtocolUtils.readKey(buf);
+      }
 
-  public void setSoundName(@Nullable Key soundName) {
-    this.soundName = soundName;
-  }
+      return new ClientboundStopSoundPacket(source, soundName);
+    }
 
+    @Override
+    public void encode(ClientboundStopSoundPacket packet, ByteBuf buf,
+                       ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+      int flagsBitmask = 0;
+      if (packet.source != null && packet.soundName == null) {
+        flagsBitmask |= 1;
+      } else if (packet.soundName != null && packet.source == null) {
+        flagsBitmask |= 2;
+      } else if (packet.source != null /*&& sound != null*/) {
+        flagsBitmask |= 3;
+      }
+
+      buf.writeByte(flagsBitmask);
+
+      if (packet.source != null) {
+        ProtocolUtils.writeSoundSource(buf, protocolVersion, packet.source);
+      }
+
+      if (packet.soundName != null) {
+        ProtocolUtils.writeMinimalKey(buf, packet.soundName);
+      }
+    }
+  }
 }

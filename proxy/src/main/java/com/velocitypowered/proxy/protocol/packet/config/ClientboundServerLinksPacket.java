@@ -21,49 +21,22 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.util.ServerLink;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClientboundServerLinksPacket implements MinecraftPacket {
-
-    private List<ServerLink> serverLinks;
+public record ClientboundServerLinksPacket(List<ServerLink> serverLinks) implements MinecraftPacket {
 
     public ClientboundServerLinksPacket() {
-    }
-
-    public ClientboundServerLinksPacket(List<ServerLink> serverLinks) {
-        this.serverLinks = serverLinks;
-    }
-
-    @Override
-    public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-        int linksCount = ProtocolUtils.readVarInt(buf);
-
-        this.serverLinks = new ArrayList<>(linksCount);
-        for (int i = 0; i < linksCount; i++) {
-            serverLinks.add(ServerLink.read(buf, version));
-        }
-    }
-
-    @Override
-    public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        ProtocolUtils.writeVarInt(buf, serverLinks.size());
-
-        for (ServerLink serverLink : serverLinks) {
-            serverLink.write(buf);
-        }
+        this(List.of());
     }
 
     @Override
     public boolean handle(MinecraftSessionHandler handler) {
         return handler.handle(this);
-    }
-
-    public List<ServerLink> getServerLinks() {
-        return serverLinks;
     }
 
     public record ServerLink(int id, ComponentHolder displayName, String url) {
@@ -85,6 +58,30 @@ public class ClientboundServerLinksPacket implements MinecraftPacket {
                 displayName.write(buf);
             }
             ProtocolUtils.writeString(buf, url);
+        }
+    }
+
+    public static class Codec implements PacketCodec<ClientboundServerLinksPacket> {
+        @Override
+        public ClientboundServerLinksPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+                                                    ProtocolVersion version) {
+            int linksCount = ProtocolUtils.readVarInt(buf);
+
+            List<ServerLink> serverLinks = new ArrayList<>(linksCount);
+            for (int i = 0; i < linksCount; i++) {
+                serverLinks.add(ServerLink.read(buf, version));
+            }
+            return new ClientboundServerLinksPacket(serverLinks);
+        }
+
+        @Override
+        public void encode(ClientboundServerLinksPacket packet, ByteBuf buf,
+                           ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+            ProtocolUtils.writeVarInt(buf, packet.serverLinks.size());
+
+            for (ServerLink serverLink : packet.serverLinks) {
+                serverLink.write(buf);
+            }
         }
     }
 }

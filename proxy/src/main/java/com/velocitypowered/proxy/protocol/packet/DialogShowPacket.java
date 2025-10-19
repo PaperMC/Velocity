@@ -20,45 +20,71 @@ package com.velocitypowered.proxy.protocol.packet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.nbt.BinaryTag;
 import net.kyori.adventure.nbt.BinaryTagIO;
 
-public class DialogShowPacket implements MinecraftPacket {
+public final class DialogShowPacket implements MinecraftPacket {
 
   private final StateRegistry state;
-  private int id;
-  private BinaryTag nbt;
+  private final int id;
+  private final BinaryTag nbt;
 
-  public DialogShowPacket(final StateRegistry state) {
+  public DialogShowPacket(StateRegistry state, int id, BinaryTag nbt) {
     this.state = state;
+    this.id = id;
+    this.nbt = nbt;
   }
 
-  @Override
-  public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    this.id = this.state == StateRegistry.CONFIG ? 0 : ProtocolUtils.readVarInt(buf);
-    if (this.id == 0) {
-      this.nbt = ProtocolUtils.readBinaryTag(buf, protocolVersion, BinaryTagIO.reader());
-    }
+  public StateRegistry state() {
+    return state;
   }
 
-  @Override
-  public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    if (this.state == StateRegistry.CONFIG) {
-      ProtocolUtils.writeBinaryTag(buf, protocolVersion, this.nbt);
-    } else {
-      ProtocolUtils.writeVarInt(buf, this.id);
-      if (this.id == 0) {
-        ProtocolUtils.writeBinaryTag(buf, protocolVersion, this.nbt);
-      }
-    }
+  public int id() {
+    return id;
+  }
+
+  public BinaryTag nbt() {
+    return nbt;
   }
 
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<DialogShowPacket> {
+    private final StateRegistry state;
+
+    public Codec(StateRegistry state) {
+      this.state = state;
+    }
+
+    @Override
+    public DialogShowPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+                                    ProtocolVersion protocolVersion) {
+      int id = state == StateRegistry.CONFIG ? 0 : ProtocolUtils.readVarInt(buf);
+      BinaryTag nbt = null;
+      if (id == 0) {
+        nbt = ProtocolUtils.readBinaryTag(buf, protocolVersion, BinaryTagIO.reader());
+      }
+      return new DialogShowPacket(state, id, nbt);
+    }
+
+    @Override
+    public void encode(DialogShowPacket packet, ByteBuf buf, ProtocolUtils.Direction direction,
+                       ProtocolVersion protocolVersion) {
+      if (packet.state == StateRegistry.CONFIG) {
+        ProtocolUtils.writeBinaryTag(buf, protocolVersion, packet.nbt);
+      } else {
+        ProtocolUtils.writeVarInt(buf, packet.id);
+        if (packet.id == 0) {
+          ProtocolUtils.writeBinaryTag(buf, protocolVersion, packet.nbt);
+        }
+      }
+    }
   }
 }

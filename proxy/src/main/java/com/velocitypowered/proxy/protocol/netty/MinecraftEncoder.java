@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.protocol.netty;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import io.netty.buffer.ByteBuf;
@@ -48,16 +49,31 @@ public class MinecraftEncoder extends MessageToByteEncoder<MinecraftPacket> {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   protected void encode(ChannelHandlerContext ctx, MinecraftPacket msg, ByteBuf out) {
+    PacketCodec<MinecraftPacket> codec = (PacketCodec<MinecraftPacket>) this.registry.getCodec(msg.getClass());
+    if (codec == null) {
+      throw new IllegalArgumentException("No codec found for packet: " + msg.getClass());
+    }
+
     int packetId = this.registry.getPacketId(msg);
     ProtocolUtils.writeVarInt(out, packetId);
-    msg.encode(out, direction, registry.version);
+    codec.encode(msg, out, direction, registry.version);
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   protected ByteBuf allocateBuffer(ChannelHandlerContext ctx, MinecraftPacket msg,
       boolean preferDirect) throws Exception {
-    int hint = msg.encodeSizeHint(direction, registry.version);
+    PacketCodec<MinecraftPacket> codec =
+        (PacketCodec<MinecraftPacket>)
+        this.registry.getCodec(msg.getClass());
+
+    int hint = -1;
+    if (codec != null) {
+      hint = codec.encodeSizeHint(msg, direction, registry.version);
+    }
+
     if (hint < 0) {
       return super.allocateBuffer(ctx, msg, preferDirect);
     }
