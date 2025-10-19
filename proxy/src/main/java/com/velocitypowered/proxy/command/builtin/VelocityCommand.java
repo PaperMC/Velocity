@@ -71,7 +71,6 @@ import org.apache.logging.log4j.Logger;
  */
 public final class VelocityCommand {
   private static final String USAGE = "/velocity <%s>";
-  private static final JoinConfiguration COMMA_JOINER = JoinConfiguration.commas(true);
 
   @SuppressWarnings("checkstyle:MissingJavadocMethod")
   public static BrigadierCommand create(final VelocityServer server) {
