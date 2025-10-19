@@ -54,6 +54,19 @@ public class MinecraftEncoder extends MessageToByteEncoder<MinecraftPacket> {
     msg.encode(out, direction, registry.version);
   }
 
+  @Override
+  protected ByteBuf allocateBuffer(ChannelHandlerContext ctx, MinecraftPacket msg,
+      boolean preferDirect) throws Exception {
+    int hint = msg.encodeSizeHint(direction, registry.version);
+    if (hint < 0) {
+      return super.allocateBuffer(ctx, msg, preferDirect);
+    }
+
+    int packetId = this.registry.getPacketId(msg);
+    int totalHint = ProtocolUtils.varIntBytes(packetId) + hint;
+    return preferDirect ? ctx.alloc().ioBuffer(totalHint) : ctx.alloc().heapBuffer(totalHint);
+  }
+
   public void setProtocolVersion(final ProtocolVersion protocolVersion) {
     this.registry = state.getProtocolRegistry(direction, protocolVersion);
   }

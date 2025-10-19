@@ -23,6 +23,7 @@ import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import com.velocitypowered.proxy.util.VelocityProperties;
 import io.netty.buffer.ByteBuf;
 import java.util.List;
@@ -131,5 +132,12 @@ public class ServerLoginSuccessPacket implements MinecraftPacket {
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  @Override
+  public int encodeSizeHint(Direction direction, ProtocolVersion version) {
+    // We could compute an exact size, but 4KiB ought to be enough to encode all reasonable
+    // sizes of this packet.
+    return 4 * 1024;
   }
 }

@@ -44,12 +44,12 @@ public class StatusPingPacket implements MinecraftPacket {
   }
 
   @Override
-  public int expectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
+  public int decodeExpectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
     return 8;
   }
 
   @Override
-  public int expectedMinLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
+  public int decodeExpectedMinLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
     return 8;
   }
 }

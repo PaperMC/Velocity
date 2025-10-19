@@ -41,7 +41,8 @@ public class SessionPlayerCommandPacket implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    this.command = ProtocolUtils.readString(buf, 256);
+    int cap = protocolVersion.lessThan(ProtocolVersion.MINECRAFT_1_20_5) ? 256 : ProtocolUtils.DEFAULT_MAX_STRING_SIZE;
+    this.command = ProtocolUtils.readString(buf, cap);
     this.timeStamp = Instant.ofEpochMilli(buf.readLong());
     this.salt = buf.readLong();
     this.argumentSignatures = new ArgumentSignatures(buf);

@@ -62,6 +62,7 @@ import com.velocitypowered.proxy.adventure.VelocityBossBarImplementation;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
+import com.velocitypowered.proxy.connection.player.bossbar.BossBarManager;
 import com.velocitypowered.proxy.connection.player.bundle.BundleDelimiterHandler;
 import com.velocitypowered.proxy.connection.player.resourcepack.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.player.resourcepack.handler.ResourcePackHandler;
@@ -201,6 +202,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private @Nullable ClientSettingsPacket clientSettingsPacket;
   private volatile ChatQueue chatQueue;
   private final ChatBuilderFactory chatBuilderFactory;
+  private final BossBarManager bossBarManager;
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
                   @Nullable InetSocketAddress virtualHost, @Nullable String rawVirtualHost, boolean onlineMode,
@@ -227,6 +229,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     this.chatQueue = new ChatQueue(this);
     this.chatBuilderFactory = new ChatBuilderFactory(this.getProtocolVersion());
     this.resourcePackHandler = ResourcePackHandler.create(this, server);
+    this.bossBarManager = new BossBarManager(this);
   }
 
   /**
@@ -813,9 +816,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
         case RedirectPlayer res -> createConnectionRequest(res.getServer(), previousConnection).connect()
                 .whenCompleteAsync((status, throwable) -> {
                   if (throwable != null) {
-                    handleConnectionException(
-                              status != null ? status.getAttemptedConnection() : res.getServer(), throwable,
-                              true);
+                    handleConnectionException(res.getServer(), throwable, true);
                     return;
                   }
 
@@ -1426,6 +1427,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     return handshakeIntent;
   }
 
+  public BossBarManager getBossBarManager() {
+    return bossBarManager;
+  }
+
   private final class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {
 
     private final RegisteredServer toConnect;
@@ -1485,7 +1490,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
           VelocityServerConnection con =
               new VelocityServerConnection(vrs, previousServer, ConnectedPlayer.this, server);
           connectionInFlight = con;
-          return con.connect().whenCompleteAsync((result, exception) -> this.resetIfInFlightIs(con),
+
+          return con.connect().whenCompleteAsync((result, exception) -> {
+            if (result != null && !result.isSuccessful() && !result.isSafe()) {
+              handleConnectionException(result.getAttemptedConnection(),
+                  // The only way for the reason to be null is if the result is safe
+                  DisconnectPacket.create(result.getReasonComponent().orElseThrow(),
+                      getProtocolVersion(), connection.getState()), false);
+            }
+            this.resetIfInFlightIs(con);
+          },
               connection.eventLoop());
         }, connection.eventLoop());
       });
@@ -1499,22 +1513,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
     @Override
     public CompletableFuture<Result> connect() {
-      return this.internalConnect().whenCompleteAsync((status, throwable) -> {
-        if (status != null && !status.isSuccessful()) {
-          if (!status.isSafe()) {
-            handleConnectionException(status.getAttemptedConnection(), throwable, false);
-          }
-        }
-      }, connection.eventLoop()).thenApply(x -> x);
+      return this.internalConnect().thenApply(x -> x);
     }
 
     @Override
     public CompletableFuture<Boolean> connectWithIndication() {
       return internalConnect().whenCompleteAsync((status, throwable) -> {
         if (throwable != null) {
-          // TODO: The exception handling from this is not very good. Find a better way.
-          handleConnectionException(status != null ? status.getAttemptedConnection() : toConnect,
-              throwable, true);
+          handleConnectionException(toConnect, throwable, true);
           return;
         }
 
