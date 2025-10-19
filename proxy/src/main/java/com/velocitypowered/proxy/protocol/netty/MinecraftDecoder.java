@@ -90,8 +90,6 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
           throw handleDecodeFailure(e, codec, packetId);
         }
 
-        System.out.println(packet);
-
         if (buf.isReadable()) {
           throw handleOverflow(packet, buf.readerIndex(), buf.writerIndex());
         }

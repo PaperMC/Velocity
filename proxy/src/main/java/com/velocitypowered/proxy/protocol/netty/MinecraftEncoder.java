@@ -55,7 +55,6 @@ public class MinecraftEncoder extends MessageToByteEncoder<MinecraftPacket> {
   @SuppressWarnings("unchecked")
   protected void encode(ChannelHandlerContext ctx, MinecraftPacket msg, ByteBuf out) {
     PacketCodec<MinecraftPacket> codec = (PacketCodec<MinecraftPacket>) this.registry.getCodec(msg.getClass());
-    System.out.println(msg);
     if (codec == null) {
       throw new IllegalArgumentException("No codec found for packet: " + msg.getClass());
     }
