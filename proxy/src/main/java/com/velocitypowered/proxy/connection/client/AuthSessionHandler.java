@@ -195,7 +195,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ServerboundCookieResponsePacket packet) {
     server.getEventManager()
-        .fire(new CookieReceiveEvent(connectedPlayer, packet.getKey(), packet.getPayload()))
+        .fire(new CookieReceiveEvent(connectedPlayer, packet.key(), packet.payload()))
         .thenAcceptAsync(event -> {
           if (event.getResult().isAllowed()) {
             // The received cookie must have been requested by a proxy plugin in login phase,

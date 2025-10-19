@@ -71,7 +71,7 @@ class PacketRegistryTest {
     assertNotNull(packet, "Packet was not found in registry");
     assertEquals(HandshakePacket.Codec.class, packet.getClass(), "Registry returned wrong class");
 
-    assertEquals(0, registry.forVersion(MINECRAFT_1_12).getPacketId(new HandshakePacket()),
+    assertEquals(0, registry.forVersion(MINECRAFT_1_12).getPacketId(HandshakePacket.DEFAULT),
         "Registry did not return the correct packet ID");
   }
 
@@ -81,7 +81,7 @@ class PacketRegistryTest {
     PacketCodec<?> packet = registry.forVersion(MINECRAFT_1_12_1).getCodec(0);
     assertNotNull(packet, "Packet was not found in registry");
     assertEquals(HandshakePacket.Codec.class, packet.getClass(), "Registry returned wrong class");
-    HandshakePacket handshakePacket = new HandshakePacket();
+    HandshakePacket handshakePacket = HandshakePacket.DEFAULT;
     assertEquals(0, registry.forVersion(MINECRAFT_1_12_1).getPacketId(handshakePacket),
         "Registry did not return the correct packet ID");
     assertEquals(0, registry.forVersion(MINECRAFT_1_14_2).getPacketId(handshakePacket),
@@ -227,9 +227,9 @@ class PacketRegistryTest {
         .build();
 
     // 1.12 should have ID 0x00
-    assertEquals(0x00, registry.forVersion(MINECRAFT_1_12).getPacketId(new HandshakePacket()));
+    assertEquals(0x00, registry.forVersion(MINECRAFT_1_12).getPacketId(HandshakePacket.DEFAULT));
     // 1.13 should have ID 0x01
-    assertEquals(0x01, registry.forVersion(MINECRAFT_1_13).getPacketId(new HandshakePacket()));
+    assertEquals(0x01, registry.forVersion(MINECRAFT_1_13).getPacketId(HandshakePacket.DEFAULT));
   }
 
   @Test
@@ -242,7 +242,7 @@ class PacketRegistryTest {
             VersionRange.of(MINECRAFT_1_12, 0x01))
         .build();
 
-    assertEquals(0x00, registry.forVersion(MINECRAFT_1_12).getPacketId(new HandshakePacket()));
+    assertEquals(0x00, registry.forVersion(MINECRAFT_1_12).getPacketId(HandshakePacket.DEFAULT));
     assertEquals(0x01, registry.forVersion(MINECRAFT_1_12).getPacketId(new StatusPingPacket(0L)));
     assertNotNull(registry.forVersion(MINECRAFT_1_12).getCodec(0x00));
     assertNotNull(registry.forVersion(MINECRAFT_1_12).getCodec(0x01));
@@ -311,7 +311,7 @@ class PacketRegistryTest {
   @Test
   void canDecodePacketReturnsTrue() {
     MultiVersionPacketRegistry registry = setupRegistry();
-    assertTrue(registry.forVersion(MINECRAFT_1_12).canDecodePacket(new HandshakePacket()),
+    assertTrue(registry.forVersion(MINECRAFT_1_12).canDecodePacket(HandshakePacket.DEFAULT),
         "Should be able to decode HandshakePacket in 1.12");
   }
 
@@ -330,7 +330,7 @@ class PacketRegistryTest {
         .build();
 
     // Encode-only packets can still be identified by class for encoding purposes
-    assertTrue(registry.forVersion(MINECRAFT_1_12).canDecodePacket(new HandshakePacket()),
+    assertTrue(registry.forVersion(MINECRAFT_1_12).canDecodePacket(HandshakePacket.DEFAULT),
         "Encode-only packets can be identified for encoding");
     // But cannot be decoded by ID (not in packetIdToCodec)
     assertNull(registry.forVersion(MINECRAFT_1_12).getCodec(0x00),
@@ -364,7 +364,7 @@ class PacketRegistryTest {
     SimplePacketRegistry registry = new SimplePacketRegistry(ProtocolUtils.Direction.CLIENTBOUND);
     registry.register(0x42, HandshakePacket.class, new HandshakePacket.Codec());
 
-    int id = registry.getPacketId(new HandshakePacket());
+    int id = registry.getPacketId(HandshakePacket.DEFAULT);
     assertEquals(0x42, id, "Should return correct packet ID");
   }
 
@@ -383,7 +383,7 @@ class PacketRegistryTest {
     SimplePacketRegistry registry = new SimplePacketRegistry(ProtocolUtils.Direction.CLIENTBOUND);
     registry.register(0x00, HandshakePacket.class, new HandshakePacket.Codec());
 
-    assertTrue(registry.canDecodePacket(new HandshakePacket()),
+    assertTrue(registry.canDecodePacket(HandshakePacket.DEFAULT),
         "Should be able to decode registered packet");
     assertFalse(registry.canDecodePacket(new StatusPingPacket(0L)),
         "Should not be able to decode unregistered packet");
@@ -405,8 +405,8 @@ class PacketRegistryTest {
             VersionRange.of(MINECRAFT_1_12, 0x01))
         .build();
 
-    assertEquals(0x00, clientbound.forVersion(MINECRAFT_1_12).getPacketId(new HandshakePacket()));
-    assertEquals(0x01, serverbound.forVersion(MINECRAFT_1_12).getPacketId(new HandshakePacket()));
+    assertEquals(0x00, clientbound.forVersion(MINECRAFT_1_12).getPacketId(HandshakePacket.DEFAULT));
+    assertEquals(0x01, serverbound.forVersion(MINECRAFT_1_12).getPacketId(HandshakePacket.DEFAULT));
   }
 
   // ==================== Wide Version Range Tests ====================
@@ -420,9 +420,9 @@ class PacketRegistryTest {
         .build();
 
     // Should work for all supported versions in range
-    assertEquals(0x00, registry.forVersion(MINECRAFT_1_8).getPacketId(new HandshakePacket()));
-    assertEquals(0x00, registry.forVersion(MINECRAFT_1_12).getPacketId(new HandshakePacket()));
-    assertEquals(0x00, registry.forVersion(MINECRAFT_1_16_2).getPacketId(new HandshakePacket()));
+    assertEquals(0x00, registry.forVersion(MINECRAFT_1_8).getPacketId(HandshakePacket.DEFAULT));
+    assertEquals(0x00, registry.forVersion(MINECRAFT_1_12).getPacketId(HandshakePacket.DEFAULT));
+    assertEquals(0x00, registry.forVersion(MINECRAFT_1_16_2).getPacketId(HandshakePacket.DEFAULT));
   }
 
   @Test
@@ -433,7 +433,7 @@ class PacketRegistryTest {
             VersionRange.of(MINECRAFT_1_15, 0x00))
         .build();
 
-    assertEquals(0x00, registry.forVersion(MINECRAFT_1_15).getPacketId(new HandshakePacket()));
-    assertEquals(0x00, registry.forVersion(MINECRAFT_1_16_2).getPacketId(new HandshakePacket()));
+    assertEquals(0x00, registry.forVersion(MINECRAFT_1_15).getPacketId(HandshakePacket.DEFAULT));
+    assertEquals(0x00, registry.forVersion(MINECRAFT_1_16_2).getPacketId(HandshakePacket.DEFAULT));
   }
 }

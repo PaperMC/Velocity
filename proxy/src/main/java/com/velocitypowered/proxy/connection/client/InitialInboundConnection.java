@@ -61,12 +61,12 @@ public final class InitialInboundConnection implements VelocityInboundConnection
 
   @Override
   public Optional<InetSocketAddress> getVirtualHost() {
-    return Optional.of(InetSocketAddress.createUnresolved(cleanedAddress, handshake.getPort()));
+    return Optional.of(InetSocketAddress.createUnresolved(cleanedAddress, handshake.port()));
   }
 
   @Override
   public Optional<String> getRawVirtualHost() {
-    return Optional.of(handshake.getServerAddress());
+    return Optional.of(handshake.serverAddress());
   }
 
   @Override
@@ -101,7 +101,7 @@ public final class InitialInboundConnection implements VelocityInboundConnection
 
   @Override
   public HandshakeIntent getHandshakeIntent() {
-    return handshake.getIntent();
+    return handshake.intent();
   }
 
   /**

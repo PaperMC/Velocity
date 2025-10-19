@@ -63,11 +63,11 @@ public class ConnectionRequestResults {
   }
 
   public static Impl forDisconnect(DisconnectPacket disconnect, RegisteredServer server) {
-    return forDisconnect(disconnect.getReason().getComponent(), server);
+    return forDisconnect(disconnect.reason().getComponent(), server);
   }
 
   public static Impl forUnsafeDisconnect(DisconnectPacket disconnect, RegisteredServer server) {
-    return new Impl(Status.SERVER_DISCONNECTED, disconnect.getReason().getComponent(), server,
+    return new Impl(Status.SERVER_DISCONNECTED, disconnect.reason().getComponent(), server,
         false);
   }
 

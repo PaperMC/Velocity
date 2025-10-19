@@ -28,36 +28,11 @@ import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.text.Component;
 
-public final class DisconnectPacket implements MinecraftPacket {
+public record DisconnectPacket(StateRegistry state, ComponentHolder reason)
+    implements MinecraftPacket {
 
-  private final ComponentHolder reason;
-  private final StateRegistry state;
-
-  public DisconnectPacket(StateRegistry state, ComponentHolder reason) {
-    this.state = state;
-    this.reason = Preconditions.checkNotNull(reason, "reason");
-  }
-
-  public ComponentHolder reason() {
-    if (reason == null) {
-      throw new IllegalStateException("No reason specified");
-    }
-    return reason;
-  }
-
-  public ComponentHolder getReason() {
-    return reason();
-  }
-
-  public StateRegistry state() {
-    return state;
-  }
-
-  @Override
-  public String toString() {
-    return "Disconnect{"
-        + "reason='" + reason + '\''
-        + '}';
+  public DisconnectPacket {
+    Preconditions.checkNotNull(reason, "reason");
   }
 
   @Override

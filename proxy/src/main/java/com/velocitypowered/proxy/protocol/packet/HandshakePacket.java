@@ -27,75 +27,19 @@ import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
-public final class HandshakePacket implements MinecraftPacket {
+public record HandshakePacket(ProtocolVersion protocolVersion, String serverAddress, int port,
+                               HandshakeIntent intent)
+    implements MinecraftPacket {
 
   // This size was chosen to ensure Forge clients can still connect even with very long hostnames.
   // While DNS technically allows any character to be used, in practice ASCII is used.
   private static final int MAXIMUM_HOSTNAME_LENGTH = 255 + HANDSHAKE_HOSTNAME_TOKEN.length() + 1;
 
-  private final ProtocolVersion protocolVersion;
-  private final String serverAddress;
-  private final int port;
-  private final HandshakeIntent intent;
-  private final int nextStatus;
-
-  public HandshakePacket() {
-    this(ProtocolVersion.MINIMUM_VERSION, "", 0, HandshakeIntent.LOGIN);
-  }
-
-  public HandshakePacket(ProtocolVersion protocolVersion, String serverAddress, int port,
-                          HandshakeIntent intent) {
-    this.protocolVersion = protocolVersion;
-    this.serverAddress = serverAddress;
-    this.port = port;
-    this.intent = intent;
-    this.nextStatus = intent.id();
-  }
-
-  public ProtocolVersion protocolVersion() {
-    return protocolVersion;
-  }
-
-  public String serverAddress() {
-    return serverAddress;
-  }
-
-  public int port() {
-    return port;
-  }
+  public static final HandshakePacket DEFAULT = new HandshakePacket(ProtocolVersion.MINIMUM_VERSION, "", 0,
+      HandshakeIntent.LOGIN);
 
   public int nextStatus() {
-    return this.nextStatus;
-  }
-
-  public HandshakeIntent intent() {
-    return this.intent;
-  }
-
-  public ProtocolVersion getProtocolVersion() {
-    return protocolVersion();
-  }
-
-  public String getServerAddress() {
-    return serverAddress();
-  }
-
-  public int getPort() {
-    return port();
-  }
-
-  public HandshakeIntent getIntent() {
-    return intent();
-  }
-
-  @Override
-  public String toString() {
-    return "Handshake{"
-        + "protocolVersion=" + protocolVersion
-        + ", serverAddress='" + serverAddress + '\''
-        + ", port=" + port
-        + ", nextStatus=" + nextStatus
-        + '}';
+    return intent.id();
   }
 
   @Override
@@ -121,10 +65,10 @@ public final class HandshakePacket implements MinecraftPacket {
     @Override
     public void encode(HandshakePacket packet, ByteBuf buf, ProtocolUtils.Direction direction,
                        ProtocolVersion ignored) {
-      ProtocolUtils.writeVarInt(buf, packet.protocolVersion.getProtocol());
-      ProtocolUtils.writeString(buf, packet.serverAddress);
-      buf.writeShort(packet.port);
-      ProtocolUtils.writeVarInt(buf, packet.nextStatus);
+      ProtocolUtils.writeVarInt(buf, packet.protocolVersion().getProtocol());
+      ProtocolUtils.writeString(buf, packet.serverAddress());
+      buf.writeShort(packet.port());
+      ProtocolUtils.writeVarInt(buf, packet.nextStatus());
     }
 
     @Override

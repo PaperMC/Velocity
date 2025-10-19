@@ -133,10 +133,10 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
   }
 
   void handleLoginPluginResponse(final LoginPluginResponsePacket response) {
-    final MessageConsumer consumer = this.outstandingResponses.remove(response.getId());
+    final MessageConsumer consumer = this.outstandingResponses.remove(response.id());
     if (consumer != null) {
       try {
-        consumer.onMessageResponse(response.isSuccess() ? ByteBufUtil.getBytes(response.content())
+        consumer.onMessageResponse(response.success() ? ByteBufUtil.getBytes(response.content())
             : null);
       } finally {
         final Runnable onAllMessagesHandled = this.onAllMessagesHandled;

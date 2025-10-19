@@ -33,54 +33,25 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public final class ResourcePackRequestPacket implements MinecraftPacket {
-
-  private final @Nullable UUID id; // 1.20.3+
-  private final String url;
-  private final String hash;
-  private final boolean isRequired; // 1.17+
-  private final @Nullable ComponentHolder prompt; // 1.17+
+public record ResourcePackRequestPacket(
+    @Nullable UUID id, // 1.20.3+
+    String url,
+    String hash,
+    boolean isRequired, // 1.17+
+    @Nullable ComponentHolder prompt // 1.17+
+) implements MinecraftPacket {
 
   private static final Pattern PLAUSIBLE_SHA1_HASH = Pattern.compile("^[a-z0-9]{40}$"); // 1.20.2+
 
-  public ResourcePackRequestPacket(@Nullable UUID id, String url, String hash,
-                                   boolean isRequired, @Nullable ComponentHolder prompt) {
-    this.id = id;
-    this.url = url;
-    this.hash = hash;
-    this.isRequired = isRequired;
-    this.prompt = prompt;
-  }
-
-  public @Nullable UUID getId() {
-    return id;
-  }
-
-  public String getUrl() {
-    return url;
-  }
-
-  public boolean isRequired() {
-    return isRequired;
-  }
-
-  public String getHash() {
-    return hash;
-  }
-
-  public @Nullable ComponentHolder getPrompt() {
-    return prompt;
-  }
-
   public VelocityResourcePackInfo toServerPromptedPack() {
     final ResourcePackInfo.Builder builder =
-        new VelocityResourcePackInfo.BuilderImpl(Preconditions.checkNotNull(url))
-            .setId(id).setPrompt(prompt == null ? null : prompt.getComponent())
-            .setShouldForce(isRequired).setOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
+        new VelocityResourcePackInfo.BuilderImpl(Preconditions.checkNotNull(url()))
+            .setId(id()).setPrompt(prompt() == null ? null : prompt().getComponent())
+            .setShouldForce(isRequired()).setOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
 
-    if (hash != null && !hash.isEmpty()) {
-      if (PLAUSIBLE_SHA1_HASH.matcher(hash).matches()) {
-        builder.setHash(ByteBufUtil.decodeHexDump(hash));
+    if (hash() != null && !hash().isEmpty()) {
+      if (PLAUSIBLE_SHA1_HASH.matcher(hash()).matches()) {
+        builder.setHash(ByteBufUtil.decodeHexDump(hash()));
       }
     }
     return (VelocityResourcePackInfo) builder.build();
@@ -129,21 +100,21 @@ public final class ResourcePackRequestPacket implements MinecraftPacket {
     public void encode(ResourcePackRequestPacket packet, ByteBuf buf, Direction direction,
         ProtocolVersion protocolVersion) {
       if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
-        if (packet.id == null) {
+        if (packet.id() == null) {
           throw new IllegalStateException("Resource pack id not set yet!");
         }
-        ProtocolUtils.writeUuid(buf, packet.id);
+        ProtocolUtils.writeUuid(buf, packet.id());
       }
-      if (packet.url == null || packet.hash == null) {
+      if (packet.url() == null || packet.hash() == null) {
         throw new IllegalStateException("Packet not fully filled in yet!");
       }
-      ProtocolUtils.writeString(buf, packet.url);
-      ProtocolUtils.writeString(buf, packet.hash);
+      ProtocolUtils.writeString(buf, packet.url());
+      ProtocolUtils.writeString(buf, packet.hash());
       if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
-        buf.writeBoolean(packet.isRequired);
-        if (packet.prompt != null) {
+        buf.writeBoolean(packet.isRequired());
+        if (packet.prompt() != null) {
           buf.writeBoolean(true);
-          packet.prompt.write(buf);
+          packet.prompt().write(buf);
         } else {
           buf.writeBoolean(false);
         }

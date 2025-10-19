@@ -47,14 +47,6 @@ public final class LoginPluginResponsePacket extends DefaultByteBufHolder
     return success;
   }
 
-  public int getId() {
-    return id();
-  }
-
-  public boolean isSuccess() {
-    return success();
-  }
-
   @Override
   public String toString() {
     return "LoginPluginResponse{"

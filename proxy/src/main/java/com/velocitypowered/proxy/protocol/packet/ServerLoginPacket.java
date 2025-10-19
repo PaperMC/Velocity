@@ -28,53 +28,27 @@ import io.netty.buffer.ByteBuf;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public final class ServerLoginPacket implements MinecraftPacket {
+public record ServerLoginPacket(
+    String username,
+    @Nullable IdentifiedKey playerKey, // Introduced in 1.19.3
+    @Nullable UUID holderUuid // Used for key revision 2
+) implements MinecraftPacket {
 
   private static final QuietDecoderException EMPTY_USERNAME = new QuietDecoderException(
       "Empty username!");
 
-  private final String username;
-  private final @Nullable IdentifiedKey playerKey; // Introduced in 1.19.3
-  private final @Nullable UUID holderUuid; // Used for key revision 2
-
+  /**
+   * Creates a ServerLoginPacket with a player key.
+   */
   public ServerLoginPacket(String username, @Nullable IdentifiedKey playerKey) {
     this(username, playerKey, null);
   }
 
+  /**
+   * Creates a ServerLoginPacket with a holder UUID.
+   */
   public ServerLoginPacket(String username, @Nullable UUID holderUuid) {
     this(username, null, holderUuid);
-  }
-
-  private ServerLoginPacket(String username, @Nullable IdentifiedKey playerKey,
-                            @Nullable UUID holderUuid) {
-    this.username = username;
-    this.playerKey = playerKey;
-    this.holderUuid = holderUuid;
-  }
-
-  public String username() {
-    return username;
-  }
-
-  public String getUsername() {
-    return username();
-  }
-
-  public @Nullable IdentifiedKey playerKey() {
-    return this.playerKey;
-  }
-
-  public @Nullable UUID holderUuid() {
-    return holderUuid;
-  }
-
-  @Override
-  public String toString() {
-    return "ServerLogin{"
-        + "username='" + username + '\''
-        + "playerKey='" + playerKey + '\''
-        + "holderUUID='" + holderUuid + '\''
-        + '}';
   }
 
   @Override
@@ -127,33 +101,33 @@ public final class ServerLoginPacket implements MinecraftPacket {
     @Override
     public void encode(ServerLoginPacket packet, ByteBuf buf, ProtocolUtils.Direction direction,
                        ProtocolVersion version) {
-      if (packet.username == null) {
+      if (packet.username() == null) {
         throw new IllegalStateException("No username found!");
       }
-      ProtocolUtils.writeString(buf, packet.username);
+      ProtocolUtils.writeString(buf, packet.username());
 
       if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
         if (version.lessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
-          if (packet.playerKey != null) {
+          if (packet.playerKey() != null) {
             buf.writeBoolean(true);
-            ProtocolUtils.writePlayerKey(buf, packet.playerKey);
+            ProtocolUtils.writePlayerKey(buf, packet.playerKey());
           } else {
             buf.writeBoolean(false);
           }
         }
 
         if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
-          ProtocolUtils.writeUuid(buf, packet.holderUuid);
+          ProtocolUtils.writeUuid(buf, packet.holderUuid());
           return;
         }
 
         if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19_1)) {
-          if (packet.playerKey != null && packet.playerKey.getSignatureHolder() != null) {
+          if (packet.playerKey() != null && packet.playerKey().getSignatureHolder() != null) {
             buf.writeBoolean(true);
-            ProtocolUtils.writeUuid(buf, packet.playerKey.getSignatureHolder());
-          } else if (packet.holderUuid != null) {
+            ProtocolUtils.writeUuid(buf, packet.playerKey().getSignatureHolder());
+          } else if (packet.holderUuid() != null) {
             buf.writeBoolean(true);
-            ProtocolUtils.writeUuid(buf, packet.holderUuid);
+            ProtocolUtils.writeUuid(buf, packet.holderUuid());
           } else {
             buf.writeBoolean(false);
           }

@@ -735,7 +735,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       return;
     }
 
-    Component disconnectReason = disconnect.getReason().getComponent();
+    Component disconnectReason = disconnect.reason().getComponent();
     String plainTextReason = PASS_THRU_TRANSLATE.serialize(disconnectReason);
     if (connectedServer != null && connectedServer.getServerInfo().equals(server.getServerInfo())) {
       if (this.server.getConfiguration().isLogPlayerConnections()) {
@@ -1349,7 +1349,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   private boolean sendKeepAliveToBackend(final @Nullable VelocityServerConnection serverConnection, final @NotNull KeepAlivePacket packet) {
     if (serverConnection != null) {
-      final Long sentTime = serverConnection.getPendingPings().remove(packet.getRandomId());
+      final Long sentTime = serverConnection.getPendingPings().remove(packet.randomId());
       if (sentTime != null) {
         final MinecraftConnection smc = serverConnection.getConnection();
         if (smc != null) {

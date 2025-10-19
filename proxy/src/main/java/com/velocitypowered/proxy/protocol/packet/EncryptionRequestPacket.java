@@ -24,7 +24,6 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
-import java.util.Arrays;
 
 public final class EncryptionRequestPacket implements MinecraftPacket {
 
@@ -55,22 +54,6 @@ public final class EncryptionRequestPacket implements MinecraftPacket {
 
   public boolean shouldAuthenticate() {
     return shouldAuthenticate;
-  }
-
-  public byte[] getPublicKey() {
-    return publicKey();
-  }
-
-  public byte[] getVerifyToken() {
-    return verifyToken();
-  }
-
-  @Override
-  public String toString() {
-    return "EncryptionRequest{"
-        + "publicKey=" + Arrays.toString(publicKey)
-        + ", verifyToken=" + Arrays.toString(verifyToken)
-        + '}';
   }
 
   @Override

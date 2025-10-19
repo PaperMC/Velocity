@@ -42,7 +42,7 @@ public final class TabCompleteResponsePacket implements MinecraftPacket {
     this.transactionId = transactionId;
     this.start = start;
     this.length = length;
-    this.offers = offers;
+    this.offers = List.copyOf(offers);
   }
 
   public int transactionId() {

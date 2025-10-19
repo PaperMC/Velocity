@@ -26,17 +26,6 @@ import io.netty.buffer.ByteBuf;
 
 public record KeepAlivePacket(long randomId) implements MinecraftPacket {
 
-  public long getRandomId() {
-    return randomId;
-  }
-
-  @Override
-  public String toString() {
-    return "KeepAlive{"
-        + "randomId=" + randomId
-        + '}';
-  }
-
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);

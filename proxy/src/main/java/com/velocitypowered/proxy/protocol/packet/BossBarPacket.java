@@ -65,14 +65,6 @@ public record BossBarPacket(UUID uuid, int action, @Nullable ComponentHolder nam
   public static final int UPDATE_STYLE = 4;
   public static final int UPDATE_PROPERTIES = 5;
 
-  public UUID getUuid() {
-    return uuid;
-  }
-
-  public int getAction() {
-    return action;
-  }
-
   public static BossBarPacket createAddPacket(
       final UUID id,
       final BossBar bar,

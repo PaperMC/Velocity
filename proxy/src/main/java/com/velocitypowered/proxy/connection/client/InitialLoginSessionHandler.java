@@ -120,7 +120,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
     inbound.setPlayerKey(playerKey);
     this.login = packet;
 
-    final PreLoginEvent event = new PreLoginEvent(inbound, login.getUsername(), login.holderUuid());
+    final PreLoginEvent event = new PreLoginEvent(inbound, login.username(), login.holderUuid());
     server.getEventManager().fire(event).thenRunAsync(() -> {
       if (mcConnection.isClosed()) {
         // The player was disconnected
@@ -146,13 +146,13 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
               && (server.getConfiguration().isOnlineMode() || result.isOnlineModeAllowed())) {
             // Request encryption.
             EncryptionRequestPacket request = generateEncryptionRequest();
-            this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
+            this.verify = Arrays.copyOf(request.verifyToken(), 4);
             mcConnection.write(request);
             this.currentState = LoginState.ENCRYPTION_REQUEST_SENT;
           } else {
             mcConnection.setActiveSessionHandler(StateRegistry.LOGIN,
                 new AuthSessionHandler(server, inbound,
-                    GameProfile.forOfflinePlayer(login.getUsername()), false));
+                    GameProfile.forOfflinePlayer(login.username()), false));
           }
         });
       });
@@ -203,7 +203,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
 
       String playerIp = ((InetSocketAddress) mcConnection.getRemoteAddress()).getHostString();
       String url = String.format(MOJANG_HASJOINED_URL,
-          urlFormParameterEscaper().escape(login.getUsername()), serverId);
+          urlFormParameterEscaper().escape(login.username()), serverId);
 
       if (server.getConfiguration().shouldPreventClientProxyConnections()) {
         url += "&ip=" + urlFormParameterEscaper().escape(playerIp);
@@ -263,7 +263,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
               // Something else went wrong
               logger.error(
                   "Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
-                  response.statusCode(), login.getUsername(), playerIp);
+                  response.statusCode(), login.username(), playerIp);
               inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
             }
           }, mcConnection.eventLoop())

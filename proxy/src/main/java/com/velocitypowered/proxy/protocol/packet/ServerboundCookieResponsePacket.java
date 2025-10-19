@@ -30,14 +30,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public record ServerboundCookieResponsePacket(Key key,
     byte @Nullable [] payload) implements MinecraftPacket {
 
-  public Key getKey() {
-    return key;
-  }
-
-  public byte @Nullable [] getPayload() {
-    return payload;
-  }
-
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
