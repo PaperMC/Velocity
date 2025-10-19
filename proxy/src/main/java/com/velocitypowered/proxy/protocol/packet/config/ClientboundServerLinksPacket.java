@@ -62,6 +62,8 @@ public record ClientboundServerLinksPacket(List<ServerLink> serverLinks) impleme
     }
 
     public static class Codec implements PacketCodec<ClientboundServerLinksPacket> {
+        public static final Codec INSTANCE = new Codec();
+
         @Override
         public ClientboundServerLinksPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
                                                     ProtocolVersion version) {

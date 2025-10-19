@@ -89,6 +89,8 @@ public final class TabCompleteRequestPacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<TabCompleteRequestPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public TabCompleteRequestPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
                                             ProtocolVersion version) {

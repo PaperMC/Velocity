@@ -196,6 +196,8 @@ public final class JoinGamePacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<JoinGamePacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public JoinGamePacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion version) {

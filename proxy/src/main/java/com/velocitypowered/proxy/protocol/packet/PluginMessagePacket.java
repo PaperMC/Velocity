@@ -94,6 +94,8 @@ public final class PluginMessagePacket extends DefaultByteBufHolder implements M
   }
 
   public static class Codec implements PacketCodec<PluginMessagePacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public PluginMessagePacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion version) {

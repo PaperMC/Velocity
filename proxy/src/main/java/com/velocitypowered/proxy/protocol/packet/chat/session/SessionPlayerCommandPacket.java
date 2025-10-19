@@ -89,6 +89,8 @@ public class SessionPlayerCommandPacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<SessionPlayerCommandPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public SessionPlayerCommandPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion protocolVersion) {

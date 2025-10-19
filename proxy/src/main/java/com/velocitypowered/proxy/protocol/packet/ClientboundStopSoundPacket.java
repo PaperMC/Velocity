@@ -42,6 +42,8 @@ public record ClientboundStopSoundPacket(@Nullable Sound.Source source,
   }
 
   public static class Codec implements PacketCodec<ClientboundStopSoundPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public ClientboundStopSoundPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
                                               ProtocolVersion protocolVersion) {

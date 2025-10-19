@@ -77,6 +77,8 @@ public class CodeOfConductPacket extends DefaultByteBufHolder implements Minecra
   }
 
   public static class Codec implements PacketCodec<CodeOfConductPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public CodeOfConductPacket decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
       return new CodeOfConductPacket(buf.readRetainedSlice(buf.readableBytes()));

@@ -66,6 +66,8 @@ public final class TitleTimesPacket extends GenericTitlePacket {
   }
 
   public static class Codec implements PacketCodec<TitleTimesPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public TitleTimesPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion protocolVersion) {

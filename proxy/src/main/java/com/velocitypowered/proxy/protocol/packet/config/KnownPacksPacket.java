@@ -49,6 +49,8 @@ public record KnownPacksPacket(KnownPack[] packs) implements MinecraftPacket {
     }
 
     public static class Codec implements PacketCodec<KnownPacksPacket> {
+        public static final Codec INSTANCE = new Codec();
+
         private static final int MAX_LENGTH_PACKS = Integer.getInteger("velocity.max-known-packs", 64);
         private static final QuietDecoderException TOO_MANY_PACKS =
             new QuietDecoderException("too many known packs");

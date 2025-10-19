@@ -36,10 +36,12 @@ public final class BundleDelimiterPacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<BundleDelimiterPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public BundleDelimiterPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion protocolVersion) {
-      return INSTANCE;
+      return BundleDelimiterPacket.INSTANCE;
     }
 
     @Override

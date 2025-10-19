@@ -50,6 +50,8 @@ public record TransferPacket(String host, int port) implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<TransferPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public TransferPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion protocolVersion) {

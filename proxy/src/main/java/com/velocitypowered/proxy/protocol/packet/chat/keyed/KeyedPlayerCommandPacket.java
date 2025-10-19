@@ -95,6 +95,8 @@ public final class KeyedPlayerCommandPacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<KeyedPlayerCommandPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public KeyedPlayerCommandPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion protocolVersion) {

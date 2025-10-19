@@ -37,10 +37,12 @@ public final class CodeOfConductAcceptPacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<CodeOfConductAcceptPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public CodeOfConductAcceptPacket decode(ByteBuf buf, Direction direction,
         ProtocolVersion protocolVersion) {
-      return INSTANCE;
+      return CodeOfConductAcceptPacket.INSTANCE;
     }
 
     @Override

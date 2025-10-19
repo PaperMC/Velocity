@@ -83,6 +83,8 @@ public final class ServerLoginPacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<ServerLoginPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public ServerLoginPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
                                      ProtocolVersion version) {

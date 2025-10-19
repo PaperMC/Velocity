@@ -79,6 +79,8 @@ public class ServerboundCustomClickActionPacket extends DefaultByteBufHolder
   }
 
   public static class Codec implements PacketCodec<ServerboundCustomClickActionPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public ServerboundCustomClickActionPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion protocolVersion) {

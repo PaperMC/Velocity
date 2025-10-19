@@ -37,10 +37,12 @@ public final class DialogClearPacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<DialogClearPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public DialogClearPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
                                     ProtocolVersion protocolVersion) {
-      return INSTANCE;
+      return DialogClearPacket.INSTANCE;
     }
 
     @Override

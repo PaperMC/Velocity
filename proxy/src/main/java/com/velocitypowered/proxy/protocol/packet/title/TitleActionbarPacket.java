@@ -51,6 +51,8 @@ public final class TitleActionbarPacket extends GenericTitlePacket {
   }
 
   public static class Codec implements PacketCodec<TitleActionbarPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public TitleActionbarPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion protocolVersion) {

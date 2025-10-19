@@ -42,6 +42,8 @@ public final class RegistrySyncPacket extends DefaultByteBufHolder implements Mi
   }
 
   public static class Codec implements PacketCodec<RegistrySyncPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public RegistrySyncPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion protocolVersion) {

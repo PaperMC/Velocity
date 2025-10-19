@@ -34,6 +34,8 @@ public record ClientboundStoreCookiePacket(Key key, byte[] payload) implements M
   }
 
   public static class Codec implements PacketCodec<ClientboundStoreCookiePacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public ClientboundStoreCookiePacket decode(ByteBuf buf, Direction direction,
         ProtocolVersion protocolVersion) {

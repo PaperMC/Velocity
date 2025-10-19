@@ -61,6 +61,8 @@ public final class LoginPluginMessagePacket extends DefaultByteBufHolder impleme
   }
 
   public static class Codec implements PacketCodec<LoginPluginMessagePacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public LoginPluginMessagePacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion version) {

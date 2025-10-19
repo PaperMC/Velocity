@@ -36,10 +36,12 @@ public final class StartUpdatePacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<StartUpdatePacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public StartUpdatePacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion protocolVersion) {
-      return INSTANCE;
+      return StartUpdatePacket.INSTANCE;
     }
 
     @Override

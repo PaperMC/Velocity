@@ -122,6 +122,8 @@ public record BossBarPacket(UUID uuid, int action, @Nullable ComponentHolder nam
   }
 
   public static class Codec implements PacketCodec<BossBarPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public BossBarPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
                                  ProtocolVersion version) {

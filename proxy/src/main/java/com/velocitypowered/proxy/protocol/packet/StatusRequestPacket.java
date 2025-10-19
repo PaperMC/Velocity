@@ -43,10 +43,12 @@ public final class StatusRequestPacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<StatusRequestPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public StatusRequestPacket decode(ByteBuf buf, Direction direction,
         ProtocolVersion protocolVersion) {
-      return INSTANCE;
+      return StatusRequestPacket.INSTANCE;
     }
 
     @Override

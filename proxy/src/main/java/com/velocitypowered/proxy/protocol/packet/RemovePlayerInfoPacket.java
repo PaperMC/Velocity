@@ -39,6 +39,8 @@ public record RemovePlayerInfoPacket(Collection<UUID> profilesToRemove) implemen
   }
 
   public static class Codec implements PacketCodec<RemovePlayerInfoPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public RemovePlayerInfoPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion protocolVersion) {

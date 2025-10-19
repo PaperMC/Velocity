@@ -64,6 +64,8 @@ public final class UpsertPlayerInfoPacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<UpsertPlayerInfoPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public UpsertPlayerInfoPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion protocolVersion) {

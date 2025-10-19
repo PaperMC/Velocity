@@ -60,6 +60,8 @@ public final class SystemChatPacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<SystemChatPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public SystemChatPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
                                     ProtocolVersion version) {

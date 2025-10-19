@@ -20,8 +20,10 @@ package com.velocitypowered.proxy.protocol.netty;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolStates;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.registry.PacketRegistry;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -39,8 +41,9 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
           + "information, launch Velocity with -Dvelocity.packet-decode-logging=true to see more.");
 
   private final ProtocolUtils.Direction direction;
+  private ProtocolVersion version;
   private StateRegistry state;
-  private StateRegistry.PacketRegistry.ProtocolRegistry registry;
+  private PacketRegistry registry;
 
   /**
    * Creates a new {@code MinecraftDecoder} decoding packets from the specified {@code direction}.
@@ -49,8 +52,8 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
    */
   public MinecraftDecoder(ProtocolUtils.Direction direction) {
     this.direction = Preconditions.checkNotNull(direction, "direction");
-    this.registry = StateRegistry.HANDSHAKE.getProtocolRegistry(
-        direction, ProtocolVersion.MINIMUM_VERSION);
+    this.version = ProtocolVersion.MINIMUM_VERSION;
+    this.registry = ProtocolStates.handshake(direction).forVersion(ProtocolVersion.MINIMUM_VERSION);
     this.state = StateRegistry.HANDSHAKE;
   }
 
@@ -82,10 +85,12 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
         MinecraftPacket packet;
         try {
-          packet = codec.decode(buf, direction, registry.version);
+          packet = codec.decode(buf, direction, this.version);
         } catch (Exception e) {
           throw handleDecodeFailure(e, codec, packetId);
         }
+
+        System.out.println(packet);
 
         if (buf.isReadable()) {
           throw handleOverflow(packet, buf.readerIndex(), buf.writerIndex());
@@ -100,8 +105,8 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
   private void doLengthSanityChecks(ByteBuf buf,
       com.velocitypowered.proxy.protocol.PacketCodec<? extends MinecraftPacket> codec)
       throws Exception {
-    int expectedMinLen = codec.decodeExpectedMinLength(buf, direction, registry.version);
-    int expectedMaxLen = codec.decodeExpectedMaxLength(buf, direction, registry.version);
+    int expectedMinLen = codec.decodeExpectedMinLength(buf, direction, this.version);
+    int expectedMaxLen = codec.decodeExpectedMaxLength(buf, direction, this.version);
     if (expectedMaxLen != -1 && buf.readableBytes() > expectedMaxLen) {
       throw handleOverflow(codec, expectedMaxLen, buf.readableBytes());
     }
@@ -153,17 +158,18 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
   }
 
   private String getExtraConnectionDetail(int packetId) {
-    return "Direction " + direction + " Protocol " + registry.version + " State " + state
+    return "Direction " + direction + " Protocol " + this.version + " State " + state
         + " ID 0x" + Integer.toHexString(packetId);
   }
 
   public void setProtocolVersion(ProtocolVersion protocolVersion) {
-    this.registry = state.getProtocolRegistry(direction, protocolVersion);
+    this.version = protocolVersion;
+    this.registry = ProtocolStates.lookup(this.state, this.direction).forVersion(protocolVersion);
   }
 
   public void setState(StateRegistry state) {
     this.state = state;
-    this.setProtocolVersion(registry.version);
+    this.registry = ProtocolStates.lookup(this.state, this.direction).forVersion(this.version);
   }
 
   public ProtocolUtils.Direction getDirection() {

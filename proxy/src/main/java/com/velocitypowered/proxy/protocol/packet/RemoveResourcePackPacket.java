@@ -39,6 +39,8 @@ public record RemoveResourcePackPacket(@Nullable UUID id) implements MinecraftPa
   }
 
   public static class Codec implements PacketCodec<RemoveResourcePackPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public RemoveResourcePackPacket decode(ByteBuf buf, Direction direction,
         ProtocolVersion protocolVersion) {

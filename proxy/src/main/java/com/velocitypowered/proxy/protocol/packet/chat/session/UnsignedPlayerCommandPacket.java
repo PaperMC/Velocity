@@ -56,6 +56,8 @@ public final class UnsignedPlayerCommandPacket extends SessionPlayerCommandPacke
   }
 
   public static class Codec implements PacketCodec<UnsignedPlayerCommandPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public UnsignedPlayerCommandPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion protocolVersion) {

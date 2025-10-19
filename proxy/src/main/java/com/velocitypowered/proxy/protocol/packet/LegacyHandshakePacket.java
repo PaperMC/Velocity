@@ -37,6 +37,8 @@ public final class LegacyHandshakePacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<LegacyHandshakePacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public LegacyHandshakePacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
                                          ProtocolVersion version) {

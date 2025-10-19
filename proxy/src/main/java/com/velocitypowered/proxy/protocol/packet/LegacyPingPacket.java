@@ -64,6 +64,8 @@ public final class LegacyPingPacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<LegacyPingPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public LegacyPingPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
                                     ProtocolVersion version) {

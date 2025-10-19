@@ -58,6 +58,8 @@ public final class PlayerChatCompletionPacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<PlayerChatCompletionPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public PlayerChatCompletionPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
                                               ProtocolVersion protocolVersion) {

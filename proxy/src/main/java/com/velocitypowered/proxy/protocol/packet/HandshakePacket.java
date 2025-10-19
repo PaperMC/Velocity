@@ -104,6 +104,8 @@ public final class HandshakePacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<HandshakePacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public HandshakePacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
                                    ProtocolVersion ignored) {

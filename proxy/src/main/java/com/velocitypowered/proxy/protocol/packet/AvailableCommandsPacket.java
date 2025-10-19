@@ -86,6 +86,8 @@ public final class AvailableCommandsPacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<AvailableCommandsPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public AvailableCommandsPacket decode(ByteBuf buf, Direction direction,
         ProtocolVersion protocolVersion) {

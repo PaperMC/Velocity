@@ -28,16 +28,14 @@ import java.util.Map;
 
 public record ClientboundCustomReportDetailsPacket(Map<String, String> details) implements MinecraftPacket {
 
-    public ClientboundCustomReportDetailsPacket() {
-        this(Map.of());
-    }
-
     @Override
     public boolean handle(MinecraftSessionHandler handler) {
         return handler.handle(this);
     }
 
     public static class Codec implements PacketCodec<ClientboundCustomReportDetailsPacket> {
+        public static final Codec INSTANCE = new Codec();
+
         @Override
         public ClientboundCustomReportDetailsPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
                                                            ProtocolVersion protocolVersion) {

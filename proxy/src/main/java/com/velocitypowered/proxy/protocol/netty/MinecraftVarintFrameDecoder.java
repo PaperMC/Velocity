@@ -21,8 +21,10 @@ import static io.netty.util.ByteProcessor.FIND_NON_NUL;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.PacketCodec;
+import com.velocitypowered.proxy.protocol.ProtocolStates;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.registry.PacketRegistry;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
@@ -50,7 +52,7 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       new QuietDecoderException("Unknown packet");
 
   private final ProtocolUtils.Direction direction;
-  private final StateRegistry.PacketRegistry.ProtocolRegistry registry;
+  private final PacketRegistry registry;
   private StateRegistry state;
 
   /**
@@ -60,8 +62,7 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
    */
   public MinecraftVarintFrameDecoder(ProtocolUtils.Direction direction) {
     this.direction = direction;
-    this.registry = StateRegistry.HANDSHAKE.getProtocolRegistry(
-        direction, ProtocolVersion.MINIMUM_VERSION);
+    this.registry = ProtocolStates.handshake(direction).forVersion(ProtocolVersion.MINIMUM_VERSION);
     this.state = StateRegistry.HANDSHAKE;
   }
 
@@ -110,9 +111,6 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
   }
 
   private boolean validateServerboundHandshakePacket(ByteBuf in, int length) throws Exception {
-    StateRegistry.PacketRegistry.ProtocolRegistry registry =
-        state.getProtocolRegistry(direction, ProtocolVersion.MINIMUM_VERSION);
-
     final int index = in.readerIndex();
     final int packetId = readRawVarInt21(in);
     // Index hasn't changed, we've read nothing
@@ -130,8 +128,8 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
 
     // We 'technically' have the incoming bytes of a payload here, and so, these can actually parse
     // the packet if needed, so, we'll take advantage of the existing methods
-    int expectedMinLen = codec.decodeExpectedMinLength(in, direction, registry.version);
-    int expectedMaxLen = codec.decodeExpectedMaxLength(in, direction, registry.version);
+    int expectedMinLen = codec.decodeExpectedMinLength(in, direction, ProtocolVersion.MINIMUM_VERSION);
+    int expectedMaxLen = codec.decodeExpectedMaxLength(in, direction, ProtocolVersion.MINIMUM_VERSION);
     if (expectedMaxLen != -1 && payloadLength > expectedMaxLen) {
       throw handleOverflow(expectedMaxLen, in.readableBytes());
     }

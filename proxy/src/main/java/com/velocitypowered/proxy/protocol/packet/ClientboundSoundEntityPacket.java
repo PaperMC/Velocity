@@ -37,6 +37,8 @@ public record ClientboundSoundEntityPacket(Sound sound, @Nullable Float fixedRan
   }
 
   public static class Codec implements PacketCodec<ClientboundSoundEntityPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public ClientboundSoundEntityPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
                                                 ProtocolVersion protocolVersion) {

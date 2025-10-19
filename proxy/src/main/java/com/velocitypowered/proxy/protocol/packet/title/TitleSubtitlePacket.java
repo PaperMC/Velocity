@@ -51,6 +51,8 @@ public final class TitleSubtitlePacket extends GenericTitlePacket {
   }
 
   public static class Codec implements PacketCodec<TitleSubtitlePacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public TitleSubtitlePacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion protocolVersion) {

@@ -81,6 +81,8 @@ public final class KeyedPlayerChatPacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<KeyedPlayerChatPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public KeyedPlayerChatPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion protocolVersion) {

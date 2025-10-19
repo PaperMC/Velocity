@@ -78,6 +78,8 @@ public final class LegacyTitlePacket extends GenericTitlePacket {
   }
 
   public static class Codec implements PacketCodec<LegacyTitlePacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public LegacyTitlePacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion protocolVersion) {

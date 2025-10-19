@@ -103,6 +103,8 @@ public final class ResourcePackRequestPacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<ResourcePackRequestPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public ResourcePackRequestPacket decode(ByteBuf buf, Direction direction,
         ProtocolVersion protocolVersion) {

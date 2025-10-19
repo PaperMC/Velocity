@@ -37,10 +37,12 @@ public final class LoginAcknowledgedPacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<LoginAcknowledgedPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public LoginAcknowledgedPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion protocolVersion) {
-      return INSTANCE;
+      return LoginAcknowledgedPacket.INSTANCE;
     }
 
     @Override

@@ -79,6 +79,8 @@ public final class EncryptionRequestPacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<EncryptionRequestPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public EncryptionRequestPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
                                            ProtocolVersion version) {

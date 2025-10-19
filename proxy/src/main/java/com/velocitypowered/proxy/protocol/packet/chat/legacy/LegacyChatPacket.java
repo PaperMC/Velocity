@@ -45,6 +45,8 @@ public record LegacyChatPacket(String message, byte type, @Nullable UUID sender)
   }
 
   public static class Codec implements PacketCodec<LegacyChatPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public LegacyChatPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
                                     ProtocolVersion version) {

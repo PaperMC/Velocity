@@ -32,6 +32,8 @@ public record PingIdentifyPacket(int id) implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<PingIdentifyPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public PingIdentifyPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion protocolVersion) {

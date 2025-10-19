@@ -44,6 +44,8 @@ public record ServerboundCookieResponsePacket(Key key,
   }
 
   public static class Codec implements PacketCodec<ServerboundCookieResponsePacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public ServerboundCookieResponsePacket decode(ByteBuf buf, Direction direction,
         ProtocolVersion protocolVersion) {

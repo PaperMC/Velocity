@@ -41,6 +41,8 @@ public record ActiveFeaturesPacket(Key[] activeFeatures) implements MinecraftPac
   }
 
   public static class Codec implements PacketCodec<ActiveFeaturesPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public ActiveFeaturesPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
                                        ProtocolVersion protocolVersion) {

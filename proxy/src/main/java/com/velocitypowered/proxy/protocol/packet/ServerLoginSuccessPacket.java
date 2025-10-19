@@ -71,6 +71,8 @@ public final class ServerLoginSuccessPacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<ServerLoginSuccessPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public ServerLoginSuccessPacket decode(ByteBuf buf, Direction direction,
         ProtocolVersion version) {

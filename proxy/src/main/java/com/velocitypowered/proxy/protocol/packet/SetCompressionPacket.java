@@ -43,6 +43,8 @@ public record SetCompressionPacket(int threshold) implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<SetCompressionPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public SetCompressionPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion protocolVersion) {

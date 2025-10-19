@@ -39,6 +39,8 @@ public record ChatAcknowledgementPacket(int offset) implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<ChatAcknowledgementPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public ChatAcknowledgementPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion protocolVersion) {

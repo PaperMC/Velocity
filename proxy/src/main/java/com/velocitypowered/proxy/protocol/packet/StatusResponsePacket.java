@@ -57,6 +57,8 @@ public final class StatusResponsePacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<StatusResponsePacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public StatusResponsePacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
                                         ProtocolVersion version) {

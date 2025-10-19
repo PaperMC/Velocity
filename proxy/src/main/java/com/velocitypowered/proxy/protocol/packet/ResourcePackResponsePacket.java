@@ -49,6 +49,8 @@ public record ResourcePackResponsePacket(UUID id, String hash,
   }
 
   public static class Codec implements PacketCodec<ResourcePackResponsePacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public ResourcePackResponsePacket decode(ByteBuf buf, Direction direction,
         ProtocolVersion protocolVersion) {

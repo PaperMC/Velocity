@@ -64,6 +64,8 @@ public final class LegacyPlayerListItemPacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<LegacyPlayerListItemPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public LegacyPlayerListItemPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion version) {

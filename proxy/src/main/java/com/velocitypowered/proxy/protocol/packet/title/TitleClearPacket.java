@@ -49,6 +49,8 @@ public final class TitleClearPacket extends GenericTitlePacket {
   }
 
   public static class Codec implements PacketCodec<TitleClearPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public TitleClearPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
         ProtocolVersion protocolVersion) {

@@ -38,6 +38,8 @@ public record ClientboundCookieRequestPacket(Key key) implements MinecraftPacket
   }
 
   public static class Codec implements PacketCodec<ClientboundCookieRequestPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public ClientboundCookieRequestPacket decode(ByteBuf buf, Direction direction,
         ProtocolVersion protocolVersion) {

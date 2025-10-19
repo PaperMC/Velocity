@@ -141,6 +141,8 @@ public final class ClientSettingsPacket implements MinecraftPacket {
   }
 
   public static class Codec implements PacketCodec<ClientSettingsPacket> {
+    public static final Codec INSTANCE = new Codec();
+
     @Override
     public ClientSettingsPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
                                         ProtocolVersion version) {
