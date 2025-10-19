@@ -817,9 +817,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
         createConnectionRequest(res.getServer(), previousConnection).connect()
             .whenCompleteAsync((status, throwable) -> {
               if (throwable != null) {
-                handleConnectionException(
-                    status != null ? status.getAttemptedConnection() : res.getServer(), throwable,
-                    true);
+                handleConnectionException(res.getServer(), throwable, true);
                 return;
               }
 
@@ -1497,7 +1495,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
           VelocityServerConnection con =
               new VelocityServerConnection(vrs, previousServer, ConnectedPlayer.this, server);
           connectionInFlight = con;
-          return con.connect().whenCompleteAsync((result, exception) -> this.resetIfInFlightIs(con),
+
+          return con.connect().whenCompleteAsync((result, exception) -> {
+            if (result != null && !result.isSuccessful() && !result.isSafe()) {
+              handleConnectionException(result.getAttemptedConnection(),
+                  // The only way for the reason to be null is if the result is safe
+                  DisconnectPacket.create(result.getReasonComponent().orElseThrow(),
+                      getProtocolVersion(), connection.getState()), false);
+            }
+            this.resetIfInFlightIs(con);
+          },
               connection.eventLoop());
         }, connection.eventLoop());
       });
@@ -1511,22 +1518,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
     @Override
     public CompletableFuture<Result> connect() {
-      return this.internalConnect().whenCompleteAsync((status, throwable) -> {
-        if (status != null && !status.isSuccessful()) {
-          if (!status.isSafe()) {
-            handleConnectionException(status.getAttemptedConnection(), throwable, false);
-          }
-        }
-      }, connection.eventLoop()).thenApply(x -> x);
+      return this.internalConnect().thenApply(x -> x);
     }
 
     @Override
     public CompletableFuture<Boolean> connectWithIndication() {
       return internalConnect().whenCompleteAsync((status, throwable) -> {
         if (throwable != null) {
-          // TODO: The exception handling from this is not very good. Find a better way.
-          handleConnectionException(status != null ? status.getAttemptedConnection() : toConnect,
-              throwable, true);
+          handleConnectionException(toConnect, throwable, true);
           return;
         }
 
