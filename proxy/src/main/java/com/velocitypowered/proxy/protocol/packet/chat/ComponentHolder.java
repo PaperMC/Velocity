@@ -87,7 +87,7 @@ public class ComponentHolder {
         } catch (Exception ex) {
           logger.error(
               "Error converting binary component to JSON component! "
-              + "Binary: " + binaryTag + " JSON: " + json, ex);
+                  + "Binary: " + binaryTag + " JSON: " + json, ex);
           throw ex;
         }
       }
