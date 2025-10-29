@@ -111,7 +111,7 @@ public final class ProxyOptions {
         throw new ValueConversionException("Invalid server format. Use <name>:<host>:[port]:[forwardingmode]");
       }
       InetSocketAddress address;
-      ServerInfoForwardingMode mode = ServerInfoForwardingMode.FOLLOWUP;
+      ServerInfoForwardingMode mode = null;
       try {
         if (split.length >= 3) {
           address = AddressUtil.parseAddress(split[1] + ":" + split[2]);

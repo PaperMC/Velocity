@@ -650,7 +650,7 @@ public class VelocityConfiguration implements ProxyConfig {
         for (UnmodifiableConfig.Entry entry : config.entrySet()) {
           if (entry.getValue() instanceof com.electronwill.nightconfig.core.CommentedConfig c) {
             String address = null;
-            ServerInfoForwardingMode forwardingMode = ServerInfoForwardingMode.FOLLOWUP;
+            ServerInfoForwardingMode forwardingMode = null;
             for (UnmodifiableConfig.Entry entry2 : c.entrySet()) {
               if (entry2.getKey().equalsIgnoreCase("address")) {
                 address = entry2.getValue();

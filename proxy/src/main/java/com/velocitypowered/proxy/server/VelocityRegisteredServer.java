@@ -97,8 +97,10 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
    * @return player info forwarding
    */
   public PlayerInfoForwarding getConfiguredPlayerInfoForwarding() {
+    if (serverInfo.getServerInfoForwardingMode() == null) {
+      return server.getConfiguration().getPlayerInfoForwardingMode();
+    }
     return switch (serverInfo.getServerInfoForwardingMode()) {
-      case FOLLOWUP -> server.getConfiguration().getPlayerInfoForwardingMode();
       case LEGACY -> PlayerInfoForwarding.LEGACY;
       case MODERN -> PlayerInfoForwarding.MODERN;
       case BUNGEEGUARD -> PlayerInfoForwarding.BUNGEEGUARD;

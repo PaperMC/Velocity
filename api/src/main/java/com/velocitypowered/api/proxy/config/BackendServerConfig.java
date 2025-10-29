@@ -11,6 +11,7 @@ import static java.util.Objects.requireNonNull;
 
 import com.velocitypowered.api.proxy.server.ServerInfoForwardingMode;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Exposes server configuration information that plugins may use.<br>
@@ -33,14 +34,13 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public record BackendServerConfig(
         String address,
-        ServerInfoForwardingMode forwardingMode
+        @Nullable ServerInfoForwardingMode forwardingMode
 ) {
   public BackendServerConfig {
     requireNonNull(address);
-    requireNonNull(forwardingMode);
   }
 
   public BackendServerConfig(final String address) {
-    this(address, ServerInfoForwardingMode.FOLLOWUP);
+    this(address, null);
   }
 }

@@ -20,7 +20,7 @@ public final class ServerInfo implements Comparable<ServerInfo> {
 
   private final String name;
   private final InetSocketAddress address;
-  private final ServerInfoForwardingMode forwardingMode;
+  private ServerInfoForwardingMode forwardingMode;
 
   /**
    * Creates a new ServerInfo object.
@@ -33,7 +33,7 @@ public final class ServerInfo implements Comparable<ServerInfo> {
   public ServerInfo(String name, InetSocketAddress address, ServerInfoForwardingMode forwardingMode) {
     this.name = Preconditions.checkNotNull(name, "name");
     this.address = Preconditions.checkNotNull(address, "address");
-    this.forwardingMode = Preconditions.checkNotNull(forwardingMode, "forwardingMode");
+    this.forwardingMode = forwardingMode;
   }
 
   /**
@@ -45,7 +45,6 @@ public final class ServerInfo implements Comparable<ServerInfo> {
   public ServerInfo(String name, InetSocketAddress address) {
     this.name = Preconditions.checkNotNull(name, "name");
     this.address = Preconditions.checkNotNull(address, "address");
-    this.forwardingMode = ServerInfoForwardingMode.FOLLOWUP;
   }
 
   public final String getName() {
