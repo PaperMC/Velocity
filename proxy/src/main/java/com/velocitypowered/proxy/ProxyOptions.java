@@ -124,7 +124,7 @@ public final class ProxyOptions {
       if (split.length == 4) {
         try {
           mode = ServerInfoForwardingMode.valueOf(split[3].toUpperCase());
-        } catch (IllegalStateException e) {
+        } catch (IllegalArgumentException e) {
           throw new ValueConversionException("Invalid forwarding mode for server flag with name: " + split[0]);
         }
       }

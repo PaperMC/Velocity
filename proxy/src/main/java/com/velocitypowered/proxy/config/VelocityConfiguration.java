@@ -197,7 +197,7 @@ public class VelocityConfiguration implements ProxyConfig {
     }
 
     for (String s : servers.getAttemptConnectionOrder()) {
-      if (!servers.getServers().containsKey(s)) {
+      if (!servers.getBackendServers().containsKey(s)) {
         logger.error("Fallback server " + s + " is not registered in your configuration!");
         valid = false;
       }
@@ -211,7 +211,7 @@ public class VelocityConfiguration implements ProxyConfig {
       }
 
       for (String server : entry.getValue()) {
-        if (!servers.getServers().containsKey(server)) {
+        if (!servers.getBackendServers().containsKey(server)) {
           logger.error("Server '{}' for forced host '{}' does not exist", server, entry.getKey());
           valid = false;
         }
@@ -324,7 +324,9 @@ public class VelocityConfiguration implements ProxyConfig {
 
   @Override
   public Map<String, String> getServers() {
-    return servers.getServers();
+    Map<String, String> serverAddresses = new HashMap<>();
+    getBackendServers().forEach((k, v) -> serverAddresses.put(k, v.address()));
+    return serverAddresses;
   }
 
   @Override
@@ -676,12 +678,6 @@ public class VelocityConfiguration implements ProxyConfig {
     private Servers(Map<String, BackendServerConfig> servers, List<String> attemptConnectionOrder) {
       this.servers = servers;
       this.attemptConnectionOrder = attemptConnectionOrder;
-    }
-
-    private Map<String, String> getServers() {
-      Map<String, String> serverAddresses = new HashMap<>();
-      servers.forEach((k, v) -> serverAddresses.put(k, v.address()));
-      return serverAddresses;
     }
 
     private Map<String, BackendServerConfig> getBackendServers() {
