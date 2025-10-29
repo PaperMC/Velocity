@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.protocol;
 
+import static com.velocitypowered.proxy.protocol.ProtocolUtils.encode21BitVarInt;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -83,7 +84,7 @@ public class ProtocolUtilsTest {
 
   private void writeReadTest3Bytes(ByteBuf buf, int test) {
     buf.clear();
-    ProtocolUtils.write21BitVarInt(buf, test);
+    buf.writeMedium(encode21BitVarInt(test));
     assertEquals(test, ProtocolUtils.readVarInt(buf));
   }
 

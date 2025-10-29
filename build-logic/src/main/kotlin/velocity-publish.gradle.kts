@@ -9,9 +9,9 @@ extensions.configure<PublishingExtension> {
             credentials(PasswordCredentials::class.java)
 
             name = if (version.toString().endsWith("SNAPSHOT")) "paperSnapshots" else "paper" // "paper" is seemingly not defined
-            val base = "https://repo.papermc.io/repository/maven"
-            val releasesRepoUrl = "$base-releases/"
-            val snapshotsRepoUrl = "$base-snapshots/"
+            val base = "https://artifactory.papermc.io/artifactory"
+            val releasesRepoUrl = "$base/releases/"
+            val snapshotsRepoUrl = "$base/snapshots/"
             setUrl(if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl)
         }
     }

@@ -22,6 +22,7 @@ import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 import org.jetbrains.annotations.Nullable;
@@ -120,5 +121,10 @@ public class ServerDataPacket implements MinecraftPacket {
 
   public void setSecureChatEnforced(boolean secureChatEnforced) {
     this.secureChatEnforced = secureChatEnforced;
+  }
+
+  @Override
+  public int encodeSizeHint(Direction direction, ProtocolVersion version) {
+    return 8 * 1024;
   }
 }

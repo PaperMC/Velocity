@@ -28,7 +28,7 @@ public class UnsignedPlayerCommandPacket extends SessionPlayerCommandPacket {
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    this.command = ProtocolUtils.readString(buf, 256);
+    this.command = ProtocolUtils.readString(buf, ProtocolUtils.DEFAULT_MAX_STRING_SIZE);
   }
 
   @Override
