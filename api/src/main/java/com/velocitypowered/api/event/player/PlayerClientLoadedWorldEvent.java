@@ -16,7 +16,6 @@ import com.velocitypowered.api.proxy.Player;
  *
  * <p>This event is fired when the player explicitly notifies the server after loading the world (closing the downloading terrain screen)
  *
- * @apiNote Velocity does not ensure the timing of this packet. Consequently, this event might fire before {@link Player#getCurrentServer()} is set.
  * @implNote Unlike Paper this event will <u>not</u> fire due to a timeout.
  * @sinceMinecraft 1.21.4
  * @since 3.4.0
