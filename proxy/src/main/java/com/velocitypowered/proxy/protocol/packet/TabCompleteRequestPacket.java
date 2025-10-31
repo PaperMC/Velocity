@@ -31,7 +31,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TabCompleteRequestPacket implements MinecraftPacket {
 
-  private static final int VANILLA_MAX_TAB_COMPLETE_LEN = 2048;
+  private static final int VANILLA_MAX_TAB_COMPLETE_LEN = 32767;
 
   private @Nullable String command;
   private int transactionId;
