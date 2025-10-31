@@ -36,6 +36,11 @@ public class ServerboundPlayerLoadedPacket implements MinecraftPacket {
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {}
 
   @Override
+  public int decodeExpectedMaxLength(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+    return 0;
+  }
+
+  @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
   }
