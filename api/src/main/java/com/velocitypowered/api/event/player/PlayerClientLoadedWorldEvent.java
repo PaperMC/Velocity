@@ -17,6 +17,8 @@ import com.velocitypowered.api.proxy.Player;
  * <p>This event is fired when the player explicitly notifies the server after loading the world (closing the downloading terrain screen)
  *
  * @implNote Unlike Paper this event will <u>not</u> fire due to a timeout.
+ *     Though plugins can implement a timeout by scheduling a task in {@link ServerPostConnectEvent}
+ *     and checking {@link com.velocitypowered.api.proxy.ServerConnection#isClientLoaded()}.
  * @sinceMinecraft 1.21.4
  * @since 3.4.0
  */
