@@ -257,7 +257,13 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(DisconnectPacket packet) {
     serverConn.disconnect();
-    resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
+    // If the player receives a DisconnectPacket without a connection to a server in progress,
+    // it means that the backend server has kicked the player during reconfiguration
+    if (serverConn.getPlayer().getConnectionInFlight() != null) {
+      resultFuture.complete(ConnectionRequestResults.forDisconnect(packet, serverConn.getServer()));
+    } else {
+      serverConn.getPlayer().handleConnectionException(serverConn.getServer(), packet, true);
+    }
     return true;
   }
 

@@ -45,6 +45,8 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -87,9 +89,6 @@ public class ArgumentPropertyRegistry {
     ArgumentIdentifier identifier = readIdentifier(buf, protocolVersion);
 
     ArgumentPropertySerializer<?> serializer = byIdentifier.get(identifier);
-    if (serializer == null) {
-      throw new IllegalArgumentException("Argument type identifier " + identifier + " unknown.");
-    }
     Object result = serializer.deserialize(buf, protocolVersion);
 
     if (result instanceof ArgumentType) {
@@ -156,7 +155,7 @@ public class ArgumentPropertyRegistry {
    * @param protocolVersion the protocol version to use
    * @return the identifier read from the buffer
    */
-  public static ArgumentIdentifier readIdentifier(ByteBuf buf, ProtocolVersion protocolVersion) {
+  public static @NotNull ArgumentIdentifier readIdentifier(ByteBuf buf, ProtocolVersion protocolVersion) {
     if (protocolVersion.noLessThan(MINECRAFT_1_19)) {
       int id = ProtocolUtils.readVarInt(buf);
       for (ArgumentIdentifier i : byIdentifier.keySet()) {
@@ -173,8 +172,8 @@ public class ArgumentPropertyRegistry {
           return i;
         }
       }
+      throw new IllegalArgumentException("Argument type identifier " + identifier + " unknown.");
     }
-    return null;
   }
 
   static {

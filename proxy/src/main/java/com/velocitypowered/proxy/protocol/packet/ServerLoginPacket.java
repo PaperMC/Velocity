@@ -150,7 +150,7 @@ public class ServerLoginPacket implements MinecraftPacket {
   }
 
   @Override
-  public int expectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
+  public int decodeExpectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
     // Accommodate the rare (but likely malicious) use of UTF-8 usernames, since it is technically
     // legal on the protocol level.
     int base = 1 + (16 * 3);

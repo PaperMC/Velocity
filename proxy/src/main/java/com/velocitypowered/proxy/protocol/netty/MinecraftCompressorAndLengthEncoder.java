@@ -46,7 +46,7 @@ public class MinecraftCompressorAndLengthEncoder extends MessageToByteEncoder<By
     if (uncompressed < threshold) {
       // Under the threshold, there is nothing to do.
       ProtocolUtils.writeVarInt(out, uncompressed + 1);
-      ProtocolUtils.writeVarInt(out, 0);
+      out.writeByte(0);
       out.writeBytes(msg);
     } else {
       handleCompressed(ctx, msg, out);
@@ -57,7 +57,7 @@ public class MinecraftCompressorAndLengthEncoder extends MessageToByteEncoder<By
       throws DataFormatException {
     int uncompressed = msg.readableBytes();
 
-    ProtocolUtils.write21BitVarInt(out, 0); // Dummy packet length
+    out.writeMedium(0); // Reserve the packet length
     ProtocolUtils.writeVarInt(out, uncompressed);
     ByteBuf compatibleIn = MoreByteBufUtils.ensureCompatible(ctx.alloc(), compressor, msg);
 
@@ -72,11 +72,8 @@ public class MinecraftCompressorAndLengthEncoder extends MessageToByteEncoder<By
       throw new DataFormatException("The server sent a very large (over 2MiB compressed) packet.");
     }
 
-    int writerIndex = out.writerIndex();
     int packetLength = out.readableBytes() - 3;
-    out.writerIndex(0);
-    ProtocolUtils.write21BitVarInt(out, packetLength); // Rewrite packet length
-    out.writerIndex(writerIndex);
+    out.setMedium(0, ProtocolUtils.encode21BitVarInt(packetLength)); // Rewrite packet length
   }
 
   @Override

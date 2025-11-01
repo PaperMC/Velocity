@@ -36,6 +36,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import net.kyori.adventure.text.Component;
 
 /**
  * Common utilities for handling server list ping results.
@@ -107,6 +108,13 @@ public class ServerListPingHandler {
             if (response == fallback) {
               continue;
             }
+
+            if (response.getDescriptionComponent() == null) {
+              return response.asBuilder()
+                  .description(Component.empty())
+                  .build();
+            }
+
             return response;
           }
           return fallback;

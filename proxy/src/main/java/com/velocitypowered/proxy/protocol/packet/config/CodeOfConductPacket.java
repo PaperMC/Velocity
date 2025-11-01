@@ -44,4 +44,9 @@ public class CodeOfConductPacket extends DeferredByteBufHolder implements Minecr
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
   }
+
+  @Override
+  public int encodeSizeHint(Direction direction, ProtocolVersion version) {
+    return content().readableBytes();
+  }
 }
