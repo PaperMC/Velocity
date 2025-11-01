@@ -21,6 +21,7 @@ import org.jspecify.annotations.Nullable;
  * For instance, if you are running a 1.12 (or lower version) server on a velocity proxy with MODERN player info forwarding
  * the server doesn't support MODERN forwarding. So you need to set LEGACY forwarding mode for that server
  * and velocity will use ONLY FOR THAT SERVER the legacy forwarding mode.<br><br>
+ * If the forwarding mode is null it means that the server is using the "player-info-forwarding-mode", set in the config.
  *
  * @param address The address of the backend server.
  * @param forwardingMode The forwarding mode of the backend server.

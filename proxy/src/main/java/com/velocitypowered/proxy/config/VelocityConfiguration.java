@@ -648,7 +648,7 @@ public class VelocityConfiguration implements ProxyConfig {
       if (config != null) {
         Map<String, BackendServerConfig> servers = new HashMap<>();
         for (UnmodifiableConfig.Entry entry : config.entrySet()) {
-          if (entry.getValue() instanceof com.electronwill.nightconfig.core.CommentedConfig c) {
+          if (entry.getValue() instanceof CommentedConfig c) {
             String address = null;
             ServerInfoForwardingMode forwardingMode = null;
             for (UnmodifiableConfig.Entry entry2 : c.entrySet()) {
@@ -664,7 +664,7 @@ public class VelocityConfiguration implements ProxyConfig {
                       "Server entry " + entry.getKey() + " is missing address!");
             }
             servers.put(cleanServerName(entry.getKey()), new BackendServerConfig(address, forwardingMode));
-            //support for old server config system (forwarding mode will be followup)
+            //support for old server config system (forwarding mode will be null)
           } else if (entry.getValue() instanceof String v) {
             servers.put(cleanServerName(entry.getKey()), new BackendServerConfig(v));
           } else {
