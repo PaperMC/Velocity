@@ -21,11 +21,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
+import com.velocitypowered.api.event.player.PlayerServerBrandEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
-import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
@@ -173,21 +175,24 @@ public final class PluginMessageUtil {
    * Rewrites the brand message to indicate the presence of Velocity.
    *
    * @param message the plugin message
-   * @param version the proxy version
+   * @param server the proxy
+   * @param player the player to rewrite for
    * @return the rewritten plugin message
    */
   public static PluginMessagePacket rewriteMinecraftBrand(PluginMessagePacket message,
-                                                          ProxyVersion version,
-                                                          ProtocolVersion protocolVersion) {
+                                                          ProxyServer server,
+                                                          Player player) {
     checkNotNull(message, "message");
-    checkNotNull(version, "version");
+    checkNotNull(server, "server");
     checkArgument(isMcBrand(message), "message is not a brand plugin message");
 
     String currentBrand = readBrandMessage(message.content());
-    String rewrittenBrand = String.format("%s (%s)", currentBrand, version.getName());
+    PlayerServerBrandEvent brandEvent =
+            new PlayerServerBrandEvent(player, currentBrand, String.format("%s (%s)", currentBrand, server.getVersion().getName()));
+    String rewrittenBrand = server.getEventManager().fire(brandEvent).join().getBrand();
 
     ByteBuf rewrittenBuf = Unpooled.buffer();
-    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
+    if (player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       ProtocolUtils.writeString(rewrittenBuf, rewrittenBrand);
     } else {
       rewrittenBuf.writeCharSequence(rewrittenBrand, StandardCharsets.UTF_8);
