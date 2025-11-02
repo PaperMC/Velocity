@@ -33,6 +33,7 @@ import com.velocitypowered.proxy.config.migration.MotdMigration;
 import com.velocitypowered.proxy.config.migration.TransferIntegrationMigration;
 import com.velocitypowered.proxy.util.AddressUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.InputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URL;
@@ -483,6 +484,18 @@ public class VelocityConfiguration implements ProxyConfig {
         .getResource("default-velocity.toml");
     if (defaultConfigLocation == null) {
       throw new RuntimeException("Default configuration file does not exist.");
+    }
+    
+    // Explicitly create the configuration file from the default if it does not exist.
+    // This ensures a complete file is present before any migrations or autosaving can
+    // write a partial file to disk.
+    if (Files.notExists(path)) {
+      try (InputStream in = defaultConfigLocation.openStream()) {
+        Files.copy(in, path);
+      } catch (IOException e) {
+        logger.error("Could not write default configuration to {}", path, e);
+        throw e;
+      }
     }
 
     // Create the forwarding-secret file on first-time startup if it doesn't exist
