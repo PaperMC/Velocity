@@ -487,8 +487,7 @@ public class VelocityConfiguration implements ProxyConfig {
     }
     
     // Explicitly create the configuration file from the default if it does not exist.
-    // This ensures a complete file is present before any migrations or autosaving can
-    // write a partial file to disk.
+    // This ensures a complete file is present before any migrations or autosaving can write a partial file to disk.
     if (Files.notExists(path)) {
       try (InputStream in = defaultConfigLocation.openStream()) {
         Files.copy(in, path);
