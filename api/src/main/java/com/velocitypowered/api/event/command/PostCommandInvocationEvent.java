@@ -19,6 +19,10 @@ import org.jetbrains.annotations.NotNull;
  * <p>Commands can be cancelled or forwarded to backend servers in {@link CommandExecuteEvent}.
  * This will prevent firing this event.</p>
  *
+ * <p>Note that due to the proxy's command rate limiting, this event may not be fired for
+ * every command sent by the client in rapid succession. In such cases, the command is forwarded
+ * directly to the backend server and not handled by the proxy.</p>
+ *
  * @since 3.3.0
  */
 public final class PostCommandInvocationEvent {

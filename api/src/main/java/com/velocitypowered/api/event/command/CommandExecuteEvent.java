@@ -19,6 +19,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * This event is fired when someone executes a command. Velocity will wait for this event to finish
  * firing before trying to handle the command and/or forwarding it to the server.
+ *
+ * <p>Note that due to the proxy's command rate limiting, this event may not be fired for
+ * every command sent by the client in rapid succession. In such cases, the command is forwarded
+ * directly to the backend server.</p>
  */
 @AwaitingEvent
 public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
