@@ -63,8 +63,8 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
    * @param resultFuture the result future
    */
   TransitionSessionHandler(VelocityServer server,
-      VelocityServerConnection serverConn,
-      CompletableFuture<Impl> resultFuture) {
+                           VelocityServerConnection serverConn,
+                           CompletableFuture<Impl> resultFuture) {
     this.server = server;
     this.serverConn = serverConn;
     this.resultFuture = resultFuture;
@@ -153,6 +153,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
           // We're done! :)
           server.getEventManager().fireAndForget(new ServerPostConnectEvent(player,
+              serverConn.getServer(),
               previousServer));
           resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
         }, smc.eventLoop()).exceptionally(exc -> {
