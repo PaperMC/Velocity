@@ -238,8 +238,8 @@ public class VelocityCommandManager implements CommandManager {
       result = executed ? CommandResult.EXECUTED : CommandResult.FORWARDED;
       return executed;
     } catch (final CommandSyntaxException e) {
-      boolean isSyntaxError = !e.getType().equals(
-          CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand());
+      boolean isSyntaxError = !e.getType().equals(CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand())
+              && !e.getType().equals(CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownArgument());
       if (isSyntaxError) {
         final Message message = e.getRawMessage();
         if (message instanceof ComponentLike componentLike) {
