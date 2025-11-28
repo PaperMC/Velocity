@@ -43,12 +43,14 @@ public final class VelocityCommandMeta implements CommandMeta {
     private final ImmutableSet.Builder<String> aliases;
     private final ImmutableList.Builder<CommandNode<CommandSource>> hints;
     private @MonotonicNonNull Object plugin;
+    private boolean forwardPartial;
 
     public Builder(final String alias) {
       Preconditions.checkNotNull(alias, "alias");
       this.aliases = ImmutableSet.<String>builder()
           .add(alias.toLowerCase(Locale.ENGLISH));
       this.hints = ImmutableList.builder();
+      this.forwardPartial = false;
       this.plugin = null;
     }
 
@@ -84,8 +86,14 @@ public final class VelocityCommandMeta implements CommandMeta {
     }
 
     @Override
+    public CommandMeta.Builder forwardPartial(boolean fowardPartial) {
+      this.forwardPartial = fowardPartial;
+      return this;
+    }
+
+    @Override
     public CommandMeta build() {
-      return new VelocityCommandMeta(this.aliases.build(), this.hints.build(), this.plugin);
+      return new VelocityCommandMeta(this.aliases.build(), this.hints.build(), this.plugin, this.forwardPartial);
     }
   }
 
@@ -126,15 +134,18 @@ public final class VelocityCommandMeta implements CommandMeta {
   private final Set<String> aliases;
   private final List<CommandNode<CommandSource>> hints;
   private final Object plugin;
+  private final boolean forwardPartial;
 
   private VelocityCommandMeta(
       final Set<String> aliases,
       final List<CommandNode<CommandSource>> hints,
-      final @Nullable Object plugin
+      final @Nullable Object plugin,
+      final boolean forwardPartial
   ) {
     this.aliases = aliases;
     this.hints = hints;
     this.plugin = plugin;
+    this.forwardPartial = forwardPartial;
   }
 
   @Override
@@ -150,6 +161,11 @@ public final class VelocityCommandMeta implements CommandMeta {
   @Override
   public @Nullable Object getPlugin() {
     return plugin;
+  }
+
+  @Override
+  public boolean forwardPartial() {
+    return forwardPartial;
   }
 
   @Override

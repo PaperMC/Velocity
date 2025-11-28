@@ -239,26 +239,43 @@ public class VelocityCommandManager implements CommandManager {
       return executed;
     } catch (final CommandSyntaxException e) {
       boolean isSyntaxError = !e.getType().equals(CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand())
-              && !e.getType().equals(CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownArgument());
+          && !e.getType().equals(CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownArgument());
+
       if (isSyntaxError) {
-        final Message message = e.getRawMessage();
-        if (message instanceof ComponentLike componentLike) {
-          source.sendMessage(componentLike.asComponent().applyFallbackStyle(NamedTextColor.RED));
-        } else {
-          source.sendMessage(Component.text(e.getMessage(), NamedTextColor.RED));
-        }
-        result = com.velocitypowered.api.command.CommandResult.SYNTAX_ERROR;
+        sendError(source, e);
+        result = CommandResult.SYNTAX_ERROR;
         // This is, of course, a lie, but the API will need to change...
         return true;
-      } else {
-        result = CommandResult.FORWARDED;
-        return false;
       }
+
+      boolean existsOnProxy = !parsed.getContext().getNodes().isEmpty();
+      if (existsOnProxy) {
+        String invokedAlias = parsed.getContext().getNodes().get(0).getRange().get(parsed.getReader());
+        CommandMeta meta = this.commandMetas.get(invokedAlias);
+        if (meta != null && !meta.forwardPartial()) {
+          // mark command handled and send error to source if command meta specifies partial matches should not be forwarded
+          sendError(source, e);
+          result = CommandResult.SYNTAX_ERROR;
+          return true;
+        }
+      }
+      // Command does not exist or was not handled on the proxy, let the backend server handle it
+      result = CommandResult.FORWARDED;
+      return false;
     } catch (final Throwable e) {
       // Ugly, ugly swallowing of everything Throwable, because plugins are naughty.
       throw new RuntimeException("Unable to invoke command " + parsed.getReader().getString() + " for " + source, e);
     } finally {
       eventManager.fireAndForget(new PostCommandInvocationEvent(source, parsed.getReader().getString(), result));
+    }
+  }
+
+  private void sendError(CommandSource source, CommandSyntaxException e) {
+    final Message message = e.getRawMessage();
+    if (message instanceof ComponentLike componentLike) {
+      source.sendMessage(componentLike.asComponent().applyFallbackStyle(NamedTextColor.RED));
+    } else {
+      source.sendMessage(Component.text(e.getMessage(), NamedTextColor.RED));
     }
   }
 
