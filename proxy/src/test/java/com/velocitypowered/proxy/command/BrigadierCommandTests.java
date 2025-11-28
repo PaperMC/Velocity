@@ -259,7 +259,7 @@ public class BrigadierCommandTests extends CommandTestSuite {
         .then(LiteralArgumentBuilder
             .<CommandSource>literal("world")
             .executes(context -> fail())
-            .requires(src -> true)
+            .requires(src -> false)
         )
         .build();
 
