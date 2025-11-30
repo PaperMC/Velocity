@@ -29,7 +29,7 @@ public @interface Plugin {
   String id();
 
   /**
-   * The human readable name of the plugin as to be used in descriptions and similar things.
+   * The human-readable name of the plugin as to be used in descriptions and similar things.
    *
    * @return The plugin name, or an empty string if unknown
    */
