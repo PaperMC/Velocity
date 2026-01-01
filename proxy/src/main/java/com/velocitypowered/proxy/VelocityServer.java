@@ -74,6 +74,7 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -86,6 +87,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -305,7 +307,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     ipAttemptLimiter = Ratelimiters.createWithMilliseconds(configuration.getLoginRatelimit());
     commandRateLimiter = Ratelimiters.createWithMilliseconds(configuration.getCommandRatelimit());
     tabCompleteRateLimiter = Ratelimiters.createWithMilliseconds(configuration.getTabCompleteRatelimit());
-    loadPlugins();
+    loadPlugins(options.getExtraPluginDirectories());
 
     // Go ahead and fire the proxy initialization event. We block since plugins should have a chance
     // to fully initialize before we accept any connections to the server.
@@ -419,7 +421,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     }
   }
 
-  private void loadPlugins() {
+  private void loadPlugins(List<File> extraPluginDirectories) {
     logger.info("Loading plugins...");
 
     try {
@@ -427,15 +429,12 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
       if (!pluginPath.toFile().exists()) {
         Files.createDirectory(pluginPath);
-      } else {
-        if (!pluginPath.toFile().isDirectory()) {
-          logger.warn("Plugin location {} is not a directory, continuing without loading plugins",
-              pluginPath);
-          return;
-        }
-
-        pluginManager.loadPlugins(pluginPath);
       }
+
+      List<Path> pluginDirectories = new ArrayList<>();
+      pluginDirectories.add(pluginPath);
+      pluginDirectories.addAll(extraPluginDirectories.stream().map(File::toPath).toList());
+      pluginManager.loadPlugins(pluginDirectories, pluginPath);
     } catch (Exception e) {
       logger.error("Couldn't load plugins", e);
     }
