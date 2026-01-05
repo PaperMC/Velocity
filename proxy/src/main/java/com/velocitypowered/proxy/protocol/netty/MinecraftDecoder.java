@@ -96,8 +96,8 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
   }
 
   private void doLengthSanityChecks(ByteBuf buf, MinecraftPacket packet) throws Exception {
-    int expectedMinLen = packet.expectedMinLength(buf, direction, registry.version);
-    int expectedMaxLen = packet.expectedMaxLength(buf, direction, registry.version);
+    int expectedMinLen = packet.decodeExpectedMinLength(buf, direction, registry.version);
+    int expectedMaxLen = packet.decodeExpectedMaxLength(buf, direction, registry.version);
     if (expectedMaxLen != -1 && buf.readableBytes() > expectedMaxLen) {
       throw handleOverflow(packet, expectedMaxLen, buf.readableBytes());
     }
@@ -135,7 +135,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
   private String getExtraConnectionDetail(int packetId) {
     return "Direction " + direction + " Protocol " + registry.version + " State " + state
-        + " ID " + Integer.toHexString(packetId);
+        + " ID 0x" + Integer.toHexString(packetId);
   }
 
   public void setProtocolVersion(ProtocolVersion protocolVersion) {

@@ -62,6 +62,7 @@ import com.velocitypowered.proxy.adventure.VelocityBossBarImplementation;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
+import com.velocitypowered.proxy.connection.player.bossbar.BossBarManager;
 import com.velocitypowered.proxy.connection.player.bundle.BundleDelimiterHandler;
 import com.velocitypowered.proxy.connection.player.resourcepack.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.player.resourcepack.handler.ResourcePackHandler;
@@ -73,6 +74,8 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundSoundEntityPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundStopSoundPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.HeaderAndFooterPacket;
@@ -127,6 +130,8 @@ import net.kyori.adventure.pointer.PointersSupplier;
 import net.kyori.adventure.resource.ResourcePackInfoLike;
 import net.kyori.adventure.resource.ResourcePackRequest;
 import net.kyori.adventure.resource.ResourcePackRequestLike;
+import net.kyori.adventure.sound.Sound;
+import net.kyori.adventure.sound.SoundStop;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
@@ -146,7 +151,7 @@ import org.jetbrains.annotations.NotNull;
 public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, KeyIdentifiable,
     VelocityInboundConnection {
 
-  public static final int MAX_CLIENTSIDE_PLUGIN_CHANNELS = 1024;
+  public static final int MAX_CLIENTSIDE_PLUGIN_CHANNELS = Integer.getInteger("velocity.max-clientside-plugin-channels", 1024);
   private static final PlainTextComponentSerializer PASS_THRU_TRANSLATE =
       PlainTextComponentSerializer.builder().flattener(TranslatableMapper.FLATTENER).build();
   static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
@@ -197,6 +202,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private @Nullable ClientSettingsPacket clientSettingsPacket;
   private volatile ChatQueue chatQueue;
   private final ChatBuilderFactory chatBuilderFactory;
+  private final BossBarManager bossBarManager;
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
                   @Nullable InetSocketAddress virtualHost, @Nullable String rawVirtualHost, boolean onlineMode,
@@ -223,6 +229,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     this.chatQueue = new ChatQueue(this);
     this.chatBuilderFactory = new ChatBuilderFactory(this.getProtocolVersion());
     this.resourcePackHandler = ResourcePackHandler.create(this, server);
+    this.bossBarManager = new BossBarManager(this);
   }
 
   /**
@@ -733,15 +740,19 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     Component disconnectReason = disconnect.getReason().getComponent();
     String plainTextReason = PASS_THRU_TRANSLATE.serialize(disconnectReason);
     if (connectedServer != null && connectedServer.getServerInfo().equals(server.getServerInfo())) {
-      logger.info("{}: kicked from server {}: {}", this, server.getServerInfo().getName(),
-          plainTextReason);
+      if (this.server.getConfiguration().isLogPlayerConnections()) {
+        logger.info("{}: kicked from server {}: {}", this, server.getServerInfo().getName(),
+            plainTextReason);
+      }
       handleConnectionException(server, disconnectReason,
           Component.translatable("velocity.error.moved-to-new-server", NamedTextColor.RED,
               Component.text(server.getServerInfo().getName()),
               disconnectReason), safe);
     } else {
-      logger.error("{}: disconnected while connecting to {}: {}", this,
-          server.getServerInfo().getName(), plainTextReason);
+      if (this.server.getConfiguration().isLogPlayerConnections()) {
+        logger.error("{}: disconnected while connecting to {}: {}", this,
+            server.getServerInfo().getName(), plainTextReason);
+      }
       handleConnectionException(server, disconnectReason,
           Component.translatable("velocity.error.cant-connect", NamedTextColor.RED,
               Component.text(server.getServerInfo().getName()),
@@ -806,9 +817,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
         createConnectionRequest(res.getServer(), previousConnection).connect()
             .whenCompleteAsync((status, throwable) -> {
               if (throwable != null) {
-                handleConnectionException(
-                    status != null ? status.getAttemptedConnection() : res.getServer(), throwable,
-                    true);
+                handleConnectionException(res.getServer(), throwable, true);
                 return;
               }
 
@@ -1036,6 +1045,50 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   void setClientBrand(final @Nullable String clientBrand) {
     this.clientBrand = clientBrand;
+  }
+
+  @Override
+  public void playSound(@NotNull Sound sound, @NotNull Sound.Emitter emitter) {
+    Preconditions.checkNotNull(sound, "sound");
+    Preconditions.checkNotNull(emitter, "emitter");
+    VelocityServerConnection soundTargetServerConn = getConnectedServer();
+    if (getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_19_3)
+        || connection.getState() != StateRegistry.PLAY
+        || soundTargetServerConn == null
+        || (sound.source() == Sound.Source.UI
+            && getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_21_5))) {
+      return;
+    }
+
+    VelocityServerConnection soundEmitterServerConn;
+    if (emitter == Sound.Emitter.self()) {
+      soundEmitterServerConn = soundTargetServerConn;
+    } else if (emitter instanceof ConnectedPlayer player) {
+      if ((soundEmitterServerConn = player.getConnectedServer()) == null) {
+        return;
+      }
+
+      if (!soundEmitterServerConn.getServer().equals(soundTargetServerConn.getServer())) {
+        return;
+      }
+    } else {
+      return;
+    }
+
+    connection.write(new ClientboundSoundEntityPacket(sound, null, soundEmitterServerConn.getEntityId()));
+  }
+
+  @Override
+  public void stopSound(@NotNull SoundStop stop) {
+    Preconditions.checkNotNull(stop, "stop");
+    if (getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_19_3)
+        || connection.getState() != StateRegistry.PLAY
+        || (stop.source() == Sound.Source.UI
+            && getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_21_5))) {
+      return;
+    }
+
+    connection.write(new ClientboundStopSoundPacket(stop));
   }
 
   @Override
@@ -1379,6 +1432,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     return handshakeIntent;
   }
 
+  public BossBarManager getBossBarManager() {
+    return bossBarManager;
+  }
+
   private final class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {
 
     private final RegisteredServer toConnect;
@@ -1438,7 +1495,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
           VelocityServerConnection con =
               new VelocityServerConnection(vrs, previousServer, ConnectedPlayer.this, server);
           connectionInFlight = con;
-          return con.connect().whenCompleteAsync((result, exception) -> this.resetIfInFlightIs(con),
+
+          return con.connect().whenCompleteAsync((result, exception) -> {
+            if (result != null && !result.isSuccessful() && !result.isSafe()) {
+              handleConnectionException(result.getAttemptedConnection(),
+                  // The only way for the reason to be null is if the result is safe
+                  DisconnectPacket.create(result.getReasonComponent().orElseThrow(),
+                      getProtocolVersion(), connection.getState()), false);
+            }
+            this.resetIfInFlightIs(con);
+          },
               connection.eventLoop());
         }, connection.eventLoop());
       });
@@ -1452,22 +1518,14 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
     @Override
     public CompletableFuture<Result> connect() {
-      return this.internalConnect().whenCompleteAsync((status, throwable) -> {
-        if (status != null && !status.isSuccessful()) {
-          if (!status.isSafe()) {
-            handleConnectionException(status.getAttemptedConnection(), throwable, false);
-          }
-        }
-      }, connection.eventLoop()).thenApply(x -> x);
+      return this.internalConnect().thenApply(x -> x);
     }
 
     @Override
     public CompletableFuture<Boolean> connectWithIndication() {
       return internalConnect().whenCompleteAsync((status, throwable) -> {
         if (throwable != null) {
-          // TODO: The exception handling from this is not very good. Find a better way.
-          handleConnectionException(status != null ? status.getAttemptedConnection() : toConnect,
-              throwable, true);
+          handleConnectionException(toConnect, throwable, true);
           return;
         }
 

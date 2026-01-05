@@ -177,10 +177,12 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(BossBarPacket packet) {
-    if (packet.getAction() == BossBarPacket.ADD) {
-      playerSessionHandler.getServerBossBars().add(packet.getUuid());
-    } else if (packet.getAction() == BossBarPacket.REMOVE) {
-      playerSessionHandler.getServerBossBars().remove(packet.getUuid());
+    if (serverConn.getPlayer().getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
+      if (packet.getAction() == BossBarPacket.ADD) {
+        playerSessionHandler.getServerBossBars().add(packet.getUuid());
+      } else if (packet.getAction() == BossBarPacket.REMOVE) {
+        playerSessionHandler.getServerBossBars().remove(packet.getUuid());
+      }
     }
     return false; // forward
   }
@@ -359,7 +361,12 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       // Inject commands from the proxy.
       final CommandGraphInjector<CommandSource> injector = server.getCommandManager().getInjector();
       injector.inject(rootNode, serverConn.getPlayer());
-      rootNode.removeChildByName("velocity:callback");
+
+      // In 1.21.6 a confirmation prompt was added when executing a command via `run_command` click
+      // action if the command is unknown. To prevent this prompt we have to send the command.
+      if (this.playerConnection.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_21_6)) {
+        rootNode.removeChildByName("velocity:callback");
+      }
     }
 
     server.getEventManager().fire(

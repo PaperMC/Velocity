@@ -22,6 +22,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 
 import java.util.Map;
@@ -78,5 +79,23 @@ public class TagsUpdatePacket implements MinecraftPacket {
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  @Override
+  public int encodeSizeHint(Direction direction, ProtocolVersion version) {
+    int size = ProtocolUtils.varIntBytes(tags.size());
+    for (Map.Entry<String, Map<String, int[]>> entry : tags.entrySet()) {
+      size += ProtocolUtils.stringSizeHint(entry.getKey());
+      size += ProtocolUtils.varIntBytes(entry.getValue().size());
+      for (Map.Entry<String, int[]> innerEntry : entry.getValue().entrySet()) {
+        size += ProtocolUtils.stringSizeHint(innerEntry.getKey());
+        size += ProtocolUtils.varIntBytes(innerEntry.getValue().length);
+        for (int innerEntryValue : innerEntry.getValue()) {
+          size += ProtocolUtils.varIntBytes(innerEntryValue);
+        }
+      }
+    }
+
+    return size;
   }
 }

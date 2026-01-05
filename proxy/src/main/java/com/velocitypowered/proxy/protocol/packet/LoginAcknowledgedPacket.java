@@ -36,7 +36,7 @@ public class LoginAcknowledgedPacket implements MinecraftPacket {
   }
 
   @Override
-  public int expectedMaxLength(ByteBuf buf, ProtocolUtils.Direction direction,
+  public int decodeExpectedMaxLength(ByteBuf buf, ProtocolUtils.Direction direction,
                                ProtocolVersion version) {
     return 0;
   }

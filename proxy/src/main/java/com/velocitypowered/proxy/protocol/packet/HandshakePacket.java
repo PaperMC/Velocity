@@ -24,6 +24,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 
 public class HandshakePacket implements MinecraftPacket {
@@ -108,14 +109,21 @@ public class HandshakePacket implements MinecraftPacket {
   }
 
   @Override
-  public int expectedMinLength(ByteBuf buf, ProtocolUtils.Direction direction,
+  public int decodeExpectedMinLength(ByteBuf buf, ProtocolUtils.Direction direction,
                                ProtocolVersion version) {
     return 7;
   }
 
   @Override
-  public int expectedMaxLength(ByteBuf buf, ProtocolUtils.Direction direction,
+  public int decodeExpectedMaxLength(ByteBuf buf, ProtocolUtils.Direction direction,
                                ProtocolVersion version) {
     return 9 + (MAXIMUM_HOSTNAME_LENGTH * 3);
+  }
+
+  @Override
+  public int encodeSizeHint(Direction direction, ProtocolVersion version) {
+    // We could compute an exact size, but 4KiB ought to be enough to encode all reasonable
+    // sizes of this packet.
+    return 4 * 1024;
   }
 }
