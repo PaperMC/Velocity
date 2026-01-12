@@ -24,6 +24,7 @@ import com.velocitypowered.api.event.player.configuration.PlayerConfigurationEve
 import com.velocitypowered.api.event.player.configuration.PlayerFinishConfigurationEvent;
 import com.velocitypowered.api.event.player.configuration.PlayerFinishedConfigurationEvent;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
+import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -135,9 +136,16 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
       byte[] bytes = ByteBufUtil.getBytes(packet.content());
       ChannelIdentifier id = this.server.getChannelRegistrar().getFromId(packet.getChannel());
 
+      // Cancel unregistered plugin messages unless they are register/unregister packets
       if (id == null) {
-        serverConn.ensureConnected().write(packet.retain());
-        return true;
+        if (PluginMessageUtil.isRegister(packet)) {
+          id = MinecraftChannelIdentifier.from("register");
+        } else if (PluginMessageUtil.isUnregister(packet)) {
+          id = MinecraftChannelIdentifier.from("unregister");
+        } else {
+          serverConn.ensureConnected().write(packet.retain());
+          return true;
+        }
       }
 
       // Handling this stuff async means that we should probably pause
