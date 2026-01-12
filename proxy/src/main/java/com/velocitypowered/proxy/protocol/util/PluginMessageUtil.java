@@ -48,9 +48,9 @@ public final class PluginMessageUtil {
   private static final String BRAND_CHANNEL_LEGACY = "MC|Brand";
   private static final String BRAND_CHANNEL = "minecraft:brand";
   private static final String REGISTER_CHANNEL_LEGACY = "REGISTER";
-  private static final String REGISTER_CHANNEL = "minecraft:register";
+  public static final String REGISTER_CHANNEL = "minecraft:register";
   private static final String UNREGISTER_CHANNEL_LEGACY = "UNREGISTER";
-  private static final String UNREGISTER_CHANNEL = "minecraft:unregister";
+  public static final String UNREGISTER_CHANNEL = "minecraft:unregister";
 
   private PluginMessageUtil() {
     throw new AssertionError();

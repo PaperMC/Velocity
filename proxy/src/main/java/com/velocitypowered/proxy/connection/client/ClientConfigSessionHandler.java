@@ -136,12 +136,12 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
       byte[] bytes = ByteBufUtil.getBytes(packet.content());
       ChannelIdentifier id = this.server.getChannelRegistrar().getFromId(packet.getChannel());
 
-      // Cancel unregistered plugin messages unless they are register/unregister packets
+      // Cancel unregistered plugin messages unless they are register/unregister messages
       if (id == null) {
         if (PluginMessageUtil.isRegister(packet)) {
-          id = MinecraftChannelIdentifier.from("register");
+          id = MinecraftChannelIdentifier.from(PluginMessageUtil.REGISTER_CHANNEL);
         } else if (PluginMessageUtil.isUnregister(packet)) {
-          id = MinecraftChannelIdentifier.from("unregister");
+          id = MinecraftChannelIdentifier.from(PluginMessageUtil.UNREGISTER_CHANNEL);
         } else {
           serverConn.ensureConnected().write(packet.retain());
           return true;
