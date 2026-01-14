@@ -146,6 +146,9 @@ log-command-executions = false
 # and disconnecting from the proxy.
 log-player-connections = true
 
+# Enables logging of errors when players fail to connect to backend servers.
+logConnectionErrors = true
+
 # Allows players transferred from other hosts via the
 # Transfer packet (Minecraft 1.20.5) to be received.
 accepts-transfers = false
