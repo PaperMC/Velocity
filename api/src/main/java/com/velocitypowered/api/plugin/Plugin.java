@@ -8,12 +8,11 @@
 package com.velocitypowered.api.plugin;
 
 import com.velocitypowered.api.plugin.ap.SerializedPluginDescription;
-import org.intellij.lang.annotations.Pattern;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import org.intellij.lang.annotations.Pattern;
 
 /**
  * Annotation used to describe a Velocity plugin.
