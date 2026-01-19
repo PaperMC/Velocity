@@ -20,24 +20,15 @@ package com.velocitypowered.proxy.protocol.packet.config;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 
-public class ActiveFeaturesPacket implements MinecraftPacket {
-
-  private Key[] activeFeatures;
-
-  public ActiveFeaturesPacket(Key[] activeFeatures) {
-    this.activeFeatures = activeFeatures;
-  }
+public record ActiveFeaturesPacket(Key[] activeFeatures) implements MinecraftPacket {
 
   public ActiveFeaturesPacket() {
-    this.activeFeatures = new Key[0];
-  }
-
-  public void setActiveFeatures(Key[] activeFeatures) {
-    this.activeFeatures = activeFeatures;
+    this(new Key[0]);
   }
 
   public Key[] getActiveFeatures() {
@@ -45,19 +36,24 @@ public class ActiveFeaturesPacket implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
-                     ProtocolVersion protocolVersion) {
-    activeFeatures = ProtocolUtils.readKeyArray(buf);
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction,
-                     ProtocolVersion protocolVersion) {
-    ProtocolUtils.writeKeyArray(buf, activeFeatures);
-  }
-
-  @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<ActiveFeaturesPacket> {
+    public static final Codec INSTANCE = new Codec();
+
+    @Override
+    public ActiveFeaturesPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+                                       ProtocolVersion protocolVersion) {
+      Key[] activeFeatures = ProtocolUtils.readKeyArray(buf);
+      return new ActiveFeaturesPacket(activeFeatures);
+    }
+
+    @Override
+    public void encode(ActiveFeaturesPacket packet, ByteBuf buf, ProtocolUtils.Direction direction,
+                       ProtocolVersion protocolVersion) {
+      ProtocolUtils.writeKeyArray(buf, packet.activeFeatures);
+    }
   }
 }

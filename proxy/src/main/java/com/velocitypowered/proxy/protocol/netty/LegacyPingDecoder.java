@@ -66,7 +66,7 @@ public class LegacyPingDecoder extends ByteToMessageDecoder {
       out.add(readExtended16Data(in));
     } else if (first == 0x02 && in.isReadable()) {
       in.skipBytes(in.readableBytes());
-      out.add(new LegacyHandshakePacket());
+      out.add(LegacyHandshakePacket.INSTANCE);
     } else {
       in.readerIndex(originalReaderIndex);
       ctx.pipeline().remove(this);

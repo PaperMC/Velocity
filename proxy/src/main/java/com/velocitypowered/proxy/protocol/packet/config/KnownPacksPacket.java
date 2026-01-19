@@ -20,43 +20,15 @@ package com.velocitypowered.proxy.protocol.packet.config;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 
-public class KnownPacksPacket implements MinecraftPacket {
+public record KnownPacksPacket(KnownPack[] packs) implements MinecraftPacket {
 
-    private static final int MAX_LENGTH_PACKS = Integer.getInteger("velocity.max-known-packs", 64);
-    private static final QuietDecoderException TOO_MANY_PACKS =
-        new QuietDecoderException("too many known packs");
-
-    private KnownPack[] packs;
-
-    @Override
-    public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
-                       ProtocolVersion protocolVersion) {
-        final int packCount = ProtocolUtils.readVarInt(buf);
-        if (direction == ProtocolUtils.Direction.SERVERBOUND && packCount > MAX_LENGTH_PACKS) {
-          throw TOO_MANY_PACKS;
-        }
-
-        final KnownPack[] packs = new KnownPack[packCount];
-
-        for (int i = 0; i < packCount; i++) {
-            packs[i] = KnownPack.read(buf);
-        }
-
-        this.packs = packs;
-    }
-
-    @Override
-    public void encode(ByteBuf buf, ProtocolUtils.Direction direction,
-                       ProtocolVersion protocolVersion) {
-        ProtocolUtils.writeVarInt(buf, packs.length);
-
-        for (KnownPack pack : packs) {
-            pack.write(buf);
-        }
+    public KnownPacksPacket() {
+        this(new KnownPack[0]);
     }
 
     @Override
@@ -73,6 +45,41 @@ public class KnownPacksPacket implements MinecraftPacket {
             ProtocolUtils.writeString(buf, namespace);
             ProtocolUtils.writeString(buf, id);
             ProtocolUtils.writeString(buf, version);
+        }
+    }
+
+    public static class Codec implements PacketCodec<KnownPacksPacket> {
+        public static final Codec INSTANCE = new Codec();
+
+        private static final int MAX_LENGTH_PACKS = Integer.getInteger("velocity.max-known-packs", 64);
+        private static final QuietDecoderException TOO_MANY_PACKS =
+            new QuietDecoderException("too many known packs");
+
+        @Override
+        public KnownPacksPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+                                        ProtocolVersion protocolVersion) {
+            final int packCount = ProtocolUtils.readVarInt(buf);
+            if (direction == ProtocolUtils.Direction.SERVERBOUND && packCount > MAX_LENGTH_PACKS) {
+                throw TOO_MANY_PACKS;
+            }
+
+            final KnownPack[] packs = new KnownPack[packCount];
+
+            for (int i = 0; i < packCount; i++) {
+                packs[i] = KnownPack.read(buf);
+            }
+
+            return new KnownPacksPacket(packs);
+        }
+
+        @Override
+        public void encode(KnownPacksPacket packet, ByteBuf buf,
+                           ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+            ProtocolUtils.writeVarInt(buf, packet.packs.length);
+
+            for (KnownPack pack : packet.packs) {
+                pack.write(buf);
+            }
         }
     }
 }

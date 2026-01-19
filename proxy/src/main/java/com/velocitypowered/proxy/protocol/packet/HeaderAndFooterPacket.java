@@ -21,42 +21,18 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.text.Component;
 
-public class HeaderAndFooterPacket implements MinecraftPacket {
+public record HeaderAndFooterPacket(ComponentHolder header,
+    ComponentHolder footer) implements MinecraftPacket {
 
-  private final ComponentHolder header;
-  private final ComponentHolder footer;
-
-  public HeaderAndFooterPacket() {
-    throw new UnsupportedOperationException("Decode is not implemented");
-  }
-
-  public HeaderAndFooterPacket(ComponentHolder header, ComponentHolder footer) {
-    this.header = Preconditions.checkNotNull(header, "header");
-    this.footer = Preconditions.checkNotNull(footer, "footer");
-  }
-
-  public ComponentHolder getHeader() {
-    return header;
-  }
-
-  public ComponentHolder getFooter() {
-    return footer;
-  }
-
-  @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    throw new UnsupportedOperationException("Decode is not implemented");
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    header.write(buf);
-    footer.write(buf);
+  public HeaderAndFooterPacket {
+    Preconditions.checkNotNull(header, "header");
+    Preconditions.checkNotNull(footer, "footer");
   }
 
   @Override
@@ -73,5 +49,22 @@ public class HeaderAndFooterPacket implements MinecraftPacket {
   public static HeaderAndFooterPacket reset(ProtocolVersion version) {
     ComponentHolder empty = new ComponentHolder(version, Component.empty());
     return new HeaderAndFooterPacket(empty, empty);
+  }
+
+  public static class Codec implements PacketCodec<HeaderAndFooterPacket> {
+    public static final Codec INSTANCE = new Codec();
+
+    @Override
+    public HeaderAndFooterPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      throw new UnsupportedOperationException("Decode is not implemented");
+    }
+
+    @Override
+    public void encode(HeaderAndFooterPacket packet, ByteBuf buf,
+        ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+      packet.header.write(buf);
+      packet.footer.write(buf);
+    }
   }
 }

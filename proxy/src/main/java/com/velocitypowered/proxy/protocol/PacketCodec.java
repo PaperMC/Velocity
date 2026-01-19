@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2023 Velocity Contributors
+ * Copyright (C) 2018-2025 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,23 +17,11 @@
 
 package com.velocitypowered.proxy.protocol;
 
-import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
-
 /**
- * Represents a Minecraft packet. Packets are immutable data holders that use separate
- * {@link PacketCodec} implementations for encoding and decoding.
+ * A combined codec that can both encode and decode packets.
  *
- * @see PacketCodec
- * @see PacketEncoder
- * @see PacketDecoder
+ * @param <T> the packet type
  */
-public interface MinecraftPacket {
-
-  /**
-   * Handles this packet using the visitor pattern.
-   *
-   * @param handler the session handler
-   * @return true if the packet was handled
-   */
-  boolean handle(MinecraftSessionHandler handler);
+public interface PacketCodec<T extends MinecraftPacket>
+    extends PacketEncoder<T>, PacketDecoder<T> {
 }

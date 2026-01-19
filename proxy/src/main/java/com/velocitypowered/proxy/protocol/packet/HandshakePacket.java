@@ -23,84 +23,23 @@ import com.velocitypowered.api.network.HandshakeIntent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 
-public class HandshakePacket implements MinecraftPacket {
+public record HandshakePacket(ProtocolVersion protocolVersion, String serverAddress, int port,
+                               HandshakeIntent intent)
+    implements MinecraftPacket {
 
   // This size was chosen to ensure Forge clients can still connect even with very long hostnames.
   // While DNS technically allows any character to be used, in practice ASCII is used.
   private static final int MAXIMUM_HOSTNAME_LENGTH = 255 + HANDSHAKE_HOSTNAME_TOKEN.length() + 1;
-  private ProtocolVersion protocolVersion;
-  private String serverAddress = "";
-  private int port;
-  private HandshakeIntent intent;
-  private int nextStatus;
 
-  public ProtocolVersion getProtocolVersion() {
-    return protocolVersion;
-  }
+  public static final HandshakePacket DEFAULT = new HandshakePacket(ProtocolVersion.MINIMUM_VERSION, "", 0,
+      HandshakeIntent.LOGIN);
 
-  public void setProtocolVersion(ProtocolVersion protocolVersion) {
-    this.protocolVersion = protocolVersion;
-  }
-
-  public String getServerAddress() {
-    return serverAddress;
-  }
-
-  public void setServerAddress(String serverAddress) {
-    this.serverAddress = serverAddress;
-  }
-
-  public int getPort() {
-    return port;
-  }
-
-  public void setPort(int port) {
-    this.port = port;
-  }
-
-  public int getNextStatus() {
-    return this.nextStatus;
-  }
-
-  public void setIntent(HandshakeIntent intent) {
-    this.intent = intent;
-    this.nextStatus = intent.id();
-  }
-
-  public HandshakeIntent getIntent() {
-    return this.intent;
-  }
-
-  @Override
-  public String toString() {
-    return "Handshake{"
-        + "protocolVersion=" + protocolVersion
-        + ", serverAddress='" + serverAddress + '\''
-        + ", port=" + port
-        + ", nextStatus=" + nextStatus
-        + '}';
-  }
-
-  @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion ignored) {
-    int realProtocolVersion = ProtocolUtils.readVarInt(buf);
-    this.protocolVersion = ProtocolVersion.getProtocolVersion(realProtocolVersion);
-    this.serverAddress = ProtocolUtils.readString(buf, MAXIMUM_HOSTNAME_LENGTH);
-    this.port = buf.readUnsignedShort();
-    this.nextStatus = ProtocolUtils.readVarInt(buf);
-    this.intent = HandshakeIntent.getById(nextStatus);
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion ignored) {
-    ProtocolUtils.writeVarInt(buf, this.protocolVersion.getProtocol());
-    ProtocolUtils.writeString(buf, this.serverAddress);
-    buf.writeShort(this.port);
-    ProtocolUtils.writeVarInt(buf, this.nextStatus);
+  public int nextStatus() {
+    return intent.id();
   }
 
   @Override
@@ -108,22 +47,47 @@ public class HandshakePacket implements MinecraftPacket {
     return handler.handle(this);
   }
 
-  @Override
-  public int decodeExpectedMinLength(ByteBuf buf, ProtocolUtils.Direction direction,
-                               ProtocolVersion version) {
-    return 7;
-  }
+  public static class Codec implements PacketCodec<HandshakePacket> {
+    public static final Codec INSTANCE = new Codec();
 
-  @Override
-  public int decodeExpectedMaxLength(ByteBuf buf, ProtocolUtils.Direction direction,
-                               ProtocolVersion version) {
-    return 9 + (MAXIMUM_HOSTNAME_LENGTH * 3);
-  }
+    @Override
+    public HandshakePacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+                                   ProtocolVersion ignored) {
+      int realProtocolVersion = ProtocolUtils.readVarInt(buf);
+      ProtocolVersion protocolVersion = ProtocolVersion.getProtocolVersion(realProtocolVersion);
+      String serverAddress = ProtocolUtils.readString(buf, MAXIMUM_HOSTNAME_LENGTH);
+      int port = buf.readUnsignedShort();
+      int nextStatus = ProtocolUtils.readVarInt(buf);
+      HandshakeIntent intent = HandshakeIntent.getById(nextStatus);
+      return new HandshakePacket(protocolVersion, serverAddress, port, intent);
+    }
 
-  @Override
-  public int encodeSizeHint(Direction direction, ProtocolVersion version) {
-    // We could compute an exact size, but 4KiB ought to be enough to encode all reasonable
-    // sizes of this packet.
-    return 4 * 1024;
+    @Override
+    public void encode(HandshakePacket packet, ByteBuf buf, ProtocolUtils.Direction direction,
+                       ProtocolVersion ignored) {
+      ProtocolUtils.writeVarInt(buf, packet.protocolVersion().getProtocol());
+      ProtocolUtils.writeString(buf, packet.serverAddress());
+      buf.writeShort(packet.port());
+      ProtocolUtils.writeVarInt(buf, packet.nextStatus());
+    }
+
+    @Override
+    public int decodeExpectedMinLength(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion version) {
+      return 7;
+    }
+
+    @Override
+    public int decodeExpectedMaxLength(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion version) {
+      return 9 + (MAXIMUM_HOSTNAME_LENGTH * 3);
+    }
+
+    @Override
+    public int encodeSizeHint(HandshakePacket packet, ProtocolUtils.Direction direction, ProtocolVersion version) {
+      // We could compute an exact size, but 4KiB ought to be enough to encode all reasonable
+      // sizes of this packet.
+      return 4 * 1024;
+    }
   }
 }

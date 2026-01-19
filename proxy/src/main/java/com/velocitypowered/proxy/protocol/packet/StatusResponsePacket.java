@@ -20,27 +20,28 @@ package com.velocitypowered.proxy.protocol.packet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class StatusResponsePacket implements MinecraftPacket {
+public final class StatusResponsePacket implements MinecraftPacket {
 
-  private @Nullable CharSequence status;
-
-  public StatusResponsePacket() {
-  }
+  private final @Nullable CharSequence status;
 
   public StatusResponsePacket(CharSequence status) {
     this.status = status;
   }
 
-  public String getStatus() {
+  public String status() {
     if (status == null) {
       throw new IllegalStateException("Status is not specified");
     }
     return status.toString();
+  }
+
+  public String getStatus() {
+    return status();
   }
 
   @Override
@@ -51,25 +52,32 @@ public class StatusResponsePacket implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    status = ProtocolUtils.readString(buf, Short.MAX_VALUE);
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (status == null) {
-      throw new IllegalStateException("Status is not specified");
-    }
-    ProtocolUtils.writeString(buf, status);
-  }
-
-  @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
   }
 
-  @Override
-  public int encodeSizeHint(Direction direction, ProtocolVersion version) {
-    return ProtocolUtils.stringSizeHint(this.status);
+  public static class Codec implements PacketCodec<StatusResponsePacket> {
+    public static final Codec INSTANCE = new Codec();
+
+    @Override
+    public StatusResponsePacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+                                        ProtocolVersion version) {
+      CharSequence status = ProtocolUtils.readString(buf, Short.MAX_VALUE);
+      return new StatusResponsePacket(status);
+    }
+
+    @Override
+    public void encode(StatusResponsePacket packet, ByteBuf buf, ProtocolUtils.Direction direction,
+                       ProtocolVersion version) {
+      if (packet.status == null) {
+        throw new IllegalStateException("Status is not specified");
+      }
+      ProtocolUtils.writeString(buf, packet.status);
+    }
+
+    @Override
+    public int encodeSizeHint(StatusResponsePacket packet, ProtocolUtils.Direction direction, ProtocolVersion version) {
+      return ProtocolUtils.stringSizeHint(packet.status);
+    }
   }
 }

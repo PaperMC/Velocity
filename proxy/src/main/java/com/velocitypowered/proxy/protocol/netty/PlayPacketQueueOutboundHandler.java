@@ -19,8 +19,9 @@ package com.velocitypowered.proxy.protocol.netty;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolStates;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.registry.PacketRegistry;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
@@ -42,7 +43,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public class PlayPacketQueueOutboundHandler extends ChannelDuplexHandler {
 
-  private final StateRegistry.PacketRegistry.ProtocolRegistry registry;
+  private final PacketRegistry registry;
   private final Queue<MinecraftPacket> queue = new ArrayDeque<>();
 
   /**
@@ -51,7 +52,7 @@ public class PlayPacketQueueOutboundHandler extends ChannelDuplexHandler {
    * @param version the protocol version
    */
   public PlayPacketQueueOutboundHandler(ProtocolVersion version, ProtocolUtils.Direction direction) {
-    this.registry = StateRegistry.CONFIG.getProtocolRegistry(direction, version);
+    this.registry = ProtocolStates.configuration(direction).forVersion(version);
   }
 
   @Override
@@ -63,7 +64,7 @@ public class PlayPacketQueueOutboundHandler extends ChannelDuplexHandler {
 
     // If the packet exists in the CONFIG state, we want to always
     // ensure that it gets sent out to the client
-    if (this.registry.containsPacket(packet)) {
+    if (this.registry.canDecodePacket(packet)) {
       ctx.write(msg, promise);
       return;
     }

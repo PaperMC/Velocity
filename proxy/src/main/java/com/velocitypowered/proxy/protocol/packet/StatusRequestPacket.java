@@ -20,26 +20,16 @@ package com.velocitypowered.proxy.protocol.packet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 
-public class StatusRequestPacket implements MinecraftPacket {
+public final class StatusRequestPacket implements MinecraftPacket {
 
   public static final StatusRequestPacket INSTANCE = new StatusRequestPacket();
 
   private StatusRequestPacket() {
 
-  }
-
-  @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    // There is no additional data to decode.
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    // There is no data to decode.
   }
 
   @Override
@@ -52,8 +42,24 @@ public class StatusRequestPacket implements MinecraftPacket {
     return handler.handle(this);
   }
 
-  @Override
-  public int decodeExpectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
-    return 0;
+  public static class Codec implements PacketCodec<StatusRequestPacket> {
+    public static final Codec INSTANCE = new Codec();
+
+    @Override
+    public StatusRequestPacket decode(ByteBuf buf, Direction direction,
+        ProtocolVersion protocolVersion) {
+      return StatusRequestPacket.INSTANCE;
+    }
+
+    @Override
+    public void encode(StatusRequestPacket packet, ByteBuf buf, Direction direction,
+        ProtocolVersion protocolVersion) {
+    }
+
+    @Override
+    public int decodeExpectedMaxLength(ByteBuf buf, Direction direction,
+        ProtocolVersion protocolVersion) {
+      return 0;
+    }
   }
 }

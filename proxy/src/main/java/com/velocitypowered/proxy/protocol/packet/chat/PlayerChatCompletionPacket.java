@@ -20,15 +20,17 @@ package com.velocitypowered.proxy.protocol.packet.chat;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
-public class PlayerChatCompletionPacket implements MinecraftPacket {
+public final class PlayerChatCompletionPacket implements MinecraftPacket {
 
-  private String[] completions;
-  private Action action;
+  private final String[] completions;
+  private final Action action;
 
   public PlayerChatCompletionPacket() {
+    this(new String[0], Action.ADD);
   }
 
   public PlayerChatCompletionPacket(String[] completions, Action action) {
@@ -36,34 +38,12 @@ public class PlayerChatCompletionPacket implements MinecraftPacket {
     this.action = action;
   }
 
-  public String[] getCompletions() {
+  public String[] completions() {
     return completions;
   }
 
-  public Action getAction() {
+  public Action action() {
     return action;
-  }
-
-  public void setCompletions(String[] completions) {
-    this.completions = completions;
-  }
-
-  public void setAction(Action action) {
-    this.action = action;
-  }
-
-  @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
-      ProtocolVersion protocolVersion) {
-    action = Action.values()[ProtocolUtils.readVarInt(buf)];
-    completions = ProtocolUtils.readStringArray(buf);
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction,
-      ProtocolVersion protocolVersion) {
-    ProtocolUtils.writeVarInt(buf, action.ordinal());
-    ProtocolUtils.writeStringArray(buf, completions);
   }
 
   @Override
@@ -75,5 +55,24 @@ public class PlayerChatCompletionPacket implements MinecraftPacket {
     ADD,
     REMOVE,
     SET
+  }
+
+  public static class Codec implements PacketCodec<PlayerChatCompletionPacket> {
+    public static final Codec INSTANCE = new Codec();
+
+    @Override
+    public PlayerChatCompletionPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+                                              ProtocolVersion protocolVersion) {
+      Action action = Action.values()[ProtocolUtils.readVarInt(buf)];
+      String[] completions = ProtocolUtils.readStringArray(buf);
+      return new PlayerChatCompletionPacket(completions, action);
+    }
+
+    @Override
+    public void encode(PlayerChatCompletionPacket packet, ByteBuf buf,
+                       ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+      ProtocolUtils.writeVarInt(buf, packet.action.ordinal());
+      ProtocolUtils.writeStringArray(buf, packet.completions);
+    }
   }
 }

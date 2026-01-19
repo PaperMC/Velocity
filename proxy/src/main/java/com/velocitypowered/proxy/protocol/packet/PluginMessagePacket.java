@@ -22,36 +22,22 @@ import static com.velocitypowered.proxy.protocol.util.PluginMessageUtil.transfor
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
-import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
-import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import io.netty.buffer.ByteBuf;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import io.netty.buffer.DefaultByteBufHolder;
 
-public class PluginMessagePacket extends DeferredByteBufHolder implements MinecraftPacket {
+public final class PluginMessagePacket extends DefaultByteBufHolder implements MinecraftPacket {
 
-  private @Nullable String channel;
+  private final String channel;
 
-  public PluginMessagePacket() {
-    super(null);
-  }
-
-  public PluginMessagePacket(String channel,
-                             @MonotonicNonNull ByteBuf backing) {
+  public PluginMessagePacket(String channel, ByteBuf backing) {
     super(backing);
     this.channel = channel;
   }
 
   public String getChannel() {
-    if (channel == null) {
-      throw new IllegalStateException("Channel is not specified.");
-    }
     return channel;
-  }
-
-  public void setChannel(String channel) {
-    this.channel = channel;
   }
 
   @Override
@@ -60,44 +46,6 @@ public class PluginMessagePacket extends DeferredByteBufHolder implements Minecr
         + "channel='" + channel + '\''
         + ", data=" + super.toString()
         + '}';
-  }
-
-  @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    this.channel = ProtocolUtils.readString(buf);
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_13)) {
-      this.channel = transformLegacyToModernChannel(this.channel);
-    }
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
-      this.replace(buf.readRetainedSlice(buf.readableBytes()));
-    } else {
-      this.replace(ProtocolUtils.readRetainedByteBufSlice17(buf));
-    }
-
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (channel == null) {
-      throw new IllegalStateException("Channel is not specified.");
-    }
-
-    if (refCnt() == 0) {
-      throw new IllegalStateException("Plugin message contents for " + this.channel
-          + " freed too many times.");
-    }
-
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_13)) {
-      ProtocolUtils.writeString(buf, transformLegacyToModernChannel(this.channel));
-    } else {
-      ProtocolUtils.writeString(buf, this.channel);
-    }
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
-      buf.writeBytes(content());
-    } else {
-      ProtocolUtils.writeByteBuf17(content(), buf, true); // True for Forge support
-    }
-
   }
 
   @Override
@@ -145,8 +93,43 @@ public class PluginMessagePacket extends DeferredByteBufHolder implements Minecr
     return (PluginMessagePacket) super.touch(hint);
   }
 
-  @Override
-  public int encodeSizeHint(Direction direction, ProtocolVersion version) {
-    return content().readableBytes();
+  public static class Codec implements PacketCodec<PluginMessagePacket> {
+    public static final Codec INSTANCE = new Codec();
+
+    @Override
+    public PluginMessagePacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion version) {
+      String channel = ProtocolUtils.readString(buf);
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_13)) {
+        channel = transformLegacyToModernChannel(channel);
+      }
+      ByteBuf data;
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
+        data = buf.readRetainedSlice(buf.readableBytes());
+      } else {
+        data = ProtocolUtils.readRetainedByteBufSlice17(buf);
+      }
+      return new PluginMessagePacket(channel, data);
+    }
+
+    @Override
+    public void encode(PluginMessagePacket packet, ByteBuf buf,
+        ProtocolUtils.Direction direction, ProtocolVersion version) {
+      if (packet.refCnt() == 0) {
+        throw new IllegalStateException("Plugin message contents for " + packet.channel
+            + " freed too many times.");
+      }
+
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_13)) {
+        ProtocolUtils.writeString(buf, transformLegacyToModernChannel(packet.channel));
+      } else {
+        ProtocolUtils.writeString(buf, packet.channel);
+      }
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
+        buf.writeBytes(packet.content());
+      } else {
+        ProtocolUtils.writeByteBuf17(packet.content(), buf, true); // True for Forge support
+      }
+    }
   }
 }

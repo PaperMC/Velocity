@@ -23,6 +23,7 @@ import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.player.resourcepack.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
@@ -30,109 +31,27 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import java.util.UUID;
 import java.util.regex.Pattern;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class ResourcePackRequestPacket implements MinecraftPacket {
-
-  private @MonotonicNonNull UUID id; // 1.20.3+
-  private @MonotonicNonNull String url;
-  private @MonotonicNonNull String hash;
-  private boolean isRequired; // 1.17+
-  private @Nullable ComponentHolder prompt; // 1.17+
+public record ResourcePackRequestPacket(
+    @Nullable UUID id, // 1.20.3+
+    String url,
+    String hash,
+    boolean isRequired, // 1.17+
+    @Nullable ComponentHolder prompt // 1.17+
+) implements MinecraftPacket {
 
   private static final Pattern PLAUSIBLE_SHA1_HASH = Pattern.compile("^[a-z0-9]{40}$"); // 1.20.2+
 
-  public @Nullable UUID getId() {
-    return id;
-  }
-
-  public void setId(UUID id) {
-    this.id = id;
-  }
-
-  public @Nullable String getUrl() {
-    return url;
-  }
-
-  public void setUrl(String url) {
-    this.url = url;
-  }
-
-  public boolean isRequired() {
-    return isRequired;
-  }
-
-  public @Nullable String getHash() {
-    return hash;
-  }
-
-  public void setHash(String hash) {
-    this.hash = hash;
-  }
-
-  public void setRequired(boolean required) {
-    isRequired = required;
-  }
-
-  public @Nullable ComponentHolder getPrompt() {
-    return prompt;
-  }
-
-  public void setPrompt(@Nullable ComponentHolder prompt) {
-    this.prompt = prompt;
-  }
-
-  @Override
-  public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
-      this.id = ProtocolUtils.readUuid(buf);
-    }
-    this.url = ProtocolUtils.readString(buf);
-    this.hash = ProtocolUtils.readString(buf);
-    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
-      this.isRequired = buf.readBoolean();
-      if (buf.readBoolean()) {
-        this.prompt = ComponentHolder.read(buf, protocolVersion);
-      } else {
-        this.prompt = null;
-      }
-    }
-  }
-
-  @Override
-  public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
-      if (id == null) {
-        throw new IllegalStateException("Resource pack id not set yet!");
-      }
-      ProtocolUtils.writeUuid(buf, id);
-    }
-    if (url == null || hash == null) {
-      throw new IllegalStateException("Packet not fully filled in yet!");
-    }
-    ProtocolUtils.writeString(buf, url);
-    ProtocolUtils.writeString(buf, hash);
-    if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
-      buf.writeBoolean(isRequired);
-      if (prompt != null) {
-        buf.writeBoolean(true);
-        prompt.write(buf);
-      } else {
-        buf.writeBoolean(false);
-      }
-    }
-  }
-
   public VelocityResourcePackInfo toServerPromptedPack() {
     final ResourcePackInfo.Builder builder =
-        new VelocityResourcePackInfo.BuilderImpl(Preconditions.checkNotNull(url))
-            .setId(id).setPrompt(prompt == null ? null : prompt.getComponent())
-            .setShouldForce(isRequired).setOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
+        new VelocityResourcePackInfo.BuilderImpl(Preconditions.checkNotNull(url()))
+            .setId(id()).setPrompt(prompt() == null ? null : prompt().getComponent())
+            .setShouldForce(isRequired()).setOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
 
-    if (hash != null && !hash.isEmpty()) {
-      if (PLAUSIBLE_SHA1_HASH.matcher(hash).matches()) {
-        builder.setHash(ByteBufUtil.decodeHexDump(hash));
+    if (hash() != null && !hash().isEmpty()) {
+      if (PLAUSIBLE_SHA1_HASH.matcher(hash()).matches()) {
+        builder.setHash(ByteBufUtil.decodeHexDump(hash()));
       }
     }
     return (VelocityResourcePackInfo) builder.build();
@@ -152,5 +71,54 @@ public class ResourcePackRequestPacket implements MinecraftPacket {
             ", isRequired=" + isRequired +
             ", prompt=" + prompt +
             '}';
+  }
+
+  public static class Codec implements PacketCodec<ResourcePackRequestPacket> {
+    public static final Codec INSTANCE = new Codec();
+
+    @Override
+    public ResourcePackRequestPacket decode(ByteBuf buf, Direction direction,
+        ProtocolVersion protocolVersion) {
+      UUID id = null;
+      if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
+        id = ProtocolUtils.readUuid(buf);
+      }
+      String url = ProtocolUtils.readString(buf);
+      String hash = ProtocolUtils.readString(buf);
+      boolean isRequired = false;
+      ComponentHolder prompt = null;
+      if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
+        isRequired = buf.readBoolean();
+        if (buf.readBoolean()) {
+          prompt = ComponentHolder.read(buf, protocolVersion);
+        }
+      }
+      return new ResourcePackRequestPacket(id, url, hash, isRequired, prompt);
+    }
+
+    @Override
+    public void encode(ResourcePackRequestPacket packet, ByteBuf buf, Direction direction,
+        ProtocolVersion protocolVersion) {
+      if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
+        if (packet.id() == null) {
+          throw new IllegalStateException("Resource pack id not set yet!");
+        }
+        ProtocolUtils.writeUuid(buf, packet.id());
+      }
+      if (packet.url() == null || packet.hash() == null) {
+        throw new IllegalStateException("Packet not fully filled in yet!");
+      }
+      ProtocolUtils.writeString(buf, packet.url());
+      ProtocolUtils.writeString(buf, packet.hash());
+      if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
+        buf.writeBoolean(packet.isRequired());
+        if (packet.prompt() != null) {
+          buf.writeBoolean(true);
+          packet.prompt().write(buf);
+        } else {
+          buf.writeBoolean(false);
+        }
+      }
+    }
   }
 }

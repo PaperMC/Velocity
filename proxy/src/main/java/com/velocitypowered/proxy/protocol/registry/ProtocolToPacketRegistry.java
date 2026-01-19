@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2023 Velocity Contributors
+ * Copyright (C) 2025 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,25 +15,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.protocol;
+package com.velocitypowered.proxy.protocol.registry;
 
-import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.api.network.ProtocolVersion;
 
 /**
- * Represents a Minecraft packet. Packets are immutable data holders that use separate
- * {@link PacketCodec} implementations for encoding and decoding.
- *
- * @see PacketCodec
- * @see PacketEncoder
- * @see PacketDecoder
+ * Registry mapping protocol versions to their packet registries.
  */
-public interface MinecraftPacket {
-
-  /**
-   * Handles this packet using the visitor pattern.
-   *
-   * @param handler the session handler
-   * @return true if the packet was handled
-   */
-  boolean handle(MinecraftSessionHandler handler);
+public interface ProtocolToPacketRegistry {
+  PacketRegistry forVersion(ProtocolVersion version);
 }

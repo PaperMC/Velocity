@@ -44,8 +44,6 @@ public class LegacyChatBuilder extends ChatBuilderV2 {
 
   @Override
   public MinecraftPacket toServer() {
-    LegacyChatPacket chat = new LegacyChatPacket();
-    chat.setMessage(message);
-    return chat;
+    return new LegacyChatPacket(message, (byte) 0, null);
   }
 }

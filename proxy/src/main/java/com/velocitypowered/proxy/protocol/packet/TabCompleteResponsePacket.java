@@ -23,6 +23,7 @@ import com.google.common.base.MoreObjects;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
@@ -30,39 +31,54 @@ import java.util.ArrayList;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class TabCompleteResponsePacket implements MinecraftPacket {
+public final class TabCompleteResponsePacket implements MinecraftPacket {
 
-  private int transactionId;
-  private int start;
-  private int length;
-  private final List<Offer> offers = new ArrayList<>();
+  private final int transactionId;
+  private final int start;
+  private final int length;
+  private final List<Offer> offers;
 
-  public int getTransactionId() {
+  public TabCompleteResponsePacket(int transactionId, int start, int length, List<Offer> offers) {
+    this.transactionId = transactionId;
+    this.start = start;
+    this.length = length;
+    this.offers = List.copyOf(offers);
+  }
+
+  public int transactionId() {
     return transactionId;
   }
 
-  public void setTransactionId(int transactionId) {
-    this.transactionId = transactionId;
-  }
-
-  public int getStart() {
+  public int start() {
     return start;
   }
 
-  public void setStart(int start) {
-    this.start = start;
-  }
-
-  public int getLength() {
+  public int length() {
     return length;
   }
 
-  public void setLength(int length) {
-    this.length = length;
+  public List<Offer> offers() {
+    return offers;
+  }
+
+  public int getTransactionId() {
+    return transactionId();
+  }
+
+  public int getStart() {
+    return start();
+  }
+
+  public int getLength() {
+    return length();
   }
 
   public List<Offer> getOffers() {
-    return offers;
+    return offers();
+  }
+
+  public TabCompleteResponsePacket withOffers(List<Offer> offers) {
+    return new TabCompleteResponsePacket(transactionId, start, length, offers);
   }
 
   @Override
@@ -76,50 +92,60 @@ public class TabCompleteResponsePacket implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.noLessThan(MINECRAFT_1_13)) {
-      this.transactionId = ProtocolUtils.readVarInt(buf);
-      this.start = ProtocolUtils.readVarInt(buf);
-      this.length = ProtocolUtils.readVarInt(buf);
-      int offersAvailable = ProtocolUtils.readVarInt(buf);
-      for (int i = 0; i < offersAvailable; i++) {
-        String offer = ProtocolUtils.readString(buf);
-        ComponentHolder tooltip = buf.readBoolean() ? ComponentHolder.read(buf, version) : null;
-        offers.add(new Offer(offer, tooltip));
-      }
-    } else {
-      int offersAvailable = ProtocolUtils.readVarInt(buf);
-      for (int i = 0; i < offersAvailable; i++) {
-        offers.add(new Offer(ProtocolUtils.readString(buf), null));
-      }
-    }
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.noLessThan(MINECRAFT_1_13)) {
-      ProtocolUtils.writeVarInt(buf, this.transactionId);
-      ProtocolUtils.writeVarInt(buf, this.start);
-      ProtocolUtils.writeVarInt(buf, this.length);
-      ProtocolUtils.writeVarInt(buf, offers.size());
-      for (Offer offer : offers) {
-        ProtocolUtils.writeString(buf, offer.text);
-        buf.writeBoolean(offer.tooltip != null);
-        if (offer.tooltip != null) {
-          offer.tooltip.write(buf);
-        }
-      }
-    } else {
-      ProtocolUtils.writeVarInt(buf, offers.size());
-      for (Offer offer : offers) {
-        ProtocolUtils.writeString(buf, offer.text);
-      }
-    }
-  }
-
-  @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<TabCompleteResponsePacket> {
+    public static final Codec INSTANCE = new Codec();
+
+    @Override
+    public TabCompleteResponsePacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion version) {
+      if (version.noLessThan(MINECRAFT_1_13)) {
+        int transactionId = ProtocolUtils.readVarInt(buf);
+        int start = ProtocolUtils.readVarInt(buf);
+        int length = ProtocolUtils.readVarInt(buf);
+        int offersAvailable = ProtocolUtils.readVarInt(buf);
+        List<Offer> offers = new ArrayList<>(offersAvailable);
+        for (int i = 0; i < offersAvailable; i++) {
+          String offer = ProtocolUtils.readString(buf);
+          ComponentHolder tooltip = buf.readBoolean() ? ComponentHolder.read(buf, version) : null;
+          offers.add(new Offer(offer, tooltip));
+        }
+        return new TabCompleteResponsePacket(transactionId, start, length, offers);
+      } else {
+        int offersAvailable = ProtocolUtils.readVarInt(buf);
+        List<Offer> offers = new ArrayList<>(offersAvailable);
+        for (int i = 0; i < offersAvailable; i++) {
+          offers.add(new Offer(ProtocolUtils.readString(buf), null));
+        }
+        return new TabCompleteResponsePacket(0, 0, 0, offers);
+      }
+    }
+
+    @Override
+    public void encode(TabCompleteResponsePacket packet, ByteBuf buf,
+        ProtocolUtils.Direction direction, ProtocolVersion version) {
+      if (version.noLessThan(MINECRAFT_1_13)) {
+        ProtocolUtils.writeVarInt(buf, packet.transactionId);
+        ProtocolUtils.writeVarInt(buf, packet.start);
+        ProtocolUtils.writeVarInt(buf, packet.length);
+        ProtocolUtils.writeVarInt(buf, packet.offers.size());
+        for (Offer offer : packet.offers) {
+          ProtocolUtils.writeString(buf, offer.text);
+          buf.writeBoolean(offer.tooltip != null);
+          if (offer.tooltip != null) {
+            offer.tooltip.write(buf);
+          }
+        }
+      } else {
+        ProtocolUtils.writeVarInt(buf, packet.offers.size());
+        for (Offer offer : packet.offers) {
+          ProtocolUtils.writeString(buf, offer.text);
+        }
+      }
+    }
   }
 
   public static class Offer implements Comparable<Offer> {

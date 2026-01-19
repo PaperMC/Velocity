@@ -21,6 +21,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
@@ -28,28 +29,17 @@ import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
 import org.jetbrains.annotations.Nullable;
 
-public class UpsertPlayerInfoPacket implements MinecraftPacket {
+public final class UpsertPlayerInfoPacket implements MinecraftPacket {
 
   private static final Action[] ALL_ACTIONS = Action.class.getEnumConstants();
 
   private final EnumSet<Action> actions;
   private final List<Entry> entries;
-
-  public UpsertPlayerInfoPacket() {
-    this.actions = EnumSet.noneOf(Action.class);
-    this.entries = new ArrayList<>();
-  }
-
-  public UpsertPlayerInfoPacket(Action action) {
-    this.actions = EnumSet.of(action);
-    this.entries = new ArrayList<>();
-  }
 
   public UpsertPlayerInfoPacket(EnumSet<Action> actions, List<Entry> entries) {
     this.actions = actions;
@@ -68,69 +58,60 @@ public class UpsertPlayerInfoPacket implements MinecraftPacket {
     return this.actions.contains(action);
   }
 
-  public void addAction(Action action) {
-    this.actions.add(action);
-  }
-
-  public void addAllActions(Collection<? extends Action> actions) {
-    this.actions.addAll(actions);
-  }
-
-  public void addEntry(Entry entry) {
-    this.entries.add(entry);
-  }
-
-  public void addAllEntries(Collection<? extends Entry> entries) {
-    this.entries.addAll(entries);
-  }
-
-  @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
-      ProtocolVersion protocolVersion) {
-    byte[] bytes = new byte[-Math.floorDiv(-ALL_ACTIONS.length, 8)];
-    buf.readBytes(bytes);
-    BitSet actionSet = BitSet.valueOf(bytes);
-
-    for (int idx = 0; idx < ALL_ACTIONS.length; idx++) {
-      if (actionSet.get(idx)) {
-        addAction(ALL_ACTIONS[idx]);
-      }
-    }
-
-    int length = ProtocolUtils.readVarInt(buf);
-    for (int idx = 0; idx < length; idx++) {
-      Entry entry = new Entry(ProtocolUtils.readUuid(buf));
-      for (Action action : this.actions) {
-        action.read.read(protocolVersion, buf, entry);
-      }
-      addEntry(entry);
-    }
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction,
-      ProtocolVersion protocolVersion) {
-    BitSet set = new BitSet(ALL_ACTIONS.length);
-    for (int idx = 0; idx < ALL_ACTIONS.length; idx++) {
-      set.set(idx, this.actions.contains(ALL_ACTIONS[idx]));
-    }
-
-    byte[] bytes = set.toByteArray();
-    buf.writeBytes(Arrays.copyOf(bytes, -Math.floorDiv(-ALL_ACTIONS.length, 8)));
-
-    ProtocolUtils.writeVarInt(buf, this.entries.size());
-    for (Entry entry : this.entries) {
-      ProtocolUtils.writeUuid(buf, entry.profileId);
-
-      for (Action action : this.actions) {
-        action.write.write(protocolVersion, buf, entry);
-      }
-    }
-  }
-
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<UpsertPlayerInfoPacket> {
+    public static final Codec INSTANCE = new Codec();
+
+    @Override
+    public UpsertPlayerInfoPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      byte[] bytes = new byte[-Math.floorDiv(-ALL_ACTIONS.length, 8)];
+      buf.readBytes(bytes);
+      BitSet actionSet = BitSet.valueOf(bytes);
+
+      EnumSet<Action> actions = EnumSet.noneOf(Action.class);
+      for (int idx = 0; idx < ALL_ACTIONS.length; idx++) {
+        if (actionSet.get(idx)) {
+          actions.add(ALL_ACTIONS[idx]);
+        }
+      }
+
+      int length = ProtocolUtils.readVarInt(buf);
+      List<Entry> entries = new ArrayList<>(length);
+      for (int idx = 0; idx < length; idx++) {
+        Entry entry = new Entry(ProtocolUtils.readUuid(buf));
+        for (Action action : actions) {
+          action.read.read(protocolVersion, buf, entry);
+        }
+        entries.add(entry);
+      }
+      return new UpsertPlayerInfoPacket(actions, entries);
+    }
+
+    @Override
+    public void encode(UpsertPlayerInfoPacket packet, ByteBuf buf,
+        ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+      BitSet set = new BitSet(ALL_ACTIONS.length);
+      for (int idx = 0; idx < ALL_ACTIONS.length; idx++) {
+        set.set(idx, packet.actions.contains(ALL_ACTIONS[idx]));
+      }
+
+      byte[] bytes = set.toByteArray();
+      buf.writeBytes(Arrays.copyOf(bytes, -Math.floorDiv(-ALL_ACTIONS.length, 8)));
+
+      ProtocolUtils.writeVarInt(buf, packet.entries.size());
+      for (Entry entry : packet.entries) {
+        ProtocolUtils.writeUuid(buf, entry.profileId);
+
+        for (Action action : packet.actions) {
+          action.write.write(protocolVersion, buf, entry);
+        }
+      }
+    }
   }
 
   public enum Action {

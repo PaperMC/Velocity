@@ -44,27 +44,14 @@ public class SessionChatBuilder extends ChatBuilderV2 {
     LastSeenMessages lastSeenMessages = this.lastSeenMessages != null ? this.lastSeenMessages : new LastSeenMessages();
     if (message.startsWith("/")) {
       if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
-        UnsignedPlayerCommandPacket command = new UnsignedPlayerCommandPacket();
-        command.command = message.substring(1);
-        return command;
+        return new UnsignedPlayerCommandPacket(message.substring(1));
       } else {
-        SessionPlayerCommandPacket command = new SessionPlayerCommandPacket();
-        command.command = message.substring(1);
-        command.salt = 0L;
-        command.timeStamp = timestamp;
-        command.argumentSignatures = new SessionPlayerCommandPacket.ArgumentSignatures();
-        command.lastSeenMessages = lastSeenMessages;
-        return command;
+        return new SessionPlayerCommandPacket(message.substring(1), timestamp, 0L,
+            new SessionPlayerCommandPacket.ArgumentSignatures(), lastSeenMessages);
       }
     } else {
-      SessionPlayerChatPacket chat = new SessionPlayerChatPacket();
-      chat.message = message;
-      chat.signed = false;
-      chat.signature = new byte[0];
-      chat.timestamp = timestamp;
-      chat.salt = 0L;
-      chat.lastSeenMessages = lastSeenMessages;
-      return chat;
+      return new SessionPlayerChatPacket(message, timestamp, 0L, false, new byte[0],
+          lastSeenMessages);
     }
   }
 }

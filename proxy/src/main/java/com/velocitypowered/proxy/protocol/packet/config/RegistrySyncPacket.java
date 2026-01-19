@@ -20,28 +20,16 @@ package com.velocitypowered.proxy.protocol.packet.config;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
-import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DefaultByteBufHolder;
 
-public class RegistrySyncPacket extends DeferredByteBufHolder implements MinecraftPacket {
+public final class RegistrySyncPacket extends DefaultByteBufHolder implements MinecraftPacket {
 
-  public RegistrySyncPacket() {
-    super(null);
-  }
-
-  // NBT change in 1.20.2 makes it difficult to parse this packet.
-  @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
-                     ProtocolVersion protocolVersion) {
-    this.replace(buf.readRetainedSlice(buf.readableBytes()));
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction,
-                     ProtocolVersion protocolVersion) {
-    buf.writeBytes(content());
+  public RegistrySyncPacket(ByteBuf backing) {
+    super(backing);
   }
 
   @Override
@@ -49,8 +37,24 @@ public class RegistrySyncPacket extends DeferredByteBufHolder implements Minecra
     return handler.handle(this);
   }
 
-  @Override
   public int encodeSizeHint(Direction direction, ProtocolVersion version) {
     return content().readableBytes();
+  }
+
+  public static class Codec implements PacketCodec<RegistrySyncPacket> {
+    public static final Codec INSTANCE = new Codec();
+
+    @Override
+    public RegistrySyncPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      // NBT change in 1.20.2 makes it difficult to parse this packet.
+      return new RegistrySyncPacket(buf.readRetainedSlice(buf.readableBytes()));
+    }
+
+    @Override
+    public void encode(RegistrySyncPacket packet, ByteBuf buf,
+        ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+      buf.writeBytes(packet.content());
+    }
   }
 }

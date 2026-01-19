@@ -188,7 +188,7 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ServerboundCookieResponsePacket packet) {
     server.getEventManager()
-        .fire(new CookieReceiveEvent(player, packet.getKey(), packet.getPayload()))
+        .fire(new CookieReceiveEvent(player, packet.key(), packet.payload()))
         .thenAcceptAsync(event -> {
           if (event.getResult().isAllowed()) {
             final VelocityServerConnection serverConnection = player.getConnectionInFlight();

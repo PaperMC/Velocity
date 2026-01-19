@@ -24,6 +24,7 @@ import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
@@ -33,22 +34,20 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class LegacyPlayerListItemPacket implements MinecraftPacket {
+public final class LegacyPlayerListItemPacket implements MinecraftPacket {
 
   public static final int ADD_PLAYER = 0;
   public static final int UPDATE_GAMEMODE = 1;
   public static final int UPDATE_LATENCY = 2;
   public static final int UPDATE_DISPLAY_NAME = 3;
   public static final int REMOVE_PLAYER = 4;
-  private int action;
-  private final List<Item> items = new ArrayList<>();
+
+  private final int action;
+  private final List<Item> items;
 
   public LegacyPlayerListItemPacket(int action, List<Item> items) {
     this.action = action;
-    this.items.addAll(items);
-  }
-
-  public LegacyPlayerListItemPacket() {
+    this.items = ImmutableList.copyOf(items);
   }
 
   public int getAction() {
@@ -60,130 +59,138 @@ public class LegacyPlayerListItemPacket implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
-      action = ProtocolUtils.readVarInt(buf);
-      int length = ProtocolUtils.readVarInt(buf);
-
-      for (int i = 0; i < length; i++) {
-        Item item = new Item(ProtocolUtils.readUuid(buf));
-        items.add(item);
-        switch (action) {
-          case ADD_PLAYER:
-            item.setName(ProtocolUtils.readString(buf));
-            item.setProperties(ProtocolUtils.readProperties(buf));
-            item.setGameMode(ProtocolUtils.readVarInt(buf));
-            item.setLatency(ProtocolUtils.readVarInt(buf));
-            item.setDisplayName(readOptionalComponent(buf, version));
-
-            if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
-              if (buf.readBoolean()) {
-                item.setPlayerKey(ProtocolUtils.readPlayerKey(version, buf));
-              }
-            }
-            break;
-          case UPDATE_GAMEMODE:
-            item.setGameMode(ProtocolUtils.readVarInt(buf));
-            break;
-          case UPDATE_LATENCY:
-            item.setLatency(ProtocolUtils.readVarInt(buf));
-            break;
-          case UPDATE_DISPLAY_NAME:
-            item.setDisplayName(readOptionalComponent(buf, version));
-            break;
-          case REMOVE_PLAYER:
-            //Do nothing, all that is needed is the uuid
-            break;
-          default:
-            throw new UnsupportedOperationException("Unknown action " + action);
-        }
-      }
-    } else {
-      Item item = new Item();
-      item.setName(ProtocolUtils.readString(buf));
-      action = buf.readBoolean() ? ADD_PLAYER : REMOVE_PLAYER;
-      item.setLatency(buf.readShort());
-      items.add(item);
-    }
-  }
-
-  private static @Nullable Component readOptionalComponent(ByteBuf buf, ProtocolVersion version) {
-    if (buf.readBoolean()) {
-      return ProtocolUtils.getJsonChatSerializer(version)
-          .deserialize(ProtocolUtils.readString(buf));
-    }
-    return null;
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
-      ProtocolUtils.writeVarInt(buf, action);
-      ProtocolUtils.writeVarInt(buf, items.size());
-      for (Item item : items) {
-        UUID uuid = item.getUuid();
-        assert uuid != null : "UUID-less entry serialization attempt - 1.7 component!";
-
-        ProtocolUtils.writeUuid(buf, uuid);
-        switch (action) {
-          case ADD_PLAYER:
-            ProtocolUtils.writeString(buf, item.getName());
-            ProtocolUtils.writeProperties(buf, item.getProperties());
-            ProtocolUtils.writeVarInt(buf, item.getGameMode());
-            ProtocolUtils.writeVarInt(buf, item.getLatency());
-            writeDisplayName(buf, item.getDisplayName(), version);
-            if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
-              if (item.getPlayerKey() != null) {
-                buf.writeBoolean(true);
-                ProtocolUtils.writePlayerKey(buf, item.getPlayerKey());
-              } else {
-                buf.writeBoolean(false);
-              }
-            }
-            break;
-          case UPDATE_GAMEMODE:
-            ProtocolUtils.writeVarInt(buf, item.getGameMode());
-            break;
-          case UPDATE_LATENCY:
-            ProtocolUtils.writeVarInt(buf, item.getLatency());
-            break;
-          case UPDATE_DISPLAY_NAME:
-            writeDisplayName(buf, item.getDisplayName(), version);
-            break;
-          case REMOVE_PLAYER:
-            // Do nothing, all that is needed is the uuid
-            break;
-          default:
-            throw new UnsupportedOperationException("Unknown action " + action);
-        }
-      }
-    } else {
-      Item item = items.get(0);
-      Component displayNameComponent = item.getDisplayName();
-      if (displayNameComponent != null) {
-        String displayName = LegacyComponentSerializer.legacySection()
-            .serialize(displayNameComponent);
-        ProtocolUtils.writeString(buf,
-            displayName.length() > 16 ? displayName.substring(0, 16) : displayName);
-      } else {
-        ProtocolUtils.writeString(buf, item.getName());
-      }
-      buf.writeBoolean(action != REMOVE_PLAYER);
-      buf.writeShort(item.getLatency());
-    }
-  }
-
-  @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
   }
 
-  private void writeDisplayName(ByteBuf buf, @Nullable Component displayName,
-      ProtocolVersion version) {
-    buf.writeBoolean(displayName != null);
-    if (displayName != null) {
-      ProtocolUtils.writeString(buf, ProtocolUtils.getJsonChatSerializer(version)
-          .serialize(displayName));
+  public static class Codec implements PacketCodec<LegacyPlayerListItemPacket> {
+    public static final Codec INSTANCE = new Codec();
+
+    @Override
+    public LegacyPlayerListItemPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion version) {
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
+        int action = ProtocolUtils.readVarInt(buf);
+        int length = ProtocolUtils.readVarInt(buf);
+        List<Item> items = new ArrayList<>(length);
+
+        for (int i = 0; i < length; i++) {
+          Item item = new Item(ProtocolUtils.readUuid(buf));
+          items.add(item);
+          switch (action) {
+            case ADD_PLAYER:
+              item.setName(ProtocolUtils.readString(buf));
+              item.setProperties(ProtocolUtils.readProperties(buf));
+              item.setGameMode(ProtocolUtils.readVarInt(buf));
+              item.setLatency(ProtocolUtils.readVarInt(buf));
+              item.setDisplayName(readOptionalComponent(buf, version));
+
+              if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
+                if (buf.readBoolean()) {
+                  item.setPlayerKey(ProtocolUtils.readPlayerKey(version, buf));
+                }
+              }
+              break;
+            case UPDATE_GAMEMODE:
+              item.setGameMode(ProtocolUtils.readVarInt(buf));
+              break;
+            case UPDATE_LATENCY:
+              item.setLatency(ProtocolUtils.readVarInt(buf));
+              break;
+            case UPDATE_DISPLAY_NAME:
+              item.setDisplayName(readOptionalComponent(buf, version));
+              break;
+            case REMOVE_PLAYER:
+              //Do nothing, all that is needed is the uuid
+              break;
+            default:
+              throw new UnsupportedOperationException("Unknown action " + action);
+          }
+        }
+        return new LegacyPlayerListItemPacket(action, items);
+      } else {
+        Item item = new Item();
+        item.setName(ProtocolUtils.readString(buf));
+        int action = buf.readBoolean() ? ADD_PLAYER : REMOVE_PLAYER;
+        item.setLatency(buf.readShort());
+        return new LegacyPlayerListItemPacket(action, ImmutableList.of(item));
+      }
+    }
+
+    @Override
+    public void encode(LegacyPlayerListItemPacket packet, ByteBuf buf,
+        ProtocolUtils.Direction direction, ProtocolVersion version) {
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
+        ProtocolUtils.writeVarInt(buf, packet.action);
+        ProtocolUtils.writeVarInt(buf, packet.items.size());
+        for (Item item : packet.items) {
+          UUID uuid = item.getUuid();
+          assert uuid != null : "UUID-less entry serialization attempt - 1.7 component!";
+
+          ProtocolUtils.writeUuid(buf, uuid);
+          switch (packet.action) {
+            case ADD_PLAYER:
+              ProtocolUtils.writeString(buf, item.getName());
+              ProtocolUtils.writeProperties(buf, item.getProperties());
+              ProtocolUtils.writeVarInt(buf, item.getGameMode());
+              ProtocolUtils.writeVarInt(buf, item.getLatency());
+              writeDisplayName(buf, item.getDisplayName(), version);
+              if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
+                if (item.getPlayerKey() != null) {
+                  buf.writeBoolean(true);
+                  ProtocolUtils.writePlayerKey(buf, item.getPlayerKey());
+                } else {
+                  buf.writeBoolean(false);
+                }
+              }
+              break;
+            case UPDATE_GAMEMODE:
+              ProtocolUtils.writeVarInt(buf, item.getGameMode());
+              break;
+            case UPDATE_LATENCY:
+              ProtocolUtils.writeVarInt(buf, item.getLatency());
+              break;
+            case UPDATE_DISPLAY_NAME:
+              writeDisplayName(buf, item.getDisplayName(), version);
+              break;
+            case REMOVE_PLAYER:
+              // Do nothing, all that is needed is the uuid
+              break;
+            default:
+              throw new UnsupportedOperationException("Unknown action " + packet.action);
+          }
+        }
+      } else {
+        Item item = packet.items.get(0);
+        Component displayNameComponent = item.getDisplayName();
+        if (displayNameComponent != null) {
+          String displayName = LegacyComponentSerializer.legacySection()
+              .serialize(displayNameComponent);
+          ProtocolUtils.writeString(buf,
+              displayName.length() > 16 ? displayName.substring(0, 16) : displayName);
+        } else {
+          ProtocolUtils.writeString(buf, item.getName());
+        }
+        buf.writeBoolean(packet.action != REMOVE_PLAYER);
+        buf.writeShort(item.getLatency());
+      }
+    }
+
+    private static @Nullable Component readOptionalComponent(ByteBuf buf, ProtocolVersion version) {
+      if (buf.readBoolean()) {
+        return ProtocolUtils.getJsonChatSerializer(version)
+            .deserialize(ProtocolUtils.readString(buf));
+      }
+      return null;
+    }
+
+    private static void writeDisplayName(ByteBuf buf, @Nullable Component displayName,
+        ProtocolVersion version) {
+      buf.writeBoolean(displayName != null);
+      if (displayName != null) {
+        ProtocolUtils.writeString(buf, ProtocolUtils.getJsonChatSerializer(version)
+            .serialize(displayName));
+      }
     }
   }
 

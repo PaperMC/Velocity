@@ -158,7 +158,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(KeepAlivePacket packet) {
-    serverConn.getPendingPings().put(packet.getRandomId(), System.nanoTime());
+    serverConn.getPendingPings().put(packet.randomId(), System.nanoTime());
     return false; // forwards on
   }
 
@@ -178,10 +178,10 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(BossBarPacket packet) {
     if (serverConn.getPlayer().getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
-      if (packet.getAction() == BossBarPacket.ADD) {
-        playerSessionHandler.getServerBossBars().add(packet.getUuid());
-      } else if (packet.getAction() == BossBarPacket.REMOVE) {
-        playerSessionHandler.getServerBossBars().remove(packet.getUuid());
+      if (packet.action() == BossBarPacket.ADD) {
+        playerSessionHandler.getServerBossBars().add(packet.uuid());
+      } else if (packet.action() == BossBarPacket.REMOVE) {
+        playerSessionHandler.getServerBossBars().remove(packet.uuid());
       }
     }
     return false; // forward
@@ -190,13 +190,13 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(final ResourcePackRequestPacket packet) {
     final ResourcePackInfo.Builder builder = new VelocityResourcePackInfo.BuilderImpl(
-        Preconditions.checkNotNull(packet.getUrl()))
-        .setId(packet.getId())
-        .setPrompt(packet.getPrompt() == null ? null : packet.getPrompt().getComponent())
+        Preconditions.checkNotNull(packet.url()))
+        .setId(packet.id())
+        .setPrompt(packet.prompt() == null ? null : packet.prompt().getComponent())
         .setShouldForce(packet.isRequired())
         .setOrigin(ResourcePackInfo.Origin.DOWNSTREAM_SERVER);
 
-    final String hash = packet.getHash();
+    final String hash = packet.hash();
     if (hash != null && !hash.isEmpty()) {
       if (PLAUSIBLE_SHA1_HASH.matcher(hash).matches()) {
         builder.setHash(ByteBufUtil.decodeHexDump(hash));
@@ -222,14 +222,14 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
           // Do not apply a resource pack that has already been applied
           if (serverConn.getConnection() != null) {
             serverConn.getConnection().write(new ResourcePackResponsePacket(
-                    packet.getId(), packet.getHash(), PlayerResourcePackStatusEvent.Status.ACCEPTED));
+                    packet.id(), packet.hash(), PlayerResourcePackStatusEvent.Status.ACCEPTED));
             if (serverConn.getConnection().getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
               serverConn.getConnection().write(new ResourcePackResponsePacket(
-                  packet.getId(), packet.getHash(),
+                  packet.id(), packet.hash(),
                   PlayerResourcePackStatusEvent.Status.DOWNLOADED));
             }
             serverConn.getConnection().write(new ResourcePackResponsePacket(
-                packet.getId(), packet.getHash(),
+                packet.id(), packet.hash(),
                 PlayerResourcePackStatusEvent.Status.SUCCESSFUL));
           }
           if (modifiedPack) {
@@ -241,16 +241,16 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
         }
       } else if (serverConn.getConnection() != null) {
         serverConn.getConnection().write(new ResourcePackResponsePacket(
-            packet.getId(),
-            packet.getHash(),
+            packet.id(),
+            packet.hash(),
             PlayerResourcePackStatusEvent.Status.DECLINED
         ));
       }
     }, playerConnection.eventLoop()).exceptionally((ex) -> {
       if (serverConn.getConnection() != null) {
         serverConn.getConnection().write(new ResourcePackResponsePacket(
-            packet.getId(),
-            packet.getHash(),
+            packet.id(),
+            packet.hash(),
             PlayerResourcePackStatusEvent.Status.DECLINED
         ));
       }
@@ -420,7 +420,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ClientboundStoreCookiePacket packet) {
     server.getEventManager()
-        .fire(new CookieStoreEvent(serverConn.getPlayer(), packet.getKey(), packet.getPayload()))
+        .fire(new CookieStoreEvent(serverConn.getPlayer(), packet.key(), packet.payload()))
         .thenAcceptAsync(event -> {
           if (event.getResult().isAllowed()) {
             final Key resultedKey = event.getResult().getKey() == null

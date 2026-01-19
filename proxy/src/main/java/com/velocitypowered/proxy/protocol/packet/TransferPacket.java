@@ -20,22 +20,13 @@ package com.velocitypowered.proxy.protocol.packet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import org.jetbrains.annotations.Nullable;
 
-public class TransferPacket implements MinecraftPacket {
-  private String host;
-  private int port;
-
-  public TransferPacket() {
-  }
-
-  public TransferPacket(final String host, final int port) {
-    this.host = host;
-    this.port = port;
-  }
+public record TransferPacket(String host, int port) implements MinecraftPacket {
 
   @Nullable
   public InetSocketAddress address() {
@@ -45,20 +36,33 @@ public class TransferPacket implements MinecraftPacket {
     return new InetSocketAddress(host, port);
   }
 
-  @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    this.host = ProtocolUtils.readString(buf);
-    this.port = ProtocolUtils.readVarInt(buf);
+  public String getHost() {
+    return host;
   }
 
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    ProtocolUtils.writeString(buf, host);
-    ProtocolUtils.writeVarInt(buf, port);
+  public int getPort() {
+    return port;
   }
 
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<TransferPacket> {
+    public static final Codec INSTANCE = new Codec();
+
+    @Override
+    public TransferPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      return new TransferPacket(ProtocolUtils.readString(buf), ProtocolUtils.readVarInt(buf));
+    }
+
+    @Override
+    public void encode(TransferPacket packet, ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      ProtocolUtils.writeString(buf, packet.host);
+      ProtocolUtils.writeVarInt(buf, packet.port);
+    }
   }
 }

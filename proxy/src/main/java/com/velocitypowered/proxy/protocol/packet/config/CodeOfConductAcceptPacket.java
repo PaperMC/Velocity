@@ -20,10 +20,11 @@ package com.velocitypowered.proxy.protocol.packet.config;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 
-public class CodeOfConductAcceptPacket implements MinecraftPacket {
+public final class CodeOfConductAcceptPacket implements MinecraftPacket {
 
   public static final CodeOfConductAcceptPacket INSTANCE = new CodeOfConductAcceptPacket();
 
@@ -31,15 +32,22 @@ public class CodeOfConductAcceptPacket implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-  }
-
-  @Override
-  public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-  }
-
-  @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<CodeOfConductAcceptPacket> {
+    public static final Codec INSTANCE = new Codec();
+
+    @Override
+    public CodeOfConductAcceptPacket decode(ByteBuf buf, Direction direction,
+        ProtocolVersion protocolVersion) {
+      return CodeOfConductAcceptPacket.INSTANCE;
+    }
+
+    @Override
+    public void encode(CodeOfConductAcceptPacket packet, ByteBuf buf, Direction direction,
+        ProtocolVersion protocolVersion) {
+    }
   }
 }

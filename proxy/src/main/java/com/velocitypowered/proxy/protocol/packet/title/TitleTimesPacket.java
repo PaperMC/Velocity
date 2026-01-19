@@ -19,24 +19,21 @@ package com.velocitypowered.proxy.protocol.packet.title;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
-public class TitleTimesPacket extends GenericTitlePacket {
+public final class TitleTimesPacket extends GenericTitlePacket {
 
-  private int fadeIn;
-  private int stay;
-  private int fadeOut;
+  private final int fadeIn;
+  private final int stay;
+  private final int fadeOut;
 
-  public TitleTimesPacket() {
-    setAction(ActionType.SET_TIMES);
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    buf.writeInt(fadeIn);
-    buf.writeInt(stay);
-    buf.writeInt(fadeOut);
+  public TitleTimesPacket(int fadeIn, int stay, int fadeOut) {
+    super(ActionType.SET_TIMES);
+    this.fadeIn = fadeIn;
+    this.stay = stay;
+    this.fadeOut = fadeOut;
   }
 
   @Override
@@ -45,18 +42,8 @@ public class TitleTimesPacket extends GenericTitlePacket {
   }
 
   @Override
-  public void setFadeIn(int fadeIn) {
-    this.fadeIn = fadeIn;
-  }
-
-  @Override
   public int getStay() {
     return stay;
-  }
-
-  @Override
-  public void setStay(int stay) {
-    this.stay = stay;
   }
 
   @Override
@@ -65,14 +52,9 @@ public class TitleTimesPacket extends GenericTitlePacket {
   }
 
   @Override
-  public void setFadeOut(int fadeOut) {
-    this.fadeOut = fadeOut;
-  }
-
-  @Override
   public String toString() {
     return "TitleTimesPacket{"
-        + ", fadeIn=" + fadeIn
+        + "fadeIn=" + fadeIn
         + ", stay=" + stay
         + ", fadeOut=" + fadeOut
         + '}';
@@ -81,5 +63,23 @@ public class TitleTimesPacket extends GenericTitlePacket {
   @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<TitleTimesPacket> {
+    public static final Codec INSTANCE = new Codec();
+
+    @Override
+    public TitleTimesPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      throw new UnsupportedOperationException(); // encode only
+    }
+
+    @Override
+    public void encode(TitleTimesPacket packet, ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      buf.writeInt(packet.fadeIn);
+      buf.writeInt(packet.stay);
+      buf.writeInt(packet.fadeOut);
+    }
   }
 }

@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.protocol.packet.chat.session;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.chat.LastSeenMessages;
 import io.netty.buffer.ByteBuf;
@@ -27,14 +28,21 @@ import java.time.Instant;
 
 public class SessionPlayerChatPacket implements MinecraftPacket {
 
-  protected String message;
-  protected Instant timestamp;
-  protected long salt;
-  protected boolean signed;
-  protected byte[] signature;
-  protected LastSeenMessages lastSeenMessages;
+  protected final String message;
+  protected final Instant timestamp;
+  protected final long salt;
+  protected final boolean signed;
+  protected final byte[] signature;
+  protected final LastSeenMessages lastSeenMessages;
 
-  public SessionPlayerChatPacket() {
+  public SessionPlayerChatPacket(String message, Instant timestamp, long salt, boolean signed,
+      byte[] signature, LastSeenMessages lastSeenMessages) {
+    this.message = message;
+    this.timestamp = timestamp;
+    this.salt = salt;
+    this.signed = signed;
+    this.signature = signature;
+    this.lastSeenMessages = lastSeenMessages;
   }
 
   public String getMessage() {
@@ -62,34 +70,6 @@ public class SessionPlayerChatPacket implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
-      ProtocolVersion protocolVersion) {
-    this.message = ProtocolUtils.readString(buf, 256);
-    this.timestamp = Instant.ofEpochMilli(buf.readLong());
-    this.salt = buf.readLong();
-    this.signed = buf.readBoolean();
-    if (this.signed) {
-      this.signature = readMessageSignature(buf);
-    } else {
-      this.signature = new byte[0];
-    }
-    this.lastSeenMessages = new LastSeenMessages(buf, protocolVersion);
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction,
-      ProtocolVersion protocolVersion) {
-    ProtocolUtils.writeString(buf, this.message);
-    buf.writeLong(this.timestamp.toEpochMilli());
-    buf.writeLong(this.salt);
-    buf.writeBoolean(this.signed);
-    if (this.signed) {
-      buf.writeBytes(this.signature);
-    }
-    this.lastSeenMessages.encode(buf, protocolVersion);
-  }
-
-  @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
   }
@@ -101,13 +81,40 @@ public class SessionPlayerChatPacket implements MinecraftPacket {
   }
 
   public SessionPlayerChatPacket withLastSeenMessages(LastSeenMessages lastSeenMessages) {
-    SessionPlayerChatPacket packet = new SessionPlayerChatPacket();
-    packet.message = message;
-    packet.timestamp = timestamp;
-    packet.salt = salt;
-    packet.signed = signed;
-    packet.signature = signature;
-    packet.lastSeenMessages = lastSeenMessages;
-    return packet;
+    return new SessionPlayerChatPacket(message, timestamp, salt, signed, signature, lastSeenMessages);
+  }
+
+  public static class Codec implements PacketCodec<SessionPlayerChatPacket> {
+    public static final Codec INSTANCE = new Codec();
+
+    @Override
+    public SessionPlayerChatPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      String message = ProtocolUtils.readString(buf, 256);
+      Instant timestamp = Instant.ofEpochMilli(buf.readLong());
+      long salt = buf.readLong();
+      boolean signed = buf.readBoolean();
+      byte[] signature;
+      if (signed) {
+        signature = readMessageSignature(buf);
+      } else {
+        signature = new byte[0];
+      }
+      LastSeenMessages lastSeenMessages = new LastSeenMessages(buf, protocolVersion);
+      return new SessionPlayerChatPacket(message, timestamp, salt, signed, signature, lastSeenMessages);
+    }
+
+    @Override
+    public void encode(SessionPlayerChatPacket packet, ByteBuf buf,
+        ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+      ProtocolUtils.writeString(buf, packet.message);
+      buf.writeLong(packet.timestamp.toEpochMilli());
+      buf.writeLong(packet.salt);
+      buf.writeBoolean(packet.signed);
+      if (packet.signed) {
+        buf.writeBytes(packet.signature);
+      }
+      packet.lastSeenMessages.encode(buf, protocolVersion);
+    }
   }
 }

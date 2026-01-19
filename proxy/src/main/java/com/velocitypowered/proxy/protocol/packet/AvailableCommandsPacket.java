@@ -37,6 +37,7 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentPropertyRegistry;
@@ -54,7 +55,7 @@ import java.util.function.Predicate;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class AvailableCommandsPacket implements MinecraftPacket {
+public final class AvailableCommandsPacket implements MinecraftPacket {
 
   private static final Command<CommandSource> PLACEHOLDER_COMMAND = source -> 0;
   private static final Predicate<CommandSource> PLACEHOLDER_REQUIREMENT = source -> true;
@@ -69,127 +70,14 @@ public class AvailableCommandsPacket implements MinecraftPacket {
   private static final byte FLAG_HAS_SUGGESTIONS = 0x10;
   private static final byte FLAG_IS_RESTRICTED = 0x20;
 
-  private @MonotonicNonNull RootCommandNode<CommandSource> rootNode;
+  private final RootCommandNode<CommandSource> rootNode;
 
-  /**
-   * Returns the root node.
-   *
-   * @return the root node
-   */
+  public AvailableCommandsPacket(RootCommandNode<CommandSource> rootNode) {
+    this.rootNode = rootNode;
+  }
+
   public RootCommandNode<CommandSource> getRootNode() {
-    if (rootNode == null) {
-      throw new IllegalStateException("Packet not yet deserialized");
-    }
     return rootNode;
-  }
-
-  @Override
-  public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    int commands = ProtocolUtils.readVarInt(buf);
-    WireNode[] wireNodes = new WireNode[commands];
-    for (int i = 0; i < commands; i++) {
-      wireNodes[i] = deserializeNode(buf, i, protocolVersion);
-    }
-
-    // Iterate over the deserialized nodes and attempt to form a graph. We also resolve any cycles
-    // that exist.
-    Queue<WireNode> nodeQueue = new ArrayDeque<>(Arrays.asList(wireNodes));
-    while (!nodeQueue.isEmpty()) {
-      boolean cycling = false;
-
-      for (Iterator<WireNode> it = nodeQueue.iterator(); it.hasNext(); ) {
-        WireNode node = it.next();
-        if (node.toNode(wireNodes)) {
-          cycling = true;
-          it.remove();
-        }
-      }
-
-      if (!cycling) {
-        // Uh-oh. We can't cycle. This is bad.
-        throw new IllegalStateException("Stopped cycling; the root node can't be built.");
-      }
-    }
-
-    int rootIdx = ProtocolUtils.readVarInt(buf);
-    rootNode = (RootCommandNode<CommandSource>) wireNodes[rootIdx].built;
-  }
-
-  @Override
-  public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    // Assign all the children an index.
-    Deque<CommandNode<CommandSource>> childrenQueue = new ArrayDeque<>(ImmutableList.of(rootNode));
-    Object2IntMap<CommandNode<CommandSource>> idMappings = new Object2IntLinkedOpenCustomHashMap<>(
-        IdentityHashStrategy.instance());
-    while (!childrenQueue.isEmpty()) {
-      CommandNode<CommandSource> child = childrenQueue.poll();
-      if (!idMappings.containsKey(child)) {
-        idMappings.put(child, idMappings.size());
-        childrenQueue.addAll(child.getChildren());
-        if (child.getRedirect() != null) {
-          childrenQueue.add(child.getRedirect());
-        }
-      }
-    }
-
-    // Now serialize the children.
-    ProtocolUtils.writeVarInt(buf, idMappings.size());
-    for (CommandNode<CommandSource> child : idMappings.keySet()) {
-      serializeNode(child, buf, idMappings, protocolVersion);
-    }
-    ProtocolUtils.writeVarInt(buf, idMappings.getInt(rootNode));
-  }
-
-  private static void serializeNode(CommandNode<CommandSource> node, ByteBuf buf,
-      Object2IntMap<CommandNode<CommandSource>> idMappings, ProtocolVersion protocolVersion) {
-    byte flags = 0;
-    if (node.getRedirect() != null) {
-      flags |= FLAG_IS_REDIRECT;
-    }
-    if (node.getCommand() != null) {
-      flags |= FLAG_EXECUTABLE;
-    }
-    if (node.getRequirement() == PLACEHOLDER_REQUIREMENT) {
-      flags |= FLAG_IS_RESTRICTED;
-    }
-
-    if (node instanceof LiteralCommandNode<?>) {
-      flags |= NODE_TYPE_LITERAL;
-    } else if (node instanceof ArgumentCommandNode<?, ?>) {
-      flags |= NODE_TYPE_ARGUMENT;
-      if (((ArgumentCommandNode<CommandSource, ?>) node).getCustomSuggestions() != null) {
-        flags |= FLAG_HAS_SUGGESTIONS;
-      }
-    } else if (!(node instanceof RootCommandNode<?>)) {
-      throw new IllegalArgumentException("Unknown node type " + node.getClass().getName());
-    }
-
-    buf.writeByte(flags);
-    ProtocolUtils.writeVarInt(buf, node.getChildren().size());
-    for (CommandNode<CommandSource> child : node.getChildren()) {
-      ProtocolUtils.writeVarInt(buf, idMappings.getInt(child));
-    }
-    if (node.getRedirect() != null) {
-      ProtocolUtils.writeVarInt(buf, idMappings.getInt(node.getRedirect()));
-    }
-
-    if (node instanceof ArgumentCommandNode<?, ?>) {
-      ProtocolUtils.writeString(buf, node.getName());
-      ArgumentPropertyRegistry.serialize(buf,
-          ((ArgumentCommandNode<CommandSource, ?>) node).getType(), protocolVersion);
-
-      if (((ArgumentCommandNode<CommandSource, ?>) node).getCustomSuggestions() != null) {
-        SuggestionProvider<CommandSource> provider = ((ArgumentCommandNode<CommandSource, ?>) node)
-            .getCustomSuggestions();
-        String name = "minecraft:ask_server";
-        if (provider instanceof ProtocolSuggestionProvider) {
-          name = ((ProtocolSuggestionProvider) provider).name;
-        }
-        ProtocolUtils.writeString(buf, name);
-      }
-    } else if (node instanceof LiteralCommandNode<?>) {
-      ProtocolUtils.writeString(buf, node.getName());
-    }
   }
 
   @Override
@@ -197,32 +85,156 @@ public class AvailableCommandsPacket implements MinecraftPacket {
     return handler.handle(this);
   }
 
-  private static WireNode deserializeNode(ByteBuf buf, int idx, ProtocolVersion version) {
-    byte flags = buf.readByte();
-    int[] children = ProtocolUtils.readIntegerArray(buf);
-    int redirectTo = -1;
-    if ((flags & FLAG_IS_REDIRECT) > 0) {
-      redirectTo = ProtocolUtils.readVarInt(buf);
+  public static class Codec implements PacketCodec<AvailableCommandsPacket> {
+    public static final Codec INSTANCE = new Codec();
+
+    @Override
+    public AvailableCommandsPacket decode(ByteBuf buf, Direction direction,
+        ProtocolVersion protocolVersion) {
+      int commands = ProtocolUtils.readVarInt(buf);
+      WireNode[] wireNodes = new WireNode[commands];
+      for (int i = 0; i < commands; i++) {
+        wireNodes[i] = deserializeNode(buf, i, protocolVersion);
+      }
+
+      // Iterate over the deserialized nodes and attempt to form a graph. We also resolve any cycles
+      // that exist.
+      Queue<WireNode> nodeQueue = new ArrayDeque<>(Arrays.asList(wireNodes));
+      while (!nodeQueue.isEmpty()) {
+        boolean cycling = false;
+
+        for (Iterator<WireNode> it = nodeQueue.iterator(); it.hasNext(); ) {
+          WireNode node = it.next();
+          if (node.toNode(wireNodes)) {
+            cycling = true;
+            it.remove();
+          }
+        }
+
+        if (!cycling) {
+          // Uh-oh. We can't cycle. This is bad.
+          throw new IllegalStateException("Stopped cycling; the root node can't be built.");
+        }
+      }
+
+      int rootIdx = ProtocolUtils.readVarInt(buf);
+      RootCommandNode<CommandSource> rootNode = (RootCommandNode<CommandSource>) wireNodes[rootIdx].built;
+      return new AvailableCommandsPacket(rootNode);
     }
 
-    switch (flags & FLAG_NODE_TYPE) {
-      case NODE_TYPE_ROOT:
-        return new WireNode(idx, flags, children, redirectTo, null);
-      case NODE_TYPE_LITERAL:
-        return new WireNode(idx, flags, children, redirectTo, LiteralArgumentBuilder
-            .literal(ProtocolUtils.readString(buf)));
-      case NODE_TYPE_ARGUMENT:
-        String name = ProtocolUtils.readString(buf);
-        ArgumentType<?> argumentType = ArgumentPropertyRegistry.deserialize(buf, version);
-
-        RequiredArgumentBuilder<CommandSource, ?> argumentBuilder = RequiredArgumentBuilder
-            .argument(name, argumentType);
-        if ((flags & FLAG_HAS_SUGGESTIONS) != 0) {
-          argumentBuilder.suggests(new ProtocolSuggestionProvider(ProtocolUtils.readString(buf)));
+    @Override
+    public void encode(AvailableCommandsPacket packet, ByteBuf buf, Direction direction,
+        ProtocolVersion protocolVersion) {
+      // Assign all the children an index.
+      Deque<CommandNode<CommandSource>> childrenQueue = new ArrayDeque<>(ImmutableList.of(packet.rootNode));
+      Object2IntMap<CommandNode<CommandSource>> idMappings = new Object2IntLinkedOpenCustomHashMap<>(
+          IdentityHashStrategy.instance());
+      while (!childrenQueue.isEmpty()) {
+        CommandNode<CommandSource> child = childrenQueue.poll();
+        if (!idMappings.containsKey(child)) {
+          idMappings.put(child, idMappings.size());
+          childrenQueue.addAll(child.getChildren());
+          if (child.getRedirect() != null) {
+            childrenQueue.add(child.getRedirect());
+          }
         }
-        return new WireNode(idx, flags, children, redirectTo, argumentBuilder);
-      default:
-        throw new IllegalArgumentException("Unknown node type " + (flags & FLAG_NODE_TYPE));
+      }
+
+      // Now serialize the children.
+      ProtocolUtils.writeVarInt(buf, idMappings.size());
+      for (CommandNode<CommandSource> child : idMappings.keySet()) {
+        serializeNode(child, buf, idMappings, protocolVersion);
+      }
+      ProtocolUtils.writeVarInt(buf, idMappings.getInt(packet.rootNode));
+    }
+
+    private static void serializeNode(CommandNode<CommandSource> node, ByteBuf buf,
+        Object2IntMap<CommandNode<CommandSource>> idMappings, ProtocolVersion protocolVersion) {
+      byte flags = 0;
+      if (node.getRedirect() != null) {
+        flags |= FLAG_IS_REDIRECT;
+      }
+      if (node.getCommand() != null) {
+        flags |= FLAG_EXECUTABLE;
+      }
+      if (node.getRequirement() == PLACEHOLDER_REQUIREMENT) {
+        flags |= FLAG_IS_RESTRICTED;
+      }
+
+      if (node instanceof LiteralCommandNode<?>) {
+        flags |= NODE_TYPE_LITERAL;
+      } else if (node instanceof ArgumentCommandNode<?, ?>) {
+        flags |= NODE_TYPE_ARGUMENT;
+        if (((ArgumentCommandNode<CommandSource, ?>) node).getCustomSuggestions() != null) {
+          flags |= FLAG_HAS_SUGGESTIONS;
+        }
+      } else if (!(node instanceof RootCommandNode<?>)) {
+        throw new IllegalArgumentException("Unknown node type " + node.getClass().getName());
+      }
+
+      buf.writeByte(flags);
+      ProtocolUtils.writeVarInt(buf, node.getChildren().size());
+      for (CommandNode<CommandSource> child : node.getChildren()) {
+        ProtocolUtils.writeVarInt(buf, idMappings.getInt(child));
+      }
+      if (node.getRedirect() != null) {
+        ProtocolUtils.writeVarInt(buf, idMappings.getInt(node.getRedirect()));
+      }
+
+      if (node instanceof ArgumentCommandNode<?, ?>) {
+        ProtocolUtils.writeString(buf, node.getName());
+        ArgumentPropertyRegistry.serialize(buf,
+            ((ArgumentCommandNode<CommandSource, ?>) node).getType(), protocolVersion);
+
+        if (((ArgumentCommandNode<CommandSource, ?>) node).getCustomSuggestions() != null) {
+          SuggestionProvider<CommandSource> provider = ((ArgumentCommandNode<CommandSource, ?>) node)
+              .getCustomSuggestions();
+          String name = "minecraft:ask_server";
+          if (provider instanceof ProtocolSuggestionProvider) {
+            name = ((ProtocolSuggestionProvider) provider).name;
+          }
+          ProtocolUtils.writeString(buf, name);
+        }
+      } else if (node instanceof LiteralCommandNode<?>) {
+        ProtocolUtils.writeString(buf, node.getName());
+      }
+    }
+
+    private static WireNode deserializeNode(ByteBuf buf, int idx, ProtocolVersion version) {
+      byte flags = buf.readByte();
+      int[] children = ProtocolUtils.readIntegerArray(buf);
+      int redirectTo = -1;
+      if ((flags & FLAG_IS_REDIRECT) > 0) {
+        redirectTo = ProtocolUtils.readVarInt(buf);
+      }
+
+      switch (flags & FLAG_NODE_TYPE) {
+        case NODE_TYPE_ROOT:
+          return new WireNode(idx, flags, children, redirectTo, null);
+        case NODE_TYPE_LITERAL:
+          return new WireNode(idx, flags, children, redirectTo, LiteralArgumentBuilder
+              .literal(ProtocolUtils.readString(buf)));
+        case NODE_TYPE_ARGUMENT:
+          String name = ProtocolUtils.readString(buf);
+          ArgumentType<?> argumentType = ArgumentPropertyRegistry.deserialize(buf, version);
+
+          RequiredArgumentBuilder<CommandSource, ?> argumentBuilder = RequiredArgumentBuilder
+              .argument(name, argumentType);
+          if ((flags & FLAG_HAS_SUGGESTIONS) != 0) {
+            argumentBuilder.suggests(new ProtocolSuggestionProvider(ProtocolUtils.readString(buf)));
+          }
+          return new WireNode(idx, flags, children, redirectTo, argumentBuilder);
+        default:
+          throw new IllegalArgumentException("Unknown node type " + (flags & FLAG_NODE_TYPE));
+      }
+    }
+
+    @Override
+    public int encodeSizeHint(AvailableCommandsPacket packet, Direction direction, ProtocolVersion version) {
+      // This is a very complex packet to encode. Paper 1.21.10 + Velocity with Spark has a size of
+      // 30,334, but this is likely on the lower side. We'll use 128KiB as a more realistically-sized
+      // amount.
+      return 128 * 1024;
     }
   }
 
@@ -361,13 +373,5 @@ public class AvailableCommandsPacket implements MinecraftPacket {
         SuggestionsBuilder builder) throws CommandSyntaxException {
       return builder.buildFuture();
     }
-  }
-
-  @Override
-  public int encodeSizeHint(Direction direction, ProtocolVersion version) {
-    // This is a very complex packet to encode. Paper 1.21.10 + Velocity with Spark has a size of
-    // 30,334, but this is likely on the lower side. We'll use 128KiB as a more realistically-sized
-    // amount.
-    return 128 * 1024;
   }
 }

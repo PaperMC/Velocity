@@ -20,26 +20,14 @@ package com.velocitypowered.proxy.protocol.packet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
-public class SetCompressionPacket implements MinecraftPacket {
-
-  private int threshold;
-
-  public SetCompressionPacket() {
-  }
-
-  public SetCompressionPacket(int threshold) {
-    this.threshold = threshold;
-  }
+public record SetCompressionPacket(int threshold) implements MinecraftPacket {
 
   public int getThreshold() {
     return threshold;
-  }
-
-  public void setThreshold(int threshold) {
-    this.threshold = threshold;
   }
 
   @Override
@@ -50,17 +38,23 @@ public class SetCompressionPacket implements MinecraftPacket {
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    this.threshold = ProtocolUtils.readVarInt(buf);
-  }
-
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    ProtocolUtils.writeVarInt(buf, threshold);
-  }
-
-  @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
+  }
+
+  public static class Codec implements PacketCodec<SetCompressionPacket> {
+    public static final Codec INSTANCE = new Codec();
+
+    @Override
+    public SetCompressionPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      return new SetCompressionPacket(ProtocolUtils.readVarInt(buf));
+    }
+
+    @Override
+    public void encode(SetCompressionPacket packet, ByteBuf buf,
+        ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+      ProtocolUtils.writeVarInt(buf, packet.threshold);
+    }
   }
 }

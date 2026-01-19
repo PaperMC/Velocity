@@ -451,9 +451,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     ProtocolVersion playerVersion = getProtocolVersion();
     if (playerVersion.noLessThan(ProtocolVersion.MINECRAFT_1_11)) {
       // Use the title packet instead.
-      GenericTitlePacket pkt = GenericTitlePacket.constructTitlePacket(
-          GenericTitlePacket.ActionType.SET_ACTION_BAR, playerVersion);
-      pkt.setComponent(new ComponentHolder(playerVersion, translated));
+      GenericTitlePacket pkt = GenericTitlePacket.createComponentTitlePacket(
+          GenericTitlePacket.ActionType.SET_ACTION_BAR,
+          new ComponentHolder(playerVersion, translated), playerVersion);
       connection.write(pkt);
     } else {
       // Due to issues with action bar packets, we'll need to convert the text message into a
@@ -461,9 +461,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       JsonObject object = new JsonObject();
       object.addProperty("text", LegacyComponentSerializer.legacySection()
           .serialize(translated));
-      LegacyChatPacket legacyChat = new LegacyChatPacket();
-      legacyChat.setMessage(object.toString());
-      legacyChat.setType(LegacyChatPacket.GAME_INFO_TYPE);
+      LegacyChatPacket legacyChat = new LegacyChatPacket(object.toString(), LegacyChatPacket.GAME_INFO_TYPE, null);
       connection.write(legacyChat);
     }
   }
@@ -504,26 +502,26 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   @Override
   public void showTitle(net.kyori.adventure.title.@NonNull Title title) {
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
-      GenericTitlePacket timesPkt = GenericTitlePacket.constructTitlePacket(
-          GenericTitlePacket.ActionType.SET_TIMES, this.getProtocolVersion());
       net.kyori.adventure.title.Title.Times times = title.times();
       if (times != null) {
-        timesPkt.setFadeIn((int) DurationUtils.toTicks(times.fadeIn()));
-        timesPkt.setStay((int) DurationUtils.toTicks(times.stay()));
-        timesPkt.setFadeOut((int) DurationUtils.toTicks(times.fadeOut()));
+        GenericTitlePacket timesPkt = GenericTitlePacket.createTimesTitlePacket(
+            (int) DurationUtils.toTicks(times.fadeIn()),
+            (int) DurationUtils.toTicks(times.stay()),
+            (int) DurationUtils.toTicks(times.fadeOut()),
+            this.getProtocolVersion());
+        connection.delayedWrite(timesPkt);
       }
-      connection.delayedWrite(timesPkt);
 
-      GenericTitlePacket subtitlePkt = GenericTitlePacket.constructTitlePacket(
-          GenericTitlePacket.ActionType.SET_SUBTITLE, this.getProtocolVersion());
-      subtitlePkt.setComponent(new ComponentHolder(
-          this.getProtocolVersion(), translateMessage(title.subtitle())));
+      GenericTitlePacket subtitlePkt = GenericTitlePacket.createComponentTitlePacket(
+          GenericTitlePacket.ActionType.SET_SUBTITLE,
+          new ComponentHolder(this.getProtocolVersion(), translateMessage(title.subtitle())),
+          this.getProtocolVersion());
       connection.delayedWrite(subtitlePkt);
 
-      GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
-          GenericTitlePacket.ActionType.SET_TITLE, this.getProtocolVersion());
-      titlePkt.setComponent(new ComponentHolder(
-          this.getProtocolVersion(), translateMessage(title.title())));
+      GenericTitlePacket titlePkt = GenericTitlePacket.createComponentTitlePacket(
+          GenericTitlePacket.ActionType.SET_TITLE,
+          new ComponentHolder(this.getProtocolVersion(), translateMessage(title.title())),
+          this.getProtocolVersion());
       connection.delayedWrite(titlePkt);
 
       connection.flush();
@@ -545,24 +543,24 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     }
 
     if (part == TitlePart.TITLE) {
-      GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
-          GenericTitlePacket.ActionType.SET_TITLE, this.getProtocolVersion());
-      titlePkt.setComponent(new ComponentHolder(
-          this.getProtocolVersion(), translateMessage((Component) value)));
+      GenericTitlePacket titlePkt = GenericTitlePacket.createComponentTitlePacket(
+          GenericTitlePacket.ActionType.SET_TITLE,
+          new ComponentHolder(this.getProtocolVersion(), translateMessage((Component) value)),
+          this.getProtocolVersion());
       connection.write(titlePkt);
     } else if (part == TitlePart.SUBTITLE) {
-      GenericTitlePacket titlePkt = GenericTitlePacket.constructTitlePacket(
-          GenericTitlePacket.ActionType.SET_SUBTITLE, this.getProtocolVersion());
-      titlePkt.setComponent(new ComponentHolder(
-          this.getProtocolVersion(), translateMessage((Component) value)));
+      GenericTitlePacket titlePkt = GenericTitlePacket.createComponentTitlePacket(
+          GenericTitlePacket.ActionType.SET_SUBTITLE,
+          new ComponentHolder(this.getProtocolVersion(), translateMessage((Component) value)),
+          this.getProtocolVersion());
       connection.write(titlePkt);
     } else if (part == TitlePart.TIMES) {
       Times times = (Times) value;
-      GenericTitlePacket timesPkt = GenericTitlePacket.constructTitlePacket(
-          GenericTitlePacket.ActionType.SET_TIMES, this.getProtocolVersion());
-      timesPkt.setFadeIn((int) DurationUtils.toTicks(times.fadeIn()));
-      timesPkt.setStay((int) DurationUtils.toTicks(times.stay()));
-      timesPkt.setFadeOut((int) DurationUtils.toTicks(times.fadeOut()));
+      GenericTitlePacket timesPkt = GenericTitlePacket.createTimesTitlePacket(
+          (int) DurationUtils.toTicks(times.fadeIn()),
+          (int) DurationUtils.toTicks(times.stay()),
+          (int) DurationUtils.toTicks(times.fadeOut()),
+          this.getProtocolVersion());
       connection.write(timesPkt);
     } else {
       throw new IllegalArgumentException("Title part " + part + " is not valid");
@@ -572,7 +570,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   @Override
   public void clearTitle() {
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
-      connection.write(GenericTitlePacket.constructTitlePacket(
+      connection.write(GenericTitlePacket.createClearTitlePacket(
           GenericTitlePacket.ActionType.HIDE, this.getProtocolVersion()));
     }
   }
@@ -580,7 +578,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   @Override
   public void resetTitle() {
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
-      connection.write(GenericTitlePacket.constructTitlePacket(
+      connection.write(GenericTitlePacket.createClearTitlePacket(
           GenericTitlePacket.ActionType.RESET, this.getProtocolVersion()));
     }
   }
@@ -737,7 +735,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       return;
     }
 
-    Component disconnectReason = disconnect.getReason().getComponent();
+    Component disconnectReason = disconnect.reason().getComponent();
     String plainTextReason = PASS_THRU_TRANSLATE.serialize(disconnectReason);
     if (connectedServer != null && connectedServer.getServerInfo().equals(server.getServerInfo())) {
       if (this.server.getConfiguration().isLogPlayerConnections()) {
@@ -1260,7 +1258,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   @Override
   public void clearResourcePacks() {
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
-      connection.write(new RemoveResourcePackPacket());
+      connection.write(new RemoveResourcePackPacket(null));
       this.resourcePackHandler.clearAppliedResourcePacks();
     }
   }
@@ -1331,8 +1329,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   public void sendKeepAlive() {
     if (connection.getState() == StateRegistry.PLAY
         || connection.getState() == StateRegistry.CONFIG) {
-      KeepAlivePacket keepAlive = new KeepAlivePacket();
-      keepAlive.setRandomId(ThreadLocalRandom.current().nextLong());
+      KeepAlivePacket keepAlive = new KeepAlivePacket(ThreadLocalRandom.current().nextLong());
       connection.write(keepAlive);
     }
   }
@@ -1350,7 +1347,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   private boolean sendKeepAliveToBackend(final @Nullable VelocityServerConnection serverConnection, final @NotNull KeepAlivePacket packet) {
     if (serverConnection != null) {
-      final Long sentTime = serverConnection.getPendingPings().remove(packet.getRandomId());
+      final Long sentTime = serverConnection.getPendingPings().remove(packet.randomId());
       if (sentTime != null) {
         final MinecraftConnection smc = serverConnection.getConnection();
         if (smc != null) {

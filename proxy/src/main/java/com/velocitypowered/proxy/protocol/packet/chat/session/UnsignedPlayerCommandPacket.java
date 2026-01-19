@@ -19,21 +19,18 @@ package com.velocitypowered.proxy.protocol.packet.chat.session;
 
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.proxy.protocol.PacketCodec;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.chat.LastSeenMessages;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class UnsignedPlayerCommandPacket extends SessionPlayerCommandPacket {
+import java.time.Instant;
 
-  @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    this.command = ProtocolUtils.readString(buf, ProtocolUtils.DEFAULT_MAX_STRING_SIZE);
-  }
+public final class UnsignedPlayerCommandPacket extends SessionPlayerCommandPacket {
 
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    ProtocolUtils.writeString(buf, this.command);
+  public UnsignedPlayerCommandPacket(String command) {
+    super(command, Instant.EPOCH, 0L, new ArgumentSignatures(), null);
   }
 
   @Override
@@ -41,6 +38,7 @@ public class UnsignedPlayerCommandPacket extends SessionPlayerCommandPacket {
     return this;
   }
 
+  @Override
   public boolean isSigned() {
     return false;
   }
@@ -55,5 +53,22 @@ public class UnsignedPlayerCommandPacket extends SessionPlayerCommandPacket {
     return "UnsignedPlayerCommandPacket{" +
             "command='" + command + '\'' +
             '}';
+  }
+
+  public static class Codec implements PacketCodec<UnsignedPlayerCommandPacket> {
+    public static final Codec INSTANCE = new Codec();
+
+    @Override
+    public UnsignedPlayerCommandPacket decode(ByteBuf buf, ProtocolUtils.Direction direction,
+        ProtocolVersion protocolVersion) {
+      String command = ProtocolUtils.readString(buf, ProtocolUtils.DEFAULT_MAX_STRING_SIZE);
+      return new UnsignedPlayerCommandPacket(command);
+    }
+
+    @Override
+    public void encode(UnsignedPlayerCommandPacket packet, ByteBuf buf,
+        ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+      ProtocolUtils.writeString(buf, packet.command);
+    }
   }
 }

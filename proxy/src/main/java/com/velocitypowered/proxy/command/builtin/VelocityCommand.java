@@ -208,19 +208,14 @@ public final class VelocityCommand {
         return Command.SINGLE_SUCCESS;
       }
 
-      final TextComponent.Builder listBuilder = Component.text();
-      for (int i = 0; i < pluginCount; i++) {
-        final PluginContainer plugin = plugins.get(i);
-        listBuilder.append(componentForPlugin(plugin.getDescription()));
-        if (i + 1 < pluginCount) {
-          listBuilder.append(Component.text(", "));
-        }
-      }
+      final Component pluginListComponents = plugins.stream()
+          .map(container -> componentForPlugin(container.getDescription()))
+          .collect(Component.toComponent(Component.text(", ")));
 
       final TranslatableComponent output = Component.translatable()
           .key("velocity.command.plugins-list")
           .color(NamedTextColor.YELLOW)
-          .arguments(listBuilder.build())
+          .arguments(pluginListComponents)
           .build();
       source.sendMessage(output);
       return Command.SINGLE_SUCCESS;
