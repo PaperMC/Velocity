@@ -7,6 +7,9 @@
 
 package com.velocitypowered.api.plugin;
 
+import com.velocitypowered.api.plugin.ap.SerializedPluginDescription;
+import org.intellij.lang.annotations.Pattern;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -26,6 +29,7 @@ public @interface Plugin {
    *
    * @return the ID for this plugin
    */
+  @Pattern(SerializedPluginDescription.ID_PATTERN_STRING)
   String id();
 
   /**
