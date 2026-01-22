@@ -249,6 +249,11 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     }
 
     @Override
+    public Optional<InetSocketAddress> getHaProxyAddress() {
+      return Optional.ofNullable((InetSocketAddress) connection.getHaProxyAddress());
+    }
+
+    @Override
     public boolean isActive() {
       return !connection.isClosed();
     }
