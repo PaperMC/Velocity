@@ -19,21 +19,30 @@ package com.velocitypowered.proxy.util;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.translation.Translator;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Matches a player's locale to the "closest" Velocity locale, for message localization.
  */
-public class ClosestLocaleMatcher {
-
-  public static final ClosestLocaleMatcher INSTANCE = new ClosestLocaleMatcher();
-
+public class ClosestLocaleTranslator implements Translator {
+  private final Translator delegate;
   private final Map<String, Locale> byLanguage;
   private final LoadingCache<Locale, Locale> closest;
 
-  private ClosestLocaleMatcher() {
+  /**
+   * Creates a ClosestLocaleTranslator.
+   *
+   * @param delegate the delegate translator
+   */
+  public ClosestLocaleTranslator(final Translator delegate) {
+    this.delegate = delegate;
     this.byLanguage = new ConcurrentHashMap<>();
     this.closest = Caffeine.newBuilder()
         .build(sublocale -> {
@@ -57,5 +66,20 @@ public class ClosestLocaleMatcher {
 
   public Locale lookupClosest(final Locale locale) {
     return closest.get(locale);
+  }
+
+  @Override
+  public boolean canTranslate(@NotNull String key, @NotNull Locale locale) {
+    return this.delegate.canTranslate(key, this.lookupClosest(locale));
+  }
+
+  @Override
+  public @NotNull Key name() {
+    return delegate.name();
+  }
+
+  @Override
+  public @Nullable MessageFormat translate(@NotNull String key, @NotNull Locale locale) {
+    return delegate.translate(key, lookupClosest(locale));
   }
 }

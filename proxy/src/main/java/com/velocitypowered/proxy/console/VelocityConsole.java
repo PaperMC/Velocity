@@ -24,7 +24,6 @@ import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import java.util.List;
 import java.util.Locale;
 import net.kyori.adventure.audience.MessageType;
@@ -61,8 +60,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   private PermissionFunction permissionFunction = ALWAYS_TRUE;
   private final @NotNull Pointers pointers = ConsoleCommandSource.super.pointers().toBuilder()
       .withDynamic(PermissionChecker.POINTER, this::getPermissionChecker)
-      .withDynamic(Identity.LOCALE, () -> ClosestLocaleMatcher.INSTANCE
-          .lookupClosest(Locale.getDefault()))
+      .withDynamic(Identity.LOCALE, Locale::getDefault)
       .withStatic(FacetPointers.TYPE, Type.CONSOLE)
       .build();
 

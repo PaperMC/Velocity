@@ -64,7 +64,7 @@ import com.velocitypowered.proxy.protocol.util.GameProfileSerializer;
 import com.velocitypowered.proxy.scheduler.VelocityScheduler;
 import com.velocitypowered.proxy.server.ServerMap;
 import com.velocitypowered.proxy.util.AddressUtil;
-import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
+import com.velocitypowered.proxy.util.ClosestLocaleTranslator;
 import com.velocitypowered.proxy.util.ResourceUtils;
 import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
@@ -345,6 +345,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     final TranslationStore.StringBased<MessageFormat> translationRegistry =
             TranslationStore.messageFormat(Key.key("velocity", "translations"));
     translationRegistry.defaultLocale(Locale.US);
+    final ClosestLocaleTranslator closestLocaleTranslator = new ClosestLocaleTranslator(translationRegistry);
+
     try {
       ResourceUtils.visitResources(VelocityServer.class, path -> {
         logger.info("Loading localizations...");
@@ -374,19 +376,18 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
           try (final Stream<Path> files = Files.walk(langPath)) {
             files.filter(Files::isRegularFile).forEach(file -> {
               final String filename = com.google.common.io.Files
-                      .getNameWithoutExtension(file.getFileName().toString());
+                  .getNameWithoutExtension(file.getFileName().toString());
               final String localeName = filename.replace("messages_", "")
-                      .replace("messages", "")
-                      .replace('_', '-');
+                  .replace("messages", "")
+                  .replace('_', '-');
               final Locale locale = localeName.isBlank()
-                      ? Locale.US
-                      : Locale.forLanguageTag(localeName);
+                  ? Locale.US
+                  : Locale.forLanguageTag(localeName);
 
               translationRegistry.registerAll(locale, file, false);
-              ClosestLocaleMatcher.INSTANCE.registerKnown(locale);
+              closestLocaleTranslator.registerKnown(locale);
             });
           }
-
         } catch (IOException e) {
           logger.error("Encountered an I/O error whilst loading translations", e);
         }
@@ -395,7 +396,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       logger.error("Encountered an I/O error whilst loading translations", e);
       return;
     }
-    GlobalTranslator.translator().addSource(translationRegistry);
+    GlobalTranslator.translator().addSource(closestLocaleTranslator);
   }
 
   @SuppressFBWarnings("DM_EXIT")
@@ -835,7 +836,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   public VelocityChannelRegistrar getChannelRegistrar() {
     return channelRegistrar;
   }
-  
+
   @Override
   public boolean isShuttingDown() {
     return shutdownInProgress.get();

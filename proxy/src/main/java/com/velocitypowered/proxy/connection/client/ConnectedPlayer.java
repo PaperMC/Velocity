@@ -99,7 +99,6 @@ import com.velocitypowered.proxy.tablist.InternalTabList;
 import com.velocitypowered.proxy.tablist.KeyedVelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
-import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import com.velocitypowered.proxy.util.DurationUtils;
 import com.velocitypowered.proxy.util.TranslatableMapper;
 import com.velocitypowered.proxy.util.collect.CappedSet;
@@ -418,7 +417,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     if (locale == null) {
       locale = Locale.getDefault();
     }
-    locale = ClosestLocaleMatcher.INSTANCE.lookupClosest(locale);
     return GlobalTranslator.render(message, locale);
   }
 
