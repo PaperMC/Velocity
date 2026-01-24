@@ -12,8 +12,8 @@ shadow = "com.gradleup.shadow:8.3.6"
 spotless = "com.diffplug.spotless:6.25.0"
 
 [libraries]
-adventure-bom = "net.kyori:adventure-bom:4.25.0"
-adventure-text-serializer-json-legacy-impl = "net.kyori:adventure-text-serializer-json-legacy-impl:4.25.0"
+adventure-bom = "net.kyori:adventure-bom:4.26.1"
+adventure-text-serializer-json-legacy-impl = "net.kyori:adventure-text-serializer-json-legacy-impl:4.26.1"
 adventure-facet = "net.kyori:adventure-platform-facet:4.3.4"
 asm = "org.ow2.asm:asm:9.8"
 auto-service = "com.google.auto.service:auto-service:1.0.1"

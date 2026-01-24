@@ -87,7 +87,7 @@ public class ComponentHolder {
         } catch (Exception ex) {
           logger.error(
               "Error converting binary component to JSON component! "
-              + "Binary: " + binaryTag + " JSON: " + json, ex);
+                  + "Binary: " + binaryTag + " JSON: " + json, ex);
           throw ex;
         }
       }
@@ -112,7 +112,7 @@ public class ComponentHolder {
 
   public static BinaryTag serialize(JsonElement json) {
     if (json instanceof JsonPrimitive jsonPrimitive) {
-		if (jsonPrimitive.isNumber()) {
+      if (jsonPrimitive.isNumber()) {
         Number number = json.getAsNumber();
 
         if (number instanceof Byte) {

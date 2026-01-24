@@ -44,6 +44,8 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
           + "Velocity with -Dvelocity.packet-decode-logging=true to see more.");
   private static final QuietDecoderException BAD_PACKET_LENGTH =
       new QuietDecoderException("Bad packet length");
+  private static final QuietDecoderException INVALID_PREAMBLE =
+          new QuietDecoderException("Invalid packet preamble");
   private static final QuietDecoderException VARINT_TOO_BIG =
       new QuietDecoderException("VarInt too big");
   private static final QuietDecoderException UNKNOWN_PACKET =
@@ -74,38 +76,50 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
     }
 
     // skip any runs of 0x00 we might find
+    int wlen = in.readableBytes();
     int packetStart = in.forEachByte(FIND_NON_NUL);
     if (packetStart == -1) {
       in.clear();
+      // Apply a more strict check in serverbound direction, we really shouldn't be seeing this many 0x00s
+      // even from the server, the only reason we even allow these is due to bugged servers
+      if (direction == ProtocolUtils.Direction.SERVERBOUND && wlen > 16) {
+        throw INVALID_PREAMBLE;
+      }
       return;
     }
     in.readerIndex(packetStart);
 
     // try to read the length of the packet
     in.markReaderIndex();
-    int length = readRawVarInt21(in);
-    if (packetStart == in.readerIndex()) {
-      return;
-    }
-    if (length < 0) {
-      throw BAD_PACKET_LENGTH;
-    }
+    try {
+      int length = readRawVarInt21(in);
+      if (packetStart == in.readerIndex()) {
+        return;
+      }
+      if (length < 0) {
+        throw BAD_PACKET_LENGTH;
+      }
 
-    if (length > 0) {
-      if (state == StateRegistry.HANDSHAKE && direction == ProtocolUtils.Direction.SERVERBOUND) {
-        if (validateServerboundHandshakePacket(in, length)) {
-          return;
+      if (length > 0) {
+        if (state == StateRegistry.HANDSHAKE && direction == ProtocolUtils.Direction.SERVERBOUND) {
+          if (validateServerboundHandshakePacket(in, length)) {
+            return;
+          }
         }
       }
-    }
 
-    // note that zero-length packets are ignored
-    if (length > 0) {
-      if (in.readableBytes() < length) {
-        in.resetReaderIndex();
-      } else {
-        out.add(in.readRetainedSlice(length));
+      // note that zero-length packets are ignored
+      if (length > 0) {
+        if (in.readableBytes() < length) {
+          in.resetReaderIndex();
+        } else {
+          out.add(in.readRetainedSlice(length));
+        }
       }
+    } catch (Exception e) {
+      // Reset buffer to consistent state before propagating exception to prevent memory leaks
+      in.resetReaderIndex();
+      throw e;
     }
   }
 
@@ -114,34 +128,40 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
         state.getProtocolRegistry(direction, ProtocolVersion.MINIMUM_VERSION);
 
     final int index = in.readerIndex();
-    final int packetId = readRawVarInt21(in);
-    // Index hasn't changed, we've read nothing
-    if (index == in.readerIndex()) {
-      in.resetReaderIndex();
-      return true;
-    }
-    final int payloadLength = length - ProtocolUtils.varIntBytes(packetId);
+    try {
+      final int packetId = readRawVarInt21(in);
+      // Index hasn't changed, we've read nothing
+      if (index == in.readerIndex()) {
+        in.resetReaderIndex();
+        return true;
+      }
+      final int payloadLength = length - ProtocolUtils.varIntBytes(packetId);
 
-    MinecraftPacket packet = registry.createPacket(packetId);
+      MinecraftPacket packet = registry.createPacket(packetId);
 
-    // We handle every packet in this phase, if you said something we don't know, something is really wrong
-    if (packet == null) {
-      throw UNKNOWN_PACKET;
-    }
+      // We handle every packet in this phase, if you said something we don't know, something is really wrong
+      if (packet == null) {
+        throw UNKNOWN_PACKET;
+      }
 
-    // We 'technically' have the incoming bytes of a payload here, and so, these can actually parse
-    // the packet if needed, so, we'll take advantage of the existing methods
-    int expectedMinLen = packet.decodeExpectedMinLength(in, direction, registry.version);
-    int expectedMaxLen = packet.decodeExpectedMaxLength(in, direction, registry.version);
-    if (expectedMaxLen != -1 && payloadLength > expectedMaxLen) {
-      throw handleOverflow(packet, expectedMaxLen, in.readableBytes());
-    }
-    if (payloadLength < expectedMinLen) {
-      throw handleUnderflow(packet, expectedMaxLen, in.readableBytes());
-    }
+      // We 'technically' have the incoming bytes of a payload here, and so, these can actually parse
+      // the packet if needed, so, we'll take advantage of the existing methods
+      int expectedMinLen = packet.decodeExpectedMinLength(in, direction, registry.version);
+      int expectedMaxLen = packet.decodeExpectedMaxLength(in, direction, registry.version);
+      if (expectedMaxLen != -1 && payloadLength > expectedMaxLen) {
+        throw handleOverflow(packet, expectedMaxLen, in.readableBytes());
+      }
+      if (payloadLength < expectedMinLen) {
+        throw handleUnderflow(packet, expectedMaxLen, in.readableBytes());
+      }
 
-    in.readerIndex(index);
-    return false;
+      in.readerIndex(index);
+      return false;
+    } catch (Exception e) {
+      // Reset buffer to consistent state before propagating exception to prevent memory leaks
+      in.readerIndex(index);
+      throw e;
+    }
   }
 
   @Override
