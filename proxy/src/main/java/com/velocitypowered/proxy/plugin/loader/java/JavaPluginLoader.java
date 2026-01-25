@@ -83,7 +83,7 @@ public class JavaPluginLoader implements PluginLoader {
 
   @Override
   public PluginDescription createPluginFromCandidate(PluginDescription candidate) throws Exception {
-    if (!(candidate instanceof JavaVelocityPluginDescriptionCandidate)) {
+    if (!(candidate instanceof JavaVelocityPluginDescriptionCandidate candidateInst)) {
       throw new IllegalArgumentException("Description provided isn't of the Java plugin loader");
     }
 
@@ -93,8 +93,6 @@ public class JavaPluginLoader implements PluginLoader {
     PluginClassLoader loader = new PluginClassLoader(new URL[]{pluginJarUrl});
     loader.addToClassloaders();
 
-    JavaVelocityPluginDescriptionCandidate candidateInst =
-        (JavaVelocityPluginDescriptionCandidate) candidate;
     Class<?> mainClass = loader.loadClass(candidateInst.getMainClass());
     return createDescription(candidateInst, mainClass);
   }
@@ -102,11 +100,10 @@ public class JavaPluginLoader implements PluginLoader {
   @Override
   public Module createModule(PluginContainer container) {
     PluginDescription description = container.getDescription();
-    if (!(description instanceof JavaVelocityPluginDescription)) {
+    if (!(description instanceof JavaVelocityPluginDescription javaDescription)) {
       throw new IllegalArgumentException("Description provided isn't of the Java plugin loader");
     }
 
-    JavaVelocityPluginDescription javaDescription = (JavaVelocityPluginDescription) description;
     Optional<Path> source = javaDescription.getSource();
 
     if (source.isEmpty()) {
@@ -118,24 +115,23 @@ public class JavaPluginLoader implements PluginLoader {
 
   @Override
   public void createPlugin(PluginContainer container, Module... modules) {
-    if (!(container instanceof VelocityPluginContainer)) {
+    if (!(container instanceof VelocityPluginContainer pluginContainer)) {
       throw new IllegalArgumentException("Container provided isn't of the Java plugin loader");
     }
-    PluginDescription description = container.getDescription();
-    if (!(description instanceof JavaVelocityPluginDescription)) {
+    PluginDescription description = pluginContainer.getDescription();
+    if (!(description instanceof JavaVelocityPluginDescription javaPluginDescription)) {
       throw new IllegalArgumentException("Description provided isn't of the Java plugin loader");
     }
 
     Injector injector = Guice.createInjector(modules);
-    Object instance = injector
-        .getInstance(((JavaVelocityPluginDescription) description).getMainClass());
+    Object instance = injector.getInstance(javaPluginDescription.getMainClass());
 
     if (instance == null) {
       throw new IllegalStateException(
           "Got nothing from injector for plugin " + description.getId());
     }
 
-    ((VelocityPluginContainer) container).setInstance(instance);
+    pluginContainer.setInstance(instance);
   }
 
   private Optional<SerializedPluginDescription> getSerializedPluginInfo(Path source)
@@ -145,22 +141,23 @@ public class JavaPluginLoader implements PluginLoader {
         new BufferedInputStream(Files.newInputStream(source)))) {
       JarEntry entry;
       while ((entry = in.getNextJarEntry()) != null) {
-        if (entry.getName().equals("velocity-plugin.json")) {
-          try (Reader pluginInfoReader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
-            return Optional.of(VelocityServer.GENERAL_GSON.fromJson(pluginInfoReader,
-                SerializedPluginDescription.class));
+        switch (entry.getName()) {
+          case "velocity-plugin.json" -> {
+            try (Reader pluginInfoReader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
+              return Optional.of(VelocityServer.GENERAL_GSON.fromJson(pluginInfoReader,
+                  SerializedPluginDescription.class));
+            }
           }
-        }
-
-        if (entry.getName().equals("plugin.yml") || entry.getName().equals("bungee.yml")) {
-          foundBungeeBukkitPluginFile = true;
+          case "paper-plugin.yml", "plugin.yml", "bungee.yml" -> foundBungeeBukkitPluginFile = true;
+          default -> {
+          }
         }
       }
 
       if (foundBungeeBukkitPluginFile) {
         throw new InvalidPluginException("The plugin file " + source.getFileName() + " appears to "
-            + "be a Bukkit or BungeeCord plugin. Velocity does not support Bukkit or BungeeCord "
-            + "plugins.");
+            + "be a Paper, Bukkit or BungeeCord plugin. Velocity does not support plugins from these "
+            + "platforms.");
       }
 
       return Optional.empty();

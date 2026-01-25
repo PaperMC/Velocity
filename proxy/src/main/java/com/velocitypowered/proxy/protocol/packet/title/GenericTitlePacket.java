@@ -105,26 +105,14 @@ public abstract class GenericTitlePacket implements MinecraftPacket {
   public static GenericTitlePacket constructTitlePacket(ActionType type, ProtocolVersion version) {
     GenericTitlePacket packet = null;
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
-      switch (type) {
-        case SET_ACTION_BAR:
-          packet = new TitleActionbarPacket();
-          break;
-        case SET_SUBTITLE:
-          packet = new TitleSubtitlePacket();
-          break;
-        case SET_TIMES:
-          packet = new TitleTimesPacket();
-          break;
-        case SET_TITLE:
-          packet = new TitleTextPacket();
-          break;
-        case HIDE:
-        case RESET:
-          packet = new TitleClearPacket();
-          break;
-        default:
-          throw new IllegalArgumentException("Invalid ActionType");
-      }
+      packet = switch (type) {
+        case SET_ACTION_BAR -> new TitleActionbarPacket();
+        case SET_SUBTITLE -> new TitleSubtitlePacket();
+        case SET_TIMES -> new TitleTimesPacket();
+        case SET_TITLE -> new TitleTextPacket();
+        case HIDE, RESET -> new TitleClearPacket();
+        default -> throw new IllegalArgumentException("Invalid ActionType");
+      };
     } else {
       packet = new LegacyTitlePacket();
     }

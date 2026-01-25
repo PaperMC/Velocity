@@ -25,7 +25,6 @@ import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
@@ -331,12 +330,10 @@ public class AvailableCommandsPacket implements MinecraftPacket {
           .add("redirectTo", redirectTo);
 
       if (args != null) {
-        if (args instanceof LiteralArgumentBuilder) {
-          helper.add("argsLabel",
-              ((LiteralArgumentBuilder<CommandSource>) args).getLiteral());
-        } else if (args instanceof RequiredArgumentBuilder) {
-          helper.add("argsName",
-              ((RequiredArgumentBuilder<CommandSource, ?>) args).getName());
+        if (args instanceof LiteralArgumentBuilder literal) {
+          helper.add("argsLabel", literal.getLiteral());
+        } else if (args instanceof RequiredArgumentBuilder required) {
+          helper.add("argsName", required.getName());
         }
       }
 
@@ -348,17 +345,11 @@ public class AvailableCommandsPacket implements MinecraftPacket {
    * A placeholder {@link SuggestionProvider} used internally to preserve the suggestion provider
    * name.
    */
-  public static class ProtocolSuggestionProvider implements SuggestionProvider<CommandSource> {
-
-    private final String name;
-
-    public ProtocolSuggestionProvider(String name) {
-      this.name = name;
-    }
+  public record ProtocolSuggestionProvider(String name) implements SuggestionProvider<CommandSource> {
 
     @Override
     public CompletableFuture<Suggestions> getSuggestions(CommandContext<CommandSource> context,
-        SuggestionsBuilder builder) throws CommandSyntaxException {
+        SuggestionsBuilder builder) {
       return builder.buildFuture();
     }
   }

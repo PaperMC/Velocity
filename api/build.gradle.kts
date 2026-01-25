@@ -59,7 +59,7 @@ tasks {
 
         val o = options as StandardJavadocDocletOptions
         o.encoding = "UTF-8"
-        o.source = "17"
+        o.source = "21"
 
         o.use()
         o.links(
