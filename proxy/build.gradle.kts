@@ -27,6 +27,10 @@ tasks {
     }
 
     shadowJar {
+        filesMatching("META-INF/org/apache/logging/log4j/core/config/plugins/**") {
+            duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        }
+
         transform(Log4j2PluginsCacheFileTransformer::class.java)
         filesMatching("META-INF/org/apache/logging/log4j/core/config/plugins/**") {
             duplicatesStrategy = DuplicatesStrategy.INCLUDE
@@ -118,7 +122,7 @@ fill {
     project("velocity")
 
     build {
-        channel = BuildChannel.STABLE
+        channel = BuildChannel.BETA
         versionFamily("3.0.0")
         version(projectVersion)
 
