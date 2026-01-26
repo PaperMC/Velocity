@@ -35,6 +35,13 @@ import java.util.List;
 import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents a player command packet with support for keyed commands.
+ *
+ * <p>The {@code KeyedPlayerCommandPacket} handles player commands sent to the server,
+ * allowing for command execution based on specific keys. This packet can include additional
+ * information such as arguments and key-based identifiers for the command.</p>
+ */
 public class KeyedPlayerCommandPacket implements MinecraftPacket {
 
   private static final int MAX_NUM_ARGUMENTS = 8;

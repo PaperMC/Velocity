@@ -23,6 +23,10 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * Represents a packet that sets the compression threshold for network communication.
+ * When the size of a packet exceeds the threshold, the packet will be compressed.
+ */
 public class SetCompressionPacket implements MinecraftPacket {
 
   private int threshold;

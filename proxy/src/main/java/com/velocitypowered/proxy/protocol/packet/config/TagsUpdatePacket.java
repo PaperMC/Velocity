@@ -24,9 +24,17 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
-
 import java.util.Map;
 
+/**
+ * The {@code TagsUpdatePacket} class represents a packet sent to update the tags
+ * used by the Minecraft client. Tags are used in various parts of the game to group
+ * blocks, items, entities, and other objects under common categories.
+ *
+ * <p>This packet is typically sent to clients when they join a server or when
+ * the server needs to update the list of tags for the client, ensuring that
+ * the client has the most up-to-date tag information.</p>
+ */
 public class TagsUpdatePacket implements MinecraftPacket {
 
   private Map<String, Map<String, int[]>> tags;

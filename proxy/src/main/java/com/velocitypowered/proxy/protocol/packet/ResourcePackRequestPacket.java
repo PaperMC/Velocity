@@ -33,6 +33,10 @@ import java.util.regex.Pattern;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents a resource pack request packet sent by the server to prompt the client to download a resource pack.
+ * The packet includes the resource pack URL, SHA1 hash, and optional prompt.
+ */
 public class ResourcePackRequestPacket implements MinecraftPacket {
 
   private @MonotonicNonNull UUID id; // 1.20.3+
@@ -124,6 +128,12 @@ public class ResourcePackRequestPacket implements MinecraftPacket {
     }
   }
 
+  /**
+   * Converts this packet into a {@link VelocityResourcePackInfo} object, which contains the information
+   * about the resource pack being requested.
+   *
+   * @return a {@code VelocityResourcePackInfo} representing the resource pack information
+   */
   public VelocityResourcePackInfo toServerPromptedPack() {
     final ResourcePackInfo.Builder builder =
         new VelocityResourcePackInfo.BuilderImpl(Preconditions.checkNotNull(url))
@@ -145,12 +155,12 @@ public class ResourcePackRequestPacket implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "ResourcePackRequestPacket{" +
-            "id=" + id +
-            ", url='" + url + '\'' +
-            ", hash='" + hash + '\'' +
-            ", isRequired=" + isRequired +
-            ", prompt=" + prompt +
-            '}';
+    return "ResourcePackRequestPacket{"
+        + "id=" + id
+        + ", url='" + url + '\''
+        + ", hash='" + hash + '\''
+        + ", isRequired=" + isRequired
+        + ", prompt=" + prompt
+        + '}';
   }
 }

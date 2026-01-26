@@ -21,6 +21,16 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The {@code ArgumentPropertySerializer} interface defines a contract for serializing and
+ * deserializing argument properties to and from a specific format.
+ *
+ * <p>This interface allows implementations to convert argument properties into a serialized form,
+ * which can later be deserialized and restored to their original form. This is particularly useful
+ * for persisting command argument configurations or sending them across a network.</p>
+ *
+ * @param <T> the type of the argument property being serialized
+ */
 public interface ArgumentPropertySerializer<T> {
 
   @Nullable T deserialize(ByteBuf buf, ProtocolVersion protocolVersion);

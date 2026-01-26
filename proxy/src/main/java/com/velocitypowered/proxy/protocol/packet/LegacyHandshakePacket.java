@@ -23,6 +23,11 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * Represents a legacy handshake packet in Minecraft, which is typically used
+ * during the initial connection process for older versions of the Minecraft protocol.
+ * This class currently does not support decoding of the handshake packet.
+ */
 public class LegacyHandshakePacket implements MinecraftPacket {
 
   @Override

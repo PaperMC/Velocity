@@ -23,6 +23,11 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * Represents a packet sent from the server to the client to display system chat messages.
+ * This packet handles the communication of messages that are not player-generated, but instead
+ * come from the system or server itself.
+ */
 public class SystemChatPacket implements MinecraftPacket {
 
   public SystemChatPacket() {
@@ -47,7 +52,7 @@ public class SystemChatPacket implements MinecraftPacket {
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     component = ComponentHolder.read(buf, version);
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19_1)){
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19_1)) {
       type = buf.readBoolean() ? ChatType.GAME_INFO : ChatType.SYSTEM;
     } else {
       type = ChatType.values()[ProtocolUtils.readVarInt(buf)];

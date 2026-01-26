@@ -24,6 +24,14 @@ import java.util.HashMap;
 import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents an identifier for a Brigadier command argument, mapping the argument to
+ * different protocol versions.
+ *
+ * <p>The {@code ArgumentIdentifier} is responsible for holding an identifier string for
+ * an argument and a map that associates protocol versions with their respective IDs.
+ * It ensures that the protocol version is compatible with the Minecraft 1.19 protocol or later.</p>
+ */
 public class ArgumentIdentifier {
 
   private final String identifier;
@@ -37,8 +45,8 @@ public class ArgumentIdentifier {
     Map<ProtocolVersion, Integer> temp = new HashMap<>();
 
     ProtocolVersion previous = null;
-    for (int i = 0; i < versions.length; i++) {
-      VersionSet current = Preconditions.checkNotNull(versions[i]);
+    for (VersionSet version : versions) {
+      VersionSet current = Preconditions.checkNotNull(version);
 
       Preconditions.checkArgument(
           current.getVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19),
@@ -60,9 +68,9 @@ public class ArgumentIdentifier {
 
   @Override
   public String toString() {
-    return "ArgumentIdentifier{" +
-        "identifier='" + identifier + '\'' +
-        '}';
+    return "ArgumentIdentifier{"
+        + "identifier='" + identifier + '\''
+        + '}';
   }
 
   public String getIdentifier() {
@@ -101,7 +109,6 @@ public class ArgumentIdentifier {
     public ProtocolVersion getVersion() {
       return version;
     }
-
   }
 
 }

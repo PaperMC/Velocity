@@ -33,6 +33,10 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents a legacy player list item packet, which is used to modify the player list in a Minecraft client.
+ * The packet can add, remove, or update player entries (e.g., updating gamemode, latency, or display names).
+ */
 public class LegacyPlayerListItemPacket implements MinecraftPacket {
 
   public static final int ADD_PLAYER = 0;
@@ -76,16 +80,16 @@ public class LegacyPlayerListItemPacket implements MinecraftPacket {
             item.setLatency(ProtocolUtils.readVarInt(buf));
             item.setDisplayName(readOptionalComponent(buf, version));
             if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
-                if (buf.readBoolean()) {
-                    item.setPlayerKey(ProtocolUtils.readPlayerKey(version, buf));
-                }
+              if (buf.readBoolean()) {
+                item.setPlayerKey(ProtocolUtils.readPlayerKey(version, buf));
+              }
             }
           }
           case UPDATE_GAMEMODE -> item.setGameMode(ProtocolUtils.readVarInt(buf));
           case UPDATE_LATENCY -> item.setLatency(ProtocolUtils.readVarInt(buf));
           case UPDATE_DISPLAY_NAME -> item.setDisplayName(readOptionalComponent(buf, version));
           case REMOVE_PLAYER -> {
-              //Do nothing, all that is needed is the uuid
+              // Do nothing, all that is needed is the uuid
           }
           default -> throw new UnsupportedOperationException("Unknown action " + action);
         }
@@ -107,6 +111,17 @@ public class LegacyPlayerListItemPacket implements MinecraftPacket {
     return null;
   }
 
+  /**
+   * Encodes this packet's contents into the given {@link ByteBuf}.
+   *
+   * <p>This method serializes the packet data based on the current protocol version.
+   * Subclasses overriding this method should preserve compatibility with legacy
+   * and modern formats as needed.</p>
+   *
+   * @param buf the buffer to write to
+   * @param direction the direction of the packet (clientbound or serverbound)
+   * @param version the Minecraft protocol version
+   */
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
@@ -125,12 +140,12 @@ public class LegacyPlayerListItemPacket implements MinecraftPacket {
             ProtocolUtils.writeVarInt(buf, item.getLatency());
             writeDisplayName(buf, item.getDisplayName(), version);
             if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
-                if (item.getPlayerKey() != null) {
-                    buf.writeBoolean(true);
-                    ProtocolUtils.writePlayerKey(buf, item.getPlayerKey());
-                } else {
-                    buf.writeBoolean(false);
-                }
+              if (item.getPlayerKey() != null) {
+                buf.writeBoolean(true);
+                ProtocolUtils.writePlayerKey(buf, item.getPlayerKey());
+              } else {
+                buf.writeBoolean(false);
+              }
             }
           }
           case UPDATE_GAMEMODE -> ProtocolUtils.writeVarInt(buf, item.getGameMode());
@@ -172,6 +187,10 @@ public class LegacyPlayerListItemPacket implements MinecraftPacket {
     }
   }
 
+  /**
+   * Represents an individual item in the player list, containing the player's details such as UUID, name,
+   * game mode, latency, and optionally a display name and player key.
+   */
   public static class Item {
 
     private final UUID uuid;
@@ -190,6 +209,15 @@ public class LegacyPlayerListItemPacket implements MinecraftPacket {
       this.uuid = uuid;
     }
 
+    /**
+     * Creates an {@link Item} instance from a {@link TabListEntry}.
+     * This method extracts relevant data from the {@link TabListEntry} such as
+     * the player's profile ID, name, properties, latency, game mode, player key,
+     * and display name, and uses them to populate a new {@code Item}.
+     *
+     * @param entry the {@link TabListEntry} from which to extract data
+     * @return an {@link Item} populated with data from the {@link TabListEntry}
+     */
     public static Item from(TabListEntry entry) {
       return new Item(entry.getProfile().getId())
           .setName(entry.getProfile().getName())

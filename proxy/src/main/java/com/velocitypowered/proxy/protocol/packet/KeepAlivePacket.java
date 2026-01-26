@@ -23,6 +23,11 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * Represents a KeepAlive packet in Minecraft. This packet is used to ensure that the connection
+ * between the client and the server shall still be active by sending a randomly generated ID that
+ * the client must respond to.
+ */
 public class KeepAlivePacket implements MinecraftPacket {
 
   private long randomId;

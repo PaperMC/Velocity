@@ -24,6 +24,13 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The {@code FinishedUpdatePacket} class represents a packet that signals the completion
+ * of an update process between the client and server in the Minecraft protocol.
+ *
+ * <p>This packet is used to indicate that the client has finished receiving and processing
+ * an update, ensuring that further operations can proceed.</p>
+ */
 public class CodeOfConductPacket extends DeferredByteBufHolder implements MinecraftPacket {
 
   public CodeOfConductPacket() {

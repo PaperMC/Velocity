@@ -23,6 +23,14 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * Represents a packet used as a delimiter for bundling multiple packets together.
+ * The {@code BundleDelimiterPacket} marks the beginning or end of a packet bundle,
+ * allowing the server and client to process groups of packets as a single logical unit.
+ *
+ * <p>This packet is typically used to signal the start or end of a packet sequence that
+ * are sent together, enabling efficient transmission and processing of related data.</p>
+ */
 public final class BundleDelimiterPacket implements MinecraftPacket {
   public static final BundleDelimiterPacket INSTANCE = new BundleDelimiterPacket();
 

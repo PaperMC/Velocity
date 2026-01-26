@@ -53,6 +53,13 @@ import java.util.function.Predicate;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents a packet that contains the list of available commands, implementing {@link MinecraftPacket}.
+ *
+ * <p>The {@code AvailableCommandsPacket} is responsible for transmitting the set of commands
+ * that a player can execute. It provides the necessary information about available commands
+ * within the current session or game state.</p>
+ */
 public class AvailableCommandsPacket implements MinecraftPacket {
 
   private static final Command<CommandSource> PLACEHOLDER_COMMAND = source -> 0;

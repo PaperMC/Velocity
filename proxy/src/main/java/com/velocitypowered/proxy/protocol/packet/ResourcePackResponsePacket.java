@@ -24,10 +24,13 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
+import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
-import java.util.UUID;
-
+/**
+ * Represents the response packet sent by the client after receiving a resource pack request from the server.
+ * The packet contains information about the client's response, including the resource pack status.
+ */
 public class ResourcePackResponsePacket implements MinecraftPacket {
 
   private UUID id;
@@ -37,12 +40,25 @@ public class ResourcePackResponsePacket implements MinecraftPacket {
   public ResourcePackResponsePacket() {
   }
 
+  /**
+   * Constructs a new {@code ResourcePackResponsePacket} with the specified parameters.
+   *
+   * @param id the unique identifier for the response
+   * @param hash the hash of the resource pack
+   * @param status the status of the resource pack
+   */
   public ResourcePackResponsePacket(UUID id, String hash, @MonotonicNonNull Status status) {
     this.id = id;
     this.hash = hash;
     this.status = status;
   }
 
+  /**
+   * Gets the status of the resource pack response.
+   *
+   * @return the status of the response
+   * @throws IllegalStateException if the packet has not been deserialized yet
+   */
   public Status getStatus() {
     if (status == null) {
       throw new IllegalStateException("Packet not yet deserialized");
@@ -87,10 +103,10 @@ public class ResourcePackResponsePacket implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "ResourcePackResponsePacket{" +
-            "id=" + id +
-            ", hash='" + hash + '\'' +
-            ", status=" + status +
-            '}';
+    return "ResourcePackResponsePacket{"
+        + "id=" + id
+        + ", hash='" + hash + '\''
+        + ", status=" + status
+        + '}';
   }
 }

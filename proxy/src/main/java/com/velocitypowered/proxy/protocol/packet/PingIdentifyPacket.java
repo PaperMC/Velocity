@@ -23,6 +23,9 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * Represents a packet used for ping identification with a unique ID.
+ */
 public class PingIdentifyPacket implements MinecraftPacket {
 
   private int id;

@@ -28,6 +28,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Represents a Brigadier {@link ArgumentType} for registry keys, which are typically
+ * namespaced resource locations (e.g., {@code minecraft:diamond_sword}).
+ *
+ * <p>This argument type reads an unquoted string from input and treats it as a raw registry
+ * key. It does not validate the format or resolve the key against a known registry.</p>
+ *
+ * <p>Examples include simple strings, namespaced keys, or numeric-like identifiers.</p>
+ */
 public class RegistryKeyArgument implements ArgumentType<String> {
 
   private static final List<String> EXAMPLES = Arrays.asList("foo", "foo:bar", "012");

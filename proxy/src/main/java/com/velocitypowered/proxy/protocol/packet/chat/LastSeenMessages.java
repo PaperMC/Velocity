@@ -23,6 +23,10 @@ import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
 import java.util.BitSet;
 
+/**
+ * Represents a collection of the last seen messages by a player or client.
+ * This class tracks the recent chat messages that the player has viewed.
+ */
 public class LastSeenMessages {
 
   public static final int WINDOW_SIZE = 20;
@@ -35,12 +39,26 @@ public class LastSeenMessages {
     this(0, new BitSet(), (byte) 0);
   }
 
+  /**
+   * Creates a new {@link LastSeenMessages} instance with the specified offset, acknowledged messages, and checksum.
+   *
+   * @param offset the starting index of the message window
+   * @param acknowledged a BitSet representing which messages have been acknowledged
+   * @param checksum the checksum for the message window data
+   */
   public LastSeenMessages(int offset, BitSet acknowledged, byte checksum) {
     this.offset = offset;
     this.acknowledged = acknowledged;
     this.checksum = checksum;
   }
 
+  /**
+   * Constructs a new {@link LastSeenMessages} instance by decoding data from the provided
+   * {@link ByteBuf}.
+   *
+   * @param buf the buffer containing the serialized last seen messages data
+   * @param protocolVersion the protocol version (determines if checksum is written)
+   */
   public LastSeenMessages(ByteBuf buf, ProtocolVersion protocolVersion) {
     this.offset = ProtocolUtils.readVarInt(buf);
 
@@ -53,6 +71,12 @@ public class LastSeenMessages {
     }
   }
 
+  /**
+   * Encodes this {@link LastSeenMessages} instance into the provided {@link ByteBuf}.
+   *
+   * @param buf the buffer to write the data to
+   * @param protocolVersion the protocol version used for encoding
+   */
   public void encode(ByteBuf buf, ProtocolVersion protocolVersion) {
     ProtocolUtils.writeVarInt(buf, offset);
     buf.writeBytes(Arrays.copyOf(acknowledged.toByteArray(), DIV_FLOOR));
@@ -75,10 +99,10 @@ public class LastSeenMessages {
 
   @Override
   public String toString() {
-    return "LastSeenMessages{" +
-        "offset=" + offset +
-        ", acknowledged=" + acknowledged +
-        ", checksum=" + checksum +
-        '}';
+    return "LastSeenMessages{"
+        + "offset=" + offset
+        + ", acknowledged=" + acknowledged
+        + ", checksum=" + checksum
+        + '}';
   }
 }

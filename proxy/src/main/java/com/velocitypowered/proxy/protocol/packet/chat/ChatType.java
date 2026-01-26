@@ -17,6 +17,12 @@
 
 package com.velocitypowered.proxy.protocol.packet.chat;
 
+/**
+ * Represents different types of chat messages in the game, defining how a message should be
+ * handled and displayed.
+ * This enum categorizes various chat message types such as system messages, player chat,
+ * or game info.
+ */
 public enum ChatType {
   CHAT((byte) 0),
   SYSTEM((byte) 1),

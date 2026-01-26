@@ -25,6 +25,13 @@ import java.util.UUID;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 
+/**
+ * A concrete implementation of {@link ChatBuilderV2} for handling legacy chat formats.
+ *
+ * <p>The {@code LegacyChatBuilder} is designed to support and build chat components
+ * using legacy chat formatting, such as the formats used in earlier versions of Minecraft.
+ * It extends the functionality of {@link ChatBuilderV2} to cater to older chat systems.</p>
+ */
 public class LegacyChatBuilder extends ChatBuilderV2 {
 
   public LegacyChatBuilder(ProtocolVersion version) {

@@ -23,6 +23,11 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * Represents a packet sent between the server and client to handle chat completion suggestions.
+ * This packet allows the server to send chat message completions or suggestions to the client,
+ * helping users complete commands or chat messages.
+ */
 public class PlayerChatCompletionPacket implements MinecraftPacket {
 
   private String[] completions;
@@ -71,6 +76,9 @@ public class PlayerChatCompletionPacket implements MinecraftPacket {
     return handler.handle(this);
   }
 
+  /**
+   * Represents the different actions that can be taken with chat completions.
+   */
   public enum Action {
     ADD,
     REMOVE,

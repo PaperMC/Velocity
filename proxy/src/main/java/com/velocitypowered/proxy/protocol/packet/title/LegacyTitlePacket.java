@@ -24,6 +24,16 @@ import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The {@code LegacyTitlePacket} class represents a packet that handles title-related functionality
+ * for older versions of Minecraft where title handling differs.
+ *
+ * <p>This packet is used to send title and subtitle information using legacy methods for clients
+ * that do not support the newer title packet format.</p>
+ *
+ * <p>It extends the {@link GenericTitlePacket}, inheriting basic title properties but is specifically
+ * focused on legacy title implementations.</p>
+ */
 public class LegacyTitlePacket extends GenericTitlePacket {
 
   private @Nullable ComponentHolder component;
@@ -51,10 +61,10 @@ public class LegacyTitlePacket extends GenericTitlePacket {
         buf.writeInt(stay);
         buf.writeInt(fadeOut);
       }
-      case HIDE, RESET -> {}
+      case HIDE, RESET -> {
+      }
       default -> throw new UnsupportedOperationException("Unknown action " + getAction());
     }
-
   }
 
   @Override
