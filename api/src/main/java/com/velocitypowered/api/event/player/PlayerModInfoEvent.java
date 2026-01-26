@@ -21,15 +21,31 @@ public final class PlayerModInfoEvent {
   private final Player player;
   private final ModInfo modInfo;
 
+  /**
+   * Constructs a new {@code PlayerModInfoEvent}.
+   *
+   * @param player the player sending their mod list
+   * @param modInfo the mod list information
+   */
   public PlayerModInfoEvent(Player player, ModInfo modInfo) {
     this.player = Preconditions.checkNotNull(player, "player");
     this.modInfo = Preconditions.checkNotNull(modInfo, "modInfo");
   }
 
+  /**
+   * Returns the player who sent their mod list.
+   *
+   * @return the player
+   */
   public Player getPlayer() {
     return player;
   }
 
+  /**
+   * Returns the mod information sent by the player.
+   *
+   * @return the mod information
+   */
   public ModInfo getModInfo() {
     return modInfo;
   }

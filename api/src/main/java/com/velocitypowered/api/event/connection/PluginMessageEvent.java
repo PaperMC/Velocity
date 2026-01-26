@@ -61,26 +61,56 @@ public final class PluginMessageEvent implements ResultedEvent<PluginMessageEven
     this.result = Preconditions.checkNotNull(result, "result");
   }
 
+  /**
+   * Gets the source that sent this plugin message (a {@link Player} or {@link ServerConnection}).
+   *
+   * @return the message source
+   */
   public ChannelMessageSource getSource() {
     return source;
   }
 
+  /**
+   * Gets the target recipient of this plugin message.
+   *
+   * @return the message sink
+   */
   public ChannelMessageSink getTarget() {
     return target;
   }
 
+  /**
+   * Gets the channel identifier this message was sent on.
+   *
+   * @return the plugin message identifier
+   */
   public ChannelIdentifier getIdentifier() {
     return identifier;
   }
 
+  /**
+   * Gets the raw payload of the plugin message.
+   *
+   * @return a copy of the message data
+   */
   public byte[] getData() {
     return Arrays.copyOf(data, data.length);
   }
 
+  /**
+   * Returns the plugin message payload as a {@link ByteArrayInputStream}.
+   *
+   * @return the input stream wrapping the data
+   */
   public ByteArrayInputStream dataAsInputStream() {
     return new ByteArrayInputStream(data);
   }
 
+  /**
+   * Returns the plugin message payload as a {@link ByteArrayDataInput}.
+   *
+   * @return the data input stream for reading structured data
+   */
   public ByteArrayDataInput dataAsDataStream() {
     return ByteStreams.newDataInput(data);
   }
@@ -120,10 +150,21 @@ public final class PluginMessageEvent implements ResultedEvent<PluginMessageEven
       return status ? "forward to sink" : "handled message at proxy";
     }
 
+    /**
+     * Returns a result that forwards the plugin message to the target.
+     *
+     * @return the forward result
+     */
     public static ForwardResult forward() {
       return ALLOWED;
     }
 
+    /**
+     * Returns a result that marks the plugin message as handled at the proxy.
+     * This prevents it from being forwarded.
+     *
+     * @return the handled result
+     */
     public static ForwardResult handled() {
       return DENIED;
     }

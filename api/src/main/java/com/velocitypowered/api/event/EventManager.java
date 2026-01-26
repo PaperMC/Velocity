@@ -73,6 +73,7 @@ public interface EventManager {
    * servicing connections while a plugin handles a potentially long-running operation such as a
    * database query.
    *
+   * @param <E> the event type
    * @param event the event to fire
    * @return a {@link CompletableFuture} representing the posted event
    */

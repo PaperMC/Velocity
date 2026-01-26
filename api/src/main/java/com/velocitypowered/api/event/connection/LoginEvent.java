@@ -24,11 +24,21 @@ public final class LoginEvent implements ResultedEvent<ResultedEvent.ComponentRe
   private final Player player;
   private ComponentResult result;
 
+  /**
+   * Constructs a new {@link LoginEvent}.
+   *
+   * @param player the player who has completed authentication
+   */
   public LoginEvent(Player player) {
     this.player = Preconditions.checkNotNull(player, "player");
     this.result = ComponentResult.allowed();
   }
 
+  /**
+   * Returns the player who has completed authentication.
+   *
+   * @return the authenticated player
+   */
   public Player getPlayer() {
     return player;
   }

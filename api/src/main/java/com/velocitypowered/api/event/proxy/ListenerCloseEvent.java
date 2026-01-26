@@ -19,15 +19,31 @@ public final class ListenerCloseEvent {
   private final InetSocketAddress address;
   private final ListenerType listenerType;
 
+  /**
+   * Constructs a new {@link ListenerCloseEvent}.
+   *
+   * @param address the socket address the listener was bound to
+   * @param listenerType the type of listener being closed
+   */
   public ListenerCloseEvent(InetSocketAddress address, ListenerType listenerType) {
     this.address = Preconditions.checkNotNull(address, "address");
     this.listenerType = Preconditions.checkNotNull(listenerType, "listenerType");
   }
 
+  /**
+   * Returns the socket address the listener was bound to.
+   *
+   * @return the bound socket address
+   */
   public InetSocketAddress getAddress() {
     return address;
   }
 
+  /**
+   * Returns the type of listener being closed.
+   *
+   * @return the listener type
+   */
   public ListenerType getListenerType() {
     return listenerType;
   }

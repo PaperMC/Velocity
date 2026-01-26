@@ -48,18 +48,38 @@ public final class GameProfileRequestEvent {
     this.onlineMode = onlineMode;
   }
 
+  /**
+   * Returns the inbound connection from the player attempting to log in.
+   *
+   * @return the inbound connection
+   */
   public InboundConnection getConnection() {
     return connection;
   }
 
+  /**
+   * Returns the username associated with the original game profile.
+   *
+   * @return the username
+   */
   public String getUsername() {
     return username;
   }
 
+  /**
+   * Returns the original game profile before any plugin customization.
+   *
+   * @return the original {@link GameProfile}
+   */
   public GameProfile getOriginalProfile() {
     return originalProfile;
   }
 
+  /**
+   * Returns whether the player is connecting in online mode.
+   *
+   * @return {@code true} if the connection is in online mode, otherwise {@code false}
+   */
   public boolean isOnlineMode() {
     return onlineMode;
   }
@@ -91,6 +111,5 @@ public final class GameProfileRequestEvent {
         + ", gameProfile=" + gameProfile
         + "}";
   }
-
 
 }

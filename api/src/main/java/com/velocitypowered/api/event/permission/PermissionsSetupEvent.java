@@ -34,11 +34,22 @@ public final class PermissionsSetupEvent {
   private final PermissionProvider defaultProvider;
   private PermissionProvider provider;
 
+  /**
+   * Constructs a new {@link PermissionsSetupEvent}.
+   *
+   * @param subject the subject (e.g., player or console) whose permissions are being initialized
+   * @param provider the default permission provider used for the subject
+   */
   public PermissionsSetupEvent(PermissionSubject subject, PermissionProvider provider) {
     this.subject = Preconditions.checkNotNull(subject, "subject");
     this.provider = this.defaultProvider = Preconditions.checkNotNull(provider, "provider");
   }
 
+  /**
+   * Gets the subject whose permissions are being initialized.
+   *
+   * @return the permission subject
+   */
   public PermissionSubject getSubject() {
     return this.subject;
   }
@@ -53,6 +64,11 @@ public final class PermissionsSetupEvent {
     return this.provider.createFunction(subject);
   }
 
+  /**
+   * Gets the current {@link PermissionProvider} in use for this subject.
+   *
+   * @return the permission provider
+   */
   public PermissionProvider getProvider() {
     return this.provider;
   }

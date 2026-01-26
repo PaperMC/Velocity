@@ -200,14 +200,29 @@ public final class GameProfile {
       this.signature = Preconditions.checkNotNull(signature, "signature");
     }
 
+    /**
+     * Returns the name of this property.
+     *
+     * @return the property name
+     */
     public String getName() {
       return name;
     }
 
+    /**
+     * Returns the value of this property.
+     *
+     * @return the property value
+     */
     public String getValue() {
       return value;
     }
 
+    /**
+     * Returns the Mojang-provided signature for this property.
+     *
+     * @return the property signature
+     */
     public String getSignature() {
       return signature;
     }

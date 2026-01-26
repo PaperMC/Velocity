@@ -24,7 +24,19 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public final class SerializedPluginDescription {
 
+  /**
+   * The string pattern used to validate plugin IDs.
+   *
+   * <p>Plugin IDs must start with a lowercase letter and may contain lowercase letters,
+   * digits, hyphens, and underscores. The total length must not exceed 64 characters.</p>
+   */
   public static final String ID_PATTERN_STRING = "[a-z][a-z0-9-_]{0,63}";
+  /**
+   * The compiled pattern used to validate plugin IDs.
+   *
+   * <p>Plugin IDs must start with a lowercase letter and may contain lowercase letters,
+   * digits, hyphens, and underscores. The total length must not exceed 64 characters.</p>
+   */
   public static final Pattern ID_PATTERN = Pattern.compile(ID_PATTERN_STRING);
 
   // @Nullable is used here to make GSON skip these in the serialized file
@@ -64,34 +76,78 @@ public final class SerializedPluginDescription {
             .collect(Collectors.toList()), dependencies, qualifiedName);
   }
 
+  /**
+   * Gets the ID of the plugin this dependency refers to.
+   *
+   * @return the plugin ID
+   */
   public String getId() {
     return id;
   }
 
+  /**
+   * Gets the human-readable name of the plugin.
+   *
+   * @return the plugin's name, or {@code null} if not specified
+   */
   public @Nullable String getName() {
     return name;
   }
 
+  /**
+   * Gets the version string of the plugin.
+   *
+   * @return the plugin version, or {@code null} if not specified
+   */
   public @Nullable String getVersion() {
     return version;
   }
 
+  /**
+   * Gets the plugin's description, typically a short summary of its functionality.
+   *
+   * @return the description, or {@code null} if not specified
+   */
   public @Nullable String getDescription() {
     return description;
   }
 
+  /**
+   * Gets the website URL for the plugin.
+   *
+   * <p>This is often used to link to documentation, support, or the plugin's homepage.</p>
+   *
+   * @return the plugin URL, or {@code null} if not specified
+   */
   public @Nullable String getUrl() {
     return url;
   }
 
+  /**
+   * Gets the list of authors who contributed to the plugin.
+   *
+   * @return an immutable list of authors; empty if none were specified
+   */
   public List<String> getAuthors() {
     return authors == null ? ImmutableList.of() : authors;
   }
 
+  /**
+   * Gets the list of declared dependencies for the plugin.
+   *
+   * <p>Dependencies may be required or optional and describe other plugins, this one depends.</p>
+   *
+   * @return an immutable list of plugin dependencies
+   */
   public List<Dependency> getDependencies() {
     return dependencies == null ? ImmutableList.of() : dependencies;
   }
 
+  /**
+   * Gets the fully qualified name of the plugin's main class.
+   *
+   * @return the main class name
+   */
   public String getMain() {
     return main;
   }
@@ -142,15 +198,33 @@ public final class SerializedPluginDescription {
     private final String id;
     private final boolean optional;
 
+    /**
+     * Constructs a new dependency class.
+     *
+     * @param id the ID of the dependent plugin
+     * @param optional whether the dependency is optional
+     */
     public Dependency(String id, boolean optional) {
       this.id = id;
       this.optional = optional;
     }
 
+    /**
+     * Gets the ID of the plugin this dependency refers to.
+     *
+     * @return the plugin ID
+     */
     public String getId() {
       return id;
     }
 
+    /**
+     * Indicates whether this dependency is optional.
+     *
+     * <p>Optional dependencies are not required for the plugin to load.</p>
+     *
+     * @return {@code true} if the dependency is optional; {@code false} otherwise
+     */
     public boolean isOptional() {
       return optional;
     }

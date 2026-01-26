@@ -15,6 +15,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Indicates an event that has a result attached to it.
+ *
+ * @param <R> the type of result associated with the event
  */
 public interface ResultedEvent<R extends ResultedEvent.Result> {
 
@@ -70,10 +72,20 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
       return status ? "allowed" : "denied";
     }
 
+    /**
+     * Returns a result indicating the event is allowed to proceed.
+     *
+     * @return an allowed {@link GenericResult}
+     */
     public static GenericResult allowed() {
       return ALLOWED;
     }
 
+    /**
+     * Returns a result indicating the event is denied.
+     *
+     * @return a denied {@link GenericResult}
+     */
     public static GenericResult denied() {
       return DENIED;
     }
@@ -89,6 +101,12 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
     private final boolean status;
     private final @Nullable Component reason;
 
+    /**
+     * Represents an allowed or denied result that may include a denial reason.
+     *
+     * @param status whether the result is allowed
+     * @param reason the component explaining why the result was denied, or {@code null}
+     */
     protected ComponentResult(boolean status, @Nullable Component reason) {
       this.status = status;
       this.reason = reason;
@@ -99,6 +117,11 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
       return status;
     }
 
+    /**
+     * Returns the denial reason component, if present.
+     *
+     * @return an {@link Optional} containing the reason component if the result is denied
+     */
     public Optional<Component> getReasonComponent() {
       return Optional.ofNullable(reason);
     }
@@ -114,10 +137,22 @@ public interface ResultedEvent<R extends ResultedEvent.Result> {
       return "denied";
     }
 
+    /**
+     * Returns a result indicating the event is allowed to proceed.
+     *
+     * @return an allowed {@link ComponentResult}
+     */
     public static ComponentResult allowed() {
       return ALLOWED;
     }
 
+    /**
+     * Returns a result indicating the event is denied, with the given reason component.
+     *
+     * @param reason the denial reason to show
+     * @return a denied {@link ComponentResult}
+     * @throws NullPointerException if the reason is null
+     */
     public static ComponentResult denied(Component reason) {
       Preconditions.checkNotNull(reason, "reason");
       return new ComponentResult(false, reason);

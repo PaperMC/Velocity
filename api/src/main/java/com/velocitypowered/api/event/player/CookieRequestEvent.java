@@ -47,10 +47,20 @@ public final class CookieRequestEvent implements ResultedEvent<CookieRequestEven
     this.result = Preconditions.checkNotNull(result, "result");
   }
 
+  /**
+   * Returns the player from whom the cookie is being requested.
+   *
+   * @return the player
+   */
   public Player getPlayer() {
     return player;
   }
 
+  /**
+   * Returns the original identifier of the cookie being requested.
+   *
+   * @return the original cookie key
+   */
   public Key getOriginalKey() {
     return originalKey;
   }
@@ -84,6 +94,11 @@ public final class CookieRequestEvent implements ResultedEvent<CookieRequestEven
       return status;
     }
 
+    /**
+     * Returns the replacement key to use for the cookie request, if one was provided.
+     *
+     * @return the new key, or {@code null} if unchanged
+     */
     public Key getKey() {
       return key;
     }

@@ -15,7 +15,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * Represents three different states of a setting.
  *
  * <p>Possible values:</p>
- * <p></p>
+ *
  * <ul>
  * <li>{@link #TRUE} - a positive setting</li>
  * <li>{@link #FALSE} - a negative (negated) setting</li>
