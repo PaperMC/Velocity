@@ -39,6 +39,7 @@ import net.kyori.adventure.sound.SoundStop;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.event.HoverEventSource;
+import net.kyori.adventure.text.object.PlayerHeadObjectContents;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 
@@ -49,7 +50,8 @@ public interface Player extends
     /* Fundamental Velocity interfaces */
     CommandSource, InboundConnection, ChannelMessageSource, ChannelMessageSink,
     /* Adventure-specific interfaces */
-    Identified, HoverEventSource<HoverEvent.ShowEntity>, Keyed, KeyIdentifiable, Sound.Emitter {
+    Identified, HoverEventSource<HoverEvent.ShowEntity>, Keyed, KeyIdentifiable, Sound.Emitter,
+    PlayerHeadObjectContents.SkinSource {
 
   /**
    * Returns the player's current username.
@@ -337,6 +339,16 @@ public interface Player extends
           @NotNull UnaryOperator<HoverEvent.ShowEntity> op) {
     return HoverEvent.showEntity(op.apply(HoverEvent.ShowEntity.showEntity(this, getUniqueId(),
             Component.text(getUsername()))));
+  }
+
+  @SuppressWarnings("UnstableApiUsage") // permitted implementation
+  @Override
+  default void applySkinToPlayerHeadContents(
+      final PlayerHeadObjectContents.@NotNull Builder builder) {
+    builder.skin(this.getGameProfile());
+    if (this.hasSentPlayerSettings()) {
+      builder.hat(this.getPlayerSettings().getSkinParts().hasHat());
+    }
   }
 
   /**
