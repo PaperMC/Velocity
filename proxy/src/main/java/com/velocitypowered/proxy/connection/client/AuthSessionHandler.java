@@ -69,14 +69,16 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
   private @MonotonicNonNull ConnectedPlayer connectedPlayer;
   private final boolean onlineMode;
   private State loginState = State.START; // 1.20.2+
+  private final String serverIdHash;
 
   AuthSessionHandler(VelocityServer server, LoginInboundConnection inbound,
-      GameProfile profile, boolean onlineMode) {
+      GameProfile profile, boolean onlineMode, String serverIdHash) {
     this.server = Preconditions.checkNotNull(server, "server");
     this.inbound = Preconditions.checkNotNull(inbound, "inbound");
     this.profile = Preconditions.checkNotNull(profile, "profile");
     this.onlineMode = onlineMode;
     this.mcConnection = inbound.delegatedConnection();
+    this.serverIdHash = serverIdHash;
   }
 
   @Override
@@ -213,7 +215,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
   private void completeLoginProtocolPhaseAndInitialize(ConnectedPlayer player) {
     mcConnection.setAssociation(player);
 
-    server.getEventManager().fire(new LoginEvent(player)).thenAcceptAsync(event -> {
+    server.getEventManager().fire(new LoginEvent(player, serverIdHash)).thenAcceptAsync(event -> {
       if (mcConnection.isClosed()) {
         // The player was disconnected
         server.getEventManager().fireAndForget(new DisconnectEvent(player,
