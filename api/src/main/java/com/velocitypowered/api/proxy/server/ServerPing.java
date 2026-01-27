@@ -504,9 +504,9 @@ public final class ServerPing {
     }
 
     /**
-     * Gets the legacy string name of the sample player.
+     * Gets the user-facing name of the server version.
      *
-     * @return the player name
+     * @return the version name
      */
     public String getName() {
       return name;
@@ -638,9 +638,9 @@ public final class ServerPing {
     private final UUID id;
 
     /**
-     * Constructs a SamplePlayer from a {@link Component}-based name.
+     * Constructs a SamplePlayer with the given name and UUID.
      *
-     * @param name the name of the player as a {@link Component}
+     * @param name the name of the player
      * @param id the UUID of the player
      */
     public SamplePlayer(String name, UUID id) {
