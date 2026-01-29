@@ -23,7 +23,7 @@ public interface CommandSource extends Audience, PermissionSubject {
    * Sends a message with the MiniMessage format to this source.
    *
    * @param message MiniMessage content
-   * @see <a href="https://docs.advntr.dev/minimessage/format.html">MiniMessage docs</a>
+   * @see <a href="https://docs.papermc.io/adventure/minimessage/format/">MiniMessage docs</a>
    *      for more information on the format.
    */
   default void sendRichMessage(final @NotNull String message) {
@@ -35,8 +35,8 @@ public interface CommandSource extends Audience, PermissionSubject {
    *
    * @param message MiniMessage content
    * @param resolvers resolvers to use
-   * @see <a href="https://docs.advntr.dev/minimessage/">MiniMessage docs</a>
-   *     and <a href="https://docs.advntr.dev/minimessage/dynamic-replacements">MiniMessage Placeholders docs</a>
+   * @see <a href="https://docs.papermc.io/adventure/minimessage/">MiniMessage docs</a>
+   *     and <a href="https://docs.papermc.io/adventure/minimessage/dynamic-replacements">MiniMessage Placeholders docs</a>
    *     for more information on the format.
    */
   default void sendRichMessage(
