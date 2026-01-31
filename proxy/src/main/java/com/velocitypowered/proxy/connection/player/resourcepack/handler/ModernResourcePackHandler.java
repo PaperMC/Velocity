@@ -71,6 +71,14 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
   }
 
   @Override
+  public void loadAppliedResourcePacks(Collection<ResourcePackInfo> appliedResourcePacks) {
+    this.appliedResourcePacks.clear();
+    for (ResourcePackInfo appliedResourcePack : appliedResourcePacks) {
+      this.appliedResourcePacks.put(appliedResourcePack.getId(), appliedResourcePack);
+    }
+  }
+
+  @Override
   public @NotNull Collection<ResourcePackInfo> getPendingResourcePacks() {
     return List.copyOf(pendingResourcePacks.values());
   }

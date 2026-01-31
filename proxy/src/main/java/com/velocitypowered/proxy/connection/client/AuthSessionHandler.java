@@ -27,9 +27,11 @@ import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
 import com.velocitypowered.api.event.player.CookieReceiveEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
+import com.velocitypowered.api.network.HandshakeIntent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.permission.PermissionFunction;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
+import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.UuidUtils;
@@ -38,6 +40,7 @@ import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.connection.player.resourcepack.ResourcePackTransfer;
 import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.LoginAcknowledgedPacket;
@@ -45,6 +48,9 @@ import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
 import io.netty.buffer.ByteBuf;
+import io.netty.handler.codec.CodecException;
+import java.security.SignatureException;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -68,15 +74,17 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
   private GameProfile profile;
   private @MonotonicNonNull ConnectedPlayer connectedPlayer;
   private final boolean onlineMode;
+  private final CompletableFuture<byte[]> appliedResourcePacksFuture;
   private State loginState = State.START; // 1.20.2+
 
-  AuthSessionHandler(VelocityServer server, LoginInboundConnection inbound,
-      GameProfile profile, boolean onlineMode) {
+  AuthSessionHandler(VelocityServer server, LoginInboundConnection inbound, GameProfile profile, boolean onlineMode,
+      CompletableFuture<byte[]> appliedResourcePacksFuture) {
     this.server = Preconditions.checkNotNull(server, "server");
     this.inbound = Preconditions.checkNotNull(inbound, "inbound");
     this.profile = Preconditions.checkNotNull(profile, "profile");
     this.onlineMode = onlineMode;
     this.mcConnection = inbound.delegatedConnection();
+    this.appliedResourcePacksFuture = appliedResourcePacksFuture;
   }
 
   @Override
@@ -112,7 +120,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
 
       return server.getEventManager()
           .fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
-          .thenAcceptAsync(event -> {
+          .thenAcceptBothAsync(appliedResourcePacksFuture, (event, appliedResourcePacks) -> {
             if (!mcConnection.isClosed()) {
               // wait for permissions to load, then set the players permission function
               final PermissionFunction function = event.createFunction(player);
@@ -124,6 +132,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
               } else {
                 player.setPermissionFunction(function);
               }
+              loadAppliedResourcePacks(player, appliedResourcePacks);
               startLoginCompletion(player);
             }
           }, mcConnection.eventLoop());
@@ -131,6 +140,22 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
       logger.error("Exception during connection of {}", finalProfile, ex);
       return null;
     });
+  }
+
+  private void loadAppliedResourcePacks(ConnectedPlayer player, byte[] cookieData) {
+    if (player.getHandshakeIntent() != HandshakeIntent.TRANSFER || cookieData == null) {
+      return;
+    }
+
+    try {
+      Collection<ResourcePackInfo> appliedResourcePacks = ResourcePackTransfer.decodeAndValidateCookieData(
+              server.getConfiguration().getForwardingSecret(), cookieData);
+      player.resourcePackHandler().loadAppliedResourcePacks(appliedResourcePacks);
+    } catch (SignatureException e) {
+      logger.warn("Signature error while loading applied resource packs of {}", player.getUsername(), e);
+    } catch (IndexOutOfBoundsException | CodecException e) {
+      logger.warn("Error while decoding applied resource packs of {}", player.getUsername(), e);
+    }
   }
 
   private void startLoginCompletion(ConnectedPlayer player) {
@@ -160,7 +185,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
             }
           }
         } else {
-          logger.warn("A custom key type has been set for player " + player.getUsername());
+          logger.warn("A custom key type has been set for player {}", player.getUsername());
         }
       } else {
         if (!Objects.equals(playerKey.getSignatureHolder(), playerUniqueId)) {
@@ -194,6 +219,11 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ServerboundCookieResponsePacket packet) {
+    if (packet.getKey().equals(ResourcePackTransfer.APPLIED_RESOURCE_PACKS_KEY)) {
+      appliedResourcePacksFuture.complete(packet.getPayload());
+      return true;
+    }
+
     server.getEventManager()
         .fire(new CookieReceiveEvent(connectedPlayer, packet.getKey(), packet.getPayload()))
         .thenAcceptAsync(event -> {
