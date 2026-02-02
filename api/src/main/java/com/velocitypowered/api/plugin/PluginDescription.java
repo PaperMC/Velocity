@@ -96,6 +96,12 @@ public interface PluginDescription {
     return ImmutableSet.of();
   }
 
+  /**
+   * Gets a specific dependency of the {@link Plugin} by its ID.
+   *
+   * @param id the ID of the dependency to look up
+   * @return an {@link Optional} containing the matching {@link PluginDependency}, or empty if not found
+   */
   default Optional<PluginDependency> getDependency(String id) {
     return Optional.empty();
   }

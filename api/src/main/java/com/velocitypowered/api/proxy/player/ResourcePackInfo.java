@@ -87,7 +87,6 @@ public interface ResourcePackInfo extends ResourcePackRequestLike {
 
   /**
    * Returns a copy of this {@link ResourcePackInfo} instance as a builder, using the new URL.
-   * <p/>
    * It is <b>not</b> guaranteed that
    * {@code resourcePackInfo.asBuilder(resourcePackInfo.getUrl()).build().equals(resourcePackInfo)}
    * is true, because the {@link ResourcePackInfo#getOrigin()} and
@@ -108,6 +107,7 @@ public interface ResourcePackInfo extends ResourcePackRequestLike {
      * Sets the id of the resource pack.
      *
      * @param id the id the resource-pack
+     * @return this builder instance
      */
     Builder setId(UUID id);
 
@@ -128,6 +128,7 @@ public interface ResourcePackInfo extends ResourcePackRequestLike {
      *    the player will be disconnected from the network
      *
      * @param shouldForce whether or not to force the client to accept the resource pack
+     * @return this builder instance
      */
     Builder setShouldForce(boolean shouldForce);
 
@@ -140,6 +141,7 @@ public interface ResourcePackInfo extends ResourcePackRequestLike {
      * before downloading.
      *
      * @param hash the SHA-1 hash of the resource-pack
+     * @return this builder instance
      */
     Builder setHash(@Nullable byte[] hash);
 
@@ -148,6 +150,7 @@ public interface ResourcePackInfo extends ResourcePackRequestLike {
      * This will only display if the client version is 1.17 or newer.
      *
      * @param prompt the component to display
+     * @return this builder instance
      */
     Builder setPrompt(@Nullable Component prompt);
 

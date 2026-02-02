@@ -28,6 +28,17 @@ import io.netty.buffer.Unpooled;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Represents a mod-specific argument type with custom binary data attached.
+ *
+ * <p>This class allows external mods or extensions to define their own command argument
+ * types, identified by a namespaced {@link ArgumentIdentifier} and accompanied by
+ * serialized {@link ByteBuf} data.</p>
+ *
+ * <p>Note: This type is not parseable or suggestible through Brigadier and exists primarily
+ * to preserve compatibility with extended command metadata during serialization and
+ * deserialization.</p>
+ */
 public class ModArgumentProperty implements ArgumentType<ByteBuf> {
 
   private final ArgumentIdentifier identifier;

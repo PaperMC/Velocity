@@ -30,6 +30,9 @@ import java.util.ArrayList;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents the packet used to send tab-completion suggestions to the client.
+ */
 public class TabCompleteResponsePacket implements MinecraftPacket {
 
   private int transactionId;
@@ -122,6 +125,9 @@ public class TabCompleteResponsePacket implements MinecraftPacket {
     return handler.handle(this);
   }
 
+  /**
+   * Represents an individual tab-completion suggestion (offer) sent to the client.
+   */
   public static class Offer implements Comparable<Offer> {
 
     private final String text;

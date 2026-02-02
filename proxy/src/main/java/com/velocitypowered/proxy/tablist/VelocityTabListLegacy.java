@@ -85,7 +85,7 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
 
   @Override
   public void processLegacy(LegacyPlayerListItemPacket packet) {
-    Item item = packet.getItems().get(0); // Only one item per packet in 1.7
+    Item item = packet.getItems().getFirst(); // Only one item per packet in 1.7
 
     switch (packet.getAction()) {
       case LegacyPlayerListItemPacket.ADD_PLAYER:

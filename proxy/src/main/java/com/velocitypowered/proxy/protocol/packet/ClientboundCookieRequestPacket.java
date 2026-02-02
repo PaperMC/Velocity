@@ -25,6 +25,11 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 
+/**
+ * Represents a packet sent from the server to the client to request cookies.
+ * This packet can be used to initiate a request for cookie-related data from the client,
+ * typically for authentication or tracking purposes.
+ */
 public class ClientboundCookieRequestPacket implements MinecraftPacket {
 
   private Key key;

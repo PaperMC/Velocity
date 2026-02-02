@@ -52,14 +52,29 @@ public final class CookieStoreEvent implements ResultedEvent<CookieStoreEvent.Fo
     this.result = Preconditions.checkNotNull(result, "result");
   }
 
+  /**
+   * Returns the player who should store the cookie.
+   *
+   * @return the player
+   */
   public Player getPlayer() {
     return player;
   }
 
+  /**
+   * Returns the original key identifying the cookie to be stored.
+   *
+   * @return the cookie key
+   */
   public Key getOriginalKey() {
     return originalKey;
   }
 
+  /**
+   * Returns the original data of the cookie to be stored.
+   *
+   * @return the cookie data
+   */
   public byte[] getOriginalData() {
     return originalData;
   }
@@ -96,10 +111,22 @@ public final class CookieStoreEvent implements ResultedEvent<CookieStoreEvent.Fo
       return status;
     }
 
+    /**
+     * Returns the replacement key to use when forwarding the cookie,
+     * or {@code null} if the original key should be used.
+     *
+     * @return the new cookie key, or {@code null} if unchanged
+     */
     public Key getKey() {
       return key;
     }
 
+    /**
+     * Returns the replacement data to use when forwarding the cookie,
+     * or {@code null} if the original data should be used.
+     *
+     * @return the new cookie data, or {@code null} if unchanged
+     */
     public byte[] getData() {
       return data;
     }

@@ -29,6 +29,7 @@ import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.config.migration.ConfigurationMigration;
 import com.velocitypowered.proxy.config.migration.ForwardingMigration;
 import com.velocitypowered.proxy.config.migration.KeyAuthenticationMigration;
+import com.velocitypowered.proxy.config.migration.MiniMessageTranslationsMigration;
 import com.velocitypowered.proxy.config.migration.MotdMigration;
 import com.velocitypowered.proxy.config.migration.TransferIntegrationMigration;
 import com.velocitypowered.proxy.util.AddressUtil;
@@ -156,19 +157,16 @@ public class VelocityConfiguration implements ProxyConfig {
     }
 
     switch (playerInfoForwardingMode) {
-      case NONE:
-        logger.warn("Player info forwarding is disabled! All players will appear to be connecting "
+      case NONE -> logger.warn("Player info forwarding is disabled! All players will appear to be connecting "
             + "from the proxy and will have offline-mode UUIDs.");
-        break;
-      case MODERN:
-      case BUNGEEGUARD:
+      case MODERN, BUNGEEGUARD -> {
         if (forwardingSecret == null || forwardingSecret.length == 0) {
           logger.error("You don't have a forwarding secret set. This is required for security.");
           valid = false;
         }
-        break;
-      default:
-        break;
+      }
+      default -> {
+      }
     }
 
     if (servers.getServers().isEmpty()) {
@@ -504,6 +502,7 @@ public class VelocityConfiguration implements ProxyConfig {
           new ForwardingMigration(),
           new KeyAuthenticationMigration(),
           new MotdMigration(),
+          new MiniMessageTranslationsMigration(),
           new TransferIntegrationMigration()
       };
 

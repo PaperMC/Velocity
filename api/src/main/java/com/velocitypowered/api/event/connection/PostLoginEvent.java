@@ -23,10 +23,20 @@ public final class PostLoginEvent {
 
   private final Player player;
 
+  /**
+   * Constructs a new PostLoginEvent.
+   *
+   * @param player the player who has logged in
+   */
   public PostLoginEvent(Player player) {
     this.player = Preconditions.checkNotNull(player, "player");
   }
 
+  /**
+   * Gets the player who has logged in and is about to connect to their first server.
+   *
+   * @return the player
+   */
   public Player getPlayer() {
     return player;
   }

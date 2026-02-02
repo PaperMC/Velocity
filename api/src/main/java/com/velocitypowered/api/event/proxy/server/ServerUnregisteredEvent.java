@@ -23,6 +23,12 @@ import org.jetbrains.annotations.NotNull;
  * @since 3.3.0
  */
 public record ServerUnregisteredEvent(@NotNull RegisteredServer unregisteredServer) {
+
+  /**
+   * Constructs a {@link ServerUnregisteredEvent}.
+   *
+   * @param unregisteredServer the server that was unregistered
+   */
   public ServerUnregisteredEvent {
     Preconditions.checkNotNull(unregisteredServer, "unregisteredServer");
   }

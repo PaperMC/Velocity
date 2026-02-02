@@ -22,18 +22,24 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import javax.annotation.Nullable;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.sound.SoundStop;
 
-import javax.annotation.Nullable;
-
+/**
+ * A clientbound packet instructing the client to stop one or more sounds.
+ *
+ * <p>This packet supports specifying a {@link Sound.Source}, a {@link Key} sound identifier,
+ * or both together. If neither is specified, the client will stop all currently playing sounds.</p>
+ */
 public class ClientboundStopSoundPacket implements MinecraftPacket {
 
   private @Nullable Sound.Source source;
   private @Nullable Key soundName;
 
-  public ClientboundStopSoundPacket() {}
+  public ClientboundStopSoundPacket() {
+  }
 
   public ClientboundStopSoundPacket(SoundStop soundStop) {
     this(soundStop.source(), soundStop.sound());

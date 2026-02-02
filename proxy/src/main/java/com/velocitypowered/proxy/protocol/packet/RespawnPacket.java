@@ -28,6 +28,10 @@ import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents a respawn packet sent by the server when the player changes dimensions or respawns.
+ * The packet contains information about the new dimension, difficulty, gamemode, and more.
+ */
 public class RespawnPacket implements MinecraftPacket {
 
   private int dimension;
@@ -46,6 +50,22 @@ public class RespawnPacket implements MinecraftPacket {
   public RespawnPacket() {
   }
 
+  /**
+   * Constructs a new {@code RespawnPacket} with the specified parameters.
+   *
+   * @param dimension the dimension the player is respawning or teleporting to
+   * @param partialHashedSeed the partial hashed seed
+   * @param difficulty the difficulty of the server
+   * @param gamemode the player's current gamemode
+   * @param levelType the type of level (e.g., "default", "flat")
+   * @param dataToKeep a byte flag indicating whether certain data should be kept
+   * @param dimensionInfo additional information about the dimension (for 1.16-1.16.1)
+   * @param previousGamemode the player's previous gamemode
+   * @param currentDimensionData data about the current dimension (for 1.16.2+)
+   * @param lastDeathPosition optional last death position (for 1.19+)
+   * @param portalCooldown the cooldown for portal usage (for 1.20+)
+   * @param seaLevel a determinable spawn point for a user (for 1.21.2+)
+   */
   public RespawnPacket(int dimension, long partialHashedSeed, short difficulty, short gamemode,
                        String levelType, byte dataToKeep, DimensionInfo dimensionInfo,
                        short previousGamemode, CompoundBinaryTag currentDimensionData,
@@ -65,6 +85,12 @@ public class RespawnPacket implements MinecraftPacket {
     this.seaLevel = seaLevel;
   }
 
+  /**
+   * Creates a new {@code RespawnPacket} from a {@link JoinGamePacket}.
+   *
+   * @param joinGame the {@code JoinGamePacket} to use
+   * @return a new {@code RespawnPacket} based on the provided {@code JoinGamePacket}
+   */
   public static RespawnPacket fromJoinGame(JoinGamePacket joinGame) {
     return new RespawnPacket(joinGame.getDimension(), joinGame.getPartialHashedSeed(),
         joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),

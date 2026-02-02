@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * This event is executed when a player has finished the configuration state.
+ *
  * <p>From this moment on, the {@link Player#getProtocolState()} method
  * will return {@link ProtocolState#PLAY}.</p>
  *

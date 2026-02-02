@@ -23,6 +23,12 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * A client-to-server packet indicating the player has accepted the server's
+ * code of conduct during the configuration stage.
+ *
+ * <p>This packet has no payload and is represented as a singleton.</p>
+ */
 public class CodeOfConductAcceptPacket implements MinecraftPacket {
 
   public static final CodeOfConductAcceptPacket INSTANCE = new CodeOfConductAcceptPacket();

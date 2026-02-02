@@ -23,9 +23,13 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.Objects;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents the client settings packet in Minecraft, which is sent by the client
+ * to the server to communicate its settings such as locale, view distance, chat preferences,
+ * skin customization, and other client-side configurations.
+ */
 public class ClientSettingsPacket implements MinecraftPacket {
   private @Nullable String locale;
   private byte viewDistance;
@@ -41,6 +45,19 @@ public class ClientSettingsPacket implements MinecraftPacket {
   public ClientSettingsPacket() {
   }
 
+  /**
+   * Constructs a new {@code ClientSettingsPacket} with the specified settings.
+   *
+   * @param locale the client's locale setting
+   * @param viewDistance the view distance
+   * @param chatVisibility the client's chat visibility setting
+   * @param chatColors whether chat colors are enabled
+   * @param skinParts the customization for skin parts
+   * @param mainHand the client's main hand preference
+   * @param textFilteringEnabled whether text filtering is enabled
+   * @param clientListingAllowed whether the client allows listing
+   * @param particleStatus whether particles are enabled
+   */
   public ClientSettingsPacket(String locale, byte viewDistance, int chatVisibility, boolean chatColors,
                               short skinParts, int mainHand, boolean textFilteringEnabled, boolean clientListingAllowed,
                               int particleStatus) {
@@ -55,6 +72,12 @@ public class ClientSettingsPacket implements MinecraftPacket {
     this.particleStatus = particleStatus;
   }
 
+  /**
+   * Gets the client's locale.
+   *
+   * @return the locale
+   * @throws IllegalStateException if no locale is specified
+   */
   public String getLocale() {
     if (locale == null) {
       throw new IllegalStateException("No locale specified");
@@ -132,10 +155,10 @@ public class ClientSettingsPacket implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "ClientSettings{" + "locale='" + locale + '\'' + ", viewDistance=" + viewDistance +
-        ", chatVisibility=" + chatVisibility + ", chatColors=" + chatColors + ", skinParts=" +
-        skinParts + ", mainHand=" + mainHand + ", chatFilteringEnabled=" + textFilteringEnabled +
-        ", clientListingAllowed=" + clientListingAllowed +  ", particleStatus=" + particleStatus + '}';
+    return "ClientSettings{" + "locale='" + locale + '\'' + ", viewDistance=" + viewDistance
+        + ", chatVisibility=" + chatVisibility + ", chatColors=" + chatColors + ", skinParts="
+        + skinParts + ", mainHand=" + mainHand + ", chatFilteringEnabled=" + textFilteringEnabled
+        + ", clientListingAllowed=" + clientListingAllowed +  ", particleStatus=" + particleStatus + '}';
   }
 
   @Override

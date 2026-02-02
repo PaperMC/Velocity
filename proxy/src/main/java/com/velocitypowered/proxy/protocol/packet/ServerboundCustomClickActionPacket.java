@@ -25,6 +25,12 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * Represents a serverbound packet carrying an opaque custom click action payload.
+ *
+ * <p>The payload is retained as-is and forwarded to the session handler without
+ * interpretation by the proxy.</p>
+ */
 public class ServerboundCustomClickActionPacket extends DeferredByteBufHolder implements MinecraftPacket {
 
   public ServerboundCustomClickActionPacket() {

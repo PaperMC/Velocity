@@ -21,6 +21,16 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The {@code RegistryIdArgumentSerializer} handles serialization and deserialization
+ * of integer-based registry ID arguments.
+ *
+ * <p>This serializer is used for command arguments that refer to elements in Minecraft
+ * registries (e.g., items, entities, dimensions) by their numerical registry ID.</p>
+ *
+ * <p>Values are encoded as variable-length integers using {@link ProtocolUtils}
+ * for compact transmission.</p>
+ */
 public class RegistryIdArgumentSerializer implements ArgumentPropertySerializer<Integer> {
 
   static final RegistryIdArgumentSerializer REGISTRY_ID = new RegistryIdArgumentSerializer();

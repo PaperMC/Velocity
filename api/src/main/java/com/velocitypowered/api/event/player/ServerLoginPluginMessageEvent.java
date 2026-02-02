@@ -63,10 +63,20 @@ public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResu
     this.result = checkNotNull(result, "result");
   }
 
+  /**
+   * Gets the connection from which the login plugin message was received.
+   *
+   * @return the server connection
+   */
   public ServerConnection getConnection() {
     return connection;
   }
 
+  /**
+   * Gets the identifier of the channel this login plugin message was sent on.
+   *
+   * @return the channel identifier
+   */
   public ChannelIdentifier getIdentifier() {
     return identifier;
   }
@@ -100,6 +110,11 @@ public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResu
     return ByteStreams.newDataInput(contents);
   }
 
+  /**
+   * Gets the sequence ID of the plugin message sent by the server.
+   *
+   * @return the sequence ID
+   */
   public int getSequenceId() {
     return sequenceId;
   }
@@ -146,10 +161,21 @@ public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResu
       return response.clone();
     }
 
+    /**
+     * Returns a result indicating that this login plugin message was not handled by the proxy.
+     *
+     * @return the unknown response result
+     */
     public static ResponseResult unknown() {
       return UNKNOWN;
     }
 
+    /**
+     * Returns a result with a reply to the server's login plugin message.
+     *
+     * @param response the response bytes to send
+     * @return a response result containing the response data
+     */
     public static ResponseResult reply(byte[] response) {
       checkNotNull(response, "response");
       return new ResponseResult(response);

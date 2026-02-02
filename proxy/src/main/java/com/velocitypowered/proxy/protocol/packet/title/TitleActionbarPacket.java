@@ -23,6 +23,16 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The {@code TitleActionbarPacket} class represents a packet that handles the content of an action bar
+ * displayed to the player in Minecraft.
+ *
+ * <p>This packet is used to send the text that appears in the action bar, which is a separate text line
+ * displayed above the hotbar on the player's screen.</p>
+ *
+ * <p>It extends the {@link GenericTitlePacket}, inheriting basic title properties and focusing on
+ * the content of the action bar.</p>
+ */
 public class TitleActionbarPacket extends GenericTitlePacket {
 
   private ComponentHolder component;

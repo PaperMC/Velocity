@@ -145,45 +145,44 @@ public enum InformationUtils {
    * @return {@link String} address with public parts redacted
    */
   public static String anonymizeInetAddress(InetAddress address) {
-    if (address instanceof Inet4Address) {
-      Inet4Address v4 = (Inet4Address) address;
-      if (v4.isAnyLocalAddress() || v4.isLoopbackAddress()
-          || v4.isLinkLocalAddress()
-          || v4.isSiteLocalAddress()) {
-        return address.getHostAddress();
-      } else {
-        byte[] addr = v4.getAddress();
-        return (addr[0] & 0xff) + "." + (addr[1] & 0xff) + ".XXX.XXX";
-      }
-    } else if (address instanceof Inet6Address) {
-      Inet6Address v6 = (Inet6Address) address;
-      if (v6.isAnyLocalAddress() || v6.isLoopbackAddress()
-          || v6.isSiteLocalAddress()
-          || v6.isSiteLocalAddress()) {
-        return address.getHostAddress();
-      } else {
-        String[] bits = v6.getHostAddress().split(":");
-        String ret = "";
-        boolean flag = false;
-        for (int iter = 0; iter < bits.length; iter++) {
-          if (flag) {
-            ret += ":X";
-            continue;
-          }
-          if (!bits[iter].equals("0")) {
-            if (iter == 0) {
-              ret = bits[iter];
-            } else {
-              ret = "::" + bits[iter];
-            }
-            flag = true;
-          }
+    return switch (address) {
+      case Inet4Address v4 -> {
+        if (v4.isAnyLocalAddress() || v4.isLoopbackAddress()
+                || v4.isLinkLocalAddress()
+                || v4.isSiteLocalAddress()) {
+          yield address.getHostAddress();
+        } else {
+          byte[] addr = v4.getAddress();
+          yield (addr[0] & 0xff) + "." + (addr[1] & 0xff) + ".XXX.XXX";
         }
-        return ret;
+      } case Inet6Address v6 -> {
+        if (v6.isAnyLocalAddress() || v6.isLoopbackAddress()
+                || v6.isSiteLocalAddress()
+                || v6.isSiteLocalAddress()) {
+          yield address.getHostAddress();
+        } else {
+          String[] bits = v6.getHostAddress().split(":");
+          String ret = "";
+          boolean flag = false;
+          for (int iter = 0; iter < bits.length; iter++) {
+            if (flag) {
+              ret += ":X";
+              continue;
+            }
+            if (!bits[iter].equals("0")) {
+              if (iter == 0) {
+                ret = bits[iter];
+              } else {
+                ret = "::" + bits[iter];
+              }
+              flag = true;
+            }
+          }
+          yield ret;
+        }
       }
-    } else {
-      return address.getHostAddress();
-    }
+      default -> address.getHostAddress();
+    };
   }
 
   /**

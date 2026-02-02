@@ -20,6 +20,8 @@ public interface Continuation {
 
   /**
    * Resumes the continuation after the executed task failed.
+   *
+   * @param exception the {@link Throwable} that caused the failure
    */
   void resumeWithException(Throwable exception);
 }

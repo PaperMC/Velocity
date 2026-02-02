@@ -23,39 +23,44 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * Represents a packet sent to acknowledge the receipt of a chat message.
+ * This packet is used to confirm that a player or client has received and processed
+ * a chat message from the server.
+ */
 public class ChatAcknowledgementPacket implements MinecraftPacket {
-    int offset;
+  int offset;
 
-    public ChatAcknowledgementPacket(int offset) {
-        this.offset = offset;
-    }
+  public ChatAcknowledgementPacket(int offset) {
+    this.offset = offset;
+  }
 
-    public ChatAcknowledgementPacket() {
-    }
+  public ChatAcknowledgementPacket() {
+  }
 
-    @Override
-    public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        offset = ProtocolUtils.readVarInt(buf);
-    }
+  @Override
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+    offset = ProtocolUtils.readVarInt(buf);
+  }
 
-    @Override
-    public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        ProtocolUtils.writeVarInt(buf, offset);
-    }
+  @Override
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+    ProtocolUtils.writeVarInt(buf, offset);
+  }
 
-    @Override
-    public boolean handle(MinecraftSessionHandler handler) {
-        return handler.handle(this);
-    }
+  @Override
+  public boolean handle(MinecraftSessionHandler handler) {
+    return handler.handle(this);
+  }
 
-    @Override
-    public String toString() {
-        return "ChatAcknowledgement{" +
-                "offset=" + offset +
-                '}';
-    }
+  @Override
+  public String toString() {
+    return "ChatAcknowledgement{"
+        + "offset=" + offset
+        + '}';
+  }
 
-    public int offset() {
-        return offset;
-    }
+  public int offset() {
+    return offset;
+  }
 }

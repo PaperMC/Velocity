@@ -140,7 +140,7 @@ public class VelocityCommandManager implements CommandManager {
               command + " implements multiple registrable Command subinterfaces: "
                       + implementedInterfaces);
     } else {
-      this.internalRegister(commandRegistrars.get(0), command, meta);
+      this.internalRegister(commandRegistrars.getFirst(), command, meta);
     }
   }
 

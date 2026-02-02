@@ -24,6 +24,13 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 
+/**
+ * The {@code ActiveFeaturesPacket} class represents a packet that communicates the currently
+ * active features between the client and server in the Minecraft protocol.
+ *
+ * <p>This packet is used to inform the client about which features are enabled or active,
+ * potentially based on server configurations or gameplay states.</p>
+ */
 public class ActiveFeaturesPacket implements MinecraftPacket {
 
   private Key[] activeFeatures;

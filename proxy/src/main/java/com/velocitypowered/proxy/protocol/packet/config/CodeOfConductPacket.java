@@ -24,6 +24,14 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * A server-to-client packet containing the server's code of conduct.
+ *
+ * <p>This packet is sent during the configuration stage to present the
+ * server-defined conduct rules to the client. The client may later
+ * respond with a {@link CodeOfConductAcceptPacket} to indicate
+ * acceptance.</p>
+ */
 public class CodeOfConductPacket extends DeferredByteBufHolder implements MinecraftPacket {
 
   public CodeOfConductPacket() {

@@ -28,6 +28,12 @@ import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents a packet sent by the server to disconnect the client. This packet contains
+ * a reason for the disconnection, which is sent to the client and displayed to the player.
+ * The packet can be sent in different states (e.g., login, play), which affects how the
+ * reason is processed.
+ */
 public class DisconnectPacket implements MinecraftPacket {
 
   private @Nullable ComponentHolder reason;
@@ -42,6 +48,12 @@ public class DisconnectPacket implements MinecraftPacket {
     this.reason = Preconditions.checkNotNull(reason, "reason");
   }
 
+  /**
+   * Retrieves the reason for the disconnection, which will be sent to the client.
+   *
+   * @return the reason for the disconnection as a {@link ComponentHolder}
+   * @throws IllegalStateException if no reason is specified
+   */
   public ComponentHolder getReason() {
     if (reason == null) {
       throw new IllegalStateException("No reason specified");
@@ -62,8 +74,8 @@ public class DisconnectPacket implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-	  reason = ComponentHolder.read(buf, state == StateRegistry.LOGIN
-              ? ProtocolVersion.MINECRAFT_1_20_2 : version);
+    reason = ComponentHolder.read(buf, state == StateRegistry.LOGIN
+          ? ProtocolVersion.MINECRAFT_1_20_2 : version);
   }
 
   @Override
@@ -76,6 +88,14 @@ public class DisconnectPacket implements MinecraftPacket {
     return handler.handle(this);
   }
 
+  /**
+   * Creates a new {@code DisconnectPacket} with the specified reason and version.
+   *
+   * @param component the component explaining the disconnection reason
+   * @param version the protocol version in use
+   * @param state the state in which the disconnection occurs
+   * @return the created {@code DisconnectPacket}
+   */
   public static DisconnectPacket create(Component component, ProtocolVersion version, StateRegistry state) {
     Preconditions.checkNotNull(component, "component");
     return new DisconnectPacket(state, new ComponentHolder(state == StateRegistry.LOGIN

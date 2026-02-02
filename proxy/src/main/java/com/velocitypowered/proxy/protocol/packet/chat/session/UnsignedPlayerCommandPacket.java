@@ -24,6 +24,13 @@ import com.velocitypowered.proxy.protocol.packet.chat.LastSeenMessages;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents an unsigned player command packet, extending {@link SessionPlayerCommandPacket}.
+ *
+ * <p>The {@code UnsignedPlayerCommandPacket} is used to handle player commands that are not
+ * signed. It inherits session-specific behavior from {@link SessionPlayerCommandPacket}
+ * while indicating that the command is unsigned.</p>
+ */
 public class UnsignedPlayerCommandPacket extends SessionPlayerCommandPacket {
 
   @Override
@@ -52,8 +59,8 @@ public class UnsignedPlayerCommandPacket extends SessionPlayerCommandPacket {
 
   @Override
   public String toString() {
-    return "UnsignedPlayerCommandPacket{" +
-            "command='" + command + '\'' +
-            '}';
+    return "UnsignedPlayerCommandPacket{"
+        + "command='" + command + '\''
+        + '}';
   }
 }

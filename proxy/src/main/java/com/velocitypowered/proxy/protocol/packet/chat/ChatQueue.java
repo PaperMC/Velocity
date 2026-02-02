@@ -21,12 +21,12 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import io.netty.channel.ChannelFuture;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import java.time.Instant;
 import java.util.BitSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A precisely ordered queue which allows for outside entries into the ordered queue through
@@ -79,7 +79,8 @@ public class ChatQueue implements AutoCloseable {
    * @param timestamp        the new {@link Instant} timestamp of this packet to update the internal chat state.
    * @param lastSeenMessages the new {@link LastSeenMessages} last seen messages to update the internal chat state.
    */
-  public void queuePacket(Function<LastSeenMessages, CompletableFuture<MinecraftPacket>> nextPacket, @Nullable Instant timestamp, @Nullable LastSeenMessages lastSeenMessages) {
+  public void queuePacket(Function<LastSeenMessages, CompletableFuture<MinecraftPacket>> nextPacket, @Nullable Instant timestamp,
+                          @Nullable LastSeenMessages lastSeenMessages) {
     queueTask((chatState, smc) -> {
       LastSeenMessages newLastSeenMessages = chatState.updateFromMessage(timestamp, lastSeenMessages);
       return nextPacket.apply(newLastSeenMessages).thenCompose(packet -> writePacket(packet, smc));
@@ -100,6 +101,12 @@ public class ChatQueue implements AutoCloseable {
     });
   }
 
+  /**
+   * Handles the acknowledgement of a chat message or event by processing the given offset.
+   * This method is typically called when a chat message or command is acknowledged by the client or server.
+   *
+   * @param offset the offset representing the specific message or event being acknowledged
+   */
   public void handleAcknowledgement(int offset) {
     queueTask((chatState, smc) -> {
       int ackCountToForward = chatState.accumulateAckCount(offset);
@@ -138,16 +145,16 @@ public class ChatQueue implements AutoCloseable {
    *     <li>If we last forwarded a chat or command packet from the client, we have a known 'last seen' that we can
    *     reuse.</li>
    *     <li>If we last forwarded a {@link ChatAcknowledgementPacket}, the previous 'last seen' cannot be reused. We
-   *     cannot predict an up-to-date 'last seen', as we do not know which messages the client actually saw.</li>
+   *     cannot predict an up to date 'last seen', as we do not know which messages the client actually saw.</li>
    *     <li>Therefore, we need to hold back any acknowledgement packets so that we can continue to reuse the last valid
    *     'last seen' state.</li>
    *     <li>However, there is a limit to the number of messages that can remain unacknowledged on the server.</li>
    *     <li>To address this, we know that if the client has moved its 'last seen' window far enough, we can fill in the
-   *     gap with dummy 'last seen', and it will never be checked.</li>
+   *     gap with stub 'last seen', and it will never be checked.</li>
    * </ul>
    *
-   * Note that this is effectively unused for 1.20.5+ clients, as commands without any signature do not send 'last seen'
-   * updates.
+   * <p>Note that this is effectively unused for 1.20.5+ clients, as commands without any signature do not send 'last seen'
+   * updates.</p>
    */
   public static class ChatState {
     private static final int MINIMUM_DELAYED_ACK_COUNT = LastSeenMessages.WINDOW_SIZE;
@@ -160,6 +167,17 @@ public class ChatQueue implements AutoCloseable {
     private ChatState() {
     }
 
+    /**
+     * Updates the state of the {@link LastSeenMessages} and the timestamp based on a new message or event.
+     * This method processes the given timestamp and last seen messages to ensure the internal state is up to date.
+     * - If the provided {@link Instant} is not null, it updates the last known timestamp.
+     * - If the provided {@link LastSeenMessages} is not null, it flushes any delayed acknowledgements and updates the
+     *   internal acknowledged messages, returning an adjusted {@link LastSeenMessages} with the offset applied.
+     *
+     * @param timestamp the optional {@link Instant} representing the new timestamp for the message or event
+     * @param lastSeenMessages the optional {@link LastSeenMessages} representing the last seen messages by the player
+     * @return the updated {@link LastSeenMessages} with the applied offset, or {@code null} if no updates were made
+     */
     @Nullable
     public LastSeenMessages updateFromMessage(@Nullable Instant timestamp, @Nullable LastSeenMessages lastSeenMessages) {
       if (timestamp != null) {
@@ -174,6 +192,16 @@ public class ChatQueue implements AutoCloseable {
       return null;
     }
 
+    /**
+     * Accumulates the given acknowledgement count and determines if enough acknowledgements have been gathered to forward.
+     * - Adds the provided `ackCount` to the current delayed acknowledgement count.
+     * - If the accumulated acknowledgements exceed the {@link LastSeenMessages#WINDOW_SIZE}, the method resets the delayed
+     *   acknowledgement count and returns the number of acknowledgements that should be forwarded.
+     * - If the threshold is not met, the method returns 0, indicating that no acknowledgements need to be forwarded yet.
+     *
+     * @param ackCount the number of acknowledgements to add to the accumulated count
+     * @return the number of acknowledgements that should be forwarded, or 0 if the threshold has not been reached
+     */
     public int accumulateAckCount(int ackCount) {
       int delayedAckCount = this.delayedAckCount.addAndGet(ackCount);
       int ackCountToForward = delayedAckCount - MINIMUM_DELAYED_ACK_COUNT;
@@ -186,6 +214,11 @@ public class ChatQueue implements AutoCloseable {
       return 0;
     }
 
+    /**
+     * Creates a snapshot of the current {@link LastSeenMessages} state.
+     *
+     * @return a new {@link LastSeenMessages} representing the current view
+     */
     public LastSeenMessages createLastSeen() {
       return new LastSeenMessages(0, lastSeenMessages, (byte) 0);
     }

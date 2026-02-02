@@ -27,6 +27,10 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
+/**
+ * Represents the response packet to a plugin message sent during the login phase.
+ * The packet contains the plugin message ID, a success flag, and any additional data.
+ */
 public class LoginPluginResponsePacket extends DeferredByteBufHolder implements MinecraftPacket {
 
   private int id;
@@ -36,6 +40,13 @@ public class LoginPluginResponsePacket extends DeferredByteBufHolder implements 
     super(Unpooled.EMPTY_BUFFER);
   }
 
+  /**
+   * Constructs a new {@code LoginPluginResponsePacket} with the specified ID, success status, and data buffer.
+   *
+   * @param id the plugin message ID
+   * @param success {@code true} if the plugin message was successful, {@code false} otherwise
+   * @param buf the data buffer
+   */
   public LoginPluginResponsePacket(int id, boolean success, @MonotonicNonNull ByteBuf buf) {
     super(buf);
     this.id = id;

@@ -38,6 +38,7 @@ public final class ServerLink {
    *
    * @param label a custom component label to display
    * @param link  the URL to open when clicked
+   * @return a {@link ServerLink} instance with the given label and URL
    */
   public static ServerLink serverLink(Component label, String link) {
     return new ServerLink(label, link);
@@ -48,6 +49,7 @@ public final class ServerLink {
    *
    * @param type the {@link Type built-in type} of link
    * @param link the URL to open when clicked
+   * @return a {@link ServerLink} instance with the given type and URL
    */
   public static ServerLink serverLink(Type type, String link) {
     return new ServerLink(type, link);
@@ -86,15 +88,45 @@ public final class ServerLink {
    * @apiNote {@link Type#BUG_REPORT} links are shown on the connection error screen
    */
   public enum Type {
+    /**
+     * A link to report bugs related to the server or gameplay.
+     */
     BUG_REPORT,
+    /**
+     * A link to the server's community guidelines or rules.
+     */
     COMMUNITY_GUIDELINES,
+    /**
+     * A link to the server’s support or help desk.
+     */
     SUPPORT,
+    /**
+     * A link showing the current server or service status.
+     */
     STATUS,
+    /**
+     * A link to provide feedback to the server staff or developers.
+     */
     FEEDBACK,
+    /**
+     * A link to the server’s community hub or Discord.
+     */
     COMMUNITY,
+    /**
+     * A link to the server's main website.
+     */
     WEBSITE,
+    /**
+     * A link to the server's forums.
+     */
     FORUMS,
+    /**
+     * A link to server or game-related news.
+     */
     NEWS,
+    /**
+     * A link to announcements from the server team.
+     */
     ANNOUNCEMENTS
   }
 

@@ -27,6 +27,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
 
+/**
+ * Represents a packet sent to remove player information from the player list.
+ * The packet contains a collection of {@link UUID}s representing the profiles to be removed.
+ */
 public class RemovePlayerInfoPacket implements MinecraftPacket {
 
   private Collection<UUID> profilesToRemove;

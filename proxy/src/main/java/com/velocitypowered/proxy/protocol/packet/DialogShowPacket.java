@@ -27,6 +27,13 @@ import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.nbt.BinaryTag;
 import net.kyori.adventure.nbt.BinaryTagIO;
 
+/**
+ * Represents the packet sent by the server to the client to display a configuration dialog
+ * during the configuration phase in Minecraft 1.21.6+.
+ *
+ * <p>This packet is only relevant in the CONFIG and PLAY states. If the ID is {@code 0},
+ * a dialog is to be shown and the accompanying {@link BinaryTag} contains its data.</p>
+ */
 public class DialogShowPacket implements MinecraftPacket {
 
   private final StateRegistry state;

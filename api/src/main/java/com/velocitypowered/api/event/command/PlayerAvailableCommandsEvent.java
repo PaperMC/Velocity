@@ -37,10 +37,20 @@ public class PlayerAvailableCommandsEvent {
     this.rootNode = checkNotNull(rootNode, "rootNode");
   }
 
+  /**
+   * Gets the player that the available commands are being sent to.
+   *
+   * @return the targeted player
+   */
   public Player getPlayer() {
     return player;
   }
 
+  /**
+   * Gets the root command node that represents the available commands.
+   *
+   * @return the Brigadier root command node
+   */
   public RootCommandNode<?> getRootNode() {
     return rootNode;
   }

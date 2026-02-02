@@ -42,18 +42,39 @@ public class ServerResourcePackSendEvent implements ResultedEvent<ResultedEvent.
     this.providedResourcePack = receivedResourcePack;
   }
 
+  /**
+   * Gets the server connection that attempted to send the resource pack.
+   *
+   * @return the server connection
+   */
   public ServerConnection getServerConnection() {
     return serverConnection;
   }
 
+  /**
+   * Gets the original resource pack provided by the server.
+   *
+   * @return the resource pack sent by the server
+   */
   public ResourcePackInfo getReceivedResourcePack() {
     return receivedResourcePack;
   }
 
+  /**
+   * Gets the resource pack that will be forwarded to the player.
+   * This can be different from the one received from the server.
+   *
+   * @return the resource pack to send to the player
+   */
   public ResourcePackInfo getProvidedResourcePack() {
     return providedResourcePack;
   }
 
+  /**
+   * Sets the resource pack that should be forwarded to the player.
+   *
+   * @param providedResourcePack the resource pack to send to the player
+   */
   public void setProvidedResourcePack(ResourcePackInfo providedResourcePack) {
     this.providedResourcePack = providedResourcePack;
   }

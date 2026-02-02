@@ -11,11 +11,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import net.kyori.adventure.text.object.PlayerHeadObjectContents;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents a Mojang game profile. This class is immutable.
  */
-public final class GameProfile {
+public final class GameProfile implements PlayerHeadObjectContents.SkinSource {
 
   private final UUID id;
   private final String undashedId;
@@ -169,6 +172,23 @@ public final class GameProfile {
         ImmutableList.of());
   }
 
+  @SuppressWarnings("UnstableApiUsage") // permitted implementation
+  @Override
+  public void applySkinToPlayerHeadContents(
+      final PlayerHeadObjectContents.@NotNull Builder builder) {
+    if (this.properties.isEmpty()) {
+      builder.id(this.id);
+      return;
+    }
+
+    builder.id(this.id)
+        .name(this.name)
+        .profileProperties(this.properties.stream()
+            .map(property -> PlayerHeadObjectContents.property(property.getName(),
+                property.getValue(), property.getSignature()))
+            .collect(Collectors.toList()));
+  }
+
   @Override
   public String toString() {
     return "GameProfile{"
@@ -200,14 +220,29 @@ public final class GameProfile {
       this.signature = Preconditions.checkNotNull(signature, "signature");
     }
 
+    /**
+     * Returns the name of this property.
+     *
+     * @return the property name
+     */
     public String getName() {
       return name;
     }
 
+    /**
+     * Returns the value of this property.
+     *
+     * @return the property value
+     */
     public String getValue() {
       return value;
     }
 
+    /**
+     * Returns the Mojang-provided signature for this property.
+     *
+     * @return the property signature
+     */
     public String getSignature() {
       return signature;
     }

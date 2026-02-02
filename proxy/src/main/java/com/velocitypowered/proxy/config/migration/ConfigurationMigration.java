@@ -28,6 +28,7 @@ public sealed interface ConfigurationMigration
         permits ForwardingMigration,
                 KeyAuthenticationMigration,
                 MotdMigration,
+                MiniMessageTranslationsMigration,
                 TransferIntegrationMigration {
   boolean shouldMigrate(CommentedFileConfig config);
 

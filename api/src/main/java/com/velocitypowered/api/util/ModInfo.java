@@ -18,6 +18,10 @@ import java.util.Objects;
  */
 public final class ModInfo {
 
+  /**
+   * The default mod info used when no mods are present.
+   * Typically used for Forge-compatible connections that require a placeholder.
+   */
   public static final ModInfo DEFAULT = new ModInfo("FML", ImmutableList.of());
 
   private final String type;
@@ -34,10 +38,20 @@ public final class ModInfo {
     this.modList = ImmutableList.copyOf(modList);
   }
 
+  /**
+   * Returns the Forge mod list type (e.g., "FML").
+   *
+   * @return the mod list type
+   */
   public String getType() {
     return type;
   }
 
+  /**
+   * Returns an immutable list of all mods in this mod list.
+   *
+   * @return the list of mods
+   */
   public List<Mod> getMods() {
     return modList;
   }
@@ -89,10 +103,20 @@ public final class ModInfo {
       Preconditions.checkArgument(version.length() < 128, "mod version is too long");
     }
 
+    /**
+     * Returns the mod ID (identifier string).
+     *
+     * @return the mod ID
+     */
     public String getId() {
       return id;
     }
 
+    /**
+     * Returns the mod version string.
+     *
+     * @return the mod version
+     */
     public String getVersion() {
       return version;
     }

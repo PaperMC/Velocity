@@ -31,6 +31,11 @@ public final class LegacyChannelIdentifier implements ChannelIdentifier {
     this.name = name;
   }
 
+  /**
+   * Returns the name of this legacy plugin message channel.
+   *
+   * @return the channel name
+   */
   public String getName() {
     return name;
   }
