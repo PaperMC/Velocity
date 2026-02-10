@@ -50,6 +50,7 @@ public final class LoginEvent implements ResultedEvent<ResultedEvent.ComponentRe
     this(player, null);
   }
 
+  /**
    * Returns the player who has completed authentication.
    *
    * @return the authenticated player
