@@ -22,7 +22,6 @@ import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.Nullable;
 
-
 /**
  * Represents a 1.7 and above server list ping response. This class is immutable.
  */
@@ -34,6 +33,14 @@ public final class ServerPing {
   private final @Nullable Favicon favicon;
   private final @Nullable ModInfo modinfo;
 
+  /**
+   * Constructs an initial ServerPing instance.
+   *
+   * @param version the version of the server
+   * @param players the players on the server, or {@code null} if not shown
+   * @param description the MOTD for the server
+   * @param favicon the server's favicon, or {@code null} if not set
+   */
   public ServerPing(Version version, @Nullable Players players,
       net.kyori.adventure.text.Component description, @Nullable Favicon favicon) {
     this(version, players, description, favicon, ModInfo.DEFAULT);
@@ -58,23 +65,48 @@ public final class ServerPing {
     this.modinfo = modinfo;
   }
 
+  /**
+   * Gets the version shown to the client during the ping.
+   *
+   * @return the version
+   */
   public Version getVersion() {
     return version;
   }
 
+  /**
+   * Gets the player information shown to the client.
+   *
+   * @return the player information, or empty if not shown
+   */
   public Optional<Players> getPlayers() {
     return Optional.ofNullable(players);
   }
 
+  /**
+   * Gets the description (MOTD) component shown in the ping response.
+   *
+   * @return the description component
+   */
   @Nullable
   public Component getDescriptionComponent() {
     return description;
   }
 
+  /**
+   * Gets the favicon sent to the client.
+   *
+   * @return the favicon, or empty if not present
+   */
   public Optional<Favicon> getFavicon() {
     return Optional.ofNullable(favicon);
   }
 
+  /**
+   * Gets the mod info sent to the client.
+   *
+   * @return the mod info, or empty if not present
+   */
   public Optional<ModInfo> getModinfo() {
     return Optional.ofNullable(modinfo);
   }
@@ -139,6 +171,11 @@ public final class ServerPing {
     return builder;
   }
 
+  /**
+   * Creates a new {@link Builder} for constructing a {@link ServerPing}.
+   *
+   * @return a new ServerPing builder
+   */
   public static Builder builder() {
     return new Builder();
   }
@@ -346,34 +383,74 @@ public final class ServerPing {
           description, favicon, nullOutModinfo ? null : new ModInfo(modType, mods));
     }
 
+    /**
+     * Gets the version currently set in the builder.
+     *
+     * @return the version
+     */
     public Version getVersion() {
       return version;
     }
 
+    /**
+     * Gets the number of players online.
+     *
+     * @return the online player count
+     */
     public int getOnlinePlayers() {
       return onlinePlayers;
     }
 
+    /**
+     * Gets the maximum player capacity.
+     *
+     * @return the max player count
+     */
     public int getMaximumPlayers() {
       return maximumPlayers;
     }
 
+    /**
+     * Gets the sample players shown in the ping.
+     *
+     * @return the sample player list
+     */
     public List<SamplePlayer> getSamplePlayers() {
       return samplePlayers;
     }
 
+    /**
+     * Gets the description component currently set in the builder.
+     *
+     * @return the server description, or empty if unset
+     */
     public Optional<Component> getDescriptionComponent() {
       return Optional.ofNullable(description);
     }
 
+    /**
+     * Gets the favicon currently set in the builder.
+     *
+     * @return the favicon, or empty if none
+     */
     public Optional<Favicon> getFavicon() {
       return Optional.ofNullable(favicon);
     }
 
+    /**
+     * Gets the type of mod loader (e.g., "FML").
+     *
+     * @return the mod type string
+     */
     public String getModType() {
       return modType;
     }
 
+    /**
+     * Gets the list of mods reported in the ping.
+     *
+     * @return the mod list
+     */
     public List<ModInfo.Mod> getMods() {
       return mods;
     }
@@ -417,10 +494,20 @@ public final class ServerPing {
       this.name = Preconditions.checkNotNull(name, "name");
     }
 
+    /**
+     * Gets the protocol number associated with the server version.
+     *
+     * @return the protocol version number
+     */
     public int getProtocol() {
       return protocol;
     }
 
+    /**
+     * Gets the user-facing name of the server version.
+     *
+     * @return the version name
+     */
     public String getName() {
       return name;
     }
@@ -474,14 +561,29 @@ public final class ServerPing {
       this.sample = ImmutableList.copyOf(sample);
     }
 
+    /**
+     * Gets the number of online players.
+     *
+     * @return the number of online players
+     */
     public int getOnline() {
       return online;
     }
 
+    /**
+     * Gets the maximum number of players the server claims it can hold.
+     *
+     * @return the maximum number of players
+     */
     public int getMax() {
       return max;
     }
 
+    /**
+     * Gets a sample list of online players.
+     *
+     * @return the sample players
+     */
     public List<SamplePlayer> getSample() {
       return sample == null ? ImmutableList.of() : sample;
     }
@@ -519,22 +621,47 @@ public final class ServerPing {
    */
   public static final class SamplePlayer {
 
+    /**
+     * A constant representing an anonymous sample player with a null UUID and generic name.
+     */
     public static final SamplePlayer ANONYMOUS = new SamplePlayer(
         "Anonymous Player",
         new UUID(0L, 0L)
     );
+    /**
+     * The legacy string name of the player.
+     */
     private final String name;
+    /**
+     * The unique identifier (UUID) of the player.
+     */
     private final UUID id;
 
+    /**
+     * Constructs a SamplePlayer with the given name and UUID.
+     *
+     * @param name the name of the player
+     * @param id the UUID of the player
+     */
     public SamplePlayer(String name, UUID id) {
       this.name = name;
       this.id = id;
     }
 
+    /**
+     * Gets the legacy string name of the sample player.
+     *
+     * @return the player name
+     */
     public String getName() {
       return name;
     }
 
+    /**
+     * Gets the UUID of the sample player.
+     *
+     * @return the player UUID
+     */
     public UUID getId() {
       return id;
     }

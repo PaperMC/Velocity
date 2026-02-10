@@ -29,6 +29,11 @@ import io.netty.buffer.ByteBuf;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents the packet sent from the client to the server during the login phase.
+ * This packet contains the player's username, optionally a cryptographic key for
+ * authentication, and the holder UUID depending on the Minecraft protocol version.
+ */
 public class ServerLoginPacket implements MinecraftPacket {
 
   private static final QuietDecoderException EMPTY_USERNAME = new QuietDecoderException(
@@ -41,17 +46,35 @@ public class ServerLoginPacket implements MinecraftPacket {
   public ServerLoginPacket() {
   }
 
+  /**
+   * Constructs a {@code ServerLoginPacket} with a username and optional player key.
+   *
+   * @param username the player's username
+   * @param playerKey the player's cryptographic key, or {@code null} if not present
+   */
   public ServerLoginPacket(String username, @Nullable IdentifiedKey playerKey) {
     this.username = Preconditions.checkNotNull(username, "username");
     this.playerKey = playerKey;
   }
 
+  /**
+   * Constructs a new {@code ServerLoginPacket} with the specified username and holder UUID.
+   *
+   * @param username the player's username
+   * @param holderUuid the holder UUID (optional)
+   */
   public ServerLoginPacket(String username, @Nullable UUID holderUuid) {
     this.username = Preconditions.checkNotNull(username, "username");
     this.holderUuid = holderUuid;
     this.playerKey = null;
   }
 
+  /**
+   * Gets the player's username from the login packet.
+   *
+   * @return the player's username
+   * @throws IllegalStateException if the username is not specified
+   */
   public String getUsername() {
     if (username == null) {
       throw new IllegalStateException("No username found!");
@@ -74,10 +97,10 @@ public class ServerLoginPacket implements MinecraftPacket {
   @Override
   public String toString() {
     return "ServerLogin{"
-            + "username='" + username + '\''
-            + "playerKey='" + playerKey + '\''
-            + "holderUUID='" + holderUuid + '\''
-            + '}';
+        + "username='" + username + '\''
+        + "playerKey='" + playerKey + '\''
+        + "holderUUID='" + holderUuid + '\''
+        + '}';
   }
 
   @Override

@@ -230,23 +230,20 @@ public final class PluginMessageUtil {
     }
 
     // Before falling into the fallback, explicitly rewrite certain messages.
-    switch (name) {
-      case REGISTER_CHANNEL_LEGACY:
-        return REGISTER_CHANNEL;
-      case UNREGISTER_CHANNEL_LEGACY:
-        return UNREGISTER_CHANNEL;
-      case BRAND_CHANNEL_LEGACY:
-        return BRAND_CHANNEL;
-      case "BungeeCord":
-        // This is a special historical case we are compelled to support for the benefit of
-        // BungeeQuack.
-        return "bungeecord:main";
-      default:
+    return switch (name) {
+      case REGISTER_CHANNEL_LEGACY -> REGISTER_CHANNEL;
+      case UNREGISTER_CHANNEL_LEGACY -> UNREGISTER_CHANNEL;
+      case BRAND_CHANNEL_LEGACY -> BRAND_CHANNEL;
+      // This is a special historical case we are compelled to support for the benefit of
+      // BungeeQuack.
+      case "BungeeCord" -> "bungeecord:main";
+      default -> {
         // This is very likely a legacy name, so transform it. Velocity uses the same scheme as
         // BungeeCord does to transform channels, but also removes clearly invalid characters as
         // well.
-        String lower = name.toLowerCase(Locale.ROOT);
-        return "legacy:" + INVALID_IDENTIFIER_REGEX.matcher(lower).replaceAll("");
-    }
+        final String lower = name.toLowerCase(Locale.ROOT);
+        yield "legacy:" + INVALID_IDENTIFIER_REGEX.matcher(lower).replaceAll("");
+      }
+    };
   }
 }

@@ -38,10 +38,20 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
     this.result = ChatResult.allowed();
   }
 
+  /**
+   * Gets the player who sent the chat message.
+   *
+   * @return the player who sent the message
+   */
   public Player getPlayer() {
     return player;
   }
 
+  /**
+   * Gets the (possibly modified) chat message to be sent.
+   *
+   * @return an {@link Optional} containing the message, or empty if none
+   */
   public String getMessage() {
     return message;
   }
@@ -88,6 +98,11 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
       this.message = message;
     }
 
+    /**
+     * Gets the (possibly modified) chat message to be sent.
+     *
+     * @return an {@link Optional} containing the message, or empty if none
+     */
     public Optional<String> getMessage() {
       return Optional.ofNullable(message);
     }

@@ -62,16 +62,12 @@ public class FakePluginManager implements PluginManager {
 
   @Override
   public @NonNull Optional<PluginContainer> getPlugin(@NonNull String id) {
-    switch (id) {
-      case "a":
-        return Optional.of(containerA);
-      case "b":
-        return Optional.of(containerB);
-      case "velocity":
-        return Optional.of(containerVelocity);
-      default:
-        return Optional.empty();
-    }
+    return switch (id) {
+      case "a" -> Optional.of(containerA);
+      case "b" -> Optional.of(containerB);
+      case "velocity" -> Optional.of(containerVelocity);
+      default -> Optional.empty();
+    };
   }
 
   @Override

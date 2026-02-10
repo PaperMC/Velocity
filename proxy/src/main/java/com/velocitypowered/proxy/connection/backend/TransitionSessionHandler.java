@@ -122,9 +122,8 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           // Change the client to use the ClientPlaySessionHandler if required.
           ClientPlaySessionHandler playHandler;
           if (player.getConnection()
-              .getActiveSessionHandler() instanceof ClientPlaySessionHandler) {
-            playHandler =
-                (ClientPlaySessionHandler) player.getConnection().getActiveSessionHandler();
+              .getActiveSessionHandler() instanceof ClientPlaySessionHandler sessionHandler) {
+            playHandler = sessionHandler;
           } else {
             playHandler = new ClientPlaySessionHandler(server, player);
             player.getConnection().setActiveSessionHandler(StateRegistry.PLAY, playHandler);

@@ -20,6 +20,12 @@ import org.jetbrains.annotations.NotNull;
  */
 public final class VelocityBrigadierMessage implements Message, ComponentLike {
 
+  /**
+   * Creates a new {@link VelocityBrigadierMessage} using the given {@link Component} as the message.
+   *
+   * @param message the component to use as the tooltip message
+   * @return a new instance of {@link VelocityBrigadierMessage}
+   */
   public static VelocityBrigadierMessage tooltip(Component message) {
     return new VelocityBrigadierMessage(message);
   }

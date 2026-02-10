@@ -21,6 +21,12 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * Serializer for {@link RegistryKeyArgument} objects.
+ *
+ * <p>This class handles the serialization and deserialization of {@code RegistryKeyArgument}
+ * objects to and from a {@link ByteBuf} using the specified {@link ProtocolVersion}.</p>
+ */
 public class RegistryKeyArgumentSerializer implements
     ArgumentPropertySerializer<RegistryKeyArgument> {
 

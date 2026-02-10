@@ -71,7 +71,7 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
   protected void doResolve(String inetHost, Promise<InetAddress> promise) throws Exception {
     List<InetAddress> addresses = cache.getIfPresent(inetHost);
     if (addresses != null) {
-      promise.trySuccess(addresses.get(0));
+      promise.trySuccess(addresses.getFirst());
       return;
     }
 

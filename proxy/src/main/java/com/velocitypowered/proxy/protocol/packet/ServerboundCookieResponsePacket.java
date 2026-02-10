@@ -26,6 +26,11 @@ import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents a server-bound packet sent by the client containing a key and an optional payload.
+ * This packet is typically used for exchanging metadata or other information between the client
+ * and server.
+ */
 public class ServerboundCookieResponsePacket implements MinecraftPacket {
 
   private Key key;

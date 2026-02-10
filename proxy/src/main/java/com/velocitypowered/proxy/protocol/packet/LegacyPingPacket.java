@@ -26,6 +26,11 @@ import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents a legacy ping packet in Minecraft, commonly used in the server list ping process.
+ * This packet handles compatibility with older Minecraft versions and contains information
+ * such as the ping protocol version and optionally a virtual host address.
+ */
 public class LegacyPingPacket implements MinecraftPacket {
 
   private final LegacyMinecraftPingVersion version;

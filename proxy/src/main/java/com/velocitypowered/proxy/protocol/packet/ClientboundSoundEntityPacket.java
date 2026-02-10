@@ -22,11 +22,16 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import java.util.Random;
 import net.kyori.adventure.sound.Sound;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Random;
-
+/**
+ * A clientbound packet that instructs the client to play a sound tied to an entity.
+ *
+ * <p>This is sent by the server when a sound should be played at the location of a
+ * specific entity, with optional fixed range and seed.</p>
+ */
 public class ClientboundSoundEntityPacket implements MinecraftPacket {
 
   private static final Random SEEDS_RANDOM = new Random();
@@ -35,8 +40,16 @@ public class ClientboundSoundEntityPacket implements MinecraftPacket {
   private @Nullable Float fixedRange;
   private int emitterEntityId;
 
-  public ClientboundSoundEntityPacket() {}
+  public ClientboundSoundEntityPacket() {
+  }
 
+  /**
+   * Constructs a new sound entity packet.
+   *
+   * @param sound the sound to play
+   * @param fixedRange the fixed attenuation range, or {@code null} to use the default
+   * @param emitterEntityId the entity ID of the sound emitter
+   */
   public ClientboundSoundEntityPacket(Sound sound, @Nullable Float fixedRange, int emitterEntityId) {
     this.sound = sound;
     this.fixedRange = fixedRange;
@@ -55,8 +68,9 @@ public class ClientboundSoundEntityPacket implements MinecraftPacket {
     ProtocolUtils.writeMinimalKey(buf, sound.name());
 
     buf.writeBoolean(fixedRange != null);
-    if (fixedRange != null)
+    if (fixedRange != null) {
       buf.writeFloat(fixedRange);
+    }
 
     ProtocolUtils.writeSoundSource(buf, protocolVersion, sound.source());
 

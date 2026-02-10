@@ -36,6 +36,15 @@ import javax.tools.StandardLocation;
 @SupportedAnnotationTypes({"com.velocitypowered.api.plugin.Plugin"})
 public class PluginAnnotationProcessor extends AbstractProcessor {
 
+  /**
+   * Creates a new {@code PluginAnnotationProcessor}.
+   *
+   * <p>The processor is instantiated by the Java compiler and initialized via
+   * {@link #init(ProcessingEnvironment)}.</p>
+   */
+  public PluginAnnotationProcessor() {
+  }
+
   private ProcessingEnvironment environment;
   private String pluginClassFound;
   private boolean warnedAboutMultiplePlugins;

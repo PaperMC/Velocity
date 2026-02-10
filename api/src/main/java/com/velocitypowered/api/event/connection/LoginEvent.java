@@ -27,9 +27,9 @@ public final class LoginEvent implements ResultedEvent<ResultedEvent.ComponentRe
   private ComponentResult result;
 
   /**
-   * Creates a new login event.
+   * Constructs a new {@link LoginEvent}.
    *
-   * @param player the player who logged in
+   * @param player the player who has completed authentication
    * @param serverIdHash the server ID hash sent to Mojang for authentication,
    *                     or {@code null} if the connection is in offline-mode
    */
@@ -40,9 +40,9 @@ public final class LoginEvent implements ResultedEvent<ResultedEvent.ComponentRe
   }
 
   /**
-   * Creates a new login event.
+   * Constructs a new {@link LoginEvent}.
    *
-   * @param player the player who logged in
+   * @param player the player who has completed authentication
    * @deprecated Use {@link #LoginEvent(Player, String)}.
    */
   @Deprecated(forRemoval = true)
@@ -50,6 +50,10 @@ public final class LoginEvent implements ResultedEvent<ResultedEvent.ComponentRe
     this(player, null);
   }
 
+   * Returns the player who has completed authentication.
+   *
+   * @return the authenticated player
+   */
   public Player getPlayer() {
     return player;
   }
@@ -57,6 +61,8 @@ public final class LoginEvent implements ResultedEvent<ResultedEvent.ComponentRe
   /**
    * Returns the server ID hash that was sent to Mojang to authenticate the player.
    * If the connection was in offline-mode, this returns {@code null}.
+   *
+   * @return the server ID hash that was sent to Mojang to authenticate the player
    */
   public @Nullable String getServerIdHash() {
     return serverIdHash;

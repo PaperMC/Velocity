@@ -24,12 +24,14 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * Represents a status request packet sent by the client to the server to request the server's status.
+ */
 public class StatusRequestPacket implements MinecraftPacket {
 
   public static final StatusRequestPacket INSTANCE = new StatusRequestPacket();
 
   private StatusRequestPacket() {
-
   }
 
   @Override

@@ -21,6 +21,12 @@ public final class ConnectionHandshakeEvent {
   private final InboundConnection connection;
   private final HandshakeIntent intent;
 
+  /**
+   * Constructs a new {@link ConnectionHandshakeEvent}.
+   *
+   * @param connection the inbound connection from the client
+   * @param intent the intent of the handshake (e.g., login or status)
+   */
   public ConnectionHandshakeEvent(InboundConnection connection, HandshakeIntent intent) {
     this.connection = Preconditions.checkNotNull(connection, "connection");
     this.intent = Preconditions.checkNotNull(intent, "intent");
@@ -39,10 +45,20 @@ public final class ConnectionHandshakeEvent {
     this.intent = HandshakeIntent.LOGIN;
   }
 
+  /**
+   * Returns the inbound connection associated with this handshake.
+   *
+   * @return the connection
+   */
   public InboundConnection getConnection() {
     return connection;
   }
 
+  /**
+   * Returns the {@link HandshakeIntent} associated with this connection handshake.
+   *
+   * @return the intent of the handshake
+   */
   public HandshakeIntent getIntent() {
     return this.intent;
   }

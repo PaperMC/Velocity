@@ -28,6 +28,13 @@ import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * An abstract class for building chat components in version 2 of the chat system.
+ *
+ * <p>The {@code ChatBuilderV2} class provides the foundation for creating and formatting
+ * chat components, allowing subclasses to implement specific behaviors for constructing
+ * chat messages or text components.</p>
+ */
 public abstract class ChatBuilderV2 {
 
   protected final ProtocolVersion version;

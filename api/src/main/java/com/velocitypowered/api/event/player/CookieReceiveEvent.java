@@ -53,14 +53,29 @@ public final class CookieReceiveEvent implements ResultedEvent<CookieReceiveEven
     this.result = Preconditions.checkNotNull(result, "result");
   }
 
+  /**
+   * Returns the player who sent the cookie response.
+   *
+   * @return the player
+   */
   public Player getPlayer() {
     return player;
   }
 
+  /**
+   * Returns the original cookie identifier received from the client.
+   *
+   * @return the original cookie key
+   */
   public Key getOriginalKey() {
     return originalKey;
   }
 
+  /**
+   * Returns the original cookie data received from the client, if present.
+   *
+   * @return the original cookie data, or {@code null} if not present
+   */
   public byte @Nullable [] getOriginalData() {
     return originalData;
   }
@@ -97,10 +112,20 @@ public final class CookieReceiveEvent implements ResultedEvent<CookieReceiveEven
       return status;
     }
 
+    /**
+     * Returns the replacement key to forward, if any.
+     *
+     * @return the key to forward, or {@code null} if unchanged
+     */
     public Key getKey() {
       return key;
     }
 
+    /**
+     * Returns the replacement data to forward, if any.
+     *
+     * @return the data to forward, or {@code null} if unchanged
+     */
     public byte[] getData() {
       return data;
     }

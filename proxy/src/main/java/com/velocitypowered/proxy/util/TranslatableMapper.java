@@ -43,6 +43,12 @@ public enum TranslatableMapper implements BiConsumer<TranslatableComponent, Cons
     final Locale locale = ClosestLocaleMatcher.INSTANCE.lookupClosest(Locale.getDefault());
     if (GlobalTranslator.translator().canTranslate(translatableComponent.key(), locale)) {
       componentConsumer.accept(GlobalTranslator.render(translatableComponent, locale));
+    } else {
+      String fallback = translatableComponent.fallback();
+      if (fallback == null) {
+        fallback = translatableComponent.key();
+      }
+      componentConsumer.accept(Component.text(fallback));
     }
   }
 }

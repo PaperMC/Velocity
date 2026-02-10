@@ -14,8 +14,9 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * This event is executed when a player is about to finish the configuration state.
+ *
  * <p>Velocity will wait for this event before asking the client to finish the configuration state.
- * However due to backend server being unable to keep the connection alive during state changes,
+ * However, due to backend server being unable to keep the connection alive during state changes,
  * Velocity will only wait for a maximum of 5 seconds. If you need to hold a player in configuration
  * state, use the {@link PlayerConfigurationEvent}.</p>
  *
