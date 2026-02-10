@@ -39,6 +39,17 @@ public final class LoginEvent implements ResultedEvent<ResultedEvent.ComponentRe
     this.result = ComponentResult.allowed();
   }
 
+  /**
+   * Creates a new login event.
+   *
+   * @param player the player who logged in
+   * @deprecated Use {@link #LoginEvent(Player, String)}.
+   */
+  @Deprecated(forRemoval = true)
+  public LoginEvent(Player player) {
+    this(player, null);
+  }
+
   public Player getPlayer() {
     return player;
   }
