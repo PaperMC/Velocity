@@ -29,7 +29,8 @@ public sealed interface ConfigurationMigration
                 KeyAuthenticationMigration,
                 MotdMigration,
                 MiniMessageTranslationsMigration,
-                TransferIntegrationMigration {
+                TransferIntegrationMigration,
+                ForcedHostSubdomainMigration {
   boolean shouldMigrate(CommentedFileConfig config);
 
   void migrate(CommentedFileConfig config, Logger logger) throws IOException;

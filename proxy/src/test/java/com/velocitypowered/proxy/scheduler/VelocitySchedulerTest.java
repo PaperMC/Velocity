@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2026 Velocity Contributors
+ * Copyright (C) 2018-2023 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
 package com.velocitypowered.proxy.scheduler;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import com.velocitypowered.api.scheduler.TaskStatus;
@@ -32,26 +31,22 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 
 class VelocitySchedulerTest {
+  // TODO: The timings here will be inaccurate on slow systems.
 
   @Test
   void buildTask() throws Exception {
-    DeterministicSchedulerBackend backend = new DeterministicSchedulerBackend();
-    VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager(), backend);
-
+    VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
     CountDownLatch latch = new CountDownLatch(1);
-    ScheduledTask task = scheduler.buildTask(FakePluginManager.PLUGIN_A, latch::countDown).schedule();
-
-    backend.runUntilIdle(); // runs tasks due at t=0
-    assertTrue(latch.await(5, TimeUnit.SECONDS));
-
+    ScheduledTask task = scheduler.buildTask(FakePluginManager.PLUGIN_A, latch::countDown)
+        .schedule();
+    latch.await();
     ((VelocityTask) task).awaitCompletion();
     assertEquals(TaskStatus.FINISHED, task.status());
   }
 
   @Test
-  void cancelWorks() {
-    DeterministicSchedulerBackend backend = new DeterministicSchedulerBackend();
-    VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager(), backend);
+  void cancelWorks() throws Exception {
+    VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
     AtomicInteger i = new AtomicInteger(3);
     ScheduledTask task = scheduler.buildTask(FakePluginManager.PLUGIN_A, i::decrementAndGet)
         .delay(100, TimeUnit.SECONDS)
@@ -63,26 +58,19 @@ class VelocitySchedulerTest {
 
   @Test
   void repeatTaskWorks() throws Exception {
-    DeterministicSchedulerBackend backend = new DeterministicSchedulerBackend();
-    VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager(), backend);
-
+    VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
     CountDownLatch latch = new CountDownLatch(3);
     ScheduledTask task = scheduler.buildTask(FakePluginManager.PLUGIN_A, latch::countDown)
         .delay(100, TimeUnit.MILLISECONDS)
         .repeat(100, TimeUnit.MILLISECONDS)
         .schedule();
-
-    backend.advance(300, TimeUnit.MILLISECONDS); // triggers 3 timer firings deterministically
-    assertTrue(latch.await(5, TimeUnit.SECONDS));
-
+    latch.await();
     task.cancel();
   }
 
   @Test
   void obtainTasksFromPlugin() throws Exception {
-    DeterministicSchedulerBackend backend = new DeterministicSchedulerBackend();
-    VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager(), backend);
-
+    VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
     CountDownLatch runningLatch = new CountDownLatch(1);
     CountDownLatch endingLatch = new CountDownLatch(1);
 
@@ -98,19 +86,16 @@ class VelocitySchedulerTest {
         .repeat(Duration.ofMillis(5))
         .schedule();
 
-    backend.advance(50, TimeUnit.MILLISECONDS); // run first tick only (no wall clock)
-    assertTrue(runningLatch.await(5, TimeUnit.SECONDS));
+    runningLatch.await();
 
-    assertEquals(1, scheduler.tasksByPlugin(FakePluginManager.PLUGIN_A).size());
+    assertEquals(scheduler.tasksByPlugin(FakePluginManager.PLUGIN_A).size(), 1);
 
     endingLatch.countDown();
   }
 
   @Test
   void testConsumerCancel() throws Exception {
-    DeterministicSchedulerBackend backend = new DeterministicSchedulerBackend();
-    VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager(), backend);
-
+    VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
     CountDownLatch latch = new CountDownLatch(1);
 
     ScheduledTask task = scheduler.buildTask(
@@ -123,17 +108,14 @@ class VelocitySchedulerTest {
 
     assertEquals(TaskStatus.SCHEDULED, task.status());
 
-    backend.runUntilIdle(); // initialDelay is 0 -> due immediately in virtual time
-    assertTrue(latch.await(5, TimeUnit.SECONDS));
+    latch.await();
 
     assertEquals(TaskStatus.CANCELLED, task.status());
   }
 
   @Test
   void testConsumerEquality() throws Exception {
-    DeterministicSchedulerBackend backend = new DeterministicSchedulerBackend();
-    VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager(), backend);
-
+    VelocityScheduler scheduler = new VelocityScheduler(new FakePluginManager());
     CountDownLatch latch = new CountDownLatch(1);
 
     AtomicReference<ScheduledTask> consumerTask = new AtomicReference<>();
@@ -145,10 +127,10 @@ class VelocitySchedulerTest {
     }).delay(60, TimeUnit.MILLISECONDS).schedule();
 
     initialTask.set(task);
-
-    backend.advance(60, TimeUnit.MILLISECONDS);
-    assertTrue(latch.await(5, TimeUnit.SECONDS));
+    latch.await();
 
     assertEquals(consumerTask.get(), initialTask.get());
+
   }
+
 }
