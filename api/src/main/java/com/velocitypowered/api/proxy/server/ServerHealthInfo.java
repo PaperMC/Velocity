@@ -12,6 +12,7 @@ import java.util.Optional;
 
 /**
  * Contains detailed health information about a registered server.
+ * This information is updated periodically by the proxy's health check system.
  *
  * @since 3.5.0
  */
@@ -71,7 +72,8 @@ public interface ServerHealthInfo {
 
   /**
    * Returns whether the server is available for player connections.
-   * A server is available if its status is either HEALTHY or DEGRADED.
+   * A server is available if its status is either {@link ServerHealthStatus#HEALTHY}
+   * or {@link ServerHealthStatus#DEGRADED}.
    *
    * @return {@code true} if the server is available
    */

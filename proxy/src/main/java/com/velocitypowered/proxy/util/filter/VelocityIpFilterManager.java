@@ -35,6 +35,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Implementation of {@link IpFilterManager}.
+ *
+ * <p>This manager handles blacklisting, whitelisting, and maintenance mode.
+ * It supports both individual IP addresses and CIDR ranges. Expiration of
+ * entries is handled lazily during lookups.</p>
  */
 public class VelocityIpFilterManager implements IpFilterManager {
 

@@ -199,6 +199,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(SessionPlayerCommandPacket packet) {
     if (player.getCurrentServer().isEmpty()) {
+      player.sendMessage(Component.translatable("velocity.command.command-does-not-exist").color(NamedTextColor.RED));
+      player.sendMessage(Component.translatable("velocity.command.hint.vhelp").color(NamedTextColor.GOLD));
       return true;
     }
 
@@ -233,6 +235,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(KeyedPlayerCommandPacket packet) {
     if (player.getCurrentServer().isEmpty()) {
+      player.sendMessage(Component.translatable("velocity.command.command-does-not-exist").color(NamedTextColor.RED));
+      player.sendMessage(Component.translatable("velocity.command.hint.vhelp").color(NamedTextColor.GOLD));
       return true;
     }
 
@@ -267,6 +271,8 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(LegacyChatPacket packet) {
     if (player.getCurrentServer().isEmpty()) {
+      player.sendMessage(Component.translatable("velocity.command.command-does-not-exist").color(NamedTextColor.RED));
+      player.sendMessage(Component.translatable("velocity.command.hint.vhelp").color(NamedTextColor.GOLD));
       return true;
     }
 

@@ -247,10 +247,15 @@ public class VelocityCommandManager implements CommandManager {
         } else {
           source.sendMessage(Component.text(e.getMessage(), NamedTextColor.RED));
         }
+        source.sendMessage(Component.translatable("velocity.command.hint.vhelp").color(NamedTextColor.GOLD));
         result = com.velocitypowered.api.command.CommandResult.SYNTAX_ERROR;
         // This is, of course, a lie, but the API will need to change...
         return true;
       } else {
+        String input = parsed.getReader().getString().toLowerCase();
+        if (input.startsWith("v") || input.startsWith("maintenance") || input.startsWith("ip")) {
+          source.sendMessage(Component.translatable("velocity.command.hint.vhelp").color(NamedTextColor.GOLD));
+        }
         result = CommandResult.FORWARDED;
         return false;
       }

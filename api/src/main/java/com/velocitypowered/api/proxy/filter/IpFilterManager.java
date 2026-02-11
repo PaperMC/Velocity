@@ -201,6 +201,8 @@ public interface IpFilterManager {
 
   /**
    * Represents an entry in the IP filter.
+   *
+   * @since 3.5.0
    */
   interface IpFilterEntry {
     /**
@@ -250,6 +252,8 @@ public interface IpFilterManager {
 
   /**
    * Result of an IP filter check.
+   *
+   * @since 3.5.0
    */
   enum FilterResult {
     /**

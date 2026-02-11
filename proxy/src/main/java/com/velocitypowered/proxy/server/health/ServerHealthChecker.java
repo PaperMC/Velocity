@@ -24,6 +24,7 @@ import com.velocitypowered.api.proxy.server.ServerHealthStatus;
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
+import com.velocitypowered.proxy.plugin.virtual.VelocityVirtualPlugin;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
 import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
@@ -31,6 +32,10 @@ import org.apache.logging.log4j.Logger;
 
 /**
  * Manages periodic health checks for all registered servers.
+ *
+ * <p>The health checker pings servers at a configured interval to determine their
+ * availability and latency. It fires {@link ServerHealthChangeEvent} when a
+ * server's health status changes.</p>
  */
 public class ServerHealthChecker {
 
@@ -62,7 +67,7 @@ public class ServerHealthChecker {
     logger.info("Starting server health checker with {}s interval", intervalSeconds);
 
     this.healthCheckTask = server.getScheduler()
-        .buildTask(server, this::checkAllServers)
+        .buildTask(VelocityVirtualPlugin.INSTANCE, this::checkAllServers)
         .delay(intervalSeconds, TimeUnit.SECONDS)
         .repeat(intervalSeconds, TimeUnit.SECONDS)
         .schedule();

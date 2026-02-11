@@ -28,6 +28,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Implementation of {@link ServerHealthInfo} with thread-safe mutable state.
+ *
+ * <p>Uses atomic references to allow concurrent updates from the health check
+ * task and reads from any thread without explicit synchronization.</p>
  */
 public class VelocityServerHealthInfo implements ServerHealthInfo {
 
