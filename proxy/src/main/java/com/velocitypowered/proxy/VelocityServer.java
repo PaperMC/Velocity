@@ -33,6 +33,7 @@ import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.filter.IpFilterManager;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
@@ -63,10 +64,12 @@ import com.velocitypowered.proxy.protocol.util.FaviconSerializer;
 import com.velocitypowered.proxy.protocol.util.GameProfileSerializer;
 import com.velocitypowered.proxy.scheduler.VelocityScheduler;
 import com.velocitypowered.proxy.server.ServerMap;
+import com.velocitypowered.proxy.server.health.ServerHealthChecker;
 import com.velocitypowered.proxy.util.AddressUtil;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import com.velocitypowered.proxy.util.ResourceUtils;
 import com.velocitypowered.proxy.util.VelocityChannelRegistrar;
+import com.velocitypowered.proxy.util.filter.VelocityIpFilterManager;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiter;
 import com.velocitypowered.proxy.util.ratelimit.Ratelimiters;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -173,6 +176,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   private final VelocityScheduler scheduler;
   private final VelocityChannelRegistrar channelRegistrar = new VelocityChannelRegistrar();
   private final ServerListPingHandler serverListPingHandler;
+  private final VelocityIpFilterManager ipFilterManager = new VelocityIpFilterManager();
+  private @MonotonicNonNull ServerHealthChecker healthChecker;
 
   VelocityServer(final ProxyOptions options) {
     pluginManager = new VelocityPluginManager(this);
@@ -330,6 +335,10 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     if (configuration.isQueryEnabled()) {
       this.cm.queryBind(configuration.getBind().getHostString(), configuration.getQueryPort());
     }
+
+    // Start the server health checker
+    this.healthChecker = new ServerHealthChecker(this);
+    this.healthChecker.start();
 
     final String defaultPackage = new String(
         new byte[] { 'o', 'r', 'g', '.', 'b', 's', 't', 'a', 't', 's' });
@@ -576,6 +585,11 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
     Runnable shutdownProcess = () -> {
       logger.info("Shutting down the proxy...");
+
+      // Stop the health checker
+      if (healthChecker != null) {
+        healthChecker.stop();
+      }
 
       // Shutdown the connection manager, this should be
       // done first to refuse new connections
@@ -877,5 +891,19 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   @Override
   public ResourcePackInfo.Builder createResourcePackBuilder(String url) {
     return new VelocityResourcePackInfo.BuilderImpl(url);
+  }
+
+  @Override
+  public IpFilterManager getIpFilterManager() {
+    return ipFilterManager;
+  }
+
+  /**
+   * Gets the server health checker.
+   *
+   * @return the health checker, or null if not started
+   */
+  public @MonotonicNonNull ServerHealthChecker getHealthChecker() {
+    return healthChecker;
   }
 }

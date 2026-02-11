@@ -23,6 +23,7 @@ import com.velocitypowered.api.event.connection.ConnectionHandshakeEvent;
 import com.velocitypowered.api.network.HandshakeIntent;
 import com.velocitypowered.api.network.ProtocolState;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.filter.IpFilterManager;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.ConnectionType;
@@ -103,10 +104,25 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
       connection.setProtocolVersion(handshake.getProtocolVersion());
       connection.setAssociation(ic);
 
+      final InetAddress address = ((InetSocketAddress) connection.getRemoteAddress()).getAddress();
+      final var filterResult = server.getIpFilterManager().checkConnection(address);
+
       switch (nextState) {
-        case STATUS -> connection.setActiveSessionHandler(StateRegistry.STATUS,
-              new StatusSessionHandler(server, ic));
-        case LOGIN -> this.handleLogin(handshake, ic);
+        case STATUS -> {
+          if (filterResult != IpFilterManager.FilterResult.ALLOWED) {
+            connection.close(true);
+            return true;
+          }
+          connection.setActiveSessionHandler(StateRegistry.STATUS,
+                  new StatusSessionHandler(server, ic));
+        }
+        case LOGIN -> {
+          if (filterResult != IpFilterManager.FilterResult.ALLOWED) {
+            handleFilterDenial(filterResult, ic, address);
+            return true;
+          }
+          this.handleLogin(handshake, ic);
+        }
         default ->
           // If you get this, it's a bug in Velocity.
           throw new AssertionError("getStateForProtocol provided invalid state!");
@@ -124,6 +140,20 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     };
   }
 
+  private void handleFilterDenial(IpFilterManager.FilterResult filterResult,
+                                 InitialInboundConnection ic, InetAddress address) {
+    connection.setState(StateRegistry.LOGIN);
+    if (filterResult == IpFilterManager.FilterResult.DENIED_MAINTENANCE) {
+      ic.disconnectQuietly(server.getIpFilterManager().getMaintenanceMessage());
+    } else {
+      // DENIED_BLACKLISTED
+      final var entry = server.getIpFilterManager().getBlacklistEntry(address);
+      final String reason = entry.flatMap(e -> e.getReason())
+              .orElse("You have been blocked from this server.");
+      ic.disconnectQuietly(Component.text(reason));
+    }
+  }
+
   private void handleLogin(HandshakePacket handshake, InitialInboundConnection ic) {
     if (!handshake.getProtocolVersion().isSupported()) {
       // Bump connection into correct protocol state so that we can send the disconnect packet.
@@ -136,6 +166,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     }
 
     final InetAddress address = ((InetSocketAddress) connection.getRemoteAddress()).getAddress();
+
     if (!server.getIpAttemptLimiter().attempt(address)) {
       // Bump connection into correct protocol state so that we can send the disconnect packet.
       connection.setState(StateRegistry.LOGIN);

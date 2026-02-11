@@ -32,6 +32,7 @@ import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.PluginMessageEncoder;
 import com.velocitypowered.api.proxy.server.PingOptions;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.api.proxy.server.ServerHealthStatus;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.proxy.VelocityServer;
@@ -45,6 +46,7 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
 import com.velocitypowered.proxy.protocol.util.ByteBufDataOutput;
+import com.velocitypowered.proxy.server.health.VelocityServerHealthInfo;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -72,10 +74,21 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   private final @Nullable VelocityServer server;
   private final ServerInfo serverInfo;
   private final Map<UUID, ConnectedPlayer> players = new ConcurrentHashMap<>();
+  private final VelocityServerHealthInfo healthInfo = new VelocityServerHealthInfo();
 
   public VelocityRegisteredServer(@Nullable VelocityServer server, ServerInfo serverInfo) {
     this.server = server;
     this.serverInfo = Preconditions.checkNotNull(serverInfo, "serverInfo");
+  }
+
+  @Override
+  public ServerHealthStatus getHealthStatus() {
+    return healthInfo.getStatus();
+  }
+
+  @Override
+  public VelocityServerHealthInfo getHealthInfo() {
+    return healthInfo;
   }
 
   @Override

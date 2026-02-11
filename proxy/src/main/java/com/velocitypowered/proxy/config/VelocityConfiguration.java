@@ -89,6 +89,8 @@ public class VelocityConfiguration implements ProxyConfig {
   private final Query query;
   private final Metrics metrics;
   @Expose
+  private final HealthCheck healthCheck;
+  @Expose
   private boolean enablePlayerAddressLogging = true;
   private net.kyori.adventure.text.@MonotonicNonNull Component motdAsComponent;
   private @Nullable Favicon favicon;
@@ -96,12 +98,13 @@ public class VelocityConfiguration implements ProxyConfig {
   private boolean forceKeyAuthentication = true; // Added in 1.19
 
   private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
-      Query query, Metrics metrics) {
+      Query query, Metrics metrics, HealthCheck healthCheck) {
     this.servers = servers;
     this.forcedHosts = forcedHosts;
     this.advanced = advanced;
     this.query = query;
     this.metrics = metrics;
+    this.healthCheck = healthCheck;
   }
 
   private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
@@ -110,7 +113,7 @@ public class VelocityConfiguration implements ProxyConfig {
       boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough,
       boolean samplePlayersInPing, boolean enablePlayerAddressLogging, Servers servers,
       ForcedHosts forcedHosts, Advanced advanced, Query query, Metrics metrics,
-      boolean forceKeyAuthentication) {
+      HealthCheck healthCheck, boolean forceKeyAuthentication) {
     this.bind = bind;
     this.motd = motd;
     this.showMaxPlayers = showMaxPlayers;
@@ -128,6 +131,7 @@ public class VelocityConfiguration implements ProxyConfig {
     this.advanced = advanced;
     this.query = query;
     this.metrics = metrics;
+    this.healthCheck = healthCheck;
     this.forceKeyAuthentication = forceKeyAuthentication;
   }
 
@@ -543,6 +547,7 @@ public class VelocityConfiguration implements ProxyConfig {
       final CommentedConfig advancedConfig = config.get("advanced");
       final CommentedConfig queryConfig = config.get("query");
       final CommentedConfig metricsConfig = config.get("metrics");
+      final CommentedConfig healthCheckConfig = config.get("health-check");
       final PlayerInfoForwarding forwardingMode = config.getEnumOrElse(
               "player-info-forwarding-mode", PlayerInfoForwarding.NONE);
       final PingPassthroughMode pingPassthroughMode = config.getEnumOrElse("ping-passthrough",
@@ -587,6 +592,7 @@ public class VelocityConfiguration implements ProxyConfig {
               new Advanced(advancedConfig),
               new Query(queryConfig),
               new Metrics(metricsConfig),
+              new HealthCheck(healthCheckConfig),
               forceKeyAuthentication
       );
     }
@@ -988,6 +994,76 @@ public class VelocityConfiguration implements ProxyConfig {
 
     public boolean isEnabled() {
       return enabled;
+    }
+  }
+
+  /**
+   * Gets the health check configuration.
+   *
+   * @return the health check configuration
+   */
+  public HealthCheck getHealthCheck() {
+    return healthCheck;
+  }
+
+  /**
+   * Configuration for server health checking.
+   */
+  public static class HealthCheck {
+
+    @Expose
+    private boolean enabled = true;
+    @Expose
+    private long intervalSeconds = 30;
+    @Expose
+    private long timeoutMs = 5000;
+    @Expose
+    private int unhealthyThreshold = 3;
+    @Expose
+    private long degradedThresholdMs = 1000;
+
+    private HealthCheck() {
+    }
+
+    private HealthCheck(CommentedConfig config) {
+      if (config != null) {
+        this.enabled = config.getOrElse("enabled", true);
+        this.intervalSeconds = config.getLongOrElse("interval-seconds", 30L);
+        this.timeoutMs = config.getLongOrElse("timeout-ms", 5000L);
+        this.unhealthyThreshold = config.getIntOrElse("unhealthy-threshold", 3);
+        this.degradedThresholdMs = config.getLongOrElse("degraded-threshold-ms", 1000L);
+      }
+    }
+
+    public boolean isEnabled() {
+      return enabled;
+    }
+
+    public long getIntervalSeconds() {
+      return intervalSeconds;
+    }
+
+    public long getTimeoutMs() {
+      return timeoutMs;
+    }
+
+    public int getUnhealthyThreshold() {
+      return unhealthyThreshold;
+    }
+
+    public long getDegradedThresholdMs() {
+      return degradedThresholdMs;
+    }
+
+    @Override
+    public String toString() {
+      return "HealthCheck{"
+          + "enabled=" + enabled
+          + ", intervalSeconds=" + intervalSeconds
+          + ", timeoutMs=" + timeoutMs
+          + ", unhealthyThreshold=" + unhealthyThreshold
+          + ", degradedThresholdMs=" + degradedThresholdMs
+          + '}';
     }
   }
 }
