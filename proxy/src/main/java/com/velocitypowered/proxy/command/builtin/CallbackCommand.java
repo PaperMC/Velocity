@@ -35,8 +35,10 @@ public final class CallbackCommand implements Command<CommandSource> {
   public static BrigadierCommand create() {
     final LiteralCommandNode<CommandSource> node = BrigadierCommand
         .literalArgumentBuilder("velocity:callback")
+        .requires(source ->
+            source.getPermissionValue("velocity.command.callback") == Tristate.TRUE)
         .then(BrigadierCommand.requiredArgumentBuilder("id", StringArgumentType.word())
-                .executes(new CallbackCommand()))
+            .executes(new CallbackCommand()))
         .build();
 
     return new BrigadierCommand(node);
