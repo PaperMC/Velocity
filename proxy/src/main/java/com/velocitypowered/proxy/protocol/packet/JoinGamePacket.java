@@ -246,7 +246,11 @@ public class JoinGamePacket implements MinecraftPacket {
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_9_1)) {
       this.dimension = buf.readInt();
     } else {
-      this.dimension = buf.readByte();
+      // Read as signed byte, then convert to unsigned for modded dimension IDs > 127
+      // (e.g. dimension 180 would be read as signed byte -76, but should be stored as 180).
+      // Preserve -1 (Nether) as-is since it is the only standard negative dimension ID.
+      int raw = buf.readByte();
+      this.dimension = (raw < -1) ? (raw & 0xFF) : raw;
     }
     if (version.noGreaterThan(ProtocolVersion.MINECRAFT_1_13_2)) {
       this.difficulty = buf.readUnsignedByte();
