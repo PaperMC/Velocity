@@ -37,10 +37,20 @@ public class PlayerChooseInitialServerEvent {
     this.initialServer = initialServer;
   }
 
+  /**
+   * Gets the player who is choosing the initial server.
+   *
+   * @return the connected player
+   */
   public Player getPlayer() {
     return player;
   }
 
+  /**
+   * Gets the initial server the player will connect to.
+   *
+   * @return an {@link Optional} containing the selected server, or empty if none was set
+   */
   public Optional<RegisteredServer> getInitialServer() {
     return Optional.ofNullable(initialServer);
   }

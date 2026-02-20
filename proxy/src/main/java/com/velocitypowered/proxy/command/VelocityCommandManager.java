@@ -140,7 +140,7 @@ public class VelocityCommandManager implements CommandManager {
               command + " implements multiple registrable Command subinterfaces: "
                       + implementedInterfaces);
     } else {
-      this.internalRegister(commandRegistrars.get(0), command, meta);
+      this.internalRegister(commandRegistrars.getFirst(), command, meta);
     }
   }
 
@@ -256,7 +256,7 @@ public class VelocityCommandManager implements CommandManager {
       }
     } catch (final Throwable e) {
       // Ugly, ugly swallowing of everything Throwable, because plugins are naughty.
-      throw new RuntimeException("Unable to invoke command  " + parsed.getReader().getString() + "for " + source, e);
+      throw new RuntimeException("Unable to invoke command " + parsed.getReader().getString() + " for " + source, e);
     } finally {
       eventManager.fireAndForget(new PostCommandInvocationEvent(source, parsed.getReader().getString(), result));
     }

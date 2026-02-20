@@ -22,6 +22,15 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The {@code TitleTimesPacket} class represents a packet that handles the timing settings for a title in
+ * Minecraft, such as fade-in, stay, and fade-out durations.
+ *
+ * <p>This packet is used to set the timing properties for a title displayed to the player.</p>
+ *
+ * <p>It extends the {@link GenericTitlePacket} to inherit basic title properties and adds specific timing
+ * controls for the title display.</p>
+ */
 public class TitleTimesPacket extends GenericTitlePacket {
 
   private int fadeIn;

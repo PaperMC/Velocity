@@ -29,6 +29,9 @@ public class ServerResourcePackRemoveEvent implements ResultedEvent<ResultedEven
 
   /**
    * Instantiates this event.
+   *
+   * @param packId the UUID of the resource pack to remove, or {@code null} to clear all
+   * @param serverConnection the server attempting to remove the resource pack
    */
   public ServerResourcePackRemoveEvent(UUID packId, ServerConnection serverConnection) {
     this.result = ResultedEvent.GenericResult.allowed();

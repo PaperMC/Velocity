@@ -10,14 +10,10 @@ plugins {
 
 application {
     mainClass.set("com.velocitypowered.proxy.Velocity")
-    applicationDefaultJvmArgs += listOf("-Dvelocity.packet-decode-logging=true");
+    applicationDefaultJvmArgs += listOf("-Dvelocity.packet-decode-logging=true")
 }
 
 tasks {
-    withType<Checkstyle> {
-        exclude("**/com/velocitypowered/proxy/protocol/packet/**")
-    }
-
     jar {
         manifest {
             attributes["Implementation-Title"] = "Velocity"
@@ -27,9 +23,13 @@ tasks {
     }
 
     shadowJar {
+        filesMatching("META-INF/org/apache/logging/log4j/core/config/plugins/**") {
+            duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        }
+
         transform(Log4j2PluginsCacheFileTransformer::class.java)
 
-        // Exclude all the collection types we don"t intend to use
+        // Exclude all the collection types we don't intend to use
         exclude("it/unimi/dsi/fastutil/booleans/**")
         exclude("it/unimi/dsi/fastutil/bytes/**")
         exclude("it/unimi/dsi/fastutil/chars/**")
@@ -38,7 +38,7 @@ tasks {
         exclude("it/unimi/dsi/fastutil/longs/**")
         exclude("it/unimi/dsi/fastutil/shorts/**")
 
-        // Exclude the fastutil IO utilities - we don"t use them.
+        // Exclude the fastutil IO utilities - we don't use them.
         exclude("it/unimi/dsi/fastutil/io/**")
 
         // Exclude most of the int types - Object2IntMap have a values() method that returns an
@@ -131,7 +131,6 @@ fill {
 dependencies {
     implementation(project(":velocity-api"))
     implementation(project(":velocity-native"))
-    implementation(project(":velocity-proxy-log4j2-plugin"))
 
     implementation(libs.bundles.log4j)
     implementation(libs.kyori.ansi)
@@ -168,4 +167,5 @@ dependencies {
     testImplementation(libs.mockito)
 
     annotationProcessor(libs.auto.service)
+    annotationProcessor(libs.log4j.core)
 }

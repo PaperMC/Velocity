@@ -34,7 +34,6 @@ public interface KeySigned {
    */
   Instant getExpiryTemporal();
 
-
   /**
    * Check if the signature has expired.
    *
@@ -56,6 +55,7 @@ public interface KeySigned {
    * Validates the signature, expiry temporal and key against the
    * signer public key. Note: This will **not** check for
    * expiry. You can check for expiry with {@link KeySigned#hasExpired()}.
+   *
    * <p>DOES NOT WORK YET FOR MESSAGES AND COMMANDS!</p>
    * Addendum: Does not work for 1.19.1 until the user has authenticated.
    *

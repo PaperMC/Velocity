@@ -84,14 +84,29 @@ public final class MinecraftChannelIdentifier implements ChannelIdentifier {
     return create(key.namespace(), key.value());
   }
 
+  /**
+   * Returns the namespace of this channel identifier.
+   *
+   * @return the namespace string (e.g., {@code minecraft})
+   */
   public String getNamespace() {
     return namespace;
   }
 
+  /**
+   * Returns the name of the channel within its namespace.
+   *
+   * @return the channel name string
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * Converts this channel identifier to a {@link Key} object.
+   *
+   * @return a {@link Key} representing this identifier
+   */
   public Key asKey() {
     return Key.key(namespace, name);
   }

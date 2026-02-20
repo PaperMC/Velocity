@@ -12,6 +12,12 @@ package com.velocitypowered.api.event.proxy;
  */
 public class ProxyReloadEvent {
 
+  /**
+   * Creates a new {@code ProxyReloadEvent}.
+   */
+  public ProxyReloadEvent() {
+  }
+
   @Override
   public String toString() {
     return "ProxyReloadEvent";

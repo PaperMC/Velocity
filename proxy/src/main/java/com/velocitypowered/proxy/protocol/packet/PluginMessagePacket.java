@@ -29,6 +29,10 @@ import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents a plugin message packet, which allows for custom communication between
+ * a Minecraft server and a client via custom channels.
+ */
 public class PluginMessagePacket extends DeferredByteBufHolder implements MinecraftPacket {
 
   private @Nullable String channel;
@@ -43,6 +47,12 @@ public class PluginMessagePacket extends DeferredByteBufHolder implements Minecr
     this.channel = channel;
   }
 
+  /**
+   * Gets the channel for this plugin message.
+   *
+   * @return the channel name
+   * @throws IllegalStateException if the channel is not set
+   */
   public String getChannel() {
     if (channel == null) {
       throw new IllegalStateException("Channel is not specified.");
@@ -73,7 +83,6 @@ public class PluginMessagePacket extends DeferredByteBufHolder implements Minecr
     } else {
       this.replace(ProtocolUtils.readRetainedByteBufSlice17(buf));
     }
-
   }
 
   @Override
@@ -97,7 +106,6 @@ public class PluginMessagePacket extends DeferredByteBufHolder implements Minecr
     } else {
       ProtocolUtils.writeByteBuf17(content(), buf, true); // True for Forge support
     }
-
   }
 
   @Override

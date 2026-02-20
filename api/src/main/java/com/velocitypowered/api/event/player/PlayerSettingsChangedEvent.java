@@ -22,15 +22,31 @@ public final class PlayerSettingsChangedEvent {
   private final Player player;
   private final PlayerSettings playerSettings;
 
+  /**
+   * Constructs a new PlayerSettingsChangedEvent.
+   *
+   * @param player the player who changed settings
+   * @param playerSettings the new settings sent by the client
+   */
   public PlayerSettingsChangedEvent(Player player, PlayerSettings playerSettings) {
     this.player = Preconditions.checkNotNull(player, "player");
     this.playerSettings = Preconditions.checkNotNull(playerSettings, "playerSettings");
   }
 
+  /**
+   * Returns the player whose settings changed.
+   *
+   * @return the player
+   */
   public Player getPlayer() {
     return player;
   }
 
+  /**
+   * Returns the new client settings sent by the player.
+   *
+   * @return the updated player settings
+   */
   public PlayerSettings getPlayerSettings() {
     return playerSettings;
   }

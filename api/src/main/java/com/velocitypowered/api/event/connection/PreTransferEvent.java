@@ -28,15 +28,31 @@ public final class PreTransferEvent implements ResultedEvent<PreTransferEvent.Tr
   private final Player player;
   private TransferResult result = TransferResult.ALLOWED;
 
+  /**
+   * Constructs a new PreTransferEvent.
+   *
+   * @param player the player being transferred
+   * @param address the destination address
+   */
   public PreTransferEvent(final Player player, final InetSocketAddress address) {
     this.player = requireNonNull(player);
     this.originalAddress = requireNonNull(address);
   }
 
+  /**
+   * Returns the player attempting to transfer.
+   *
+   * @return the player
+   */
   public Player player() {
     return this.player;
   }
 
+  /**
+   * Returns the original target address the player is attempting to connect to.
+   *
+   * @return the original address
+   */
   public InetSocketAddress originalAddress() {
     return this.originalAddress;
   }
@@ -56,7 +72,13 @@ public final class PreTransferEvent implements ResultedEvent<PreTransferEvent.Tr
    * Transfer Result of a player to another host.
    */
   public static class TransferResult implements ResultedEvent.Result {
+    /**
+     * A result allowing the transfer to proceed without modifying the destination.
+     */
     private static final TransferResult ALLOWED = new TransferResult(true, null);
+    /**
+     * A result denying the transfer entirely.
+     */
     private static final TransferResult DENIED = new TransferResult(false, null);
 
     private final InetSocketAddress address;
@@ -67,10 +89,20 @@ public final class PreTransferEvent implements ResultedEvent<PreTransferEvent.Tr
       this.allowed = allowed;
     }
 
+    /**
+     * Allows the transfer to proceed to the originally specified address.
+     *
+     * @return an allowed result
+     */
     public static TransferResult allowed() {
       return ALLOWED;
     }
 
+    /**
+     * Denies the transfer attempt.
+     *
+     * @return a denied result
+     */
     public static TransferResult denied() {
       return DENIED;
     }
@@ -92,6 +124,11 @@ public final class PreTransferEvent implements ResultedEvent<PreTransferEvent.Tr
       return this.allowed;
     }
 
+    /**
+     * Returns the destination address for the transfer, if overridden.
+     *
+     * @return the overridden address or null if not specified
+     */
     @Nullable
     public InetSocketAddress address() {
       return this.address;

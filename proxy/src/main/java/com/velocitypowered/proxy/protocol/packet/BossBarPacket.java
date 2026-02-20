@@ -29,6 +29,10 @@ import java.util.UUID;
 import net.kyori.adventure.bossbar.BossBar;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents a packet used to manage boss bars.
+ * This packet can add, remove, or update a boss bar.
+ */
 public class BossBarPacket implements MinecraftPacket {
 
   private static final Enum2IntMap<BossBar.Color> COLORS_TO_PROTOCOL =
@@ -70,6 +74,14 @@ public class BossBarPacket implements MinecraftPacket {
   private int overlay;
   private short flags;
 
+  /**
+   * Creates a packet to add a new boss bar.
+   *
+   * @param id the UUID of the boss bar
+   * @param bar the {@link BossBar} instance
+   * @param name the {@link ComponentHolder} containing the boss bar's name
+   * @return a {@link BossBarPacket} to add a boss bar
+   */
   public static BossBarPacket createAddPacket(
       final UUID id,
       final BossBar bar,
@@ -86,6 +98,13 @@ public class BossBarPacket implements MinecraftPacket {
     return packet;
   }
 
+  /**
+   * Creates a packet to remove an existing boss bar.
+   *
+   * @param id the UUID of the boss bar to remove
+   * @param bar the {@link BossBar} instance
+   * @return a {@link BossBarPacket} to remove a boss bar
+   */
   public static BossBarPacket createRemovePacket(final UUID id, final BossBar bar) {
     final BossBarPacket packet = new BossBarPacket();
     packet.setUuid(id);
@@ -93,6 +112,13 @@ public class BossBarPacket implements MinecraftPacket {
     return packet;
   }
 
+  /**
+   * Creates a packet to update the progress (percentage) of the boss bar.
+   *
+   * @param id the UUID of the boss bar
+   * @param bar the {@link BossBar} instance
+   * @return a {@link BossBarPacket} to update the boss bar's progress
+   */
   public static BossBarPacket createUpdateProgressPacket(final UUID id, final BossBar bar) {
     final BossBarPacket packet = new BossBarPacket();
     packet.setUuid(id);
@@ -101,6 +127,14 @@ public class BossBarPacket implements MinecraftPacket {
     return packet;
   }
 
+  /**
+   * Creates a packet to update the name of the boss bar.
+   *
+   * @param id the UUID of the boss bar
+   * @param bar the {@link BossBar} instance
+   * @param name the {@link ComponentHolder} containing the boss bar's new name
+   * @return a {@link BossBarPacket} to update the boss bar's name
+   */
   public static BossBarPacket createUpdateNamePacket(
       final UUID id,
       final BossBar bar,
@@ -113,6 +147,13 @@ public class BossBarPacket implements MinecraftPacket {
     return packet;
   }
 
+  /**
+   * Creates a packet to update the style (color and overlay) of the boss bar.
+   *
+   * @param id the UUID of the boss bar
+   * @param bar the {@link BossBar} instance
+   * @return a {@link BossBarPacket} to update the boss bar's style
+   */
   public static BossBarPacket createUpdateStylePacket(final UUID id, final BossBar bar) {
     final BossBarPacket packet = new BossBarPacket();
     packet.setUuid(id);
@@ -122,6 +163,13 @@ public class BossBarPacket implements MinecraftPacket {
     return packet;
   }
 
+  /**
+   * Creates a packet to update the properties of the boss bar.
+   *
+   * @param id the UUID of the boss bar
+   * @param bar the {@link BossBar} instance
+   * @return a {@link BossBarPacket} to update the boss bar's properties
+   */
   public static BossBarPacket createUpdatePropertiesPacket(final UUID id, final BossBar bar) {
     final BossBarPacket packet = new BossBarPacket();
     packet.setUuid(id);
@@ -130,6 +178,12 @@ public class BossBarPacket implements MinecraftPacket {
     return packet;
   }
 
+  /**
+   * Retrieves the UUID of the boss bar.
+   *
+   * @return the UUID of the boss bar
+   * @throws IllegalStateException if the UUID has not been set
+   */
   public UUID getUuid() {
     if (uuid == null) {
       throw new IllegalStateException("No boss bar UUID specified");
@@ -207,30 +261,23 @@ public class BossBarPacket implements MinecraftPacket {
     this.uuid = ProtocolUtils.readUuid(buf);
     this.action = ProtocolUtils.readVarInt(buf);
     switch (action) {
-      case ADD:
+      case ADD -> {
         this.name = ComponentHolder.read(buf, version);
         this.percent = buf.readFloat();
         this.color = ProtocolUtils.readVarInt(buf);
         this.overlay = ProtocolUtils.readVarInt(buf);
         this.flags = buf.readUnsignedByte();
-        break;
-      case REMOVE:
-        break;
-      case UPDATE_PERCENT:
-        this.percent = buf.readFloat();
-        break;
-      case UPDATE_NAME:
-        this.name = ComponentHolder.read(buf, version);
-        break;
-      case UPDATE_STYLE:
+      }
+      case REMOVE -> {
+      }
+      case UPDATE_PERCENT -> this.percent = buf.readFloat();
+      case UPDATE_NAME -> this.name = ComponentHolder.read(buf, version);
+      case UPDATE_STYLE -> {
         this.color = ProtocolUtils.readVarInt(buf);
         this.overlay = ProtocolUtils.readVarInt(buf);
-        break;
-      case UPDATE_PROPERTIES:
-        this.flags = buf.readUnsignedByte();
-        break;
-      default:
-        throw new UnsupportedOperationException("Unknown action " + action);
+      }
+      case UPDATE_PROPERTIES -> this.flags = buf.readUnsignedByte();
+      default -> throw new UnsupportedOperationException("Unknown action " + action);
     }
   }
 
@@ -242,7 +289,7 @@ public class BossBarPacket implements MinecraftPacket {
     ProtocolUtils.writeUuid(buf, uuid);
     ProtocolUtils.writeVarInt(buf, action);
     switch (action) {
-      case ADD:
+      case ADD -> {
         if (name == null) {
           throw new IllegalStateException("No name specified!");
         }
@@ -251,34 +298,29 @@ public class BossBarPacket implements MinecraftPacket {
         ProtocolUtils.writeVarInt(buf, color);
         ProtocolUtils.writeVarInt(buf, overlay);
         buf.writeByte(flags);
-        break;
-      case REMOVE:
-        break;
-      case UPDATE_PERCENT:
-        buf.writeFloat(percent);
-        break;
-      case UPDATE_NAME:
+      }
+      case REMOVE -> {
+      }
+      case UPDATE_PERCENT -> buf.writeFloat(percent);
+      case UPDATE_NAME -> {
         if (name == null) {
           throw new IllegalStateException("No name specified!");
         }
         name.write(buf);
-        break;
-      case UPDATE_STYLE:
+      }
+      case UPDATE_STYLE -> {
         ProtocolUtils.writeVarInt(buf, color);
         ProtocolUtils.writeVarInt(buf, overlay);
-        break;
-      case UPDATE_PROPERTIES:
-        buf.writeByte(flags);
-        break;
-      default:
-        throw new UnsupportedOperationException("Unknown action " + action);
+      }
+      case UPDATE_PROPERTIES -> buf.writeByte(flags);
+      default -> throw new UnsupportedOperationException("Unknown action " + action);
     }
   }
 
   private static byte serializeFlags(Set<BossBar.Flag> flags) {
     byte val = 0x0;
     for (BossBar.Flag flag : flags) {
-      val |= FLAG_BITS_TO_PROTOCOL.get(flag);
+      val |= (byte) FLAG_BITS_TO_PROTOCOL.get(flag);
     }
     return val;
   }

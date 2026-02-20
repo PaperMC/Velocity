@@ -17,7 +17,7 @@ pluginManagement {
 }
 
 plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
 rootProject.name = "velocity"
@@ -36,8 +36,3 @@ sequenceOf(
 val deprecatedConfigurateModule = ":deprecated-configurate3"
 include(deprecatedConfigurateModule)
 project(deprecatedConfigurateModule).projectDir = file("proxy/deprecated/configurate3")
-
-// Log4J2 plugin
-val log4j2ProxyPlugin = ":velocity-proxy-log4j2-plugin"
-include(log4j2ProxyPlugin)
-project(log4j2ProxyPlugin).projectDir = file("proxy/log4j2-plugin")

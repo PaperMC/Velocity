@@ -25,6 +25,13 @@ import io.netty.buffer.ByteBuf;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents a legacy chat packet used in older versions of Minecraft.
+ *
+ * <p>The {@code LegacyChatPacket} is responsible for holding and transmitting chat messages
+ * in the format used by legacy versions of Minecraft. It implements {@link MinecraftPacket}
+ * to ensure compatibility with the packet-handling system.</p>
+ */
 public class LegacyChatPacket implements MinecraftPacket {
 
   public static final byte CHAT_TYPE = (byte) 0;
@@ -32,11 +39,24 @@ public class LegacyChatPacket implements MinecraftPacket {
   public static final byte GAME_INFO_TYPE = (byte) 2;
 
   public static final int MAX_SERVERBOUND_MESSAGE_LENGTH = 256;
+  private static final int MAX_SERVERBOUND_MESSAGE_LENGTH_LEGACY = getMaxServerboundMessageLength();
   public static final UUID EMPTY_SENDER = new UUID(0, 0);
 
   private @Nullable String message;
   private byte type;
   private @Nullable UUID sender;
+
+  private static int getMaxServerboundMessageLength() {
+    final String value = System.getProperty("velocity.legacyChatMaxServerboundLength");
+    if (value != null) {
+      try {
+        return Integer.parseInt(value.trim());
+      } catch (final NumberFormatException e) {
+        // Exception has been handled
+      }
+    }
+    return 100;
+  }
 
   public LegacyChatPacket() {
   }
@@ -92,7 +112,10 @@ public class LegacyChatPacket implements MinecraftPacket {
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     message = ProtocolUtils.readString(buf, direction == ProtocolUtils.Direction.CLIENTBOUND
-        ? 262144 : version.noLessThan(ProtocolVersion.MINECRAFT_1_11) ? 256 : 100);
+        ? 262144
+        : version.noLessThan(ProtocolVersion.MINECRAFT_1_11)
+          ? MAX_SERVERBOUND_MESSAGE_LENGTH
+          : MAX_SERVERBOUND_MESSAGE_LENGTH_LEGACY);
     if (direction == ProtocolUtils.Direction.CLIENTBOUND
         && version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       type = buf.readByte();

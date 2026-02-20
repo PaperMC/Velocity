@@ -33,6 +33,8 @@ public class PlayerResourcePackStatusEvent {
   /**
    * Instantiates this event.
    *
+   * @param player the player affected by the status update
+   * @param status the status of the resource pack
    * @deprecated Use {@link PlayerResourcePackStatusEvent#PlayerResourcePackStatusEvent
    *             (Player, UUID, Status, ResourcePackInfo)} instead.
    */
@@ -44,6 +46,9 @@ public class PlayerResourcePackStatusEvent {
   /**
    * Instantiates this event.
    *
+   * @param player the player affected by the status update
+   * @param status the status of the resource pack
+   * @param packInfo the resource pack metadata
    * @deprecated Use {@link PlayerResourcePackStatusEvent#PlayerResourcePackStatusEvent
    *             (Player, UUID, Status, ResourcePackInfo)} instead.
    */
@@ -54,6 +59,11 @@ public class PlayerResourcePackStatusEvent {
 
   /**
    * Instantiates this event.
+   *
+   * @param player the player affected by the status update
+   * @param packId the unique ID of the resource pack
+   * @param status the status of the resource pack
+   * @param packInfo the resource pack metadata
    */
   public PlayerResourcePackStatusEvent(
           Player player, UUID packId, Status status, ResourcePackInfo packInfo) {

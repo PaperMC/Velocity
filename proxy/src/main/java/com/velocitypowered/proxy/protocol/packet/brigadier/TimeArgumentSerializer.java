@@ -20,6 +20,12 @@ package com.velocitypowered.proxy.protocol.packet.brigadier;
 import com.velocitypowered.api.network.ProtocolVersion;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * Serializer for time-based arguments represented as {@link Integer}.
+ *
+ * <p>This class handles the serialization and deserialization of time-related arguments,
+ * converting them to and from an {@link Integer} format.</p>
+ */
 public class TimeArgumentSerializer implements ArgumentPropertySerializer<Integer> {
 
   static final TimeArgumentSerializer TIME = new TimeArgumentSerializer();

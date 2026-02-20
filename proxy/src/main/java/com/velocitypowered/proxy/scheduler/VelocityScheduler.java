@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2023 Velocity Contributors
+ * Copyright (C) 2018-2026 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginManager;
 import com.velocitypowered.api.scheduler.ScheduledTask;
@@ -40,7 +39,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -60,20 +58,23 @@ import org.jetbrains.annotations.VisibleForTesting;
 public class VelocityScheduler implements Scheduler {
 
   private final PluginManager pluginManager;
-  private final ScheduledExecutorService timerExecutionService;
+  private final SchedulerBackend backend;
   private final Multimap<Object, ScheduledTask> tasksByPlugin = Multimaps.synchronizedMultimap(
       Multimaps.newSetMultimap(new IdentityHashMap<>(), HashSet::new));
 
   /**
-   * Initalizes the scheduler.
+   * Initializes the scheduler.
    *
    * @param pluginManager the Velocity plugin manager
    */
   public VelocityScheduler(PluginManager pluginManager) {
+    this(pluginManager, new ExecutorSchedulerBackend());
+  }
+
+  @VisibleForTesting
+  VelocityScheduler(PluginManager pluginManager, SchedulerBackend backend) {
     this.pluginManager = pluginManager;
-    this.timerExecutionService = Executors
-        .newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setDaemon(true)
-            .setNameFormat("Velocity Task Scheduler Timer").build());
+    this.backend = backend;
   }
 
   @Override
@@ -118,7 +119,7 @@ public class VelocityScheduler implements Scheduler {
     for (ScheduledTask task : terminating) {
       task.cancel();
     }
-    timerExecutionService.shutdown();
+    backend.shutdown();
     final List<PluginContainer> plugins = new ArrayList<>(this.pluginManager.getPlugins());
     final Iterator<PluginContainer> pluginIterator = plugins.iterator();
     while (pluginIterator.hasNext()) {
@@ -232,10 +233,9 @@ public class VelocityScheduler implements Scheduler {
 
     void schedule() {
       if (repeat == 0) {
-        this.future = timerExecutionService.schedule(this, delay, TimeUnit.MILLISECONDS);
+        this.future = backend.schedule(this, delay, TimeUnit.MILLISECONDS);
       } else {
-        this.future = timerExecutionService
-            .scheduleAtFixedRate(this, delay, repeat, TimeUnit.MILLISECONDS);
+        this.future = backend.scheduleAtFixedRate(this, delay, repeat, TimeUnit.MILLISECONDS);
       }
     }
 
