@@ -21,6 +21,23 @@ public final class ServerInfo implements Comparable<ServerInfo> {
   private final String name;
   private final InetSocketAddress address;
 
+  @Nullable
+  private final ServerInfoForwardingMode forwardingMode;
+
+  /**
+   * Creates a new ServerInfo object.
+   *
+   * @param name the name for the server
+   * @param address the address of the server to connect to
+   * @param forwardingMode the server info forwarding mode, or {@code null} if the mode from the config should be used
+   * @since 3.4.0
+   */
+  public ServerInfo(String name, InetSocketAddress address, @Nullable ServerInfoForwardingMode forwardingMode) {
+    this.name = Preconditions.checkNotNull(name, "name");
+    this.address = Preconditions.checkNotNull(address, "address");
+    this.forwardingMode = forwardingMode;
+  }
+
   /**
    * Creates a new ServerInfo object.
    *
@@ -30,6 +47,7 @@ public final class ServerInfo implements Comparable<ServerInfo> {
   public ServerInfo(String name, InetSocketAddress address) {
     this.name = Preconditions.checkNotNull(name, "name");
     this.address = Preconditions.checkNotNull(address, "address");
+    this.forwardingMode = null;
   }
 
   /**
@@ -50,11 +68,23 @@ public final class ServerInfo implements Comparable<ServerInfo> {
     return address;
   }
 
+  /**
+   * Returns the forwarding mode used by the backend server to communicate with Velocity.
+   *
+   * @return the configured forwarding mode for the server, or {@code null}
+   *     if the mode is inherited from the "player-info-forwarding-mode" set in the config
+   */
+  @Nullable
+  public final ServerInfoForwardingMode getServerInfoForwardingMode() {
+    return forwardingMode;
+  }
+
   @Override
   public String toString() {
     return "ServerInfo{"
         + "name='" + name + '\''
         + ", address=" + address
+        + ", forwarding=" + forwardingMode
         + '}';
   }
 
@@ -63,17 +93,17 @@ public final class ServerInfo implements Comparable<ServerInfo> {
     if (this == o) {
       return true;
     }
-    if (o == null || getClass() != o.getClass()) {
+    if (!(o instanceof final ServerInfo that)) {
       return false;
     }
-    ServerInfo that = (ServerInfo) o;
     return Objects.equals(name, that.name)
-        && Objects.equals(address, that.address);
+        && Objects.equals(address, that.address)
+        && Objects.equals(forwardingMode, that.forwardingMode);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, address);
+    return Objects.hash(name, address, forwardingMode);
   }
 
   @Override

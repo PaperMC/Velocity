@@ -35,6 +35,7 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
@@ -73,6 +74,13 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   private final ServerInfo serverInfo;
   private final Map<UUID, ConnectedPlayer> players = new ConcurrentHashMap<>();
 
+  /**
+   * Register a backend server.
+   *
+   * @param server velocity instance
+   *
+   * @param serverInfo info of the backend server
+   */
   public VelocityRegisteredServer(@Nullable VelocityServer server, ServerInfo serverInfo) {
     this.server = server;
     this.serverInfo = Preconditions.checkNotNull(serverInfo, "serverInfo");
@@ -81,6 +89,23 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
   @Override
   public ServerInfo getServerInfo() {
     return serverInfo;
+  }
+
+  /**
+   * Converts server info forward mode to Player info forwarding.
+   *
+   * @return player info forwarding
+   */
+  public PlayerInfoForwarding getConfiguredPlayerInfoForwarding() {
+    if (serverInfo.getServerInfoForwardingMode() == null) {
+      return server.getConfiguration().getPlayerInfoForwardingMode();
+    }
+    return switch (serverInfo.getServerInfoForwardingMode()) {
+      case LEGACY -> PlayerInfoForwarding.LEGACY;
+      case MODERN -> PlayerInfoForwarding.MODERN;
+      case BUNGEEGUARD -> PlayerInfoForwarding.BUNGEEGUARD;
+      case NONE -> PlayerInfoForwarding.NONE;
+    };
   }
 
   @Override
