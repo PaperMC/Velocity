@@ -18,9 +18,9 @@
 package com.velocitypowered.proxy.config;
 
 import com.electronwill.nightconfig.core.CommentedConfig;
-import com.google.common.annotations.VisibleForTesting;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -28,11 +28,11 @@ import com.google.gson.annotations.Expose;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.config.migration.ConfigurationMigration;
+import com.velocitypowered.proxy.config.migration.ForcedHostSubdomainMigration;
 import com.velocitypowered.proxy.config.migration.ForwardingMigration;
 import com.velocitypowered.proxy.config.migration.KeyAuthenticationMigration;
 import com.velocitypowered.proxy.config.migration.MiniMessageTranslationsMigration;
 import com.velocitypowered.proxy.config.migration.MotdMigration;
-import com.velocitypowered.proxy.config.migration.ForcedHostSubdomainMigration;
 import com.velocitypowered.proxy.config.migration.TransferIntegrationMigration;
 import com.velocitypowered.proxy.util.AddressUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -680,6 +680,9 @@ public class VelocityConfiguration implements ProxyConfig {
       if (config != null) {
         Map<String, String> servers = new HashMap<>();
         for (UnmodifiableConfig.Entry entry : config.entrySet()) {
+          if ("subdomain-matching".equals(entry.getKey())) {
+            continue;
+          }
           if (entry.getValue() instanceof String) {
             servers.put(cleanServerName(entry.getKey()), entry.getValue());
           } else {
