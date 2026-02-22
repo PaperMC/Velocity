@@ -435,6 +435,14 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isLogPlayerConnections();
   }
 
+  public boolean isUpdateFolderEnabled() {
+    return advanced.getUpdateFolderName() != null;
+  }
+
+  public @Nullable String getUpdateFolderName() {
+    return advanced.getUpdateFolderName();
+  }
+
   public boolean isAcceptTransfers() {
     return this.advanced.isAcceptTransfers();
   }
@@ -763,6 +771,8 @@ public class VelocityConfiguration implements ProxyConfig {
     @Expose
     private boolean logPlayerConnections = true;
     @Expose
+    private String updateFolderName = null;
+    @Expose
     private boolean acceptTransfers = false;
     @Expose
     private boolean enableReusePort = false;
@@ -800,6 +810,7 @@ public class VelocityConfiguration implements ProxyConfig {
         this.announceProxyCommands = config.getOrElse("announce-proxy-commands", true);
         this.logCommandExecutions = config.getOrElse("log-command-executions", false);
         this.logPlayerConnections = config.getOrElse("log-player-connections", true);
+        this.updateFolderName = config.get("update-folder");
         this.acceptTransfers = config.getOrElse("accepts-transfers", false);
         this.enableReusePort = config.getOrElse("enable-reuse-port", false);
         this.commandRateLimit = config.getIntOrElse("command-rate-limit", 25);
@@ -864,6 +875,10 @@ public class VelocityConfiguration implements ProxyConfig {
 
     public boolean isLogPlayerConnections() {
       return logPlayerConnections;
+    }
+
+    public @Nullable String getUpdateFolderName() {
+      return updateFolderName;
     }
 
     public boolean isAcceptTransfers() {
