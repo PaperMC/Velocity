@@ -146,7 +146,7 @@ log-command-executions = false
 # and disconnecting from the proxy.
 log-player-connections = true
 
-# The name of the update folder, set to {} to disable the update folder
+# The name of the update folder, set to "" to disable the update folder
 update-folder = ".update"
 
 # Allows players transferred from other hosts via the
