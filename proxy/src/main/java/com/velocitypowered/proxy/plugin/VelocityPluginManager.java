@@ -189,17 +189,17 @@ public class VelocityPluginManager implements PluginManager {
   }
 
   private void updatePlugins(
-    Path pluginDirectory,
-    Path updateDirectory,
-    Map<String, PluginDescription> found,
-    JavaPluginLoader loader
+      Path pluginDirectory,
+      Path updateDirectory,
+      Map<String, PluginDescription> found,
+      JavaPluginLoader loader
   ) throws IOException {
     checkNotNull(updateDirectory, "updateDirectory");
 
     List<PluginDescription> availableUpdates = new ArrayList<>();
     JavaPluginLoader updateLoader = new JavaPluginLoader(server, updateDirectory);
     try (
-      DirectoryStream<Path> stream = Files.newDirectoryStream(updateDirectory, path -> path.toFile().isFile() && path.toString().endsWith(".jar"))
+        DirectoryStream<Path> stream = Files.newDirectoryStream(updateDirectory, path -> path.toFile().isFile() && path.toString().endsWith(".jar"))
     ) {
       for (Path path : stream) {
         try {
