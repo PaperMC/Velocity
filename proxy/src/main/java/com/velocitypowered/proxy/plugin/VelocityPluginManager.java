@@ -84,6 +84,7 @@ public class VelocityPluginManager implements PluginManager {
    * Loads all plugins from the specified {@code directory}.
    *
    * @param pluginDirectory the directory to load from
+   * @param updateDirectory the directory to pull updated plugin files from
    * @throws IOException if we could not open the directory
    */
   @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
