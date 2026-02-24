@@ -92,6 +92,9 @@ public class VelocityPluginManager implements PluginManager {
   public void loadPlugins(Path pluginDirectory, @Nullable Path updateDirectory) throws IOException {
     checkNotNull(pluginDirectory, "directory");
     checkArgument(pluginDirectory.toFile().isDirectory(), "provided path isn't a directory");
+    if (updateDirectory != null) {
+      checkArgument(updateDirectory.toFile().isDirectory(), "provided path isn't a directory");
+    }
 
     Map<String, PluginDescription> foundCandidates = new LinkedHashMap<>();
     JavaPluginLoader loader = new JavaPluginLoader(server, pluginDirectory);
