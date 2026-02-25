@@ -43,7 +43,9 @@ public interface PermissionSubject {
    *
    * @return the permission map, or {@code null} if the implementing provider does not expose this information.
    */
-  @Nullable @Unmodifiable Map<String, Boolean> getPermissionMap();
+  @Nullable
+  @Unmodifiable
+  Map<String, Boolean> getPermissionMap();
 
   /**
    * Gets the permission checker for the subject.

@@ -48,7 +48,9 @@ public interface PermissionFunction {
    *
    * @return the permission map, or {@code null} if the implementing provider does not expose this information.
    */
-  default @Nullable @Unmodifiable Map<String, Boolean> getPermissionMap() {
+  @Nullable
+  @Unmodifiable
+  default Map<String, Boolean> getPermissionMap() {
     return null;
   }
 }
