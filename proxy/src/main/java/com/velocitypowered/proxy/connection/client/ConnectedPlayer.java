@@ -146,6 +146,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Unmodifiable;
 
 /**
  * Represents a player that is connected to the proxy.
@@ -1005,7 +1006,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public @Nullable Map<String, Boolean> getPermissionMap() {
+  public @Nullable @Unmodifiable Map<String, Boolean> getPermissionMap() {
     return permissionFunction.getPermissionMap();
   }
 

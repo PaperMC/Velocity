@@ -46,6 +46,7 @@ import org.apache.logging.log4j.io.IoBuilder;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Unmodifiable;
 import org.jline.reader.Candidate;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
@@ -85,7 +86,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   }
 
   @Override
-  public @Nullable Map<String, Boolean> getPermissionMap() {
+  public @Nullable @Unmodifiable Map<String, Boolean> getPermissionMap() {
     return permissionFunction.getPermissionMap();
   }
 

@@ -21,6 +21,7 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.permission.Tristate;
 import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 /**
  * A fake {@link CommandSource}.
@@ -35,7 +36,7 @@ public class MockCommandSource implements CommandSource {
   }
 
   @Override
-  public @Nullable Map<String, Boolean> getPermissionMap() {
+  public @Nullable @Unmodifiable Map<String, Boolean> getPermissionMap() {
     return null;
   }
 }

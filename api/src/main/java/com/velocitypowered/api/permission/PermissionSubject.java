@@ -10,6 +10,7 @@ package com.velocitypowered.api.permission;
 import java.util.Map;
 import net.kyori.adventure.permission.PermissionChecker;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 /**
  * Represents a object that has a set of queryable permissions.
@@ -38,10 +39,11 @@ public interface PermissionSubject {
    * Gets the subjects permission map for any set permission.
    * There does not have to be a guarantee that when {@link #getPermissionValue} returns {@link Tristate#TRUE} or {@link Tristate#FALSE}
    * for a given permission, that it should also be contained within this permission map.
+   * This method should return an unmodifiable map. Modifying the returned map may cause undefined behavior or throw.
    *
    * @return the permission map, or {@code null} if the implementing provider does not expose this information.
    */
-  @Nullable Map<String, Boolean> getPermissionMap();
+  @Nullable @Unmodifiable Map<String, Boolean> getPermissionMap();
 
   /**
    * Gets the permission checker for the subject.
