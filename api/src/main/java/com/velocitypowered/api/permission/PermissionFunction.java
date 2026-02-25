@@ -7,6 +7,9 @@
 
 package com.velocitypowered.api.permission;
 
+import java.util.Map;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Function that calculates the permission settings for a given {@link PermissionSubject}.
  */
@@ -35,4 +38,15 @@ public interface PermissionFunction {
    * @return the value the permission is set to
    */
   Tristate getPermissionValue(String permission);
+
+  /**
+   * Gets the subjects permission map for any set permission.
+   * There does not have to be a guarantee that when {@link #getPermissionValue} returns {@link Tristate#TRUE} or {@link Tristate#FALSE}
+   * for a given permission, that it should also be contained within this permission map.
+   *
+   * @return the permission map, or {@code null} if the implementing provider does not expose this information.
+   */
+  default @Nullable Map<String, Boolean> getPermissionMap() {
+    return null;
+  }
 }

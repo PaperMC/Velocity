@@ -111,6 +111,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -1001,6 +1002,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   @Override
   public Tristate getPermissionValue(String permission) {
     return permissionFunction.getPermissionValue(permission);
+  }
+
+  @Override
+  public @Nullable Map<String, Boolean> getPermissionMap() {
+    return permissionFunction.getPermissionMap();
   }
 
   @Override

@@ -27,6 +27,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.permission.PermissionChecker;
@@ -43,6 +44,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.io.IoBuilder;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 import org.jline.reader.Candidate;
 import org.jline.reader.LineReader;
@@ -79,7 +81,12 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
 
   @Override
   public @NonNull Tristate getPermissionValue(@NonNull String permission) {
-    return this.permissionFunction.getPermissionValue(permission);
+    return permissionFunction.getPermissionValue(permission);
+  }
+
+  @Override
+  public @Nullable Map<String, Boolean> getPermissionMap() {
+    return permissionFunction.getPermissionMap();
   }
 
   /**
