@@ -219,7 +219,7 @@ public class VelocityPluginManager implements PluginManager {
 
       // This should not happen but acts as a failsafe
       if (availableUpdate.getSource().isEmpty()) {
-        logger.warn("No source found for plugin {} found", availableUpdate.getId());
+        logger.warn("No source for plugin {} found", availableUpdate.getId());
         continue;
       }
 
