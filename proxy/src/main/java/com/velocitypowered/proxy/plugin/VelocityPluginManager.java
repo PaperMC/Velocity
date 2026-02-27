@@ -91,16 +91,16 @@ public class VelocityPluginManager implements PluginManager {
       justification = "I looked carefully and there's no way SpotBugs is right.")
   public void loadPlugins(Path pluginDirectory, @Nullable Path updateDirectory) throws IOException {
     checkNotNull(pluginDirectory, "directory");
-    checkArgument(pluginDirectory.toFile().isDirectory(), "provided path isn't a directory");
+    checkArgument(Files.isDirectory(pluginDirectory), "provided path isn't a directory");
     if (updateDirectory != null) {
-      checkArgument(updateDirectory.toFile().isDirectory(), "provided path isn't a directory");
+      checkArgument(Files.isDirectory(updateDirectory), "provided path isn't a directory");
     }
 
     Map<String, PluginDescription> foundCandidates = new LinkedHashMap<>();
     JavaPluginLoader loader = new JavaPluginLoader(server, pluginDirectory);
 
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(pluginDirectory,
-        p -> p.toFile().isFile() && p.toString().endsWith(".jar"))) {
+        p -> Files.isRegularFile(p) && p.toString().endsWith(".jar"))) {
       for (Path path : stream) {
         try {
           PluginDescription candidate = loader.loadCandidate(path);
@@ -203,7 +203,7 @@ public class VelocityPluginManager implements PluginManager {
     List<PluginDescription> availableUpdates = new ArrayList<>();
     JavaPluginLoader updateLoader = new JavaPluginLoader(server, updateDirectory);
     try (
-        DirectoryStream<Path> stream = Files.newDirectoryStream(updateDirectory, path -> path.toFile().isFile() && path.toString().endsWith(".jar"))
+        DirectoryStream<Path> stream = Files.newDirectoryStream(updateDirectory, path -> Files.isRegularFile(path) && path.toString().endsWith(".jar"))
     ) {
       for (Path path : stream) {
         try {
