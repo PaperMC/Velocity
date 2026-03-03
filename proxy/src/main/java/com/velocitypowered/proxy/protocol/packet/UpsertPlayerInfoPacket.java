@@ -34,9 +34,6 @@ import java.util.List;
 import java.util.UUID;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * Represents the packet for updating or inserting player information.
- */
 public class UpsertPlayerInfoPacket implements MinecraftPacket {
 
   private static final Action[] ALL_ACTIONS = Action.class.getEnumConstants();
@@ -136,9 +133,6 @@ public class UpsertPlayerInfoPacket implements MinecraftPacket {
     return handler.handle(this);
   }
 
-  /**
-   * Represents the possible actions in the player info packet.
-   */
   public enum Action {
     ADD_PLAYER((ignored, buf, info) -> { // read
       info.profile = new GameProfile(
@@ -219,9 +213,6 @@ public class UpsertPlayerInfoPacket implements MinecraftPacket {
     }
   }
 
-  /**
-   * Represents an entry in the player info packet.
-   */
   public static class Entry {
 
     private final UUID profileId;
@@ -312,16 +303,16 @@ public class UpsertPlayerInfoPacket implements MinecraftPacket {
 
     @Override
     public String toString() {
-      return "Entry{"
-          + "profileId=" + profileId
-          + ", profile=" + profile
-          + ", listed=" + listed
-          + ", latency=" + latency
-          + ", gameMode=" + gameMode
-          + ", displayName=" + displayName
-          + ", listOrder=" + listOrder
-          + ", chatSession=" + chatSession
-          + '}';
+      return "Entry{" +
+          "profileId=" + profileId +
+          ", profile=" + profile +
+          ", listed=" + listed +
+          ", latency=" + latency +
+          ", gameMode=" + gameMode +
+          ", displayName=" + displayName +
+          ", listOrder=" + listOrder +
+          ", chatSession=" + chatSession +
+          '}';
     }
   }
 }

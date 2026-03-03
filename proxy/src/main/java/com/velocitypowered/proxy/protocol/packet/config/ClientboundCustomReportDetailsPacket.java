@@ -25,47 +25,43 @@ import io.netty.buffer.ByteBuf;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Represents a packet sent from the server to the client, containing custom report details.
- * This packet carries a map of key-value pairs, where each key and value are strings.
- */
 public class ClientboundCustomReportDetailsPacket implements MinecraftPacket {
 
-  private Map<String, String> details;
+    private Map<String, String> details;
 
-  public ClientboundCustomReportDetailsPacket() {
-  }
-
-  public ClientboundCustomReportDetailsPacket(Map<String, String> details) {
-    this.details = details;
-  }
-
-  @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    int detailsCount = ProtocolUtils.readVarInt(buf);
-
-    this.details = new HashMap<>(detailsCount);
-    for (int i = 0; i < detailsCount; i++) {
-      details.put(ProtocolUtils.readString(buf), ProtocolUtils.readString(buf));
+    public ClientboundCustomReportDetailsPacket() {
     }
-  }
 
-  @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    ProtocolUtils.writeVarInt(buf, details.size());
+    public ClientboundCustomReportDetailsPacket(Map<String, String> details) {
+        this.details = details;
+    }
 
-    details.forEach((key, detail) -> {
-      ProtocolUtils.writeString(buf, key);
-      ProtocolUtils.writeString(buf, detail);
-    });
-  }
+    @Override
+    public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+        int detailsCount = ProtocolUtils.readVarInt(buf);
 
-  @Override
-  public boolean handle(MinecraftSessionHandler handler) {
-    return handler.handle(this);
-  }
+        this.details = new HashMap<>(detailsCount);
+        for (int i = 0; i < detailsCount; i++) {
+            details.put(ProtocolUtils.readString(buf), ProtocolUtils.readString(buf));
+        }
+    }
 
-  public Map<String, String> getDetails() {
-    return details;
-  }
+    @Override
+    public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+        ProtocolUtils.writeVarInt(buf, details.size());
+
+        details.forEach((key, detail) -> {
+            ProtocolUtils.writeString(buf, key);
+            ProtocolUtils.writeString(buf, detail);
+        });
+    }
+
+    @Override
+    public boolean handle(MinecraftSessionHandler handler) {
+        return handler.handle(this);
+    }
+
+    public Map<String, String> getDetails() {
+        return details;
+    }
 }

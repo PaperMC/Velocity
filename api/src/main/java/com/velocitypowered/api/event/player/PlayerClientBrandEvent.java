@@ -29,20 +29,10 @@ public final class PlayerClientBrandEvent {
     this.brand = Preconditions.checkNotNull(brand);
   }
 
-  /**
-   * Gets the player who sent the client brand.
-   *
-   * @return the player
-   */
   public Player getPlayer() {
     return player;
   }
 
-  /**
-   * Gets the brand string sent by the client.
-   *
-   * @return the client brand
-   */
   public String getBrand() {
     return brand;
   }
@@ -50,9 +40,9 @@ public final class PlayerClientBrandEvent {
   @Override
   public String toString() {
     return "PlayerClientBrandEvent{"
-        + "player=" + player
-        + ", brand='" + brand + '\''
-        + '}';
+      + "player=" + player
+      + ", brand='" + brand + '\''
+      + '}';
   }
 }
 

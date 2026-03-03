@@ -25,9 +25,6 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-/**
- * Represents a status response packet sent from the server to the client.
- */
 public class StatusResponsePacket implements MinecraftPacket {
 
   private @Nullable CharSequence status;
@@ -39,12 +36,6 @@ public class StatusResponsePacket implements MinecraftPacket {
     this.status = status;
   }
 
-  /**
-   * Gets the status message from the packet.
-   *
-   * @return the status message as a {@link String}
-   * @throws IllegalStateException if the status is not specified
-   */
   public String getStatus() {
     if (status == null) {
       throw new IllegalStateException("Status is not specified");

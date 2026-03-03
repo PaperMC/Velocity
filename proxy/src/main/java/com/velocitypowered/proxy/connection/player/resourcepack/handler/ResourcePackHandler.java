@@ -118,7 +118,6 @@ public abstract sealed class ResourcePackHandler
 
   /**
    * Processes a client response to a sent resource-pack.
-   *
    * <p>Cases in which no action will be taken:</p>
    * <ul>
    *

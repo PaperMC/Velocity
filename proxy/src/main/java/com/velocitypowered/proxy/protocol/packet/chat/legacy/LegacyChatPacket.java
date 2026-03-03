@@ -25,13 +25,6 @@ import io.netty.buffer.ByteBuf;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-/**
- * Represents a legacy chat packet used in older versions of Minecraft.
- *
- * <p>The {@code LegacyChatPacket} is responsible for holding and transmitting chat messages
- * in the format used by legacy versions of Minecraft. It implements {@link MinecraftPacket}
- * to ensure compatibility with the packet-handling system.</p>
- */
 public class LegacyChatPacket implements MinecraftPacket {
 
   public static final byte CHAT_TYPE = (byte) 0;
@@ -52,7 +45,6 @@ public class LegacyChatPacket implements MinecraftPacket {
       try {
         return Integer.parseInt(value.trim());
       } catch (final NumberFormatException e) {
-        // Exception has been handled
       }
     }
     return 100;

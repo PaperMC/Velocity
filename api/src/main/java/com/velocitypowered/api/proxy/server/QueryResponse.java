@@ -147,6 +147,7 @@ public final class QueryResponse {
     return plugins;
   }
 
+
   /**
    * Creates a new {@link Builder} instance from data represented by this response, so that you
    * may create a new {@link QueryResponse} with new data. It is guaranteed that
@@ -433,31 +434,14 @@ public final class QueryResponse {
       this.version = version;
     }
 
-    /**
-     * Gets the name of the plugin.
-     *
-     * @return the plugin name
-     */
     public String getName() {
       return name;
     }
 
-    /**
-     * Gets the version of the plugin, if available.
-     *
-     * @return an {@link Optional} containing the version if present
-     */
     public Optional<String> getVersion() {
       return Optional.ofNullable(version);
     }
 
-    /**
-     * Creates a new {@link PluginInformation} instance with the given name and version.
-     *
-     * @param name the name of the plugin
-     * @param version the version of the plugin (nullable)
-     * @return a new {@link PluginInformation} instance
-     */
     public static PluginInformation of(String name, @Nullable String version) {
       return new PluginInformation(name, version);
     }

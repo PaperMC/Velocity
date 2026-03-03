@@ -22,46 +22,37 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import net.kyori.adventure.text.Component;
 
-/**
- * Abstract base class for handling rate-limited player command packets.
- *
- * <p>Subclasses should implement {@link #handlePlayerCommandInternal(MinecraftPacket)} to define
- * how individual command packets are processed. Rate limiting is enforced to prevent abuse.</p>
- *
- * @param <T> the type of {@link MinecraftPacket} this handler processes
- */
 public abstract class RateLimitedCommandHandler<T extends MinecraftPacket> implements CommandHandler<T> {
 
-  private final Player player;
-  private final VelocityServer velocityServer;
+    private final Player player;
+    private final VelocityServer velocityServer;
 
-  private int failedAttempts;
+    private int failedAttempts;
 
-  protected RateLimitedCommandHandler(Player player, VelocityServer velocityServer) {
-    this.player = player;
-    this.velocityServer = velocityServer;
-  }
-
-  @Override
-  public boolean handlePlayerCommand(MinecraftPacket packet) {
-    if (packetClass().isInstance(packet)) {
-      if (!velocityServer.getCommandRateLimiter().attempt(player.getUniqueId())) {
-        if (velocityServer.getConfiguration().isKickOnCommandRateLimit()
-              && failedAttempts++ >= velocityServer.getConfiguration().getKickAfterRateLimitedCommands()) {
-          player.disconnect(Component.translatable("velocity.kick.command-rate-limit"));
-        }
-
-        if (velocityServer.getConfiguration().isForwardCommandsIfRateLimited()) {
-          return false; // Send the packet to the server
-        }
-      } else {
-        failedAttempts = 0;
-      }
-
-      handlePlayerCommandInternal(packetClass().cast(packet));
-      return true;
+    protected RateLimitedCommandHandler(Player player, VelocityServer velocityServer) {
+        this.player = player;
+        this.velocityServer = velocityServer;
     }
 
-    return false;
-  }
+    @Override
+    public boolean handlePlayerCommand(MinecraftPacket packet) {
+        if (packetClass().isInstance(packet)) {
+            if (!velocityServer.getCommandRateLimiter().attempt(player.getUniqueId())) {
+                if (velocityServer.getConfiguration().isKickOnCommandRateLimit() && failedAttempts++ >= velocityServer.getConfiguration().getKickAfterRateLimitedCommands()) {
+                    player.disconnect(Component.translatable("velocity.kick.command-rate-limit"));
+                }
+
+                if (velocityServer.getConfiguration().isForwardCommandsIfRateLimited()) {
+                    return false; // Send the packet to the server
+                }
+            } else {
+                failedAttempts = 0;
+            }
+
+            handlePlayerCommandInternal(packetClass().cast(packet));
+            return true;
+        }
+
+        return false;
+    }
 }
