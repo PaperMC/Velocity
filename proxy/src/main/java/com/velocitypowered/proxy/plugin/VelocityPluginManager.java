@@ -203,7 +203,8 @@ public class VelocityPluginManager implements PluginManager {
     List<PluginDescription> availableUpdates = new ArrayList<>();
     JavaPluginLoader updateLoader = new JavaPluginLoader(server, updateDirectory);
     try (
-        DirectoryStream<Path> stream = Files.newDirectoryStream(updateDirectory, path -> Files.isRegularFile(path) && path.toString().endsWith(".jar"))
+        DirectoryStream<Path> stream = Files.newDirectoryStream(updateDirectory, path ->
+            Files.isRegularFile(path) && path.toString().endsWith(".jar"))
     ) {
       for (Path path : stream) {
         try {
