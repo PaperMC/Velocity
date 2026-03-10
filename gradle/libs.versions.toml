@@ -3,7 +3,7 @@ configurate3 = "3.7.3"
 configurate4 = "4.2.0"
 flare = "2.0.1"
 log4j = "2.25.3"
-netty = "4.2.7.Final"
+netty = "4.2.10.Final"
 
 [plugins]
 fill = "io.papermc.fill.gradle:1.0.10"
