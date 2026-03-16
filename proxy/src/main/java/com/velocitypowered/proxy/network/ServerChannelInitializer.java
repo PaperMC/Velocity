@@ -24,6 +24,7 @@ import static com.velocitypowered.proxy.network.Connections.LEGACY_PING_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.MINECRAFT_DECODER;
 import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
+import static com.velocitypowered.proxy.network.Connections.WRITE_TIMEOUT;
 
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
@@ -42,6 +43,8 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -63,6 +66,9 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
         .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder(ProtocolUtils.Direction.SERVERBOUND))
         .addLast(READ_TIMEOUT,
             new ReadTimeoutHandler(this.server.getConfiguration().getReadTimeout(),
+                TimeUnit.MILLISECONDS))
+        .addLast(WRITE_TIMEOUT,
+            new WriteTimeoutHandler(this.server.getConfiguration().getWriteTimeout(),
                 TimeUnit.MILLISECONDS))
         .addLast(LEGACY_PING_ENCODER, LegacyPingEncoder.INSTANCE)
         .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)

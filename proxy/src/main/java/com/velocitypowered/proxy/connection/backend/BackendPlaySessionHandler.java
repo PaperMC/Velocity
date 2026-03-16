@@ -74,9 +74,10 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
-import io.netty.handler.timeout.ReadTimeoutException;
 import java.net.InetSocketAddress;
 import java.util.regex.Pattern;
+
+import io.netty.handler.timeout.TimeoutException;
 import net.kyori.adventure.key.Key;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -485,7 +486,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   public void exception(Throwable throwable) {
     exceptionTriggered = true;
     serverConn.getPlayer().handleConnectionException(serverConn.getServer(), throwable,
-        !(throwable instanceof ReadTimeoutException));
+        !(throwable instanceof TimeoutException));
   }
 
   public VelocityServer getServer() {

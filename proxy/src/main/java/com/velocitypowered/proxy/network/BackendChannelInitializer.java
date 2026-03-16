@@ -23,6 +23,7 @@ import static com.velocitypowered.proxy.network.Connections.FRAME_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.MINECRAFT_DECODER;
 import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
+import static com.velocitypowered.proxy.network.Connections.WRITE_TIMEOUT;
 
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -34,6 +35,8 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -54,6 +57,9 @@ public class BackendChannelInitializer extends ChannelInitializer<Channel> {
         .addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder(ProtocolUtils.Direction.CLIENTBOUND))
         .addLast(READ_TIMEOUT,
             new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(),
+                TimeUnit.MILLISECONDS))
+        .addLast(WRITE_TIMEOUT,
+            new WriteTimeoutHandler(server.getConfiguration().getWriteTimeout(),
                 TimeUnit.MILLISECONDS))
         .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
         .addLast(MINECRAFT_DECODER,
