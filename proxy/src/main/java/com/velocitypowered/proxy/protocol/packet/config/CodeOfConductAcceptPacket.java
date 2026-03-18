@@ -39,6 +39,11 @@ public class CodeOfConductAcceptPacket implements MinecraftPacket {
   }
 
   @Override
+  public int decodeExpectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
+    return 0;
+  }
+
+  @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
   }
