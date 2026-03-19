@@ -35,6 +35,7 @@ import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.connection.client.InitialLoginSessionHandler;
+import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.client.StatusSessionHandler;
 import com.velocitypowered.proxy.network.Connections;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
@@ -368,6 +369,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   public void setState(StateRegistry state) {
     ensureInEventLoop();
 
+    final StateRegistry previousState = this.state;
     this.state = state;
     final MinecraftVarintFrameDecoder frameDecoder = this.channel.pipeline()
         .get(MinecraftVarintFrameDecoder.class);
@@ -388,7 +390,13 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     if (state == StateRegistry.CONFIG) {
       // Activate the play packet queue
-      addPlayPacketQueueHandler();
+      if (previousState == StateRegistry.PLAY
+          && this.pendingConfigurationSwitch
+          && this.association instanceof ConnectedPlayer) {
+        addPlayPacketQueueOutboundHandler();
+      } else {
+        addPlayPacketQueueHandler();
+      }
     } else {
       // Remove the queue
       if (this.channel.pipeline().get(Connections.PLAY_PACKET_QUEUE_OUTBOUND) != null) {
@@ -404,13 +412,23 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * Adds the play packet queue handler.
    */
   public void addPlayPacketQueueHandler() {
-    if (this.channel.pipeline().get(Connections.PLAY_PACKET_QUEUE_OUTBOUND) == null) {
-      this.channel.pipeline().addAfter(Connections.MINECRAFT_ENCODER, Connections.PLAY_PACKET_QUEUE_OUTBOUND,
-           new PlayPacketQueueOutboundHandler(this.protocolVersion, channel.pipeline().get(MinecraftEncoder.class).getDirection()));
-    }
+    addPlayPacketQueueOutboundHandler();
+
     if (this.channel.pipeline().get(Connections.PLAY_PACKET_QUEUE_INBOUND) == null) {
       this.channel.pipeline().addAfter(Connections.MINECRAFT_DECODER, Connections.PLAY_PACKET_QUEUE_INBOUND,
-           new PlayPacketQueueInboundHandler(this.protocolVersion, channel.pipeline().get(MinecraftDecoder.class).getDirection()));
+           new PlayPacketQueueInboundHandler(this.protocolVersion,
+               channel.pipeline().get(MinecraftDecoder.class).getDirection()));
+    }
+  }
+
+  /**
+   * Adds only the outbound play packet queue handler.
+   */
+  public void addPlayPacketQueueOutboundHandler() {
+    if (this.channel.pipeline().get(Connections.PLAY_PACKET_QUEUE_OUTBOUND) == null) {
+      this.channel.pipeline().addAfter(Connections.MINECRAFT_ENCODER, Connections.PLAY_PACKET_QUEUE_OUTBOUND,
+           new PlayPacketQueueOutboundHandler(this.protocolVersion,
+               channel.pipeline().get(MinecraftEncoder.class).getDirection()));
     }
   }
 
