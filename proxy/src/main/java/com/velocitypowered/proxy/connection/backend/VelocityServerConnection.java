@@ -175,8 +175,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     handshake.setProtocolVersion(protocolVersion);
     if (forwardingMode == PlayerInfoForwarding.LEGACY) {
       handshake.setServerAddress(createLegacyForwardingAddress());
-    } else if (forwardingMode == PlayerInfoForwarding.BUNGEEGUARD ||
-            (forwardingMode == PlayerInfoForwarding.SECURE_MIX && protocolVersion.lessThan(ProtocolVersion.MINECRAFT_1_13))) {
+    } else if (forwardingMode == PlayerInfoForwarding.BUNGEEGUARD
+            || (forwardingMode == PlayerInfoForwarding.SECURE_MIX && protocolVersion.lessThan(ProtocolVersion.MINECRAFT_1_13))) {
       byte[] secret = server.getConfiguration().getForwardingSecret();
       handshake.setServerAddress(createBungeeGuardForwardingAddress(secret));
     } else if (proxyPlayer.getConnection().getType() == ConnectionTypes.LEGACY_FORGE) {

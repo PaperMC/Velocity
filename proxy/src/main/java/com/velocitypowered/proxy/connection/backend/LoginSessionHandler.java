@@ -83,8 +83,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   public boolean handle(LoginPluginMessagePacket packet) {
     MinecraftConnection mc = serverConn.ensureConnected();
     VelocityConfiguration configuration = server.getConfiguration();
-    if ((configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN ||
-            (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.SECURE_MIX
+    if ((configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
+            || (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.SECURE_MIX
                     && mc.getProtocolVersion().greaterThan(ProtocolVersion.MINECRAFT_1_13)))
         && packet.getChannel().equals(PlayerDataForwarding.CHANNEL)) {
 
@@ -147,9 +147,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   public boolean handle(ServerLoginSuccessPacket packet) {
     MinecraftConnection smc = serverConn.ensureConnected();
 
-    if ((server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN ||
-            (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.SECURE_MIX &&
-                    !smc.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_13)))
+    if ((server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
+            || (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.SECURE_MIX
+                    && !smc.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_13)))
             && !informationForwarded) {
       resultFuture.complete(ConnectionRequestResults.forDisconnect(MODERN_IP_FORWARDING_FAILURE, serverConn.getServer()));
       serverConn.disconnect();
