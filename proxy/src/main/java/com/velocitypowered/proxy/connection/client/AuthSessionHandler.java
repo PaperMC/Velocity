@@ -100,7 +100,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
         return CompletableFuture.completedFuture(null);
       }
 
-      // Initiate a regular connection and move over to it.
+      // Check if we can register the connection before instantiating ConnectedPlayer
       if (!server.canRegisterConnection(profileEvent.getGameProfile())) {
         // ConnectedPlayer#disconnect0 uses its own translateMessage(), which uses the players' PlayerSettings
         // to translate the message, but at this stage this wouldn't have been set yet, resulting in
@@ -116,6 +116,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
         return CompletableFuture.completedFuture(null);
       }
 
+      // Initiate a regular connection and move over to it.
       ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.getGameProfile(),
           mcConnection, inbound.getVirtualHost().orElse(null), inbound.getRawVirtualHost().orElse(null), onlineMode,
           inbound.getHandshakeIntent(), inbound.getIdentifiedKey());
