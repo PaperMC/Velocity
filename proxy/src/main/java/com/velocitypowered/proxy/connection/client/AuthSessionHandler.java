@@ -40,17 +40,21 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.LoginAcknowledgedPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
+import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import io.netty.buffer.ByteBuf;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.translation.GlobalTranslator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -97,16 +101,25 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
       }
 
       // Initiate a regular connection and move over to it.
+      if (!server.canRegisterConnection(profileEvent.getGameProfile())) {
+        // ConnectedPlayer#disconnect0 uses its own translateMessage(), which uses the players' PlayerSettings
+        // to translate the message, but at this stage this wouldn't have been set yet, resulting in
+        // Locale.getDefault() being used anyway.
+        mcConnection.closeWith(DisconnectPacket.create(
+            GlobalTranslator.render(
+                Component.translatable("velocity.error.already-connected-proxy", NamedTextColor.RED),
+                ClosestLocaleMatcher.INSTANCE.lookupClosest(Locale.getDefault())
+            ),
+            mcConnection.getProtocolVersion(),
+            mcConnection.getState()
+        ));
+        return CompletableFuture.completedFuture(null);
+      }
+
       ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.getGameProfile(),
           mcConnection, inbound.getVirtualHost().orElse(null), inbound.getRawVirtualHost().orElse(null), onlineMode,
           inbound.getHandshakeIntent(), inbound.getIdentifiedKey());
       this.connectedPlayer = player;
-      if (!server.canRegisterConnection(player)) {
-        player.disconnect0(
-            Component.translatable("velocity.error.already-connected-proxy", NamedTextColor.RED),
-            true);
-        return CompletableFuture.completedFuture(null);
-      }
 
       if (server.getConfiguration().isLogPlayerConnections()) {
         logger.info("{} has connected", player);

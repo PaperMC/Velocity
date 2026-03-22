@@ -692,16 +692,16 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   /**
    * Checks if the {@code connection} can be registered with the proxy.
    *
-   * @param connection the connection to check
+   * @param gameProfile the {@link GameProfile} of the incoming connection
    * @return {@code true} if we can register the connection, {@code false} if not
    */
-  public boolean canRegisterConnection(ConnectedPlayer connection) {
+  public boolean canRegisterConnection(GameProfile gameProfile) {
     if (configuration.isOnlineMode() && configuration.isOnlineModeKickExistingPlayers()) {
       return true;
     }
-    String lowerName = connection.getUsername().toLowerCase(Locale.US);
+    String lowerName = gameProfile.getName().toLowerCase(Locale.US);
     return !(connectionsByName.containsKey(lowerName)
-        || connectionsByUuid.containsKey(connection.getUniqueId()));
+        || connectionsByUuid.containsKey(gameProfile.getId()));
   }
 
   /**
