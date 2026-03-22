@@ -83,7 +83,9 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   public boolean handle(LoginPluginMessagePacket packet) {
     MinecraftConnection mc = serverConn.ensureConnected();
     VelocityConfiguration configuration = server.getConfiguration();
-    if (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
+    if ((configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN ||
+            (configuration.getPlayerInfoForwardingMode() == PlayerInfoForwarding.SECURE_MIX
+                    && mc.getProtocolVersion().greaterThan(ProtocolVersion.MINECRAFT_1_13)))
         && packet.getChannel().equals(PlayerDataForwarding.CHANNEL)) {
 
       int requestedForwardingVersion = PlayerDataForwarding.MODERN_DEFAULT;
@@ -143,7 +145,12 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ServerLoginSuccessPacket packet) {
-    if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN && !informationForwarded) {
+    MinecraftConnection smc = serverConn.ensureConnected();
+
+    if ((server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN ||
+            (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.SECURE_MIX &&
+                    !smc.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_13)))
+            && !informationForwarded) {
       resultFuture.complete(ConnectionRequestResults.forDisconnect(MODERN_IP_FORWARDING_FAILURE, serverConn.getServer()));
       serverConn.disconnect();
       return true;
@@ -153,7 +160,6 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
     // other problems that could arise before we get a JoinGame packet from the server.
 
     // Move into the PLAY phase.
-    MinecraftConnection smc = serverConn.ensureConnected();
     if (smc.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_2)) {
       smc.setActiveSessionHandler(StateRegistry.PLAY, new TransitionSessionHandler(server, serverConn, resultFuture));
     } else {
