@@ -34,7 +34,7 @@ public final class AddressUtil {
 
 
   /**
-   * Attempts to parse an IP address of the form {@code 127.0.0.1:25565}. The returned
+   * Attempts to parse an IPAddress/Hostname with an optional port of the form {@code 127.0.0.1:25565}. The returned
    * {@link InetSocketAddress} is resolved.
    *
    * @param ip the IP to parse
