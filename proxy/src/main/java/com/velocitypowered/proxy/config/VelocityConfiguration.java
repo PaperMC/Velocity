@@ -144,7 +144,7 @@ public class VelocityConfiguration implements ProxyConfig {
       valid = false;
     } else {
       try {
-        AddressUtil.parseAddress(bind);
+        AddressUtil.parseAndResolveAddress(bind);
       } catch (IllegalArgumentException e) {
         logger.error("'bind' option does not specify a valid IP address.", e);
         valid = false;
@@ -175,7 +175,7 @@ public class VelocityConfiguration implements ProxyConfig {
 
     for (Map.Entry<String, String> entry : servers.getServers().entrySet()) {
       try {
-        AddressUtil.parseAddress(entry.getValue());
+        AddressUtil.parseAndResolveAddress(entry.getValue());
       } catch (IllegalArgumentException e) {
         logger.error("Server {} does not have a valid IP address.", entry.getKey(), e);
         valid = false;

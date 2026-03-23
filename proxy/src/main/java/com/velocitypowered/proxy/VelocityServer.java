@@ -297,7 +297,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
     if (!options.isIgnoreConfigServers()) {
       for (Map.Entry<String, String> entry : configuration.getServers().entrySet()) {
-        servers.register(new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue())));
+        servers.register(new ServerInfo(entry.getKey(), AddressUtil.parseAndResolveAddress(entry.getValue())));
       }
     }
 
@@ -489,7 +489,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     // move back to a fallback server.
     Collection<ConnectedPlayer> evacuate = new ArrayList<>();
     for (Map.Entry<String, String> entry : newConfiguration.getServers().entrySet()) {
-      ServerInfo newInfo = new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue()));
+      ServerInfo newInfo = new ServerInfo(entry.getKey(), AddressUtil.parseAndResolveAddress(entry.getValue()));
       Optional<RegisteredServer> rs = servers.getServer(entry.getKey());
       if (rs.isEmpty()) {
         servers.register(newInfo);

@@ -111,7 +111,7 @@ public final class ProxyOptions {
       }
       InetSocketAddress address;
       try {
-        address = AddressUtil.parseAddress(split[1]);
+        address = AddressUtil.parseAndResolveAddress(split[1]);
       } catch (IllegalStateException e) {
         throw new ValueConversionException("Invalid hostname for server flag with name: " + split[0]);
       }
