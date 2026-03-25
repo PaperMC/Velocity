@@ -199,8 +199,12 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
       }
 
       byte[] decryptedSharedSecret = decryptRsa(serverKeyPair, packet.getSharedSecret());
-      String serverId = generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
 
+      // Go ahead and enable encryption. Once the client sends EncryptionResponse, encryption
+      // is enabled.
+      mcConnection.enableEncryption(decryptedSharedSecret);
+
+      String serverId = generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
       String playerIp = ((InetSocketAddress) mcConnection.getRemoteAddress()).getHostString();
       String url = String.format(MOJANG_HASJOINED_URL,
           urlFormParameterEscaper().escape(login.getUsername()), serverId);
@@ -226,18 +230,6 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
             if (throwable != null) {
               logger.error("Unable to authenticate player", throwable);
               inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
-              return;
-            }
-
-            // Go ahead and enable encryption. Once the client sends EncryptionResponse, encryption
-            // is enabled.
-            try {
-              mcConnection.enableEncryption(decryptedSharedSecret);
-            } catch (GeneralSecurityException e) {
-              logger.error("Unable to enable encryption for connection", e);
-              // At this point, the connection is encrypted, but something's wrong on our side and
-              // we can't do anything about it.
-              mcConnection.close(true);
               return;
             }
 
