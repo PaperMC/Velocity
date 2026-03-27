@@ -47,10 +47,6 @@ public final class VelocityBossBarImplementation implements BossBar.Listener,
     this.bar = bar;
   }
 
-  public BossBar bar() {
-    return this.bar;
-  }
-
   public boolean viewerAdd(final ConnectedPlayer viewer) {
     if (this.viewers.add(viewer)) {
       final ComponentHolder name = new ComponentHolder(
