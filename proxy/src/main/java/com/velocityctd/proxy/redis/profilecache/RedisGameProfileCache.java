@@ -38,14 +38,14 @@ public class RedisGameProfileCache implements GameProfileCacheStrategy {
   }
 
   @Override
-  public Optional<GameProfile> findByUsername(String username) {
-    return Optional.ofNullable(provider.get(KEY_PREFIX + username))
+  public Optional<GameProfile> findByUsername(String username, String playerIp) {
+    return Optional.ofNullable(provider.get(KEY_PREFIX + username + ":" + playerIp))
         .map(json -> GENERAL_GSON.fromJson(json, GameProfile.class));
   }
 
   @Override
-  public void insert(GameProfile profile) {
+  public void insert(GameProfile profile, String playerIp) {
     String json = GENERAL_GSON.toJson(profile);
-    provider.setWithExpiry(KEY_PREFIX + profile.getName(), json, ttlSeconds);
+    provider.setWithExpiry(KEY_PREFIX + profile.getName() + ":" + playerIp, json, ttlSeconds);
   }
 }

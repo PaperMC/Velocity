@@ -19,13 +19,14 @@ package com.velocityctd.proxy.connection.profile.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.velocityctd.proxy.connection.profile.GameProfileKey;
 import com.velocitypowered.api.util.GameProfile;
 import java.time.Duration;
 import java.util.Optional;
 
 public class MemoryGameProfileCache implements GameProfileCacheStrategy {
 
-  private final Cache<String, GameProfile> cache;
+  private final Cache<GameProfileKey, GameProfile> cache;
 
   public MemoryGameProfileCache(Duration cacheExpiry, int maximumSize) {
     this.cache = Caffeine.newBuilder()
@@ -35,12 +36,12 @@ public class MemoryGameProfileCache implements GameProfileCacheStrategy {
   }
 
   @Override
-  public Optional<GameProfile> findByUsername(String username) {
-    return Optional.ofNullable(cache.getIfPresent(username));
+  public Optional<GameProfile> findByUsername(String username, String playerIp) {
+    return Optional.ofNullable(cache.getIfPresent(new GameProfileKey(username, playerIp)));
   }
 
   @Override
-  public void insert(GameProfile profile) {
-    cache.put(profile.getName(), profile);
+  public void insert(GameProfile profile, String playerIp) {
+    cache.put(new GameProfileKey(profile.getName(), playerIp), profile);
   }
 }

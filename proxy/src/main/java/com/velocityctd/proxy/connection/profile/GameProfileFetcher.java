@@ -81,11 +81,11 @@ public class GameProfileFetcher {
     return CompletableFuture.supplyAsync(() -> {
       for (int i = 0; i < cacheLayers.size(); i++) {
         var layer = cacheLayers.get(i);
-        GameProfile cachedProfile = layer.findByUsername(username).orElse(null);
+        GameProfile cachedProfile = layer.findByUsername(username, playerIp).orElse(null);
         if (cachedProfile != null) {
           // Insert to lower-tier cache layers
           for (int j = 0; j < i; j++) {
-            cacheLayers.get(j).insert(cachedProfile);
+            cacheLayers.get(j).insert(cachedProfile, playerIp);
           }
 
           LOGGER.debug("Fetched game profile from cache (hit from {})", layer.getClass().getSimpleName());
@@ -133,7 +133,7 @@ public class GameProfileFetcher {
 
               // Insert profile into caches
               for (var layer : cacheLayers) {
-                layer.insert(profile);
+                layer.insert(profile, playerIp);
               }
 
               return new GameProfileResponse(profile, GameProfileResponse.Status.SUCCESS);

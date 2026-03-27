@@ -22,7 +22,7 @@ import java.util.Optional;
 
 public interface GameProfileCacheStrategy {
 
-  Optional<GameProfile> findByUsername(String username);
+  Optional<GameProfile> findByUsername(String username, String playerIp);
 
-  void insert(GameProfile profile);
+  void insert(GameProfile profile, String playerIp);
 }
