@@ -29,6 +29,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
+import net.kyori.adventure.bossbar.BossBarViewer;
 import net.kyori.adventure.dialog.DialogLike;
 import net.kyori.adventure.identity.Identified;
 import net.kyori.adventure.inventory.Book;
@@ -51,7 +52,8 @@ public interface Player extends
     CommandSource, InboundConnection, ChannelMessageSource, ChannelMessageSink,
     /* Adventure-specific interfaces */
     Identified, HoverEventSource<HoverEvent.ShowEntity>, Keyed, KeyIdentifiable, Sound.Emitter,
-    PlayerHeadObjectContents.SkinSource {
+    PlayerHeadObjectContents.SkinSource,
+    BossBarViewer {
 
   /**
    * Returns the player's current username.

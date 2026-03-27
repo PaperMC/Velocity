@@ -145,6 +145,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.UnmodifiableView;
 
 /**
  * Represents a player that is connected to the proxy.
@@ -185,7 +186,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private @Nullable VelocityServerConnection connectionInFlight;
   private @Nullable PlayerSettings settings;
   private @Nullable ModInfo modInfo;
-  private final Set<VelocityBossBarImplementation> bossBars = new HashSet<>();
+  private final Set<BossBar> bossBars = new HashSet<>();
   private Component playerListHeader = Component.empty();
   private Component playerListFooter = Component.empty();
   private final InternalTabList tabList;
@@ -237,8 +238,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
    * Used for cleaning up resources during a disconnection.
    */
   public void disconnected() {
-    for (final VelocityBossBarImplementation bar : this.bossBars) {
-      bar.viewerDisconnected(this);
+    for (final BossBar bar : this.bossBars) {
+      VelocityBossBarImplementation.get(bar).viewerRemove(this);
     }
   }
 
@@ -591,7 +592,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_9)) {
       final VelocityBossBarImplementation impl = VelocityBossBarImplementation.get(bar);
       if (impl.viewerRemove(this)) {
-        this.bossBars.remove(impl);
+        this.bossBars.remove(bar);
       }
     }
   }
@@ -601,7 +602,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_9)) {
       final VelocityBossBarImplementation impl = VelocityBossBarImplementation.get(bar);
       if (impl.viewerAdd(this)) {
-        this.bossBars.add(impl);
+        this.bossBars.add(bar);
       }
     }
   }
@@ -1430,6 +1431,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   public BossBarManager getBossBarManager() {
     return bossBarManager;
+  }
+
+  @Override
+  public @UnmodifiableView @org.jspecify.annotations.NonNull Iterable<? extends BossBar> activeBossBars() {
+    return Set.copyOf(this.bossBars);
   }
 
   private final class ConnectionRequestBuilderImpl implements ConnectionRequestBuilder {
