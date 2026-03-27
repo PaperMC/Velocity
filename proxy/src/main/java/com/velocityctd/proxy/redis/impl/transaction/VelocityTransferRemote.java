@@ -36,12 +36,11 @@ public final class VelocityTransferRemote extends VelocityTransaction<VelocityRe
    *
    * @param source the command source to send the result to
    * @param uniqueId the player's unique ID
-   * @param proxyId the ID of the proxy the player is on
    * @param ip the IP address of the remote server
    * @param port the port of the remote server
    */
-  public VelocityTransferRemote(final @NotNull CommandSource source, final UUID uniqueId, final String proxyId, final String ip, final int port) {
-    super(new VelocityRemote(uniqueId, proxyId, ip, port), source, "redis.command.transfer.timeout");
+  public VelocityTransferRemote(final @NotNull CommandSource source, final UUID uniqueId, final String ip, final int port) {
+    super(new VelocityRemote(uniqueId, ip, port), source, "redis.command.transfer.timeout");
 
     this.onComplete(packet -> PacketBehaviour.SEND_COMPONENT.behave(source, packet));
   }

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -187,7 +188,7 @@ public final class ProxyOptions {
 
       if (split.length == 4) {
         try {
-          mode = ServerInfoForwardingMode.valueOf(split[3].toUpperCase());
+          mode = ServerInfoForwardingMode.valueOf(split[3].toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
           throw new ValueConversionException("Invalid forwarding mode for server flag with name: " + split[0]);
         }

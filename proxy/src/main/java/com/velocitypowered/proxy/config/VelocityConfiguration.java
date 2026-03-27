@@ -1737,7 +1737,9 @@ public final class VelocityConfiguration implements ProxyConfig {
               }
 
               if (entry2.getKey().equalsIgnoreCase("forwarding-mode")) {
-                forwardingMode = ServerInfoForwardingMode.valueOf(ServerInfoForwardingMode.class, entry2.getValue());
+                String forwardingModeName = entry2.getValue();
+                forwardingMode = ServerInfoForwardingMode.valueOf(
+                    forwardingModeName.toUpperCase(Locale.ROOT));
               }
 
               if (entry2.getKey().equalsIgnoreCase("minimum-version")) {

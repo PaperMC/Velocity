@@ -165,8 +165,8 @@ override-server-command-usage = false
 # Configure your servers here. Each key represents the server's name, and the value
 # represents the IP address of the server to connect to.
 lobby = "127.0.0.1:30066"
-factions  = { address = "127.0.0.1:30067", forwarding-mode = "MODERN", minimum-version = "1.13" }
-minigames = { address = "127.0.0.1:30068", forwarding-mode = "LEGACY", minimum-version = "1.7.2", maximum-version = "1.21.10" }
+factions  = { address = "127.0.0.1:30067", forwarding-mode = "modern", minimum-version = "1.13" }
+minigames = { address = "127.0.0.1:30068", forwarding-mode = "legacy", minimum-version = "1.7.2", maximum-version = "1.21.10" }
 
 # In what order, we should try servers when a player logs in or is kicked from a server.
 try = [

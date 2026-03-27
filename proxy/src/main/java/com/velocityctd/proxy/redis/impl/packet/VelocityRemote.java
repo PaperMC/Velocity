@@ -26,11 +26,6 @@ import java.util.UUID;
 public final class VelocityRemote extends UuidPacket {
 
   /**
-   * The identifier of the proxy from which the player is being redirected.
-   */
-  private final String proxyId;
-
-  /**
    * The IP address of the remote server the player should be sent to.
    */
   private final String ip;
@@ -44,25 +39,14 @@ public final class VelocityRemote extends UuidPacket {
    * Constructs a new {@link VelocityRemote} packet.
    *
    * @param uniqueId the player's unique ID
-   * @param proxyId the ID of the proxy the player is on
    * @param ip the IP address of the remote server
    * @param port the port of the remote server
    */
-  public VelocityRemote(final UUID uniqueId, final String proxyId, final String ip, final int port) {
+  public VelocityRemote(final UUID uniqueId, final String ip, final int port) {
     super(uniqueId);
 
-    this.proxyId = proxyId;
     this.ip = ip;
     this.port = port;
-  }
-
-  /**
-   * Gets the ID of the proxy the player is on.
-   *
-   * @return the ID of the proxy the player is on
-   */
-  public String getProxyId() {
-    return proxyId;
   }
 
   /**

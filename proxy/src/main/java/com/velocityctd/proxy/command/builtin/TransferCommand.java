@@ -224,7 +224,7 @@ public class TransferCommand implements BuiltinCommand {
                 .arguments(Argument.string("player", playerEntry.getUsername()),
                         Argument.string("proxy", normalizedProxyId)));
 
-        new VelocityTransferRemote(context.getSource(), playerEntry.getUniqueId(), proxyId, address.ip(), address.port())
+        new VelocityTransferRemote(context.getSource(), playerEntry.getUniqueId(), address.ip(), address.port())
                 .publish();
       } else {
         Optional<ConnectedPlayer> maybePlayer = this.server.getPlayer(player);
