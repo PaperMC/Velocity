@@ -37,6 +37,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
   private static final QuietRuntimeException DECODE_FAILED =
       new QuietRuntimeException("A packet did not decode successfully (invalid data). For more "
           + "information, launch Velocity with -Dvelocity.packet-decode-logging=true to see more.");
+  private static final boolean DIRECTION_VALIDATION = Boolean.getBoolean("velocity.packet-direction-validation");
 
   private final ProtocolUtils.Direction direction;
   private StateRegistry state;
@@ -74,7 +75,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
     MinecraftPacket packet = this.registry.createPacket(packetId);
     if (packet == null) {
       buf.readerIndex(originalReaderIndex);
-      if (this.direction == ProtocolUtils.Direction.SERVERBOUND && this.state != StateRegistry.PLAY) {
+      if (DIRECTION_VALIDATION && this.direction == ProtocolUtils.Direction.SERVERBOUND && this.state != StateRegistry.PLAY) {
         buf.release();
         throw this.handleInvalidPacketId(packetId);
       }
