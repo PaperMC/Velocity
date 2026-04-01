@@ -22,6 +22,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.util.VelocityProperties;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -37,7 +38,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
   private static final QuietRuntimeException DECODE_FAILED =
       new QuietRuntimeException("A packet did not decode successfully (invalid data). For more "
           + "information, launch Velocity with -Dvelocity.packet-decode-logging=true to see more.");
-  private static final boolean DIRECTION_VALIDATION = Boolean.getBoolean("velocity.packet-direction-validation");
+  private static final boolean DIRECTION_VALIDATION = VelocityProperties.readBoolean("velocity.packet-direction-validation", true);
 
   private final ProtocolUtils.Direction direction;
   private StateRegistry state;
