@@ -17,10 +17,9 @@
 
 package com.velocitypowered.proxy.console;
 
-import static com.velocitypowered.api.permission.PermissionFunction.ALWAYS_TRUE;
-
 import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
 import com.velocitypowered.api.permission.PermissionFunction;
+import com.velocitypowered.api.permission.PermissionProvider;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.proxy.VelocityServer;
@@ -54,12 +53,14 @@ import org.jline.reader.LineReaderBuilder;
  */
 public final class VelocityConsole extends SimpleTerminalConsole implements ConsoleCommandSource {
 
+  private static final PermissionProvider DEFAULT_PERMISSION_PROVIDER = s -> PermissionFunction.ALWAYS_TRUE;
+
   private static final Logger logger = LogManager.getLogger(VelocityConsole.class);
   private static final ComponentLogger componentLogger = ComponentLogger
           .logger(VelocityConsole.class);
 
   private final VelocityServer server;
-  private PermissionFunction permissionFunction = ALWAYS_TRUE;
+  private PermissionFunction permissionFunction;
   private static final @NotNull PointersSupplier<VelocityConsole> POINTERS = PointersSupplier.<VelocityConsole>builder()
       .resolving(PermissionChecker.POINTER, VelocityConsole::getPermissionChecker)
       .resolving(Identity.LOCALE, (console) -> ClosestLocaleMatcher.INSTANCE
@@ -69,6 +70,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
 
   public VelocityConsole(VelocityServer server) {
     this.server = server;
+    this.permissionFunction = DEFAULT_PERMISSION_PROVIDER.createFunction(this);
   }
 
   @Override
@@ -94,7 +96,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
    * Sets up permissions for the console.
    */
   public void setupPermissions() {
-    PermissionsSetupEvent event = new PermissionsSetupEvent(this, s -> ALWAYS_TRUE);
+    PermissionsSetupEvent event = new PermissionsSetupEvent(this, DEFAULT_PERMISSION_PROVIDER);
     // we can safely block here, this is before any listeners fire
     this.permissionFunction = this.server.getEventManager().fire(event).join().createFunction(this);
     if (this.permissionFunction == null) {
@@ -103,7 +105,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
               + " for the console. This is a bug in the plugin, not in Velocity. Falling"
               + " back to the default permission function.",
           event.getProvider().getClass().getName());
-      this.permissionFunction = ALWAYS_TRUE;
+      this.permissionFunction = DEFAULT_PERMISSION_PROVIDER.createFunction(this);
     }
   }
 

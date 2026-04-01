@@ -155,7 +155,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   public static final int MAX_CLIENTSIDE_PLUGIN_CHANNELS = Integer.getInteger("velocity.max-clientside-plugin-channels", 1024);
   private static final PlainTextComponentSerializer PASS_THRU_TRANSLATE =
       PlainTextComponentSerializer.builder().flattener(TranslatableMapper.FLATTENER).build();
-  static final PermissionProvider DEFAULT_PERMISSIONS = s -> PermissionFunction.ALWAYS_UNDEFINED;
+  static final PermissionProvider DEFAULT_PERMISSION_PROVIDER = s -> PermissionFunction.ALWAYS_UNDEFINED;
 
   private static final ComponentLogger logger = ComponentLogger.logger(ConnectedPlayer.class);
 
@@ -214,7 +214,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     this.virtualHost = virtualHost;
     this.rawVirtualHost = rawVirtualHost;
     this.handshakeIntent = handshakeIntent;
-    this.permissionFunction = PermissionFunction.ALWAYS_UNDEFINED;
+    this.permissionFunction = DEFAULT_PERMISSION_PROVIDER.createFunction(this);
     this.connectionPhase = connection.getType().getInitialClientPhase();
     this.onlineMode = onlineMode;
     this.clientsideChannels = CappedSet.create(MAX_CLIENTSIDE_PLUGIN_CHANNELS);

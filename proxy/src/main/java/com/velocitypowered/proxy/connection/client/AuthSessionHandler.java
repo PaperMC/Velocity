@@ -113,19 +113,19 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
       }
 
       return server.getEventManager()
-          .fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSIONS))
+          .fire(new PermissionsSetupEvent(player, ConnectedPlayer.DEFAULT_PERMISSION_PROVIDER))
           .thenAcceptAsync(event -> {
             if (!mcConnection.isClosed()) {
               // wait for permissions to load, then set the players permission function
-              final PermissionFunction function = event.createFunction(player);
+              PermissionFunction function = event.createFunction(player);
               if (function == null) {
                 logger.error("A plugin permission provider {} provided an invalid permission "
                         + "function for player {}. This is a bug in the plugin, not in "
                         + "Velocity. Falling back to the default permission function.",
                     event.getProvider().getClass().getName(), player.getUsername());
-              } else {
-                player.setPermissionFunction(function);
+                function = ConnectedPlayer.DEFAULT_PERMISSION_PROVIDER.createFunction(player);
               }
+              player.setPermissionFunction(function);
               startLoginCompletion(player);
             }
           }, mcConnection.eventLoop());
