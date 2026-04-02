@@ -37,6 +37,7 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.minimessage.translation.Argument;
 
 /**
  * Implements Velocity's {@code /server} command.
@@ -76,7 +77,7 @@ public final class ServerCommand {
               final Optional<RegisteredServer> toConnect = server.getServer(serverName);
               if (toConnect.isEmpty()) {
                 player.sendMessage(CommandMessages.SERVER_DOES_NOT_EXIST
-                        .arguments(Component.text(serverName)));
+                        .arguments(Argument.string("server", serverName)));
                 return -1;
               }
 
@@ -135,7 +136,7 @@ public final class ServerCommand {
     } else {
       playersTextComponent.key("velocity.command.server-tooltip-players-online");
     }
-    playersTextComponent.arguments(Component.text(connectedPlayers));
+    playersTextComponent.arguments(Argument.component("players", Component.text(connectedPlayers)));
     if (serverInfo.getName().equals(currentPlayerServer)) {
       serverTextComponent.color(NamedTextColor.GREEN)
           .hoverEvent(

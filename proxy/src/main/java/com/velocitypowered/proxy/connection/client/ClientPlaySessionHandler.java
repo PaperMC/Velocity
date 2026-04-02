@@ -98,6 +98,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * center that joins backend servers with players.
  */
 public class ClientPlaySessionHandler implements MinecraftSessionHandler {
+  private static final boolean BACKPRESSURE_LOG =
+      Boolean.getBoolean("velocity.log-server-backpressure");
 
   private static final Logger logger = LogManager.getLogger(ClientPlaySessionHandler.class);
 
@@ -504,6 +506,14 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   @Override
   public void writabilityChanged() {
     boolean writable = player.getConnection().getChannel().isWritable();
+
+    if (BACKPRESSURE_LOG) {
+      if (writable) {
+        logger.info("{} is writable, will auto-read backend connection data", player);
+      } else {
+        logger.info("{} is not writable, not auto-reading backend connection data", player);
+      }
+    }
 
     if (!writable) {
       // We might have packets queued from the server, so flush them now to free up memory. Make

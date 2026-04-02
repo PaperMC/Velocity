@@ -22,7 +22,6 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
-import java.util.HashMap;
 import java.util.Map;
 
 public class ClientboundCustomReportDetailsPacket implements MinecraftPacket {
@@ -40,7 +39,7 @@ public class ClientboundCustomReportDetailsPacket implements MinecraftPacket {
     public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
         int detailsCount = ProtocolUtils.readVarInt(buf);
 
-        this.details = new HashMap<>(detailsCount);
+        this.details = ProtocolUtils.newMap(detailsCount);
         for (int i = 0; i < detailsCount; i++) {
             details.put(ProtocolUtils.readString(buf), ProtocolUtils.readString(buf));
         }

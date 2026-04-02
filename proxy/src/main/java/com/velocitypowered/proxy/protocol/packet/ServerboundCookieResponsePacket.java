@@ -66,6 +66,16 @@ public class ServerboundCookieResponsePacket implements MinecraftPacket {
   }
 
   @Override
+  public int decodeExpectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
+    return ProtocolUtils.DEFAULT_MAX_STRING_BYTES + 1 + 2 + 5120;
+  }
+
+  @Override
+  public int decodeExpectedMinLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
+    return 1 + 0 + 0;
+  }
+
+  @Override
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
   }

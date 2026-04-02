@@ -34,3 +34,9 @@ and you can configure it from there.
 
 Alternatively, you can get the proxy JAR from the [downloads](https://papermc.io/downloads/velocity)
 page.
+
+# Localisation
+
+Translations are handled using [Crowdin](https://papermc-io.crowdin.com/velocity).
+If you want to translate a language not available on Crowdin,
+you might want to ask in the [Discord](https://discord.gg/papermc) about it.

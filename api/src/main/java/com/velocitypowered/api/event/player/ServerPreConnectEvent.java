@@ -143,7 +143,7 @@ public final class ServerPreConnectEvent implements
      * is used, then {@link ConnectionRequestBuilder#connect()}'s result will have the status
      * {@link Status#CONNECTION_CANCELLED}.
      *
-     * @return a result to deny conneections
+     * @return a result to deny connections
      */
     public static ServerResult denied() {
       return DENIED;

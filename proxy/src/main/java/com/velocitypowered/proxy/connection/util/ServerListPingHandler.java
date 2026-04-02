@@ -100,65 +100,60 @@ public class ServerListPingHandler {
 
     CompletableFuture<List<ServerPing>> pingResponses = CompletableFutures.successfulAsList(pings,
         (ex) -> fallback);
-    switch (mode) {
-      case ALL:
-        return pingResponses.thenApply(responses -> {
-          // Find the first non-fallback
-          for (ServerPing response : responses) {
-            if (response == fallback) {
-              continue;
-            }
-
-            if (response.getDescriptionComponent() == null) {
-              return response.asBuilder()
-                  .description(Component.empty())
-                  .build();
-            }
-
-            return response;
+    return switch (mode) {
+      case ALL -> pingResponses.thenApply(responses -> {
+        // Find the first non-fallback
+        for (ServerPing response : responses) {
+          if (response == fallback) {
+            continue;
           }
-          return fallback;
-        });
-      case MODS:
-        return pingResponses.thenApply(responses -> {
-          // Find the first non-fallback that contains a mod list
-          for (ServerPing response : responses) {
-            if (response == fallback) {
-              continue;
-            }
-            Optional<ModInfo> modInfo = response.getModinfo();
-            if (modInfo.isPresent()) {
-              return fallback.asBuilder().mods(modInfo.get()).build();
-            }
-          }
-          return fallback;
-        });
-      case DESCRIPTION:
-        return pingResponses.thenApply(responses -> {
-          // Find the first non-fallback. If it includes a modlist, add it too.
-          for (ServerPing response : responses) {
-            if (response == fallback) {
-              continue;
-            }
 
-            if (response.getDescriptionComponent() == null) {
-              continue;
-            }
-
-            return new ServerPing(
-                fallback.getVersion(),
-                fallback.getPlayers().orElse(null),
-                response.getDescriptionComponent(),
-                fallback.getFavicon().orElse(null),
-                response.getModinfo().orElse(null)
-            );
+          if (response.getDescriptionComponent() == null) {
+            return response.asBuilder()
+                .description(Component.empty())
+                .build();
           }
-          return fallback;
-        });
+
+          return response;
+        }
+        return fallback;
+      });
+      case MODS -> pingResponses.thenApply(responses -> {
+        // Find the first non-fallback that contains a mod list
+        for (ServerPing response : responses) {
+          if (response == fallback) {
+            continue;
+          }
+          Optional<ModInfo> modInfo = response.getModinfo();
+          if (modInfo.isPresent()) {
+            return fallback.asBuilder().mods(modInfo.get()).build();
+          }
+        }
+        return fallback;
+      });
+      case DESCRIPTION -> pingResponses.thenApply(responses -> {
+        // Find the first non-fallback. If it includes a modlist, add it too.
+        for (ServerPing response : responses) {
+          if (response == fallback) {
+            continue;
+          }
+          if (response.getDescriptionComponent() == null) {
+            continue;
+          }
+
+          return new ServerPing(
+              fallback.getVersion(),
+              fallback.getPlayers().orElse(null),
+              response.getDescriptionComponent(),
+              fallback.getFavicon().orElse(null),
+              response.getModinfo().orElse(null)
+          );
+        }
+        return fallback;
+      });
       // Not possible, but covered for completeness.
-      default:
-        return CompletableFuture.completedFuture(fallback);
-    }
+      default -> CompletableFuture.completedFuture(fallback);
+    };
   }
 
   /**

@@ -452,8 +452,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void handleGeneric(MinecraftPacket packet) {
-    if (packet instanceof PluginMessagePacket) {
-      ((PluginMessagePacket) packet).retain();
+    if (packet instanceof PluginMessagePacket pluginMessage) {
+      pluginMessage.retain();
     }
     playerConnection.delayedWrite(packet);
     if (++packetsFlushed >= MAXIMUM_PACKETS_TO_FLUSH) {

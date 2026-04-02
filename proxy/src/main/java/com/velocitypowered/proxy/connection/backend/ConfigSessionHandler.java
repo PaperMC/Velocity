@@ -60,6 +60,7 @@ import com.velocitypowered.proxy.protocol.packet.config.TagsUpdatePacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
@@ -72,6 +73,9 @@ import org.apache.logging.log4j.Logger;
  * 1.20.2+ switching. Yes, some of this is exceptionally stupid.
  */
 public class ConfigSessionHandler implements MinecraftSessionHandler {
+  private static final boolean BACKPRESSURE_LOG =
+      Boolean.getBoolean("velocity.log-server-backpressure");
+
   private static final Logger logger = LogManager.getLogger(ConfigSessionHandler.class);
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
@@ -380,6 +384,22 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
   @Override
   public void handleGeneric(MinecraftPacket packet) {
     serverConn.getPlayer().getConnection().write(packet);
+  }
+
+  @Override
+  public void writabilityChanged() {
+    Channel serverChan = serverConn.ensureConnected().getChannel();
+    boolean writable = serverChan.isWritable();
+
+    if (BACKPRESSURE_LOG) {
+      if (writable) {
+        logger.info("{} is writable, will auto-read player connection data", this.serverConn);
+      } else {
+        logger.info("{} is not writable, not auto-reading player connection data", this.serverConn);
+      }
+    }
+
+    serverConn.getPlayer().getConnection().setAutoReading(writable);
   }
 
   private void switchFailure(Throwable cause) {

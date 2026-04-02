@@ -36,7 +36,9 @@ import io.netty.handler.codec.EncoderException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.nbt.BinaryTag;
@@ -158,6 +160,9 @@ public enum ProtocolUtils {
     }
     VAR_INT_LENGTHS[32] = 1; // Special case for the number 0.
   }
+
+  public static final int DEFAULT_MAX_STRING_BYTES = varIntBytes(ByteBufUtil.utf8MaxBytes(DEFAULT_MAX_STRING_SIZE))
+          + ByteBufUtil.utf8MaxBytes(DEFAULT_MAX_STRING_SIZE);
 
   private static DecoderException badVarint() {
     return MinecraftDecoder.DEBUG ? new CorruptedFrameException("Bad VarInt decoded")
@@ -415,7 +420,10 @@ public enum ProtocolUtils {
    */
   public static int[] readIntegerArray(ByteBuf buf) {
     int len = readVarInt(buf);
-    checkArgument(len >= 0, "Got a negative-length integer array (%s)", len);
+    checkFrame(len >= 0, "Got a negative-length integer array (%s)", len);
+    checkFrame(buf.isReadable(len),
+        "Trying to read an array that is too long (wanted %s, only have %s)", len,
+        buf.readableBytes());
     int[] array = new int[len];
     for (int i = 0; i < len; i++) {
       array[i] = readVarInt(buf);
@@ -535,6 +543,10 @@ public enum ProtocolUtils {
    */
   public static String[] readStringArray(ByteBuf buf) {
     int length = readVarInt(buf);
+    checkFrame(length >= 0, "Got a negative-length array (%s)", length);
+    checkFrame(buf.isReadable(length),
+        "Trying to read an array that is too long (wanted %s, only have %s)", length,
+        buf.readableBytes());
     String[] ret = new String[length];
     for (int i = 0; i < length; i++) {
       ret[i] = readString(buf);
@@ -646,6 +658,9 @@ public enum ProtocolUtils {
 
     checkArgument(len <= FORGE_MAX_ARRAY_LENGTH,
         "Cannot receive array longer than %s (got %s bytes)", FORGE_MAX_ARRAY_LENGTH, len);
+    checkFrame(buf.isReadable(len),
+        "Trying to read an array that is too long (wanted %s, only have %s)", len,
+        buf.readableBytes());
 
     byte[] ret = new byte[len];
     buf.readBytes(ret);
@@ -842,6 +857,29 @@ public enum ProtocolUtils {
     }
 
     writeVarInt(buf, source.ordinal());
+  }
+
+  /**
+   * Returns a pre-sized list with a max initial size of {@code Short.MAX_VALUE}.
+   *
+   * @param initialCapacity expected initial capacity
+   * @param <T> entry type
+   * @return pre-sized list
+   */
+  public static <T> List<T> newList(int initialCapacity) {
+    return new ArrayList<>(Math.min(initialCapacity, Short.MAX_VALUE));
+  }
+
+  /**
+   * Returns a pre-sized map with a max initial size of {@code Short.MAX_VALUE}.
+   *
+   * @param initialCapacity expected initial capacity
+   * @param <K> key type
+   * @param <V> value type
+   * @return pre-sized map
+   */
+  public static <K, V> Map<K, V> newMap(int initialCapacity) {
+    return new HashMap<>(Math.min(initialCapacity, Short.MAX_VALUE));
   }
 
   /**

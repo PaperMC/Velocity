@@ -18,13 +18,11 @@
 package com.velocitypowered.proxy.protocol.packet.config;
 
 import com.velocitypowered.api.network.ProtocolVersion;
-import com.velocitypowered.api.util.ServerLink;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
-import java.util.ArrayList;
 import java.util.List;
 
 public class ClientboundServerLinksPacket implements MinecraftPacket {
@@ -42,7 +40,7 @@ public class ClientboundServerLinksPacket implements MinecraftPacket {
     public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
         int linksCount = ProtocolUtils.readVarInt(buf);
 
-        this.serverLinks = new ArrayList<>(linksCount);
+        this.serverLinks = ProtocolUtils.newList(linksCount);
         for (int i = 0; i < linksCount; i++) {
             serverLinks.add(ServerLink.read(buf, version));
         }

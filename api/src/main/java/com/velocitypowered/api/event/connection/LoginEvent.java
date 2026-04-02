@@ -11,6 +11,7 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.Player;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * This event is fired once the player has been authenticated, but before they connect to a server.
@@ -22,15 +23,39 @@ import com.velocitypowered.api.proxy.Player;
 public final class LoginEvent implements ResultedEvent<ResultedEvent.ComponentResult> {
 
   private final Player player;
+  private final String serverIdHash;
   private ComponentResult result;
 
+  @Deprecated(forRemoval = true)
   public LoginEvent(Player player) {
+    this(player, null);
+  }
+
+  /**
+   * Constructs a new {@link LoginEvent}.
+   *
+   * @param player the player who has completed authentication
+   * @param serverIdHash the server ID hash sent to Mojang for authentication,
+   *                     or {@code null} if the connection is in offline-mode
+   */
+  public LoginEvent(Player player, @Nullable String serverIdHash) {
     this.player = Preconditions.checkNotNull(player, "player");
+    this.serverIdHash = serverIdHash;
     this.result = ComponentResult.allowed();
   }
 
   public Player getPlayer() {
     return player;
+  }
+
+  /**
+   * Returns the server ID hash that was sent to Mojang to authenticate the player.
+   * If the connection was in offline-mode, this returns {@code null}.
+   *
+   * @return the server ID hash that was sent to Mojang to authenticate the player
+   */
+  public @Nullable String getServerIdHash() {
+    return serverIdHash;
   }
 
   @Override

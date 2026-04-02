@@ -69,33 +69,25 @@ public class LegacyPlayerListItemPacket implements MinecraftPacket {
         Item item = new Item(ProtocolUtils.readUuid(buf));
         items.add(item);
         switch (action) {
-          case ADD_PLAYER:
+          case ADD_PLAYER -> {
             item.setName(ProtocolUtils.readString(buf));
             item.setProperties(ProtocolUtils.readProperties(buf));
             item.setGameMode(ProtocolUtils.readVarInt(buf));
             item.setLatency(ProtocolUtils.readVarInt(buf));
             item.setDisplayName(readOptionalComponent(buf, version));
-
             if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
-              if (buf.readBoolean()) {
-                item.setPlayerKey(ProtocolUtils.readPlayerKey(version, buf));
-              }
+                if (buf.readBoolean()) {
+                    item.setPlayerKey(ProtocolUtils.readPlayerKey(version, buf));
+                }
             }
-            break;
-          case UPDATE_GAMEMODE:
-            item.setGameMode(ProtocolUtils.readVarInt(buf));
-            break;
-          case UPDATE_LATENCY:
-            item.setLatency(ProtocolUtils.readVarInt(buf));
-            break;
-          case UPDATE_DISPLAY_NAME:
-            item.setDisplayName(readOptionalComponent(buf, version));
-            break;
-          case REMOVE_PLAYER:
-            //Do nothing, all that is needed is the uuid
-            break;
-          default:
-            throw new UnsupportedOperationException("Unknown action " + action);
+          }
+          case UPDATE_GAMEMODE -> item.setGameMode(ProtocolUtils.readVarInt(buf));
+          case UPDATE_LATENCY -> item.setLatency(ProtocolUtils.readVarInt(buf));
+          case UPDATE_DISPLAY_NAME -> item.setDisplayName(readOptionalComponent(buf, version));
+          case REMOVE_PLAYER -> {
+              //Do nothing, all that is needed is the uuid
+          }
+          default -> throw new UnsupportedOperationException("Unknown action " + action);
         }
       }
     } else {
@@ -126,39 +118,32 @@ public class LegacyPlayerListItemPacket implements MinecraftPacket {
 
         ProtocolUtils.writeUuid(buf, uuid);
         switch (action) {
-          case ADD_PLAYER:
+          case ADD_PLAYER -> {
             ProtocolUtils.writeString(buf, item.getName());
             ProtocolUtils.writeProperties(buf, item.getProperties());
             ProtocolUtils.writeVarInt(buf, item.getGameMode());
             ProtocolUtils.writeVarInt(buf, item.getLatency());
             writeDisplayName(buf, item.getDisplayName(), version);
             if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
-              if (item.getPlayerKey() != null) {
-                buf.writeBoolean(true);
-                ProtocolUtils.writePlayerKey(buf, item.getPlayerKey());
-              } else {
-                buf.writeBoolean(false);
-              }
+                if (item.getPlayerKey() != null) {
+                    buf.writeBoolean(true);
+                    ProtocolUtils.writePlayerKey(buf, item.getPlayerKey());
+                } else {
+                    buf.writeBoolean(false);
+                }
             }
-            break;
-          case UPDATE_GAMEMODE:
-            ProtocolUtils.writeVarInt(buf, item.getGameMode());
-            break;
-          case UPDATE_LATENCY:
-            ProtocolUtils.writeVarInt(buf, item.getLatency());
-            break;
-          case UPDATE_DISPLAY_NAME:
-            writeDisplayName(buf, item.getDisplayName(), version);
-            break;
-          case REMOVE_PLAYER:
+          }
+          case UPDATE_GAMEMODE -> ProtocolUtils.writeVarInt(buf, item.getGameMode());
+          case UPDATE_LATENCY -> ProtocolUtils.writeVarInt(buf, item.getLatency());
+          case UPDATE_DISPLAY_NAME -> writeDisplayName(buf, item.getDisplayName(), version);
+          case REMOVE_PLAYER -> {
             // Do nothing, all that is needed is the uuid
-            break;
-          default:
-            throw new UnsupportedOperationException("Unknown action " + action);
+          }
+          default -> throw new UnsupportedOperationException("Unknown action " + action);
         }
       }
     } else {
-      Item item = items.get(0);
+      Item item = items.getFirst();
       Component displayNameComponent = item.getDisplayName();
       if (displayNameComponent != null) {
         String displayName = LegacyComponentSerializer.legacySection()
@@ -269,7 +254,7 @@ public class LegacyPlayerListItemPacket implements MinecraftPacket {
       return this;
     }
 
-    public IdentifiedKey getPlayerKey() {
+    public @Nullable IdentifiedKey getPlayerKey() {
       return playerKey;
     }
   }
