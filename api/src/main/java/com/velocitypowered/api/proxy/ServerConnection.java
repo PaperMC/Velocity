@@ -41,6 +41,14 @@ public interface ServerConnection extends ChannelMessageSource, ChannelMessageSi
   ServerInfo getServerInfo();
 
   /**
+   * Returns the server info that current connected to.
+   * Can be used for getting resolved ip and port.
+   *
+   * @return the server info that current connected to
+   */
+  Optional<ServerInfo> getConnectedServerInfo();
+
+  /**
    * Returns the player that this connection is associated with.
    *
    * @return the player for this connection
