@@ -1356,8 +1356,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
             && (clientState == StateRegistry.CONFIG || clientState == StateRegistry.PLAY);
         if (stateAllowsForward) {
           setPing(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - sentTime));
-          return smc.write(packet) != null;
+          smc.write(packet);
         }
+        // We removed this, and so this is ours
+        return true;
       }
     }
     return false;
