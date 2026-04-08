@@ -161,6 +161,9 @@ public enum ProtocolUtils {
     VAR_INT_LENGTHS[32] = 1; // Special case for the number 0.
   }
 
+  public static final int DEFAULT_MAX_STRING_BYTES = varIntBytes(ByteBufUtil.utf8MaxBytes(DEFAULT_MAX_STRING_SIZE))
+          + ByteBufUtil.utf8MaxBytes(DEFAULT_MAX_STRING_SIZE);
+
   private static DecoderException badVarint() {
     return MinecraftDecoder.DEBUG ? new CorruptedFrameException("Bad VarInt decoded")
         : BAD_VARINT_CACHED;

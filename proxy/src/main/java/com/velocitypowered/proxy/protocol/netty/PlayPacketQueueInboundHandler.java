@@ -21,6 +21,9 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.util.except.QuietDecoderException;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufHolder;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.ReferenceCountUtil;
@@ -41,8 +44,13 @@ import org.jetbrains.annotations.NotNull;
  */
 public class PlayPacketQueueInboundHandler extends ChannelDuplexHandler {
 
+  private static final int MAXIMUM_SIZE = Integer.getInteger("velocity.maximum-play-queue-size", 128 * 1024 * 1024); // 128MiB by default
+  private static final QuietDecoderException QUEUE_LIMIT_FAILED = new QuietDecoderException(
+      "Queue too big (greater than " + MAXIMUM_SIZE + " bytes)");
+
   private final StateRegistry.PacketRegistry.ProtocolRegistry registry;
   private final Queue<Object> queue = new ArrayDeque<>();
+  private int queueSize = 0;
 
   /**
    * Provides registries for client &amp; server bound packets.
@@ -63,6 +71,20 @@ public class PlayPacketQueueInboundHandler extends ChannelDuplexHandler {
         return;
       }
     }
+
+    int length = 0;
+    if (msg instanceof ByteBuf) {
+      // keep track of raw packets
+      length = ((ByteBuf) msg).readableBytes();
+    } else if (msg instanceof ByteBufHolder) {
+      // keep track of bytebufs wrapped inside packets
+      length = ((ByteBufHolder) msg).content().readableBytes();
+    }
+    if (this.queueSize + length > MAXIMUM_SIZE) {
+      ReferenceCountUtil.release(msg);
+      throw QUEUE_LIMIT_FAILED;
+    }
+    this.queueSize += length;
 
     // Otherwise, queue the packet
     this.queue.offer(msg);
@@ -90,5 +112,6 @@ public class PlayPacketQueueInboundHandler extends ChannelDuplexHandler {
         ReferenceCountUtil.release(msg);
       }
     }
+    this.queueSize = 0;
   }
 }

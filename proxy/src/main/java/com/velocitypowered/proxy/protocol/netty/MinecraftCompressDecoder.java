@@ -33,20 +33,34 @@ import java.util.List;
  */
 public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
 
+  private static final int SERVERBOUND_MAXIMUM_UNCOMPRESSED_SIZE = 2 * 1024 * 1024; // 2MiB
   private static final int VANILLA_MAXIMUM_UNCOMPRESSED_SIZE = 8 * 1024 * 1024; // 8MiB
   private static final int HARD_MAXIMUM_UNCOMPRESSED_SIZE = 128 * 1024 * 1024; // 128MiB
 
-  private static final int UNCOMPRESSED_CAP =
+  private static final int CLIENTBOUND_UNCOMPRESSED_CAP =
       Boolean.getBoolean("velocity.increased-compression-cap")
           ? HARD_MAXIMUM_UNCOMPRESSED_SIZE : VANILLA_MAXIMUM_UNCOMPRESSED_SIZE;
+  private static final int SERVERBOUND_UNCOMPRESSED_CAP =
+          Boolean.getBoolean("velocity.increased-compression-cap")
+                  ? HARD_MAXIMUM_UNCOMPRESSED_SIZE : SERVERBOUND_MAXIMUM_UNCOMPRESSED_SIZE;
   private static final boolean SKIP_COMPRESSION_VALIDATION = Boolean.getBoolean("velocity.skip-uncompressed-packet-size-validation");
+  private static final double MAX_COMPRESSION_RATIO = Double.parseDouble(System.getProperty("velocity.max-compression-ratio", "10"));
+  private final ProtocolUtils.Direction direction;
 
   private int threshold;
   private final VelocityCompressor compressor;
 
-  public MinecraftCompressDecoder(int threshold, VelocityCompressor compressor) {
+  /**
+   * Creates a new {@code MinecraftCompressDecoder} with the specified compression {@code threshold}.
+   *
+   * @param threshold the threshold for compression. Packets with uncompressed size below this threshold will not be compressed.
+   * @param compressor the compressor instance to use
+   * @param direction the direction of the packets being decoded
+   */
+  public MinecraftCompressDecoder(int threshold, VelocityCompressor compressor, ProtocolUtils.Direction direction) {
     this.threshold = threshold;
     this.compressor = compressor;
+    this.direction = direction;
   }
 
   @Override
@@ -62,13 +76,23 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
       out.add(in.retain());
       return;
     }
+    int length = in.readableBytes();
 
     checkFrame(claimedUncompressedSize >= threshold, "Uncompressed size %s is less than"
         + " threshold %s", claimedUncompressedSize, threshold);
-    checkFrame(claimedUncompressedSize <= UNCOMPRESSED_CAP,
-        "Uncompressed size %s exceeds hard threshold of %s", claimedUncompressedSize,
-        UNCOMPRESSED_CAP);
-
+    if (direction == ProtocolUtils.Direction.CLIENTBOUND) {
+      checkFrame(claimedUncompressedSize <= CLIENTBOUND_UNCOMPRESSED_CAP,
+              "Uncompressed size %s exceeds hard threshold of %s", claimedUncompressedSize,
+              CLIENTBOUND_UNCOMPRESSED_CAP);
+    } else {
+      checkFrame(claimedUncompressedSize <= SERVERBOUND_UNCOMPRESSED_CAP,
+              "Uncompressed size %s exceeds hard threshold of %s", claimedUncompressedSize,
+              SERVERBOUND_UNCOMPRESSED_CAP);
+      double maxCompressedAllowed = length * MAX_COMPRESSION_RATIO;
+      checkFrame(claimedUncompressedSize <= maxCompressedAllowed,
+              "Uncompressed size %s exceeds ratio threshold of %s for compressed sized %s", claimedUncompressedSize,
+              maxCompressedAllowed, length);
+    }
     ByteBuf compatibleIn = ensureCompatible(ctx.alloc(), compressor, in);
     ByteBuf uncompressed = preferredBuffer(ctx.alloc(), compressor, claimedUncompressedSize);
     try {

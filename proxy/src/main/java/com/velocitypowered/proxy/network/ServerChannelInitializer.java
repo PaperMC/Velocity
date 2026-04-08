@@ -26,8 +26,10 @@ import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
 
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
+import com.velocitypowered.proxy.network.limiter.SimpleBytesPerSecondLimiter;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.LegacyPingDecoder;
@@ -72,6 +74,17 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
         new HandshakeSessionHandler(connection, this.server));
     ch.pipeline().addLast(Connections.HANDLER, connection);
 
+    VelocityConfiguration.PacketLimiterConfig packetLimiterConfig =
+        server.getConfiguration().getPacketLimiterConfig();
+    int configuredInterval = packetLimiterConfig.interval();
+    int configuredPacketsPerSecond = packetLimiterConfig.pps();
+    int configuredBytes = packetLimiterConfig.bytes();
+
+    if (configuredInterval > 0 && (configuredBytes > 0 ||  configuredPacketsPerSecond > 0)) {
+      ch.pipeline().get(MinecraftVarintFrameDecoder.class).setPacketLimiter(
+          new SimpleBytesPerSecondLimiter(configuredPacketsPerSecond, configuredBytes, configuredInterval)
+      );
+    }
     if (this.server.getConfiguration().isProxyProtocol()) {
       ch.pipeline().addFirst(new HAProxyMessageDecoder());
     }
