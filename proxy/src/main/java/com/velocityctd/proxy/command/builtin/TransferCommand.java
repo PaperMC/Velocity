@@ -18,6 +18,7 @@
 package com.velocityctd.proxy.command.builtin;
 
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
@@ -32,9 +33,12 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.command.builtin.BuiltinCommand;
 import com.velocitypowered.proxy.command.builtin.CommandMessages;
 import com.velocitypowered.proxy.config.ProxyAddress;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.translation.Argument;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,38 +68,64 @@ public class TransferCommand implements BuiltinCommand {
     }
 
     LiteralCommandNode<CommandSource> transfer = BrigadierCommand.literalArgumentBuilder(label())
-            .requires(source -> source.getPermissionValue("velocity.command.transfer") == Tristate.TRUE)
+        .requires(source -> source.getPermissionValue("velocity.command.transfer") == Tristate.TRUE)
+        .executes(ctx -> CommandUtils.emitUsage(ctx, label()))
+        .then(BrigadierCommand.requiredArgumentBuilder("player", StringArgumentType.word())
+            .suggests(PlayerIdentifier.suggest(server, "player"))
             .executes(ctx -> CommandUtils.emitUsage(ctx, label()))
-            .then(BrigadierCommand.requiredArgumentBuilder("player", StringArgumentType.word())
-                    .suggests(PlayerIdentifier.suggest(server, "player"))
-                    .executes(ctx -> CommandUtils.emitUsage(ctx, label()))
-                    .then(BrigadierCommand.requiredArgumentBuilder("proxy-id", StringArgumentType.word())
-                            .suggests(CommandUtils.suggestProxy(server, "proxy-id"))
-                            .executes(this::transfer)))
-            .build();
+            .then(BrigadierCommand.requiredArgumentBuilder("hostname", StringArgumentType.word())
+                .then(BrigadierCommand.requiredArgumentBuilder("port", IntegerArgumentType.integer(0, 65535))
+                    .executes(this::transferHostnameAndPort)))
+            .then(BrigadierCommand.requiredArgumentBuilder("proxy-id", StringArgumentType.word())
+                .suggests(CommandUtils.suggestProxy(server, "proxy-id"))
+                .executes(this::transferProxyId))
+        )
+        .build();
 
     return new BrigadierCommand(transfer);
   }
 
-  private int transfer(CommandContext<CommandSource> context) {
+  private int transferHostnameAndPort(CommandContext<CommandSource> context) {
+    String player = context.getArgument("player", String.class);
+    String hostname = context.getArgument("hostname", String.class);
+    int port = context.getArgument("port", Integer.class);
+
+    Address address = new Address(hostname, port);
+    String displayName = address.toString();
+
+    Optional<ProxyAddress> proxyAddress = server.getConfiguration().getProxyAddresses().stream()
+        .filter(address::proxyAddressEquals)
+        .findAny();
+    if (proxyAddress.isPresent()) {
+      displayName += " (" + proxyAddress.get().proxyId() + ")";
+    }
+
+    return transfer(context.getSource(), player, address, displayName);
+  }
+
+  private int transferProxyId(CommandContext<CommandSource> context) {
     String player = context.getArgument("player", String.class);
     String proxyId = context.getArgument("proxy-id", String.class);
     String normalizedProxyId = normalizeProxyId(proxyId);
 
-    ProxyAddress address = server.getConfiguration().getProxyAddresses().stream()
-            .filter(proxy -> proxy.proxyId().equalsIgnoreCase(proxyId))
-            .findFirst()
-            .orElse(null);
+    Optional<Address> address = server.getConfiguration().getProxyAddresses().stream()
+        .filter(proxy -> proxy.proxyId().equalsIgnoreCase(proxyId))
+        .findAny()
+        .map(Address::fromProxyAddress);
 
-    if (address == null) {
+    if (address.isEmpty()) {
       context.getSource().sendMessage(Component.translatable("velocity.command.error.transfer.invalid-proxy")
               .arguments(Component.text(proxyId)));
       return -1;
     }
 
-    PlayerIdentifier.Result result = PlayerIdentifier.resolve(server, player, context.getSource());
+    return transfer(context.getSource(), player, address.get(), normalizedProxyId);
+  }
+
+  private int transfer(CommandSource source, String player, Address address, String targetDisplayName) {
+    PlayerIdentifier.Result result = PlayerIdentifier.resolve(server, player, source);
     if (!result.success()) {
-      sendResolveError(context.getSource(), result);
+      sendResolveError(source, result);
       return -1;
     }
 
@@ -103,13 +133,13 @@ public class TransferCommand implements BuiltinCommand {
       case PLAYER -> {
         if (result.players().size() == 1) {
           VelocityClusterPlayer clusterPlayer = result.players().iterator().next();
-          clusterPlayer.transfer(address.ip(), address.port()).thenAccept(success -> {
+          clusterPlayer.transfer(address.hostname(), address.port()).thenAccept(success -> {
             if (success) {
-              context.getSource().sendMessage(Component.translatable("velocity.command.transfer.success.player")
+              source.sendMessage(Component.translatable("velocity.command.transfer.success.player")
                   .arguments(Argument.string("player", clusterPlayer.getUsername()),
-                      Argument.string("proxy", normalizedProxyId)));
+                      Argument.string("proxy", targetDisplayName)));
             } else {
-              context.getSource().sendMessage(Component.translatable("velocity.command.transfer.invalid-version")
+              source.sendMessage(Component.translatable("velocity.command.transfer.invalid-version")
                   .arguments(Argument.string("player", clusterPlayer.getUsername())));
             }
           }).exceptionally(ex -> {
@@ -118,21 +148,21 @@ public class TransferCommand implements BuiltinCommand {
           });
         } else {
           // Multiple comma-separated players
-          context.getSource().sendMessage(Component.translatable("velocity.command.transfer.success.all")
-                  .arguments(Component.text(normalizedProxyId)));
+          source.sendMessage(Component.translatable("velocity.command.transfer.success.all")
+              .arguments(Component.text(targetDisplayName)));
           transferAll(result, address);
         }
       }
       case SERVER, CURRENT_SERVER -> {
-        context.getSource().sendMessage(Component.translatable("velocity.command.transfer.success.server")
-                .arguments(
-                    Argument.string("server", result.name()),
-                    Argument.string("proxy", normalizedProxyId)));
+        source.sendMessage(Component.translatable("velocity.command.transfer.success.server")
+            .arguments(
+                Argument.string("server", result.name()),
+                Argument.string("proxy", targetDisplayName)));
         transferAll(result, address);
       }
       default -> {
-        context.getSource().sendMessage(Component.translatable("velocity.command.transfer.success.all")
-                .arguments(Component.text(normalizedProxyId)));
+        source.sendMessage(Component.translatable("velocity.command.transfer.success.all")
+            .arguments(Component.text(targetDisplayName)));
         transferAll(result, address);
       }
     }
@@ -140,9 +170,9 @@ public class TransferCommand implements BuiltinCommand {
     return Command.SINGLE_SUCCESS;
   }
 
-  private void transferAll(PlayerIdentifier.Result result, ProxyAddress address) {
+  private void transferAll(PlayerIdentifier.Result result, Address address) {
     for (VelocityClusterPlayer clusterPlayer : result.players()) {
-      clusterPlayer.transfer(address.ip(), address.port()).exceptionally(ex -> {
+      clusterPlayer.transfer(address.hostname(), address.port()).exceptionally(ex -> {
         handleTransferError(clusterPlayer, ex);
         return null;
       });
@@ -173,5 +203,36 @@ public class TransferCommand implements BuiltinCommand {
             .filter(s -> s.equalsIgnoreCase(inputProxyId))
             .findFirst()
             .orElse(inputProxyId);
+  }
+
+  private record Address(String hostname, int port) {
+
+    public static Address fromProxyAddress(ProxyAddress proxyAddress) {
+      return new Address(proxyAddress.ip(), proxyAddress.port());
+    }
+
+    public boolean proxyAddressEquals(ProxyAddress proxyAddress) {
+      return port == proxyAddress.port() && hostname.equalsIgnoreCase(proxyAddress.ip());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+
+      Address address = (Address) o;
+      return port == address.port && hostname.equalsIgnoreCase(address.hostname);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(hostname.toLowerCase(), port);
+    }
+
+    @Override
+    public @NotNull String toString() {
+      return hostname + ":" + port;
+    }
   }
 }
