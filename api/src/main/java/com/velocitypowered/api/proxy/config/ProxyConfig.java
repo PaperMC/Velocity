@@ -140,20 +140,6 @@ public interface ProxyConfig {
   boolean isForcedHostAsFallback();
 
   /**
-   * Whether the proxy should cache Mojang profile results to reduce login API pressure.
-   *
-   * @return true if profile result caching is enabled
-   */
-  boolean isCachePlayerProfileResultEnabled();
-
-  /**
-   * How long (in minutes) to cache Mojang profile results.
-   *
-   * @return the profile cache expiration time in minutes
-   */
-  int getProfileCacheExpiryMinutes();
-
-  /**
    * Get the minimum compression threshold for packets.
    *
    * @return the compression threshold

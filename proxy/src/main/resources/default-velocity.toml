@@ -229,15 +229,6 @@ examplealias = [
 ]
 
 [advanced]
-# Whether the proxy should cache Mojang profile results (reduces API load and improves login speed).
-# This may also resolve random occurrences where the user is flagged for an invalid session.
-cache-player-profile-result = false
-
-# How long to cache Mojang profile results in minutes.
-# Cannot be less than 1 minute. The default is 1440 minutes,
-# which is 24 hours.
-cache-profile-expiry-minutes = 1440
-
 # How large a Minecraft packet has to be before we compress it. Setting this to zero will
 # compress all packets, and setting it to -1 will disable compression entirely.
 compression-threshold = 256

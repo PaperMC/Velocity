@@ -144,18 +144,6 @@ public class CtdConfigMigrations {
 
         // [advanced]
         migration(
-            "Whether the proxy should cache Mojang profile results (reduces API load and improves login speed).\n"
-                + " This may also resolve random occurrences where the user is flagged for an invalid session.",
-            "advanced.cache-player-profile-result",
-            false
-        ),
-        migration(
-            "How long to cache Mojang profile results in minutes.\n"
-                + " Cannot be less than 1 minute. The default is 1440 minutes (24 hours).",
-            "advanced.cache-profile-expiry-minutes",
-            1440
-        ),
-        migration(
             "Enables the execution of illegal characters in chat and only allows\n"
                 + " or denies illegal characters that are executed through the proxy.",
             "advanced.allow-illegal-characters-in-chat",
