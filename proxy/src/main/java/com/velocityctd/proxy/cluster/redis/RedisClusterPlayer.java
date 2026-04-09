@@ -92,7 +92,7 @@ public final class RedisClusterPlayer implements VelocityClusterPlayer {
 
   @Override
   public void move(final String targetServer) {
-    redis.publish(new VelocitySwitchServer(redisEntry.getUsername(), targetServer));
+    redis.publish(new VelocitySwitchServer(redisEntry.getUniqueId(), targetServer));
   }
 
   @Override
@@ -107,7 +107,7 @@ public final class RedisClusterPlayer implements VelocityClusterPlayer {
 
   @Override
   public CompletableFuture<Long> queryPing() {
-    return redis.publishTransaction(new VelocityGetPlayerPing(redisEntry.getUsername()));
+    return redis.publishTransaction(new VelocityGetPlayerPing(redisEntry.getUniqueId()));
   }
 
   @Override

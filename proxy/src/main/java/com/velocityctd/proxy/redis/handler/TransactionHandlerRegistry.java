@@ -48,7 +48,7 @@ public enum TransactionHandlerRegistry {
    * Handles the {@link VelocityGetPlayerPing} transaction by replying with the player's ping.
    */
   VELOCITY_GET_PLAYER_PING(VelocityGetPlayerPing.class, (server, data) -> {
-    final ConnectedPlayer player = server.getPlayer(data.username()).orElse(null);
+    final ConnectedPlayer player = server.getPlayer(data.uniqueId()).orElse(null);
     if (player == null) {
       return null;
     }

@@ -17,11 +17,13 @@
 
 package com.velocityctd.proxy.redis.data;
 
+import java.util.UUID;
+
 /**
  * Data record used to switch a player to a specific server.
  *
- * @param username the username of the player
+ * @param uniqueId the player's unique ID
  * @param serverName the name of the target server
  */
-public record VelocitySwitchServer(String username, String serverName) {
+public record VelocitySwitchServer(UUID uniqueId, String serverName) {
 }

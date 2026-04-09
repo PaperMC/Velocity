@@ -53,7 +53,7 @@ public enum RouteHandlerRegistry {
    * Handles the {@link VelocitySwitchServer} data by switching the player to the specified server.
    */
   VELOCITY_SWITCH_SERVER(VelocitySwitchServer.class, (server, data) -> {
-    final ConnectedPlayer player = server.getPlayer(data.username()).orElse(null);
+    final ConnectedPlayer player = server.getPlayer(data.uniqueId()).orElse(null);
     if (player == null) {
       return;
     }

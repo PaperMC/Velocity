@@ -18,11 +18,12 @@
 package com.velocityctd.proxy.redis.data;
 
 import com.velocityctd.proxy.redis.transaction.TransactionData;
+import java.util.UUID;
 
 /**
  * Data record representing a request to get the ping of a player.
  *
- * @param username the username of the player to get the ping of
+ * @param uniqueId the player's unique ID
  */
-public record VelocityGetPlayerPing(String username) implements TransactionData<Long> {
+public record VelocityGetPlayerPing(UUID uniqueId) implements TransactionData<Long> {
 }
