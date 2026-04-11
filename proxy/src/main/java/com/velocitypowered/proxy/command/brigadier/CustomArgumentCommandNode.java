@@ -23,7 +23,6 @@ import com.mojang.brigadier.ImmutableStringReader;
 import com.mojang.brigadier.RedirectModifier;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.context.CommandContextBuilder;
@@ -34,6 +33,7 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.CommandNode;
+import com.velocitypowered.api.command.CustomArgumentType;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiPredicate;
@@ -47,33 +47,38 @@ import java.util.function.Predicate;
  * @param <S> the type of the command source
  * @param <T> the type of the argument to parse
  */
-public class VelocityArgumentCommandNode<S, T> extends ArgumentCommandNode<S, String> {
+public class CustomArgumentCommandNode<S, T, N> extends ArgumentCommandNode<S, N> {
+  private final CustomArgumentType<T, N> type;
 
-  private final ArgumentType<T> type;
-
-  VelocityArgumentCommandNode(
-      final String name, final ArgumentType<T> type, final Command<S> command,
-      final Predicate<S> requirement,
-      final BiPredicate<CommandContextBuilder<S>, ImmutableStringReader> contextRequirement,
-      final CommandNode<S> redirect, final RedirectModifier<S> modifier, final boolean forks,
-      final SuggestionProvider<S> customSuggestions) {
-    super(name, StringArgumentType.greedyString(), command, requirement, contextRequirement,
-        redirect, modifier, forks, customSuggestions);
+  CustomArgumentCommandNode(
+          final String name,
+          final CustomArgumentType<T, N> type,
+          final Command<S> command,
+          final Predicate<S> requirement,
+          final BiPredicate<CommandContextBuilder<S>, ImmutableStringReader> contextRequirement,
+          final CommandNode<S> redirect,
+          final RedirectModifier<S> modifier,
+          final boolean forks,
+          final SuggestionProvider<S> customSuggestions) {
+    super(name,
+            type.getNativeType(),
+            command,
+            requirement,
+            contextRequirement,
+            redirect,
+            modifier,
+            forks,
+            customSuggestions);
     this.type = Preconditions.checkNotNull(type, "type");
   }
 
   @Override
   public void parse(final StringReader reader, final CommandContextBuilder<S> contextBuilder)
       throws CommandSyntaxException {
-    // Same as super, except we use the rich ArgumentType
     final int start = reader.getCursor();
     final T result = this.type.parse(reader);
-    if (reader.canRead()) {
-      throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherParseException()
-          .createWithContext(reader, "Expected greedy ArgumentType to parse all input");
-    }
-
     final ParsedArgument<S, T> parsed = new ParsedArgument<>(start, reader.getCursor(), result);
+
     contextBuilder.withArgument(getName(), parsed);
     contextBuilder.withNode(this, parsed.getRange());
   }
@@ -83,34 +88,39 @@ public class VelocityArgumentCommandNode<S, T> extends ArgumentCommandNode<S, St
       final CommandContext<S> context, final SuggestionsBuilder builder)
       throws CommandSyntaxException {
     if (getCustomSuggestions() == null) {
-      return Suggestions.empty();
+      return this.type.listSuggestions(context, builder);
+    } else {
+      return getCustomSuggestions().getSuggestions(context, builder);
     }
-    return getCustomSuggestions().getSuggestions(context, builder);
   }
 
   @Override
-  public RequiredArgumentBuilder<S, String> createBuilder() {
+  public RequiredArgumentBuilder<S, N> createBuilder() {
     throw new UnsupportedOperationException();
   }
 
-  public VelocityArgumentCommandNode<S, T> withCommand(Command<S> command) {
-    return new VelocityArgumentCommandNode<>(getName(), type, command, getRequirement(),
-        getContextRequirement(), getRedirect(), getRedirectModifier(), isFork(), getCustomSuggestions());
-  }
-
-  public VelocityArgumentCommandNode<S, T> withRedirect(CommandNode<S> target) {
-    return new VelocityArgumentCommandNode<>(getName(), type, getCommand(), getRequirement(),
-        getContextRequirement(), target, getRedirectModifier(), isFork(), getCustomSuggestions());
+  /**
+   * Creates a new builder from this instance.
+   *
+   * @return the builder
+   */
+  public CustomArgumentBuilder<S, T, N> createCustomArgBuilder() {
+    return CustomArgumentBuilder.<S, T, N>argument(getName(), this.type)
+            .suggests(getCustomSuggestions())
+            .requires(getRequirement())
+            .forward(getRedirect(), getRedirectModifier(), isFork())
+            .executes(getCommand());
   }
 
   @Override
-  public boolean isValidInput(final String input) {
-    return true;
-  }
-
-  @Override
-  public void addChild(final CommandNode<S> node) {
-    throw new UnsupportedOperationException("Cannot add children to a greedy node");
+  public boolean isValidInput(String input) {
+    try {
+      final StringReader reader = new StringReader(input);
+      this.type.parse(reader);
+      return !reader.canRead() || reader.peek() == ' ';
+    } catch (final CommandSyntaxException ignored) {
+      return false;
+    }
   }
 
   @Override
@@ -118,7 +128,7 @@ public class VelocityArgumentCommandNode<S, T> extends ArgumentCommandNode<S, St
     if (this == o) {
       return true;
     }
-    if (!(o instanceof VelocityArgumentCommandNode that)) {
+    if (!(o instanceof CustomArgumentCommandNode that)) {
       return false;
     }
     if (!super.equals(that)) {

@@ -33,6 +33,8 @@ import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.proxy.command.brigadier.CustomArgumentCommandNode;
+import com.velocitypowered.api.command.CustomArgumentType;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
@@ -43,6 +45,8 @@ import com.velocitypowered.proxy.util.collect.IdentityHashStrategy;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
+
+import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Iterator;
@@ -154,10 +158,19 @@ public class AvailableCommandsPacket implements MinecraftPacket {
 
     if (node instanceof LiteralCommandNode<?>) {
       flags |= NODE_TYPE_LITERAL;
-    } else if (node instanceof ArgumentCommandNode<?, ?>) {
+    } else if (node instanceof ArgumentCommandNode<?, ?> argumentCommandNode) {
       flags |= NODE_TYPE_ARGUMENT;
-      if (((ArgumentCommandNode<CommandSource, ?>) node).getCustomSuggestions() != null) {
+
+      if (argumentCommandNode.getCustomSuggestions() != null) {
         flags |= FLAG_HAS_SUGGESTIONS;
+      } else if (argumentCommandNode instanceof CustomArgumentCommandNode<?,?,?> customArgumentCommandNode) {
+        try {
+          Method listSuggestionsMethod = customArgumentCommandNode.getType().getClass().getMethod("listSuggestions", CommandContext.class, SuggestionsBuilder.class);
+          if (listSuggestionsMethod.getDeclaringClass() != CustomArgumentType.class) {
+            flags |= FLAG_HAS_SUGGESTIONS;
+          }
+        } catch (NoSuchMethodException ignored) {
+        }
       }
     } else if (!(node instanceof RootCommandNode<?>)) {
       throw new IllegalArgumentException("Unknown node type " + node.getClass().getName());
@@ -172,22 +185,24 @@ public class AvailableCommandsPacket implements MinecraftPacket {
       ProtocolUtils.writeVarInt(buf, idMappings.getInt(node.getRedirect()));
     }
 
-    if (node instanceof ArgumentCommandNode<?, ?>) {
+    if (!(node instanceof RootCommandNode<CommandSource>)) {
       ProtocolUtils.writeString(buf, node.getName());
-      ArgumentPropertyRegistry.serialize(buf,
-          ((ArgumentCommandNode<CommandSource, ?>) node).getType(), protocolVersion);
+    }
 
-      if (((ArgumentCommandNode<CommandSource, ?>) node).getCustomSuggestions() != null) {
-        SuggestionProvider<CommandSource> provider = ((ArgumentCommandNode<CommandSource, ?>) node)
-            .getCustomSuggestions();
-        String name = "minecraft:ask_server";
+    if (node instanceof ArgumentCommandNode<CommandSource, ?> argumentCommandNode) {
+      ArgumentPropertyRegistry.serialize(buf, argumentCommandNode.getType(), protocolVersion);
+
+      if ((flags & FLAG_HAS_SUGGESTIONS) != 0) {
+        final SuggestionProvider<CommandSource> provider = argumentCommandNode.getCustomSuggestions() != null
+                ? argumentCommandNode.getCustomSuggestions()
+                : argumentCommandNode::listSuggestions;
+
+        String providerKey = "minecraft:ask_server";
         if (provider instanceof ProtocolSuggestionProvider) {
-          name = ((ProtocolSuggestionProvider) provider).name;
+          providerKey = ((ProtocolSuggestionProvider) provider).name;
         }
-        ProtocolUtils.writeString(buf, name);
+        ProtocolUtils.writeString(buf, providerKey);
       }
-    } else if (node instanceof LiteralCommandNode<?>) {
-      ProtocolUtils.writeString(buf, node.getName());
     }
   }
 

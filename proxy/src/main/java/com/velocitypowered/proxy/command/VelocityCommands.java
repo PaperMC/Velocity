@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.command;
 
 import com.google.common.base.Preconditions;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.context.CommandContextBuilder;
@@ -31,8 +32,10 @@ import com.mojang.brigadier.tree.RootCommandNode;
 import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.CustomArgumentType;
 import com.velocitypowered.api.command.InvocableCommand;
-import com.velocitypowered.proxy.command.brigadier.VelocityArgumentCommandNode;
+import com.velocitypowered.proxy.command.brigadier.CustomArgumentBuilder;
+import com.velocitypowered.proxy.command.brigadier.CustomArgumentCommandNode;
 import com.velocitypowered.proxy.command.brigadier.VelocityBrigadierCommandWrapper;
 import java.util.List;
 import java.util.Locale;
@@ -70,34 +73,34 @@ public final class VelocityCommands {
       maybeCommand = VelocityBrigadierCommandWrapper.wrap(delegate.getCommand(), registrant);
     }
 
-    return switch (delegate) {
-      case LiteralCommandNode<CommandSource> lcn -> {
-        var literalBuilder = shallowCopyAsBuilder(lcn, delegate.getName(), true);
-        literalBuilder.executes(maybeCommand);
-        // we also need to wrap any children
-        for (final CommandNode<CommandSource> child : delegate.getChildren()) {
-          literalBuilder.then(wrap(child, registrant));
-        }
-        if (delegate.getRedirect() != null) {
-          literalBuilder.redirect(wrap(delegate.getRedirect(), registrant));
-        }
-        yield literalBuilder.build();
-      }
-      case VelocityArgumentCommandNode<CommandSource, ?> vacn -> vacn.withCommand(maybeCommand)
-              .withRedirect(delegate.getRedirect() != null ? wrap(delegate.getRedirect(), registrant) : null);
+    ArgumentBuilder<CommandSource, ?> argBuilder = switch (delegate) {
+      case LiteralCommandNode<CommandSource> node -> shallowCopyAsBuilder(node, delegate.getName(), true);
+      case CustomArgumentCommandNode<CommandSource, ?, ?> node -> node.createCustomArgBuilder();
       case ArgumentCommandNode<CommandSource, ?> node -> {
-        var argBuilder = node.createBuilder().executes(maybeCommand);
-        // we also need to wrap any children
-        for (final CommandNode<CommandSource> child : delegate.getChildren()) {
-          argBuilder.then(wrap(child, registrant));
+        if (node.getType() instanceof CustomArgumentType<?, ?> type) {
+          yield CustomArgumentBuilder.<CommandSource, Object, Object>argument(node.getName(), (CustomArgumentType<Object, Object>) type)
+                  .requires(node.getRequirement())
+                  .forward(node.getRedirect(), node.getRedirectModifier(), node.isFork())
+                  .suggests(node.getCustomSuggestions())
+                  .executes(node.getCommand());
         }
-        if (delegate.getRedirect() != null) {
-          argBuilder.redirect(wrap(delegate.getRedirect(), registrant));
-        }
-        yield argBuilder.build();
+
+        yield node.createBuilder();
       }
       default -> throw new IllegalArgumentException("Unsupported node type: " + delegate.getClass());
     };
+
+    argBuilder.executes(maybeCommand);
+
+    // we also need to wrap any children
+    for (final CommandNode<CommandSource> child : delegate.getChildren()) {
+      argBuilder.then(wrap(child, registrant));
+    }
+    if (delegate.getRedirect() != null) {
+      argBuilder.redirect(wrap(delegate.getRedirect(), registrant));
+    }
+
+    return argBuilder.build();
   }
 
   // Normalization
@@ -251,11 +254,11 @@ public final class VelocityCommands {
    * @param <S>   the type of the command source
    * @return the arguments node, or null if not present
    */
-  static <S> @Nullable VelocityArgumentCommandNode<S, ?> getArgumentsNode(
+  static <S> @Nullable CustomArgumentCommandNode<S, ?, ?> getArgumentsNode(
       final LiteralCommandNode<S> alias) {
     final CommandNode<S> node = alias.getChild(ARGS_NODE_NAME);
-    if (node instanceof VelocityArgumentCommandNode) {
-      return (VelocityArgumentCommandNode<S, ?>) node;
+    if (node instanceof CustomArgumentCommandNode) {
+      return (CustomArgumentCommandNode<S, ?, ?>) node;
     }
     return null;
   }
@@ -267,7 +270,7 @@ public final class VelocityCommands {
    * @return true if the node is an arguments node; false otherwise
    */
   public static boolean isArgumentsNode(final CommandNode<?> node) {
-    return node instanceof VelocityArgumentCommandNode && node.getName().equals(ARGS_NODE_NAME);
+    return node instanceof CustomArgumentCommandNode && node.getName().equals(ARGS_NODE_NAME);
   }
 
   private VelocityCommands() {

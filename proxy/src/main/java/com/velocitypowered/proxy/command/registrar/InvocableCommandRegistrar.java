@@ -19,19 +19,19 @@ package com.velocitypowered.proxy.command.registrar;
 
 import com.google.common.base.Preconditions;
 import com.mojang.brigadier.Command;
-import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContextBuilder;
-import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
 import com.velocitypowered.api.command.CommandInvocation;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.CustomArgumentType;
 import com.velocitypowered.api.command.InvocableCommand;
 import com.velocitypowered.proxy.command.VelocityCommandMeta;
 import com.velocitypowered.proxy.command.VelocityCommands;
-import com.velocitypowered.proxy.command.brigadier.VelocityArgumentBuilder;
+import com.velocitypowered.proxy.command.brigadier.CustomArgumentBuilder;
+import com.velocitypowered.proxy.command.brigadier.CustomArgumentCommandNode;
 import com.velocitypowered.proxy.command.brigadier.VelocityBrigadierCommandWrapper;
 import com.velocitypowered.proxy.command.invocation.CommandInvocationFactory;
 import java.util.Iterator;
@@ -43,14 +43,14 @@ import java.util.function.Predicate;
  * {@link InvocableCommand} in a root node.
  */
 abstract class InvocableCommandRegistrar<T extends InvocableCommand<I>,
-    I extends CommandInvocation<A>, A> extends AbstractCommandRegistrar<T> {
+    I extends CommandInvocation<A>, A, N> extends AbstractCommandRegistrar<T> {
 
   private final CommandInvocationFactory<I> invocationFactory;
-  private final ArgumentType<A> argumentsType;
+  private final CustomArgumentType<A, N> argumentsType;
 
   protected InvocableCommandRegistrar(final RootCommandNode<CommandSource> root, final Lock lock,
       final CommandInvocationFactory<I> invocationFactory,
-      final ArgumentType<A> argumentsType) {
+      final CustomArgumentType<A, N> argumentsType) {
     super(root, lock);
     this.invocationFactory = Preconditions.checkNotNull(invocationFactory, "invocationFactory");
     this.argumentsType = Preconditions.checkNotNull(argumentsType, "argumentsType");
@@ -98,8 +98,8 @@ abstract class InvocableCommandRegistrar<T extends InvocableCommand<I>,
         .executes(callback)
         .build();
 
-    final ArgumentCommandNode<CommandSource, String> arguments = VelocityArgumentBuilder
-        .<CommandSource, A>velocityArgument(VelocityCommands.ARGS_NODE_NAME, argumentsType)
+    final CustomArgumentCommandNode<CommandSource, A, N> arguments = CustomArgumentBuilder
+        .<CommandSource, A, N>argument(VelocityCommands.ARGS_NODE_NAME, argumentsType)
         .requiresWithContext((context, reader) -> requirement.test(context))
         .executes(callback)
         .suggests((context, builder) -> {
