@@ -94,7 +94,6 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
     in.readerIndex(packetStart);
 
     // try to read the length of the packet
-    in.markReaderIndex();
     try {
       int length = readRawVarInt21(in);
       if (packetStart == in.readerIndex()) {
@@ -107,6 +106,7 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       if (length > 0) {
         if (state == StateRegistry.HANDSHAKE && direction == ProtocolUtils.Direction.SERVERBOUND) {
           if (validateServerboundHandshakePacket(in, length)) {
+            in.readerIndex(packetStart);
             return;
           }
         }
@@ -115,7 +115,7 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       // note that zero-length packets are ignored
       if (length > 0) {
         if (in.readableBytes() < length) {
-          in.resetReaderIndex();
+          in.readerIndex(packetStart);
         } else {
           // If enabled, rate-limit serverbound payload bytes based on frame length
           if (packetLimiter != null) {
@@ -130,7 +130,7 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       }
     } catch (Exception e) {
       // Reset buffer to consistent state before propagating exception to prevent memory leaks
-      in.resetReaderIndex();
+      in.readerIndex(packetStart);
       throw e;
     }
   }
@@ -140,40 +140,33 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
         state.getProtocolRegistry(direction, ProtocolVersion.MINIMUM_VERSION);
 
     final int index = in.readerIndex();
-    try {
-      final int packetId = readRawVarInt21(in);
-      // Index hasn't changed, we've read nothing
-      if (index == in.readerIndex()) {
-        in.resetReaderIndex();
-        return true;
-      }
-      final int payloadLength = length - ProtocolUtils.varIntBytes(packetId);
-
-      MinecraftPacket packet = registry.createPacket(packetId);
-
-      // We handle every packet in this phase, if you said something we don't know, something is really wrong
-      if (packet == null) {
-        throw UNKNOWN_PACKET;
-      }
-
-      // We 'technically' have the incoming bytes of a payload here, and so, these can actually parse
-      // the packet if needed, so, we'll take advantage of the existing methods
-      int expectedMinLen = packet.decodeExpectedMinLength(in, direction, registry.version);
-      int expectedMaxLen = packet.decodeExpectedMaxLength(in, direction, registry.version);
-      if (expectedMaxLen != -1 && payloadLength > expectedMaxLen) {
-        throw handleOverflow(packet, expectedMaxLen, in.readableBytes());
-      }
-      if (payloadLength < expectedMinLen) {
-        throw handleUnderflow(packet, expectedMaxLen, in.readableBytes());
-      }
-
-      in.readerIndex(index);
-      return false;
-    } catch (Exception e) {
-      // Reset buffer to consistent state before propagating exception to prevent memory leaks
-      in.readerIndex(index);
-      throw e;
+    final int packetId = readRawVarInt21(in);
+    // Index hasn't changed, we've read nothing
+    if (index == in.readerIndex()) {
+      return true;
     }
+    final int payloadLength = length - ProtocolUtils.varIntBytes(packetId);
+
+    MinecraftPacket packet = registry.createPacket(packetId);
+
+    // We handle every packet in this phase, if you said something we don't know, something is really wrong
+    if (packet == null) {
+      throw UNKNOWN_PACKET;
+    }
+
+    // We 'technically' have the incoming bytes of a payload here, and so, these can actually parse
+    // the packet if needed, so, we'll take advantage of the existing methods
+    int expectedMinLen = packet.decodeExpectedMinLength(in, direction, registry.version);
+    int expectedMaxLen = packet.decodeExpectedMaxLength(in, direction, registry.version);
+    if (expectedMaxLen != -1 && payloadLength > expectedMaxLen) {
+      throw handleOverflow(packet, expectedMaxLen, in.readableBytes());
+    }
+    if (payloadLength < expectedMinLen) {
+      throw handleUnderflow(packet, expectedMaxLen, in.readableBytes());
+    }
+
+    in.readerIndex(index);
+    return false;
   }
 
   @Override
