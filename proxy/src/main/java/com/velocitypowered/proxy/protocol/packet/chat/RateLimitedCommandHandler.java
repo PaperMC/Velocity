@@ -22,7 +22,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import net.kyori.adventure.text.Component;
 
-public abstract class RateLimitedCommandHandler<T extends MinecraftPacket> implements CommandHandler<T> {
+public abstract class RateLimitedCommandHandler<T extends MinecraftPacket> extends CommandHandler<T> {
 
     private final Player player;
     private final VelocityServer velocityServer;
