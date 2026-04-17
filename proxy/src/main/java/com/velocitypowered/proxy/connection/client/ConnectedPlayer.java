@@ -1349,11 +1349,17 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       final Long sentTime = serverConnection.getPendingPings().remove(packet.getRandomId());
       if (sentTime != null) {
         final MinecraftConnection smc = serverConnection.getConnection();
-        if (smc != null) {
+        final StateRegistry clientState = connection.getState();
+        final boolean stateAllowsForward = smc != null
+            && !smc.isClosed()
+            && clientState == smc.getState()
+            && (clientState == StateRegistry.CONFIG || clientState == StateRegistry.PLAY);
+        if (stateAllowsForward) {
           setPing(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - sentTime));
           smc.write(packet);
-          return true;
         }
+        // We removed this, and so this is ours
+        return true;
       }
     }
     return false;
@@ -1363,7 +1369,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
    * Switches the connection to the client into config state.
    */
   public void switchToConfigState() {
-    server.getEventManager().fire(new PlayerEnterConfigurationEvent(this, getConnectionInFlightOrConnectedServer()))
+    final VelocityServerConnection targetServer = getConnectionInFlightOrConnectedServer();
+    server.getEventManager().fire(new PlayerEnterConfigurationEvent(this, targetServer))
         .completeOnTimeout(null, 5, TimeUnit.SECONDS).thenRunAsync(() -> {
           // if the connection was closed earlier, there is a risk that the player is no longer connected
           if (!connection.getChannel().isActive()) {
@@ -1378,7 +1385,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
           connection.pendingConfigurationSwitch = true;
           connection.getChannel().pipeline().get(MinecraftEncoder.class).setState(StateRegistry.CONFIG);
           // Make sure we don't send any play packets to the player after update start
-          connection.addPlayPacketQueueHandler();
+          connection.addPlayPacketQueueOutboundHandler();
         }, connection.eventLoop()).exceptionally((ex) -> {
           logger.error("Error switching player connection to config state", ex);
           return null;
