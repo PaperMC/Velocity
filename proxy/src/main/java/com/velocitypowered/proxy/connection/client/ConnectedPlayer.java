@@ -106,6 +106,7 @@ import com.velocitypowered.proxy.util.collect.CappedSet;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -897,7 +898,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       if (connOrder.isEmpty()) {
         return Optional.empty();
       } else {
-        serversToTry = connOrder;
+        // Velocity start - Advanced Load Balancing
+        // If we have health data, sort the attempt order by health score
+        List<String> sortedOrder = new ArrayList<>(connOrder);
+        sortedOrder.sort((s1, s2) -> {
+          var h1 = server.getHealthTracker().getHealth(s1).orElse(com.velocitypowered.proxy.server.ServerHealthTracker.ServerHealth.unhealthy());
+          var h2 = server.getHealthTracker().getHealth(s2).orElse(com.velocitypowered.proxy.server.ServerHealthTracker.ServerHealth.unhealthy());
+          return Double.compare(h1.getScore(), h2.getScore());
+        });
+        serversToTry = sortedOrder;
+        // Velocity end - Advanced Load Balancing
       }
     }
 

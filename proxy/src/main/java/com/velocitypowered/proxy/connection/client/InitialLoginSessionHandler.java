@@ -58,6 +58,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Handles authenticating the player to Mojang's servers.
@@ -199,6 +200,24 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
       }
 
       byte[] decryptedSharedSecret = decryptRsa(serverKeyPair, packet.getSharedSecret());
+
+      // Velocity start - Global Profile Cache
+      // Check cache before hitting Mojang API
+      Optional<GameProfile> cachedProfile = server.getProfileCache().getProfile(
+          server.getProfileCache().getUuid(login.getUsername()).orElse(null));
+      if (cachedProfile.isPresent()) {
+        try {
+          mcConnection.enableEncryption(decryptedSharedSecret);
+          handleProfile(cachedProfile.get(), null);
+          return true;
+        } catch (GeneralSecurityException e) {
+          logger.error("Unable to enable encryption for connection", e);
+          mcConnection.close(true);
+          return true;
+        }
+      }
+      // Velocity end - Global Profile Cache
+
       String serverId = generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
 
       String playerIp = ((InetSocketAddress) mcConnection.getRemoteAddress()).getHostString();
@@ -244,18 +263,10 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
             if (response.statusCode() == 200) {
               final GameProfile profile = GENERAL_GSON.fromJson(response.body(),
                   GameProfile.class);
-              // Not so fast, now we verify the public key for 1.19.1+
-              if (inbound.getIdentifiedKey() != null
-                  && inbound.getIdentifiedKey().getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
-                  && inbound.getIdentifiedKey() instanceof final IdentifiedKeyImpl key) {
-                if (!key.internalAddHolder(profile.getId())) {
-                  inbound.disconnect(
-                      Component.translatable("multiplayer.disconnect.invalid_public_key"));
-                }
-              }
-              // All went well, initialize the session.
-              mcConnection.setActiveSessionHandler(StateRegistry.LOGIN,
-                  new AuthSessionHandler(server, inbound, profile, true, serverId));
+              // Velocity start - cache profile
+              server.getProfileCache().cacheProfile(profile);
+              // Velocity end
+              handleProfile(profile, serverId);
             } else if (response.statusCode() == 204) {
               // Apparently an offline-mode user logged onto this online-mode proxy.
               inbound.disconnect(
@@ -282,6 +293,22 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
       mcConnection.close(true);
     }
     return true;
+  }
+
+  private void handleProfile(GameProfile profile, @Nullable String serverId) {
+    // Not so fast, now we verify the public key for 1.19.1+
+    if (inbound.getIdentifiedKey() != null
+        && inbound.getIdentifiedKey().getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
+        && inbound.getIdentifiedKey() instanceof final IdentifiedKeyImpl key) {
+      if (!key.internalAddHolder(profile.getId())) {
+        inbound.disconnect(
+            Component.translatable("multiplayer.disconnect.invalid_public_key"));
+        return;
+      }
+    }
+    // All went well, initialize the session.
+    mcConnection.setActiveSessionHandler(StateRegistry.LOGIN,
+        new AuthSessionHandler(server, inbound, profile, true, serverId));
   }
 
   private EncryptionRequestPacket generateEncryptionRequest() {

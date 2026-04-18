@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.protocol.netty;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.proxy.network.limiter.AdvancedPacketLimiter;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
@@ -27,6 +28,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.CorruptedFrameException;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Decodes Minecraft packets.
@@ -41,6 +43,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
   private final ProtocolUtils.Direction direction;
   private StateRegistry state;
   private StateRegistry.PacketRegistry.ProtocolRegistry registry;
+  private @Nullable AdvancedPacketLimiter advancedPacketLimiter;
 
   /**
    * Creates a new {@code MinecraftDecoder} decoding packets from the specified {@code direction}.
@@ -52,6 +55,9 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
     this.registry = StateRegistry.HANDSHAKE.getProtocolRegistry(
         direction, ProtocolVersion.MINIMUM_VERSION);
     this.state = StateRegistry.HANDSHAKE;
+    if (direction == ProtocolUtils.Direction.SERVERBOUND) {
+      this.advancedPacketLimiter = new com.velocitypowered.proxy.network.limiter.AdvancedPacketLimiter(1_000_000_000L);
+    }
   }
 
   @Override
@@ -93,6 +99,12 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
       if (buf.isReadable()) {
         throw handleOverflow(packet, buf.readerIndex(), buf.writerIndex());
       }
+
+      if (this.advancedPacketLimiter != null && !this.advancedPacketLimiter.account(packet)) {
+        throw new com.velocitypowered.proxy.util.except.QuietDecoderException(
+            "Packet rate limit exceeded for " + packet.getClass().getSimpleName());
+      }
+
       ctx.fireChannelRead(packet);
     }
   }

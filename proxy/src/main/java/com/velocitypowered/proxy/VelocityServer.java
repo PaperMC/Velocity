@@ -158,6 +158,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   private @MonotonicNonNull VelocityConfiguration configuration;
   private @MonotonicNonNull KeyPair serverKeyPair;
   private final ServerMap servers;
+  private final com.velocitypowered.proxy.server.ServerHealthTracker healthTracker;
+  private final com.velocitypowered.proxy.util.GlobalProfileCache profileCache = new com.velocitypowered.proxy.util.GlobalProfileCache();
   private final VelocityCommandManager commandManager;
   private final AtomicBoolean shutdownInProgress = new AtomicBoolean(false);
   private boolean shutdown = false;
@@ -182,6 +184,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     console = new VelocityConsole(this);
     cm = new ConnectionManager(this);
     servers = new ServerMap(this);
+    healthTracker = new com.velocitypowered.proxy.server.ServerHealthTracker(this);
     serverListPingHandler = new ServerListPingHandler(this);
     this.options = options;
   }
@@ -320,6 +323,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     } else {
       this.cm.bind(configuration.getBind());
     }
+
+    healthTracker.start();
 
     final Boolean haproxy = this.options.isHaproxy();
     if (haproxy != null) {
@@ -818,6 +823,14 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   @Override
   public PluginManager getPluginManager() {
     return pluginManager;
+  }
+
+  public com.velocitypowered.proxy.server.ServerHealthTracker getHealthTracker() {
+    return healthTracker;
+  }
+
+  public com.velocitypowered.proxy.util.GlobalProfileCache getProfileCache() {
+    return profileCache;
   }
 
   @Override
