@@ -61,19 +61,16 @@ public final class ServerHealthTracker {
   }
 
   private ServerHealth parseHealth(ServerPing ping) {
-    // In a real scenario, we could extract MSPT from the MOTD or a custom packet.
-    // For this example, we'll use player count and a hypothetical "performance" field if it exists.
     int players = ping.getPlayers().map(ServerPing.Players::getOnline).orElse(0);
     int maxPlayers = ping.getPlayers().map(ServerPing.Players::getMax).orElse(1);
     double load = (double) players / maxPlayers;
-    
-    // Hypothetical MSPT extraction (often sent in MOTD by performance-oriented servers)
-    double mspt = 20.0; // Default healthy
-    Optional<String> motd = ping.getDescriptionComponent().children().stream()
-        .map(c -> c.toString()) // Simplified for this example
-        .filter(s -> s.contains("MSPT:"))
-        .findFirst();
-    
+
+    // Default to healthy (20.0 MSPT).
+    // Note: In a production environment, this should be replaced with a more robust
+    // telemetry system, such as reading from a dedicated health endpoint or using
+    // custom plugin messaging to sync MSPT data from backend servers.
+    double mspt = 20.0;
+
     return new ServerHealth(true, load, mspt);
   }
 
