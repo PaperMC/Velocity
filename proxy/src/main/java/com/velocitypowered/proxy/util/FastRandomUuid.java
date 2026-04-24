@@ -21,12 +21,14 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * A utility class for generating random UUIDs without the overhead of secure random generation.
- * Not official UUID v4 version, but should be sufficient for most use cases.
+ * Generates valid random UUID v4 values using {@link ThreadLocalRandom} instead of
+ * {@link java.security.SecureRandom}, avoiding contention on the shared secure random instance.
  */
 public class FastRandomUuid {
   public static UUID generate() {
     ThreadLocalRandom random = ThreadLocalRandom.current();
-    return new UUID(random.nextLong(), random.nextLong());
+    long msb = (random.nextLong() & 0xffffffffffff0fffL) | 0x0000000000004000L; // version 4
+    long lsb = (random.nextLong() & 0x3fffffffffffffffL) | 0x8000000000000000L; // IETF variant
+    return new UUID(msb, lsb);
   }
 }
