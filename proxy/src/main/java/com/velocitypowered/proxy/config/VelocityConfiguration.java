@@ -257,7 +257,7 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   public InetSocketAddress getBind() {
-    return AddressUtil.parseAndResolveAddress(bind);
+    return (InetSocketAddress) AddressUtil.parseAndResolveAddress(bind);
   }
 
   @Override

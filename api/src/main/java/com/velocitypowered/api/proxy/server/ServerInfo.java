@@ -9,6 +9,7 @@ package com.velocitypowered.api.proxy.server;
 
 import com.google.common.base.Preconditions;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -19,7 +20,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public final class ServerInfo implements Comparable<ServerInfo> {
 
   private final String name;
-  private final InetSocketAddress address;
+  private final SocketAddress address;
 
   /**
    * Creates a new ServerInfo object.
@@ -32,11 +33,44 @@ public final class ServerInfo implements Comparable<ServerInfo> {
     this.address = Preconditions.checkNotNull(address, "address");
   }
 
+  /**
+   * Creates a new ServerInfo object.
+   *
+   * @param name the name for the server
+   * @param address the address of the server to connect to
+   */
+  public ServerInfo(String name, SocketAddress address) {
+    this.name = Preconditions.checkNotNull(name, "name");
+    this.address = Preconditions.checkNotNull(address, "address");
+  }
+
   public final String getName() {
     return name;
   }
 
+  /**
+   * Returns the address of this server as an {@link InetSocketAddress}.
+   *
+   * @return the address
+   * @deprecated Use {@link #getSocketAddress()} instead, which supports both TCP and Unix socket
+   *     addresses.
+   */
+  @Deprecated
   public final InetSocketAddress getAddress() {
+    if (address instanceof InetSocketAddress inet) {
+      return inet;
+    }
+    throw new UnsupportedOperationException(
+        "This server is not configured with an InetSocketAddress. Use getSocketAddress() instead.");
+  }
+
+  /**
+   * Returns the address of this server as a {@link SocketAddress}. This may be an
+   * {@link InetSocketAddress} for TCP connections or a Unix domain socket address.
+   *
+   * @return the address
+   */
+  public final SocketAddress getSocketAddress() {
     return address;
   }
 

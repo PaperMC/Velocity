@@ -39,6 +39,7 @@ import io.netty.channel.unix.UnixChannelOption;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import io.netty.util.concurrent.MultithreadEventExecutorGroup;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.http.HttpClient;
 import java.util.Collection;
 import java.util.Map;
@@ -184,14 +185,15 @@ public final class ConnectionManager {
   }
 
   /**
-   * Creates a TCP {@link Bootstrap} using Velocity's event loops.
+   * Creates a {@link Bootstrap} using Velocity's event loops.
    *
    * @param group the event loop group to use. Use {@code null} for the default worker group.
+   * @param target the address the client will connect to
    * @return a new {@link Bootstrap}
    */
-  public Bootstrap createWorker(@Nullable EventLoopGroup group) {
+  public Bootstrap createWorker(@Nullable EventLoopGroup group, SocketAddress target) {
     Bootstrap bootstrap = new Bootstrap()
-        .channelFactory(this.transportType.socketChannelFactory)
+        .channelFactory(this.transportType.getClientChannelFactory(target))
         .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
             this.server.getConfiguration().getConnectTimeout())

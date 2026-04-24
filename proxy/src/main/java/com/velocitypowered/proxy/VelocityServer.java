@@ -78,6 +78,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.http.HttpClient;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -455,8 +456,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     logger.info("Loaded {} plugins", pluginManager.getPlugins().size());
   }
 
-  public Bootstrap createBootstrap(@Nullable EventLoopGroup group) {
-    return this.cm.createWorker(group);
+  public Bootstrap createBootstrap(@Nullable EventLoopGroup group, SocketAddress target) {
+    return this.cm.createWorker(group, target);
   }
 
   public ChannelInitializer<Channel> getBackendChannelInitializer() {
