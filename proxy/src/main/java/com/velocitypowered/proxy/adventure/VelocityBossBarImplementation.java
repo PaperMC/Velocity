@@ -21,7 +21,6 @@ import com.google.common.collect.MapMaker;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
-import com.velocitypowered.proxy.util.FastRandomUuid;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
@@ -37,7 +36,7 @@ public final class VelocityBossBarImplementation implements BossBar.Listener,
     BossBarImplementation {
   private final Set<ConnectedPlayer> viewers = Collections.newSetFromMap(
       new MapMaker().weakKeys().makeMap());
-  private final UUID id = FastRandomUuid.generate();
+  private final UUID id = UUID.randomUUID();
   private final BossBar bar;
 
   public static VelocityBossBarImplementation get(final BossBar bar) {
