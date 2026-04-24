@@ -26,6 +26,7 @@ import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItemPacket;
 import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItemPacket.Item;
+import com.velocitypowered.proxy.util.FastRandomUuid;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -95,7 +96,7 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
             entry.setLatencyInternal(item.getLatency());
           }
         } else {
-          UUID uuid = UUID.randomUUID(); // Use a fake uuid to preserve function of custom entries
+          UUID uuid = FastRandomUuid.generate(); // Use a fake uuid to preserve function of custom entries
           nameMapping.put(item.getName(), uuid);
           entries.put(uuid, (KeyedVelocityTabListEntry) TabListEntry.builder()
               .tabList(this)
