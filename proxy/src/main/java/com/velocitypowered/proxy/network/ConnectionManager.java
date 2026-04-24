@@ -35,6 +35,7 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
+import io.netty.channel.unix.DomainSocketAddress;
 import io.netty.channel.unix.UnixChannelOption;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import io.netty.util.concurrent.MultithreadEventExecutorGroup;
@@ -194,13 +195,15 @@ public final class ConnectionManager {
   public Bootstrap createWorker(@Nullable EventLoopGroup group, SocketAddress target) {
     Bootstrap bootstrap = new Bootstrap()
         .channelFactory(this.transportType.getClientChannelFactory(target))
-        .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
             this.server.getConfiguration().getConnectTimeout())
         .group(group == null ? this.workerGroup : group)
         .resolver(this.resolver.asGroup());
-    if (server.getConfiguration().useTcpFastOpen()) {
-      bootstrap.option(ChannelOption.TCP_FASTOPEN_CONNECT, true);
+    if (!(target instanceof DomainSocketAddress)) {
+      bootstrap.option(ChannelOption.TCP_NODELAY, true);
+      if (server.getConfiguration().useTcpFastOpen()) {
+        bootstrap.option(ChannelOption.TCP_FASTOPEN_CONNECT, true);
+      }
     }
     return bootstrap;
   }
