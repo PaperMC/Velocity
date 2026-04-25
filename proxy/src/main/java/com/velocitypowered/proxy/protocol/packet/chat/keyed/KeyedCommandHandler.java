@@ -43,6 +43,15 @@ public class KeyedCommandHandler extends RateLimitedCommandHandler<KeyedPlayerCo
   }
 
   @Override
+  protected void forwardRateLimited(KeyedPlayerCommandPacket packet) {
+    player.getChatQueue().queuePacket(
+        newLastSeenMessages -> CompletableFuture.completedFuture(packet),
+        packet.getTimestamp(),
+        null
+    );
+  }
+
+  @Override
   public void handlePlayerCommandInternal(KeyedPlayerCommandPacket packet) {
     queueCommandResult(this.server, this.player, (event, newLastSeenMessages) -> {
       CommandExecuteEvent.CommandResult result = event.getResult();

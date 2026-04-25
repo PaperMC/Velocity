@@ -43,7 +43,12 @@ public abstract class RateLimitedCommandHandler<T extends MinecraftPacket> imple
                 }
 
                 if (velocityServer.getConfiguration().isForwardCommandsIfRateLimited()) {
-                    return false; // Send the packet to the server
+                    // Route through the chat queue rather than letting the dispatcher write the
+                    // packet directly: a direct write would race ahead of any queued earlier
+                    // commands whose plugin events are still pending, causing the backend to see
+                    // out-of-order timestamps and kick the player for "out-of-order chat".
+                    forwardRateLimited(packetClass().cast(packet));
+                    return true;
                 }
             } else {
                 failedAttempts = 0;
@@ -55,4 +60,6 @@ public abstract class RateLimitedCommandHandler<T extends MinecraftPacket> imple
 
         return false;
     }
+
+    protected abstract void forwardRateLimited(T packet);
 }

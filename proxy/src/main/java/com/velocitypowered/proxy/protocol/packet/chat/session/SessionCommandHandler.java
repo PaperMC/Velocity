@@ -99,6 +99,16 @@ public class SessionCommandHandler extends RateLimitedCommandHandler<SessionPlay
   }
 
   @Override
+  protected void forwardRateLimited(SessionPlayerCommandPacket packet) {
+    player.getChatQueue().queuePacket(
+        newLastSeenMessages -> CompletableFuture.completedFuture(
+            packet.withLastSeenMessages(newLastSeenMessages)),
+        packet.timeStamp,
+        packet.lastSeenMessages
+    );
+  }
+
+  @Override
   public void handlePlayerCommandInternal(SessionPlayerCommandPacket packet) {
     queueCommandResult(this.server, this.player, (event, newLastSeenMessages) -> {
       SessionPlayerCommandPacket fixedPacket = packet.withLastSeenMessages(newLastSeenMessages);
