@@ -19,6 +19,8 @@ package com.velocitypowered.proxy.connection.forge.modern;
 
 import static com.velocitypowered.proxy.connection.forge.modern.ModernForgeConstants.MODERN_FORGE_TOKEN;
 
+import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.client.ClientConnectionPhases;
 import com.velocitypowered.proxy.connection.util.ConnectionTypeImpl;
@@ -47,19 +49,33 @@ public class ModernForgeConnectionType extends ConnectionTypeImpl {
    * @return returns the final correct hostname
    */
   public String getModernToken() {
-    int natVersion = 0;
+    int netVersion = 0;
     int idx = hostName.indexOf('\0');
     if (idx != -1) {
       for (var pt : hostName.split("\0")) {
         if (pt.startsWith(MODERN_FORGE_TOKEN)) {
           if (pt.length() > MODERN_FORGE_TOKEN.length()) {
-            natVersion = Integer.parseInt(
+            netVersion = Integer.parseInt(
                     pt.substring(MODERN_FORGE_TOKEN.length()));
           }
         }
       }
     }
-    return natVersion == 0 ? "\0" + MODERN_FORGE_TOKEN : "\0"
-            + MODERN_FORGE_TOKEN + natVersion;
+    return netVersion == 0 ? "\0" + MODERN_FORGE_TOKEN : "\0"
+            + MODERN_FORGE_TOKEN + netVersion;
+  }
+
+  @Override
+  public GameProfile addGameProfileTokensIfRequired(GameProfile original,
+      PlayerInfoForwarding forwardingType) {
+    // We can't forward the FORGE token to the server when we are running in legacy (or bungeeguard) forwarding mode,
+    // since both use the "hostname" field in the handshake. We add a special property to the
+    // profile instead, which will be ignored by non-Forge servers and can be intercepted by a
+    // Forge coremod, such as ProxyCompatibleForge.
+    if (forwardingType == PlayerInfoForwarding.LEGACY || forwardingType == PlayerInfoForwarding.BUNGEEGUARD) {
+      return original.addProperty(new GameProfile.Property("forgeClient", this.getModernToken(), ""));
+    }
+
+    return original;
   }
 }
