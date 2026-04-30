@@ -17,9 +17,20 @@
 
 package com.velocitypowered.proxy.connection.forge.modern;
 
+import com.velocitypowered.api.util.GameProfile;
+import java.util.function.Function;
+
 /**
  * Constants for use with Modern Forge systems.
  */
 public class ModernForgeConstants {
   public static final String MODERN_FORGE_TOKEN = "FORGE";
+  public static final String FORGE_CLIENT = "forgeClient";
+  public static final String EXTRA_DATA = "extraData";
+
+  public static final GameProfile.Property IS_FORGE_CLIENT_PROPERTY =
+          new GameProfile.Property(FORGE_CLIENT, "true", "");
+
+  public static final Function<String, GameProfile.Property> EXTRA_DATA_PROPERTY =
+          (data) -> new GameProfile.Property(EXTRA_DATA, data, "");
 }
