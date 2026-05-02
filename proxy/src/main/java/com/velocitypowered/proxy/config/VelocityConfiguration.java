@@ -454,6 +454,10 @@ public class VelocityConfiguration implements ProxyConfig {
     return packetLimiterConfig;
   }
 
+  public boolean isModernForwardingAllowLegacyConnections() {
+    return advanced.isModernForwardingAllowLegacyConnections();
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -786,6 +790,8 @@ public class VelocityConfiguration implements ProxyConfig {
     private int tabCompleteRateLimit = 50;
     @Expose
     private int kickAfterRateLimitedTabCompletes = 10;
+    @Expose
+    private boolean modernForwardingAllowLegacyConnections = false;
 
     private Advanced() {
     }
@@ -817,6 +823,7 @@ public class VelocityConfiguration implements ProxyConfig {
         this.kickAfterRateLimitedCommands = config.getIntOrElse("kick-after-rate-limited-commands", 0);
         this.tabCompleteRateLimit = config.getIntOrElse("tab-complete-rate-limit", 10); // very lenient
         this.kickAfterRateLimitedTabCompletes = config.getIntOrElse("kick-after-rate-limited-tab-completes", 0);
+        this.modernForwardingAllowLegacyConnections = config.getOrElse("modern-forwarding-allow-legacy-connections", false);
       }
     }
 
@@ -902,6 +909,10 @@ public class VelocityConfiguration implements ProxyConfig {
 
     public int getKickAfterRateLimitedTabCompletes() {
       return kickAfterRateLimitedTabCompletes;
+    }
+
+    public boolean isModernForwardingAllowLegacyConnections() {
+      return modernForwardingAllowLegacyConnections;
     }
 
     @Override

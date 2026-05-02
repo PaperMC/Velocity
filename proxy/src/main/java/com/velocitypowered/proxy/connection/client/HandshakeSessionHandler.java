@@ -148,7 +148,8 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     // If the proxy is configured for modern forwarding, we must deny connections from 1.12.2
     // and lower, otherwise IP information will never get forwarded.
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
-        && handshake.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_13)) {
+        && handshake.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_13)
+        && !server.getConfiguration().isModernForwardingAllowLegacyConnections()) {
       // Bump connection into correct protocol state so that we can send the disconnect packet.
       connection.setState(StateRegistry.LOGIN);
       ic.disconnectQuietly(
