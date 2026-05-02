@@ -28,7 +28,7 @@ import com.velocitypowered.proxy.connection.client.ClientConnectionPhases;
 import com.velocitypowered.proxy.connection.util.ConnectionTypeImpl;
 
 /**
- * Contains extra logic.
+ * Contains extra logic to handle Forge 1.20.2+ clients.
  */
 public class ModernForgeConnectionType extends ConnectionTypeImpl {
 
@@ -48,7 +48,7 @@ public class ModernForgeConnectionType extends ConnectionTypeImpl {
   /**
    * Align the acquisition logic with the internal code of Forge.
    *
-   * @return returns the final correct hostname
+   * @return returns the modern Forge token with the Net Version.
    */
   public String getModernToken() {
     int netVersion = 0;
@@ -59,12 +59,12 @@ public class ModernForgeConnectionType extends ConnectionTypeImpl {
           if (pt.length() > MODERN_FORGE_TOKEN.length()) {
             netVersion = Integer.parseInt(
                     pt.substring(MODERN_FORGE_TOKEN.length()));
+            break;
           }
         }
       }
     }
-    return netVersion == 0 ? "\0" + MODERN_FORGE_TOKEN : "\0"
-            + MODERN_FORGE_TOKEN + netVersion;
+    return MODERN_FORGE_TOKEN + (netVersion == 0 ? "" : netVersion);
   }
 
   @Override
