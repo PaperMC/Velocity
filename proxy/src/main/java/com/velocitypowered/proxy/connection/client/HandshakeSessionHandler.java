@@ -56,6 +56,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * handshake packet is received.
  */
 public class HandshakeSessionHandler implements MinecraftSessionHandler {
+  private static final boolean MODERN_FORWARDING_ALLOW_LEGACY_CONNECTIONS =
+      Boolean.getBoolean("velocity.modern-forwarding-allow-legacy-connections");
 
   private static final Logger LOGGER = LogManager.getLogger(HandshakeSessionHandler.class);
 
@@ -149,7 +151,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     // and lower, otherwise IP information will never get forwarded.
     if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.MODERN
         && handshake.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_13)
-        && !server.getConfiguration().isModernForwardingAllowLegacyConnections()) {
+        && !MODERN_FORWARDING_ALLOW_LEGACY_CONNECTIONS) {
       // Bump connection into correct protocol state so that we can send the disconnect packet.
       connection.setState(StateRegistry.LOGIN);
       ic.disconnectQuietly(

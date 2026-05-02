@@ -182,10 +182,6 @@ tab-complete-rate-limit = 10
 # Setting this to 0 or lower will disable this feature.
 kick-after-rate-limited-tab-completes = 0
 
-# Whether to allow legacy connections (Minecraft 1.7.2 - 1.12.2)
-# when the player-info-forwarding-mode is set to "modern".
-modern-forwarding-allow-legacy-connections = false
-
 [query]
 # Whether to enable responding to GameSpy 4 query responses or not.
 enabled = false
