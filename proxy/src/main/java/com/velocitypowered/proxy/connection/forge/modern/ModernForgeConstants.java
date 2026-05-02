@@ -25,12 +25,12 @@ import java.util.function.Function;
  */
 public class ModernForgeConstants {
   public static final String MODERN_FORGE_TOKEN = "FORGE";
-  public static final String FORGE_CLIENT = "forgeClient";
+  public static final String MODERN_FORGE_CLIENT = "modernForgeClient";
   public static final String EXTRA_DATA = "extraData";
 
-  public static final GameProfile.Property IS_FORGE_CLIENT_PROPERTY =
-          new GameProfile.Property(FORGE_CLIENT, "true", "");
+  public static final GameProfile.Property IS_MODERN_FORGE_CLIENT_PROPERTY =
+          new GameProfile.Property(MODERN_FORGE_CLIENT, "true", "");
 
   public static final Function<String, GameProfile.Property> EXTRA_DATA_PROPERTY =
-          (data) -> new GameProfile.Property(EXTRA_DATA, data, "");
+          (extraData) -> new GameProfile.Property(EXTRA_DATA, extraData, "");
 }

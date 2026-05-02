@@ -18,7 +18,7 @@
 package com.velocitypowered.proxy.connection.forge.modern;
 
 import static com.velocitypowered.proxy.connection.forge.modern.ModernForgeConstants.EXTRA_DATA_PROPERTY;
-import static com.velocitypowered.proxy.connection.forge.modern.ModernForgeConstants.IS_FORGE_CLIENT_PROPERTY;
+import static com.velocitypowered.proxy.connection.forge.modern.ModernForgeConstants.IS_MODERN_FORGE_CLIENT_PROPERTY;
 import static com.velocitypowered.proxy.connection.forge.modern.ModernForgeConstants.MODERN_FORGE_TOKEN;
 
 import com.velocitypowered.api.util.GameProfile;
@@ -75,13 +75,9 @@ public class ModernForgeConnectionType extends ConnectionTypeImpl {
     // profile instead, which will be ignored by non-Forge servers and can be intercepted by a
     // Forge coremod, such as SpongeForge, BungeeForge, or ProxyCompatibleForge.
     if (forwardingType == PlayerInfoForwarding.LEGACY || forwardingType == PlayerInfoForwarding.BUNGEEGUARD) {
-      final String[] split = hostName.split("\0", 2);
-      if (split.length < 2) { // This shouldn't occur; just a sanity check
-        return original.addProperty(IS_FORGE_CLIENT_PROPERTY);
-      }
-      final String extraData = "\1" + split[1].replaceAll("\0", "\1");
-      return original.addProperty(IS_FORGE_CLIENT_PROPERTY)
-              .addProperty(EXTRA_DATA_PROPERTY.apply(extraData));
+      return original.addProperty(IS_MODERN_FORGE_CLIENT_PROPERTY)
+              .addProperty(EXTRA_DATA_PROPERTY.apply(
+                      this.getModernToken().replaceAll("\0", "\1")));
     }
 
     return original;
