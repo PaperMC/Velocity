@@ -80,7 +80,7 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
     int configuredPacketsPerSecond = packetLimiterConfig.pps();
     int configuredBytes = packetLimiterConfig.bytes();
 
-    if (configuredInterval > 0 && (configuredBytes > 0 ||  configuredPacketsPerSecond > 0)) {
+    if (configuredInterval > 0 && (configuredBytes > 0 || configuredPacketsPerSecond > 0)) {
       ch.pipeline().get(MinecraftVarintFrameDecoder.class).setPacketLimiter(
           new SimpleBytesPerSecondLimiter(configuredPacketsPerSecond, configuredBytes, configuredInterval)
       );

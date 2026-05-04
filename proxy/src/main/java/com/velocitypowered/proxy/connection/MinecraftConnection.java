@@ -38,7 +38,9 @@ import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.connection.client.InitialLoginSessionHandler;
 import com.velocitypowered.proxy.connection.client.StatusSessionHandler;
 import com.velocitypowered.proxy.network.Connections;
+import com.velocitypowered.proxy.network.limiter.SimpleBytesPerSecondLimiter;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.VelocityConnectionEvent;
 import com.velocitypowered.proxy.protocol.netty.MinecraftCipherDecoder;
@@ -570,6 +572,14 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         channel.pipeline().remove(FRAME_ENCODER);
         channel.pipeline().addBefore(MINECRAFT_DECODER, COMPRESSION_DECODER, decoder);
         channel.pipeline().addBefore(MINECRAFT_ENCODER, COMPRESSION_ENCODER, encoder);
+
+        var packetLimiterConfig = server.getConfiguration().getPacketLimiterConfig();
+        if (minecraftDecoder.getDirection() == ProtocolUtils.Direction.SERVERBOUND
+            && packetLimiterConfig.interval() > 0
+            && packetLimiterConfig.bytesAfterDecompression() > 0) {
+          decoder.setPacketLimiter(new SimpleBytesPerSecondLimiter(
+              -1, packetLimiterConfig.bytesAfterDecompression(), packetLimiterConfig.interval()));
+        }
 
         channel.pipeline().fireUserEventTriggered(VelocityConnectionEvent.COMPRESSION_ENABLED);
       }

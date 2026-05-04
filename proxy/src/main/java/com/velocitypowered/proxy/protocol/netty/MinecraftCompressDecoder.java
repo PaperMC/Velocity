@@ -22,11 +22,14 @@ import static com.velocitypowered.natives.util.MoreByteBufUtils.preferredBuffer;
 import static com.velocitypowered.proxy.protocol.util.NettyPreconditions.checkFrame;
 
 import com.velocitypowered.natives.compression.VelocityCompressor;
+import com.velocitypowered.proxy.network.limiter.PacketLimiter;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Decompresses a Minecraft packet.
@@ -49,6 +52,8 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
 
   private int threshold;
   private final VelocityCompressor compressor;
+  @Nullable
+  private PacketLimiter packetLimiter;
 
   /**
    * Creates a new {@code MinecraftCompressDecoder} with the specified compression {@code threshold}.
@@ -73,6 +78,10 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
             + " threshold %s", actualUncompressedSize, threshold);
       }
       // This message is not compressed.
+      if (packetLimiter != null && !packetLimiter.account(in.readableBytes())) {
+        throw new QuietDecoderException("Rate limit exceeded while processing packets for %s"
+            .formatted(ctx.channel().remoteAddress()));
+      }
       out.add(in.retain());
       return;
     }
@@ -99,6 +108,10 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
       compressor.inflate(compatibleIn, uncompressed, claimedUncompressedSize);
       checkFrame(uncompressed.writerIndex() == claimedUncompressedSize,
               "Decompressed size %s does not match claimed uncompressed size %s", uncompressed.writerIndex(), claimedUncompressedSize);
+      if (packetLimiter != null && !packetLimiter.account(claimedUncompressedSize)) {
+        throw new QuietDecoderException("Rate limit exceeded while processing packets for %s"
+            .formatted(ctx.channel().remoteAddress()));
+      }
       out.add(uncompressed);
     } catch (Exception e) {
       uncompressed.release();
@@ -115,5 +128,9 @@ public class MinecraftCompressDecoder extends MessageToMessageDecoder<ByteBuf> {
 
   public void setThreshold(int threshold) {
     this.threshold = threshold;
+  }
+
+  public void setPacketLimiter(@Nullable PacketLimiter packetLimiter) {
+    this.packetLimiter = packetLimiter;
   }
 }
