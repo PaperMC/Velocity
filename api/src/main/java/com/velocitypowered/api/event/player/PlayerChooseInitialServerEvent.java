@@ -48,8 +48,8 @@ public class PlayerChooseInitialServerEvent implements ResultedEvent<PlayerChoos
   }
 
   public Optional<RegisteredServer> getInitialServer() {
-    if (result instanceof Allowed(RegisteredServer initialServer)) {
-      return Optional.ofNullable(initialServer);
+    if (result instanceof Allowed allowed) {
+      return Optional.ofNullable(allowed.initialServer());
     }
     return Optional.empty();
   }

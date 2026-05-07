@@ -263,14 +263,14 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
 
     return server.getEventManager().fire(event).thenRunAsync(() -> {
       final PlayerChooseInitialServerEvent.Result result = event.getResult();
-      if (event.getResult() instanceof PlayerChooseInitialServerEvent.Denied(Component reason)) {
-        player.disconnect0(Objects.requireNonNullElse(reason,
+      if (event.getResult() instanceof PlayerChooseInitialServerEvent.Denied denied) {
+        player.disconnect0(Objects.requireNonNullElse(denied.reason(),
           Component.translatable("velocity.error.no-available-servers", NamedTextColor.RED)),
           true);
         //noinspection UnnecessaryReturnStatement
         return;
-      } else if (result instanceof PlayerChooseInitialServerEvent.Allowed(RegisteredServer initialServer)) {
-        player.createConnectionRequest(initialServer).fireAndForget();
+      } else if (result instanceof PlayerChooseInitialServerEvent.Allowed allowed) {
+        player.createConnectionRequest(allowed.initialServer()).fireAndForget();
       }
     }, mcConnection.eventLoop());
   }
