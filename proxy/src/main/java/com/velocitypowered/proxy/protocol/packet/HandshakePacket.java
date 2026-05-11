@@ -17,8 +17,6 @@
 
 package com.velocitypowered.proxy.protocol.packet;
 
-import static com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants.HANDSHAKE_HOSTNAME_TOKEN;
-
 import com.velocitypowered.api.network.HandshakeIntent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -29,9 +27,6 @@ import io.netty.buffer.ByteBuf;
 
 public class HandshakePacket implements MinecraftPacket {
 
-  // This size was chosen to ensure Forge clients can still connect even with very long hostnames.
-  // While DNS technically allows any character to be used, in practice ASCII is used.
-  private static final int MAXIMUM_HOSTNAME_LENGTH = 255 + HANDSHAKE_HOSTNAME_TOKEN.length() + 1;
   private ProtocolVersion protocolVersion;
   private String serverAddress = "";
   private int port;
@@ -89,7 +84,7 @@ public class HandshakePacket implements MinecraftPacket {
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion ignored) {
     int realProtocolVersion = ProtocolUtils.readVarInt(buf);
     this.protocolVersion = ProtocolVersion.getProtocolVersion(realProtocolVersion);
-    this.serverAddress = ProtocolUtils.readString(buf, MAXIMUM_HOSTNAME_LENGTH);
+    this.serverAddress = ProtocolUtils.readString(buf, Short.MAX_VALUE);
     this.port = buf.readUnsignedShort();
     this.nextStatus = ProtocolUtils.readVarInt(buf);
     this.intent = HandshakeIntent.getById(nextStatus);
@@ -117,7 +112,7 @@ public class HandshakePacket implements MinecraftPacket {
   @Override
   public int decodeExpectedMaxLength(ByteBuf buf, ProtocolUtils.Direction direction,
                                ProtocolVersion version) {
-    return 9 + (MAXIMUM_HOSTNAME_LENGTH * 3);
+    return 9 + (Short.MAX_VALUE * 3);
   }
 
   @Override
