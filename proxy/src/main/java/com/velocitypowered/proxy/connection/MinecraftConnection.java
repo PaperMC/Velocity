@@ -33,7 +33,6 @@ import com.velocitypowered.natives.encryption.VelocityCipher;
 import com.velocitypowered.natives.encryption.VelocityCipherFactory;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.connection.client.InitialLoginSessionHandler;
 import com.velocitypowered.proxy.connection.client.StatusSessionHandler;
@@ -369,7 +368,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   public void setState(StateRegistry state) {
     ensureInEventLoop();
 
-    final StateRegistry previousState = this.state;
     this.state = state;
     final MinecraftVarintFrameDecoder frameDecoder = this.channel.pipeline()
         .get(MinecraftVarintFrameDecoder.class);
@@ -390,13 +388,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     if (state == StateRegistry.CONFIG) {
       // Activate the play packet queue
-      if (previousState == StateRegistry.PLAY
-          && this.pendingConfigurationSwitch
-          && this.association instanceof ConnectedPlayer) {
-        addPlayPacketQueueOutboundHandler();
-      } else {
-        addPlayPacketQueueHandler();
-      }
+      addPlayPacketQueueHandler();
     } else {
       // Remove the queue
       if (this.channel.pipeline().get(Connections.PLAY_PACKET_QUEUE_OUTBOUND) != null) {
