@@ -26,7 +26,7 @@ import org.apache.logging.log4j.Logger;
  * Configuration migration for the new [packet-limiter] section.
  * Config version 2.7 may contain this section with only the `interval`, `packets-per-second`
  * and `bytes-per-second` attributes. Config version 2.8 enforces these exist, adds the new
- * `decompressed-bytes-per-second` attribute, and adds comments.
+ * `decompressed-bytes-per-second` attribute, adjusts the new default, and adds comments.
  */
 public final class PacketLimiterMigration implements ConfigurationMigration {
 
@@ -37,35 +37,10 @@ public final class PacketLimiterMigration implements ConfigurationMigration {
 
   @Override
   public void migrate(CommentedFileConfig config, Logger logger) {
-    // Check whether the first three config attributes are present before setting them.
-    // The packet-limiter section was added before this migration was written, so
-    // freshly generated configs may exist with version 2.7 (which we would migrate) that
-    // do contain a configured packet-limiter. Version 2.8 adds decompressed-bytes-per-second
-    // and switches the defaults to only use this by default.
-    boolean previouslyConfigured = false;
-    if (config.get("packet-limiter.interval") == null) {
-      config.set("packet-limiter.interval", DEFAULT.interval());
-    } else {
-      previouslyConfigured = true;
-    }
-
-    if (config.get("packet-limiter.packets-per-second") == null) {
-      config.set("packet-limiter.packets-per-second", DEFAULT.pps());
-    } else {
-      previouslyConfigured = true;
-    }
-
-    if (config.get("packet-limiter.bytes-per-second") == null) {
-      config.set("packet-limiter.bytes-per-second", DEFAULT.bytes());
-    } else {
-      previouslyConfigured = true;
-    }
-
-    // Only enable decompressed-bytes-per-second if the packet limiter was not configured previously.
-    config.set("packet-limiter.decompressed-bytes-per-second",
-        previouslyConfigured
-            ? -1
-            : DEFAULT.bytesAfterDecompression());
+    config.set("packet-limiter.interval", DEFAULT.interval());
+    config.set("packet-limiter.packets-per-second", DEFAULT.pps());
+    config.set("packet-limiter.bytes-per-second", DEFAULT.bytes());
+    config.set("packet-limiter.decompressed-bytes-per-second", DEFAULT.bytesAfterDecompression());
 
     config.setComment("packet-limiter.interval", """
         Size of the moving time window in seconds used to calculate average rates.
