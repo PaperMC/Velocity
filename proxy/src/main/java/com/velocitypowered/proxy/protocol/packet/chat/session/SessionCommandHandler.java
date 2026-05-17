@@ -100,6 +100,8 @@ public class SessionCommandHandler extends RateLimitedCommandHandler<SessionPlay
 
   @Override
   protected void forwardRateLimited(SessionPlayerCommandPacket packet) {
+    // Forwarded without firing CommandExecuteEvent: rate-limited commands are shed,
+    // so plugins do not see or get to cancel them - same as the prior direct-write path.
     player.getChatQueue().queuePacket(
         newLastSeenMessages -> CompletableFuture.completedFuture(
             packet.withLastSeenMessages(newLastSeenMessages)),
