@@ -349,7 +349,8 @@ public enum StateRegistry {
           ServerboundPlayerLoadedPacket.class,
           () -> ServerboundPlayerLoadedPacket.INSTANCE,
           map(0x2A, MINECRAFT_1_21_4, false),
-          map(0x2B, MINECRAFT_1_21_6, false));
+          map(0x2B, MINECRAFT_1_21_6, false),
+          map(0x2C, MINECRAFT_26_1, false));
       serverbound.register(
           PluginMessagePacket.class,
           PluginMessagePacket::new,
