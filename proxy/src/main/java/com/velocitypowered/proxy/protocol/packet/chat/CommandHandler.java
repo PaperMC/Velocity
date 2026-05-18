@@ -58,21 +58,21 @@ public interface CommandHandler<T extends MinecraftPacket> {
       BiFunction<CommandExecuteEvent, LastSeenMessages, CompletableFuture<MinecraftPacket>> futurePacketCreator,
       String message, Instant timestamp, @Nullable LastSeenMessages lastSeenMessages,
                                   CommandExecuteEvent.InvocationInfo invocationInfo) {
-      CompletableFuture<CommandExecuteEvent> eventFuture = server.getCommandManager().callCommandEvent(player, message,
-              invocationInfo);
-      player.getChatQueue().queuePacket(
+    CompletableFuture<CommandExecuteEvent> eventFuture = server.getCommandManager().callCommandEvent(player, message,
+            invocationInfo);
+    player.getChatQueue().queuePacket(
         newLastSeenMessages -> eventFuture
-            .thenComposeAsync(event -> futurePacketCreator.apply(event, newLastSeenMessages))
-            .thenApply(pkt -> {
-              if (server.getConfiguration().isLogCommandExecutions()) {
-                logger.info("{} -> executed command /{}", player, message);
-              }
-              return pkt;
-            }).exceptionally(e -> {
-              logger.info("Exception occurred while running command for {}", player.getUsername(), e);
-              player.sendMessage(
-                  Component.translatable("velocity.command.generic-error", NamedTextColor.RED));
-              return null;
-            }), timestamp, lastSeenMessages);
+        .thenComposeAsync(event -> futurePacketCreator.apply(event, newLastSeenMessages))
+        .thenApply(pkt -> {
+          if (server.getConfiguration().isLogCommandExecutions()) {
+            logger.info("{} -> executed command /{}", player, message);
+          }
+          return pkt;
+        }).exceptionally(e -> {
+          logger.info("Exception occurred while running command for {}", player.getUsername(), e);
+          player.sendMessage(
+              Component.translatable("velocity.command.generic-error", NamedTextColor.RED));
+          return null;
+        }), timestamp, lastSeenMessages);
   }
 }

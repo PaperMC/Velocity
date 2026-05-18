@@ -87,11 +87,11 @@ public interface ResourcePackInfo extends ResourcePackRequestLike {
 
   /**
    * Returns a copy of this {@link ResourcePackInfo} instance as a builder, using the new URL.
-   * <p/>
-   * It is <b>not</b> guaranteed that
+   *
+   * <p>It is <b>not</b> guaranteed that
    * {@code resourcePackInfo.asBuilder(resourcePackInfo.getUrl()).build().equals(resourcePackInfo)}
    * is true, because the {@link ResourcePackInfo#getOrigin()} and
-   * {@link ResourcePackInfo#getOriginalOrigin()} fields are transient.
+   * {@link ResourcePackInfo#getOriginalOrigin()} fields are transient.</p>
    *
    * @param newUrl The new URL to use in the updated builder.
    *

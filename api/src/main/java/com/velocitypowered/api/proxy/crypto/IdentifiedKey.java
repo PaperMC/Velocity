@@ -28,7 +28,6 @@ public interface IdentifiedKey extends KeySigned {
    */
   PublicKey getSignedPublicKey();
 
-
   /**
    * Validates a signature against this public key.
    *
@@ -69,11 +68,11 @@ public interface IdentifiedKey extends KeySigned {
       this.backwardsCompatibleTo = backwardsCompatibleTo;
       this.applicableTo = applicableTo;
     }
-    
+
     public Set<Revision> getBackwardsCompatibleTo() {
       return backwardsCompatibleTo;
     }
-    
+
     public Set<ProtocolVersion> getApplicableTo() {
       return applicableTo;
     }

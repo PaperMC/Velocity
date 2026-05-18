@@ -26,10 +26,9 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.chat.LastSeenMessages;
 import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 import java.time.Instant;
 import java.util.List;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class SessionPlayerCommandPacket implements MinecraftPacket {
 
@@ -71,7 +70,8 @@ public class SessionPlayerCommandPacket implements MinecraftPacket {
   }
 
   public CommandExecuteEvent.SignedState getEventSignedState() {
-    return !this.argumentSignatures.isEmpty() ? CommandExecuteEvent.SignedState.SIGNED_WITH_ARGS : CommandExecuteEvent.SignedState.SIGNED_WITHOUT_ARGS;
+    return !this.argumentSignatures.isEmpty() ? CommandExecuteEvent.SignedState.SIGNED_WITH_ARGS
+          : CommandExecuteEvent.SignedState.SIGNED_WITHOUT_ARGS;
   }
 
   @Override
@@ -81,13 +81,13 @@ public class SessionPlayerCommandPacket implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "SessionPlayerCommand{" +
-            "command='" + command + '\'' +
-            ", timeStamp=" + timeStamp +
-            ", salt=" + salt +
-            ", argumentSignatures=" + argumentSignatures +
-            ", lastSeenMessages=" + lastSeenMessages +
-            '}';
+    return "SessionPlayerCommand{"
+        + "command='" + command + '\''
+        + ", timeStamp=" + timeStamp
+        + ", salt=" + salt
+        + ", argumentSignatures=" + argumentSignatures
+        + ", lastSeenMessages=" + lastSeenMessages
+        + '}';
   }
 
   public SessionPlayerCommandPacket withLastSeenMessages(@Nullable LastSeenMessages lastSeenMessages) {
@@ -136,11 +136,12 @@ public class SessionPlayerCommandPacket implements MinecraftPacket {
         entry.encode(buf);
       }
     }
+
     @Override
     public String toString() {
-      return "ArgumentSignatures{" +
-              "entries=" + entries +
-              '}';
+      return "ArgumentSignatures{"
+          + "entries=" + entries
+          + '}';
     }
   }
 
@@ -161,9 +162,9 @@ public class SessionPlayerCommandPacket implements MinecraftPacket {
 
     @Override
     public String toString() {
-      return "ArgumentSignature{" +
-              "name='" + name + '\'' +
-              '}';
+      return "ArgumentSignature{"
+          + "name='" + name + '\''
+          + '}';
     }
   }
 }

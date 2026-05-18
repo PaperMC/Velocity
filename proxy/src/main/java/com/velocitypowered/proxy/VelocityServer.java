@@ -367,7 +367,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
                 }
               });
             }
-
           }
 
           try (final Stream<Path> files = Files.walk(langPath)) {
@@ -650,7 +649,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   /**
-   * Calls {@link #shutdown(boolean, Component)} with the default reason "Proxy shutting down."
+   * Calls {@link #shutdown(boolean, Component)} with the default reason "Proxy shutting down.".
    *
    * @param explicitExit whether the user explicitly shut down the proxy
    */

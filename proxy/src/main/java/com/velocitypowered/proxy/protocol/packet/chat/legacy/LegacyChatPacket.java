@@ -45,6 +45,7 @@ public class LegacyChatPacket implements MinecraftPacket {
       try {
         return Integer.parseInt(value.trim());
       } catch (final NumberFormatException e) {
+        // Exception has been handled
       }
     }
     return 100;

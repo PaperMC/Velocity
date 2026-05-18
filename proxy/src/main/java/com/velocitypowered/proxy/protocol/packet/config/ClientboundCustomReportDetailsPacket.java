@@ -26,41 +26,41 @@ import java.util.Map;
 
 public class ClientboundCustomReportDetailsPacket implements MinecraftPacket {
 
-    private Map<String, String> details;
+  private Map<String, String> details;
 
-    public ClientboundCustomReportDetailsPacket() {
+  public ClientboundCustomReportDetailsPacket() {
+  }
+
+  public ClientboundCustomReportDetailsPacket(Map<String, String> details) {
+    this.details = details;
+  }
+
+  @Override
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+    int detailsCount = ProtocolUtils.readVarInt(buf);
+
+    this.details = ProtocolUtils.newMap(detailsCount);
+    for (int i = 0; i < detailsCount; i++) {
+      details.put(ProtocolUtils.readString(buf), ProtocolUtils.readString(buf));
     }
+  }
 
-    public ClientboundCustomReportDetailsPacket(Map<String, String> details) {
-        this.details = details;
-    }
+  @Override
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+    ProtocolUtils.writeVarInt(buf, details.size());
 
-    @Override
-    public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        int detailsCount = ProtocolUtils.readVarInt(buf);
+    details.forEach((key, detail) -> {
+      ProtocolUtils.writeString(buf, key);
+      ProtocolUtils.writeString(buf, detail);
+    });
+  }
 
-        this.details = ProtocolUtils.newMap(detailsCount);
-        for (int i = 0; i < detailsCount; i++) {
-            details.put(ProtocolUtils.readString(buf), ProtocolUtils.readString(buf));
-        }
-    }
+  @Override
+  public boolean handle(MinecraftSessionHandler handler) {
+    return handler.handle(this);
+  }
 
-    @Override
-    public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        ProtocolUtils.writeVarInt(buf, details.size());
-
-        details.forEach((key, detail) -> {
-            ProtocolUtils.writeString(buf, key);
-            ProtocolUtils.writeString(buf, detail);
-        });
-    }
-
-    @Override
-    public boolean handle(MinecraftSessionHandler handler) {
-        return handler.handle(this);
-    }
-
-    public Map<String, String> getDetails() {
-        return details;
-    }
+  public Map<String, String> getDetails() {
+    return details;
+  }
 }

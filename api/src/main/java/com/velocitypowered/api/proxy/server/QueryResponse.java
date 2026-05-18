@@ -147,7 +147,6 @@ public final class QueryResponse {
     return plugins;
   }
 
-
   /**
    * Creates a new {@link Builder} instance from data represented by this response, so that you
    * may create a new {@link QueryResponse} with new data. It is guaranteed that

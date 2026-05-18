@@ -37,8 +37,8 @@ public class ArgumentIdentifier {
     Map<ProtocolVersion, Integer> temp = new HashMap<>();
 
     ProtocolVersion previous = null;
-    for (int i = 0; i < versions.length; i++) {
-      VersionSet current = Preconditions.checkNotNull(versions[i]);
+    for (VersionSet version : versions) {
+      VersionSet current = Preconditions.checkNotNull(version);
 
       Preconditions.checkArgument(
           current.getVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19),
@@ -52,7 +52,6 @@ public class ArgumentIdentifier {
         }
       }
       previous = current.getVersion();
-
     }
 
     this.versionById = ImmutableMap.copyOf(temp);
@@ -60,9 +59,9 @@ public class ArgumentIdentifier {
 
   @Override
   public String toString() {
-    return "ArgumentIdentifier{" +
-        "identifier='" + identifier + '\'' +
-        '}';
+    return "ArgumentIdentifier{"
+        + "identifier='" + identifier + '\''
+        + '}';
   }
 
   public String getIdentifier() {
@@ -101,7 +100,6 @@ public class ArgumentIdentifier {
     public ProtocolVersion getVersion() {
       return version;
     }
-
   }
 
 }

@@ -67,7 +67,7 @@ public class HeaderAndFooterPacket implements MinecraftPacket {
   public static HeaderAndFooterPacket create(Component header,
                                              Component footer, ProtocolVersion protocolVersion) {
     return new HeaderAndFooterPacket(new ComponentHolder(protocolVersion, header),
-      new ComponentHolder(protocolVersion, footer));
+        new ComponentHolder(protocolVersion, footer));
   }
 
   public static HeaderAndFooterPacket reset(ProtocolVersion version) {

@@ -53,6 +53,15 @@ import java.util.function.Predicate;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The clientbound packet that declares the set of commands available to a player, allowing the
+ * client to provide tab completion and command syntax hints.
+ *
+ * <p>The command tree is sent as a flat list of nodes that reference one another by index,
+ * followed by the index of the root node. Decoding rebuilds the Brigadier command graph from
+ * this list — including resolving any cycles created by redirects — and encoding performs the
+ * reverse, assigning every node an index before writing it.</p>
+ */
 public class AvailableCommandsPacket implements MinecraftPacket {
 
   private static final Command<CommandSource> PLACEHOLDER_COMMAND = source -> 0;

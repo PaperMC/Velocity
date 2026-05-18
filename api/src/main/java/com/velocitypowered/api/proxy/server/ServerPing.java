@@ -22,7 +22,6 @@ import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.Nullable;
 
-
 /**
  * Represents a 1.7 and above server list ping response. This class is immutable.
  */

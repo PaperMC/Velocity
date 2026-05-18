@@ -29,6 +29,11 @@ import java.util.UUID;
 import net.kyori.adventure.bossbar.BossBar;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The clientbound packet that adds, updates, or removes a boss bar on the player's screen. The
+ * {@code action} field selects the operation, and the {@code create*} factory methods each build
+ * a packet for one action from an Adventure {@link BossBar}.
+ */
 public class BossBarPacket implements MinecraftPacket {
 
   private static final Enum2IntMap<BossBar.Color> COLORS_TO_PROTOCOL =
@@ -70,6 +75,9 @@ public class BossBarPacket implements MinecraftPacket {
   private int overlay;
   private short flags;
 
+  /**
+   * Builds a packet that adds a new boss bar to the player's screen.
+   */
   public static BossBarPacket createAddPacket(
       final UUID id,
       final BossBar bar,
@@ -86,6 +94,9 @@ public class BossBarPacket implements MinecraftPacket {
     return packet;
   }
 
+  /**
+   * Builds a packet that removes an existing boss bar from the player's screen.
+   */
   public static BossBarPacket createRemovePacket(final UUID id, final BossBar bar) {
     final BossBarPacket packet = new BossBarPacket();
     packet.setUuid(id);
@@ -93,6 +104,9 @@ public class BossBarPacket implements MinecraftPacket {
     return packet;
   }
 
+  /**
+   * Builds a packet that updates the progress of an existing boss bar.
+   */
   public static BossBarPacket createUpdateProgressPacket(final UUID id, final BossBar bar) {
     final BossBarPacket packet = new BossBarPacket();
     packet.setUuid(id);
@@ -101,6 +115,9 @@ public class BossBarPacket implements MinecraftPacket {
     return packet;
   }
 
+  /**
+   * Builds a packet that updates the displayed name of an existing boss bar.
+   */
   public static BossBarPacket createUpdateNamePacket(
       final UUID id,
       final BossBar bar,
@@ -113,6 +130,9 @@ public class BossBarPacket implements MinecraftPacket {
     return packet;
   }
 
+  /**
+   * Builds a packet that updates the color and overlay style of an existing boss bar.
+   */
   public static BossBarPacket createUpdateStylePacket(final UUID id, final BossBar bar) {
     final BossBarPacket packet = new BossBarPacket();
     packet.setUuid(id);
@@ -122,6 +142,9 @@ public class BossBarPacket implements MinecraftPacket {
     return packet;
   }
 
+  /**
+   * Builds a packet that updates the flags of an existing boss bar.
+   */
   public static BossBarPacket createUpdatePropertiesPacket(final UUID id, final BossBar bar) {
     final BossBarPacket packet = new BossBarPacket();
     packet.setUuid(id);
@@ -130,6 +153,9 @@ public class BossBarPacket implements MinecraftPacket {
     return packet;
   }
 
+  /**
+   * Returns the UUID of the boss bar this packet refers to, throwing if it has not been set.
+   */
   public UUID getUuid() {
     if (uuid == null) {
       throw new IllegalStateException("No boss bar UUID specified");
@@ -214,7 +240,8 @@ public class BossBarPacket implements MinecraftPacket {
         this.overlay = ProtocolUtils.readVarInt(buf);
         this.flags = buf.readUnsignedByte();
       }
-      case REMOVE -> {}
+      case REMOVE -> {
+      }
       case UPDATE_PERCENT -> this.percent = buf.readFloat();
       case UPDATE_NAME -> this.name = ComponentHolder.read(buf, version);
       case UPDATE_STYLE -> {
@@ -235,22 +262,23 @@ public class BossBarPacket implements MinecraftPacket {
     ProtocolUtils.writeVarInt(buf, action);
     switch (action) {
       case ADD -> {
-          if (name == null) {
-              throw new IllegalStateException("No name specified!");
-          }
-          name.write(buf);
-          buf.writeFloat(percent);
-          ProtocolUtils.writeVarInt(buf, color);
-          ProtocolUtils.writeVarInt(buf, overlay);
-          buf.writeByte(flags);
+        if (name == null) {
+          throw new IllegalStateException("No name specified!");
+        }
+        name.write(buf);
+        buf.writeFloat(percent);
+        ProtocolUtils.writeVarInt(buf, color);
+        ProtocolUtils.writeVarInt(buf, overlay);
+        buf.writeByte(flags);
       }
-      case REMOVE -> {}
+      case REMOVE -> {
+      }
       case UPDATE_PERCENT -> buf.writeFloat(percent);
       case UPDATE_NAME -> {
-          if (name == null) {
-              throw new IllegalStateException("No name specified!");
-          }
-          name.write(buf);
+        if (name == null) {
+          throw new IllegalStateException("No name specified!");
+        }
+        name.write(buf);
       }
       case UPDATE_STYLE -> {
         ProtocolUtils.writeVarInt(buf, color);
@@ -264,7 +292,7 @@ public class BossBarPacket implements MinecraftPacket {
   private static byte serializeFlags(Set<BossBar.Flag> flags) {
     byte val = 0x0;
     for (BossBar.Flag flag : flags) {
-      val |= FLAG_BITS_TO_PROTOCOL.get(flag);
+      val |= (byte) FLAG_BITS_TO_PROTOCOL.get(flag);
     }
     return val;
   }

@@ -22,9 +22,8 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatAcknowledgementPacket;
-import java.util.concurrent.CompletableFuture;
-
 import com.velocitypowered.proxy.protocol.packet.chat.RateLimitedCommandHandler;
+import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 

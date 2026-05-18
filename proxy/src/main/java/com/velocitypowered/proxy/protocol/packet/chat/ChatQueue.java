@@ -21,12 +21,12 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import io.netty.channel.ChannelFuture;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import java.time.Instant;
 import java.util.BitSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A precisely ordered queue which allows for outside entries into the ordered queue through
@@ -79,7 +79,8 @@ public class ChatQueue implements AutoCloseable {
    * @param timestamp        the new {@link Instant} timestamp of this packet to update the internal chat state.
    * @param lastSeenMessages the new {@link LastSeenMessages} last seen messages to update the internal chat state.
    */
-  public void queuePacket(Function<LastSeenMessages, CompletableFuture<MinecraftPacket>> nextPacket, @Nullable Instant timestamp, @Nullable LastSeenMessages lastSeenMessages) {
+  public void queuePacket(Function<LastSeenMessages, CompletableFuture<MinecraftPacket>> nextPacket,
+                          @Nullable Instant timestamp, @Nullable LastSeenMessages lastSeenMessages) {
     queueTask((chatState, smc) -> {
       LastSeenMessages newLastSeenMessages = chatState.updateFromMessage(timestamp, lastSeenMessages);
       return nextPacket.apply(newLastSeenMessages).thenCompose(packet -> writePacket(packet, smc));
@@ -138,7 +139,7 @@ public class ChatQueue implements AutoCloseable {
    *     <li>If we last forwarded a chat or command packet from the client, we have a known 'last seen' that we can
    *     reuse.</li>
    *     <li>If we last forwarded a {@link ChatAcknowledgementPacket}, the previous 'last seen' cannot be reused. We
-   *     cannot predict an up-to-date 'last seen', as we do not know which messages the client actually saw.</li>
+   *     cannot predict an up to date 'last seen', as we do not know which messages the client actually saw.</li>
    *     <li>Therefore, we need to hold back any acknowledgement packets so that we can continue to reuse the last valid
    *     'last seen' state.</li>
    *     <li>However, there is a limit to the number of messages that can remain unacknowledged on the server.</li>
@@ -146,8 +147,8 @@ public class ChatQueue implements AutoCloseable {
    *     gap with dummy 'last seen', and it will never be checked.</li>
    * </ul>
    *
-   * Note that this is effectively unused for 1.20.5+ clients, as commands without any signature do not send 'last seen'
-   * updates.
+   * <p>Note that this is effectively unused for 1.20.5+ clients, as commands without any signature do not send 'last seen'
+   * updates.</p>
    */
   public static class ChatState {
     private static final int MINIMUM_DELAYED_ACK_COUNT = LastSeenMessages.WINDOW_SIZE;

@@ -66,7 +66,7 @@ tasks {
             "https://www.javadocs.dev/org.slf4j/slf4j-api/${libs.slf4j.get().version}/",
             "https://guava.dev/releases/${libs.guava.get().version}/api/docs/",
             "https://google.github.io/guice/api-docs/${libs.guice.get().version}/javadoc/",
-            "https://docs.oracle.com/en/java/javase/17/docs/api/",
+            "https://docs.oracle.com/en/java/javase/21/docs/api/",
             "https://jd.advntr.dev/api/${libs.adventure.bom.get().version}/",
             "https://jd.advntr.dev/text-minimessage/${libs.adventure.bom.get().version}/",
             "https://jd.advntr.dev/key/${libs.adventure.bom.get().version}/",

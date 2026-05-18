@@ -37,7 +37,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Modern (Minecraft 1.20.3+) ResourcePackHandler
+ * Modern (Minecraft 1.20.3+) ResourcePackHandler.
  */
 public final class ModernResourcePackHandler extends ResourcePackHandler {
   private final ListMultimap<UUID, ResourcePackInfo> outstandingResourcePacks =
@@ -168,7 +168,7 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
         pendingResourcePacks.remove(uuid);
         appliedResourcePacks.remove(uuid);
       }
-      // The other cases in which no action is taken are documented in the javadocs.
+      // The other cases in which no action is taken are documented in the Javadocs.
       default -> {
       }
     }

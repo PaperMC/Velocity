@@ -21,7 +21,8 @@ import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.registry.DimensionInfo;
-import com.velocitypowered.proxy.protocol.*;
+import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.Pair;
 import net.kyori.adventure.nbt.BinaryTagIO;
@@ -204,17 +205,17 @@ public class JoinGamePacket implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "JoinGame{" + "entityId=" + entityId + ", gamemode=" + gamemode + ", dimension=" +
-        dimension + ", partialHashedSeed=" + partialHashedSeed + ", difficulty=" + difficulty +
-        ", isHardcore=" + isHardcore + ", maxPlayers=" + maxPlayers + ", levelType='" + levelType +
-        '\'' + ", viewDistance=" + viewDistance + ", reducedDebugInfo=" + reducedDebugInfo +
-        ", showRespawnScreen=" + showRespawnScreen + ", doLimitedCrafting=" + doLimitedCrafting +
-        ", levelNames=" + levelNames + ", registry='" + registry + '\'' + ", dimensionInfo='" +
-        dimensionInfo + '\'' + ", currentDimensionData='" + currentDimensionData + '\'' +
-        ", previousGamemode=" + previousGamemode + ", simulationDistance=" + simulationDistance +
-        ", lastDeathPosition='" + lastDeathPosition + '\'' + ", portalCooldown=" + portalCooldown +
-        ", seaLevel=" + seaLevel +
-        '}';
+    return "JoinGame{" + "entityId=" + entityId + ", gamemode=" + gamemode + ", dimension="
+        + dimension + ", partialHashedSeed=" + partialHashedSeed + ", difficulty=" + difficulty
+        + ", isHardcore=" + isHardcore + ", maxPlayers=" + maxPlayers + ", levelType='" + levelType
+        + '\'' + ", viewDistance=" + viewDistance + ", reducedDebugInfo=" + reducedDebugInfo
+        + ", showRespawnScreen=" + showRespawnScreen + ", doLimitedCrafting=" + doLimitedCrafting
+        + ", levelNames=" + levelNames + ", registry='" + registry + '\'' + ", dimensionInfo='"
+        + dimensionInfo + '\'' + ", currentDimensionData='" + currentDimensionData + '\''
+        + ", previousGamemode=" + previousGamemode + ", simulationDistance=" + simulationDistance
+        + ", lastDeathPosition='" + lastDeathPosition + '\'' + ", portalCooldown=" + portalCooldown
+        + ", seaLevel=" + seaLevel
+        + '}';
   }
 
   @Override

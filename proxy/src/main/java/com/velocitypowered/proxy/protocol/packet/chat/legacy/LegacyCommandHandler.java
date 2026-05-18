@@ -21,7 +21,6 @@ import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.chat.RateLimitedCommandHandler;
-
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
@@ -64,6 +63,7 @@ public class LegacyCommandHandler extends RateLimitedCommandHandler<LegacyChatPa
         }
         return null;
       });
-    }, command, Instant.now(), null, new CommandExecuteEvent.InvocationInfo(CommandExecuteEvent.SignedState.UNSUPPORTED, CommandExecuteEvent.Source.PLAYER));
+    }, command, Instant.now(), null, new CommandExecuteEvent.InvocationInfo(CommandExecuteEvent.SignedState.UNSUPPORTED,
+          CommandExecuteEvent.Source.PLAYER));
   }
 }

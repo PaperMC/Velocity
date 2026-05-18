@@ -62,8 +62,8 @@ public class DisconnectPacket implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-	  reason = ComponentHolder.read(buf, state == StateRegistry.LOGIN
-              ? ProtocolVersion.MINECRAFT_1_20_2 : version);
+    reason = ComponentHolder.read(buf, state == StateRegistry.LOGIN
+          ? ProtocolVersion.MINECRAFT_1_20_2 : version);
   }
 
   @Override

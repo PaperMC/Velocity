@@ -89,7 +89,6 @@ public class PluginMessagePacket extends DeferredByteBufHolder implements Minecr
     } else {
       this.replace(ProtocolUtils.readRetainedByteBufSlice17(buf));
     }
-
   }
 
   @Override
@@ -113,13 +112,12 @@ public class PluginMessagePacket extends DeferredByteBufHolder implements Minecr
     } else {
       ProtocolUtils.writeByteBuf17(content(), buf, true); // True for Forge support
     }
-
   }
 
   @Override
   public int decodeExpectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
-    return ProtocolUtils.DEFAULT_MAX_STRING_BYTES +
-        (direction == Direction.CLIENTBOUND ? MAX_PAYLOAD_SIZE_CLIENTBOUND : MAX_PAYLOAD_SIZE_SERVERBOUND);
+    return ProtocolUtils.DEFAULT_MAX_STRING_BYTES
+          + (direction == Direction.CLIENTBOUND ? MAX_PAYLOAD_SIZE_CLIENTBOUND : MAX_PAYLOAD_SIZE_SERVERBOUND);
   }
 
   @Override

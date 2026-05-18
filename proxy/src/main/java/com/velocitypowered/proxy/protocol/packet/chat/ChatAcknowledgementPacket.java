@@ -24,38 +24,38 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
 public class ChatAcknowledgementPacket implements MinecraftPacket {
-    int offset;
+  int offset;
 
-    public ChatAcknowledgementPacket(int offset) {
-        this.offset = offset;
-    }
+  public ChatAcknowledgementPacket(int offset) {
+    this.offset = offset;
+  }
 
-    public ChatAcknowledgementPacket() {
-    }
+  public ChatAcknowledgementPacket() {
+  }
 
-    @Override
-    public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        offset = ProtocolUtils.readVarInt(buf);
-    }
+  @Override
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+    offset = ProtocolUtils.readVarInt(buf);
+  }
 
-    @Override
-    public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        ProtocolUtils.writeVarInt(buf, offset);
-    }
+  @Override
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
+    ProtocolUtils.writeVarInt(buf, offset);
+  }
 
-    @Override
-    public boolean handle(MinecraftSessionHandler handler) {
-        return handler.handle(this);
-    }
+  @Override
+  public boolean handle(MinecraftSessionHandler handler) {
+    return handler.handle(this);
+  }
 
-    @Override
-    public String toString() {
-        return "ChatAcknowledgement{" +
-                "offset=" + offset +
-                '}';
-    }
+  @Override
+  public String toString() {
+    return "ChatAcknowledgement{"
+        + "offset=" + offset
+        + '}';
+  }
 
-    public int offset() {
-        return offset;
-    }
+  public int offset() {
+    return offset;
+  }
 }

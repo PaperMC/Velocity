@@ -22,10 +22,9 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import java.util.Random;
 import net.kyori.adventure.sound.Sound;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Random;
 
 public class ClientboundSoundEntityPacket implements MinecraftPacket {
 
@@ -35,7 +34,8 @@ public class ClientboundSoundEntityPacket implements MinecraftPacket {
   private @Nullable Float fixedRange;
   private int emitterEntityId;
 
-  public ClientboundSoundEntityPacket() {}
+  public ClientboundSoundEntityPacket() {
+  }
 
   public ClientboundSoundEntityPacket(Sound sound, @Nullable Float fixedRange, int emitterEntityId) {
     this.sound = sound;
@@ -55,8 +55,9 @@ public class ClientboundSoundEntityPacket implements MinecraftPacket {
     ProtocolUtils.writeMinimalKey(buf, sound.name());
 
     buf.writeBoolean(fixedRange != null);
-    if (fixedRange != null)
+    if (fixedRange != null) {
       buf.writeFloat(fixedRange);
+    }
 
     ProtocolUtils.writeSoundSource(buf, protocolVersion, sound.source());
 

@@ -24,9 +24,8 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-
 import java.util.UUID;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 public class ResourcePackResponsePacket implements MinecraftPacket {
 
@@ -107,10 +106,10 @@ public class ResourcePackResponsePacket implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "ResourcePackResponsePacket{" +
-            "id=" + id +
-            ", hash='" + hash + '\'' +
-            ", status=" + status +
-            '}';
+    return "ResourcePackResponsePacket{"
+        + "id=" + id
+        + ", hash='" + hash + '\''
+        + ", status=" + status
+        + '}';
   }
 }

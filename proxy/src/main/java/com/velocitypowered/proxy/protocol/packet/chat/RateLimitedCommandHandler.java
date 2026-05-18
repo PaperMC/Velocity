@@ -24,35 +24,36 @@ import net.kyori.adventure.text.Component;
 
 public abstract class RateLimitedCommandHandler<T extends MinecraftPacket> implements CommandHandler<T> {
 
-    private final Player player;
-    private final VelocityServer velocityServer;
+  private final Player player;
+  private final VelocityServer velocityServer;
 
-    private int failedAttempts;
+  private int failedAttempts;
 
-    protected RateLimitedCommandHandler(Player player, VelocityServer velocityServer) {
-        this.player = player;
-        this.velocityServer = velocityServer;
-    }
+  protected RateLimitedCommandHandler(Player player, VelocityServer velocityServer) {
+    this.player = player;
+    this.velocityServer = velocityServer;
+  }
 
-    @Override
-    public boolean handlePlayerCommand(MinecraftPacket packet) {
-        if (packetClass().isInstance(packet)) {
-            if (!velocityServer.getCommandRateLimiter().attempt(player.getUniqueId())) {
-                if (velocityServer.getConfiguration().isKickOnCommandRateLimit() && failedAttempts++ >= velocityServer.getConfiguration().getKickAfterRateLimitedCommands()) {
-                    player.disconnect(Component.translatable("velocity.kick.command-rate-limit"));
-                }
-
-                if (velocityServer.getConfiguration().isForwardCommandsIfRateLimited()) {
-                    return false; // Send the packet to the server
-                }
-            } else {
-                failedAttempts = 0;
-            }
-
-            handlePlayerCommandInternal(packetClass().cast(packet));
-            return true;
+  @Override
+  public boolean handlePlayerCommand(MinecraftPacket packet) {
+    if (packetClass().isInstance(packet)) {
+      if (!velocityServer.getCommandRateLimiter().attempt(player.getUniqueId())) {
+        if (velocityServer.getConfiguration().isKickOnCommandRateLimit()
+              && failedAttempts++ >= velocityServer.getConfiguration().getKickAfterRateLimitedCommands()) {
+          player.disconnect(Component.translatable("velocity.kick.command-rate-limit"));
         }
 
-        return false;
+        if (velocityServer.getConfiguration().isForwardCommandsIfRateLimited()) {
+          return false; // Send the packet to the server
+        }
+      } else {
+        failedAttempts = 0;
+      }
+
+      handlePlayerCommandInternal(packetClass().cast(packet));
+      return true;
     }
+
+    return false;
+  }
 }

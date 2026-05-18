@@ -8,7 +8,7 @@ netty = "4.2.10.Final"
 [plugins]
 fill = "io.papermc.fill.gradle:1.0.10"
 shadow = "com.gradleup.shadow:9.3.1"
-spotless = "com.diffplug.spotless:8.2.0"
+spotless = "com.diffplug.spotless:8.5.1"
 
 [libraries]
 adventure-bom = "net.kyori:adventure-bom:4.26.1"
@@ -21,7 +21,7 @@ brigadier = "com.velocitypowered:velocity-brigadier:1.0.0-SNAPSHOT"
 bstats = "org.bstats:bstats-base:3.1.0"
 caffeine = "com.github.ben-manes.caffeine:caffeine:3.2.3"
 checker-qual = "org.checkerframework:checker-qual:3.53.0"
-checkstyle = "com.puppycrawl.tools:checkstyle:10.9.3"
+checkstyle = "com.puppycrawl.tools:checkstyle:13.4.2"
 completablefutures = "com.spotify:completable-futures:0.3.6"
 configurate3-hocon = { module = "org.spongepowered:configurate-hocon", version.ref = "configurate3" }
 configurate3-yaml = { module = "org.spongepowered:configurate-yaml", version.ref = "configurate3" }

@@ -132,10 +132,10 @@ public class ClientSettingsPacket implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "ClientSettings{" + "locale='" + locale + '\'' + ", viewDistance=" + viewDistance +
-        ", chatVisibility=" + chatVisibility + ", chatColors=" + chatColors + ", skinParts=" +
-        skinParts + ", mainHand=" + mainHand + ", chatFilteringEnabled=" + textFilteringEnabled +
-        ", clientListingAllowed=" + clientListingAllowed + ", particleStatus=" + particleStatus + '}';
+    return "ClientSettings{" + "locale='" + locale + '\'' + ", viewDistance=" + viewDistance
+        + ", chatVisibility=" + chatVisibility + ", chatColors=" + chatColors + ", skinParts="
+        + skinParts + ", mainHand=" + mainHand + ", chatFilteringEnabled=" + textFilteringEnabled
+        + ", clientListingAllowed=" + clientListingAllowed +  ", particleStatus=" + particleStatus + '}';
   }
 
   @Override
