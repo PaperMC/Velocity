@@ -26,6 +26,10 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
 
+/**
+ * The clientbound login packet asking the client to begin encryption, carrying the server's
+ * public key and verification token.
+ */
 public class EncryptionRequestPacket implements MinecraftPacket {
 
   private String serverId = "";

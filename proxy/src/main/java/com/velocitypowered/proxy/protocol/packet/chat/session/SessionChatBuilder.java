@@ -26,6 +26,9 @@ import com.velocitypowered.proxy.protocol.packet.chat.SystemChatPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderV2;
 import net.kyori.adventure.text.Component;
 
+/**
+ * A chat builder that produces session-signed (1.19.1+) chat packets.
+ */
 public class SessionChatBuilder extends ChatBuilderV2 {
 
   public SessionChatBuilder(ProtocolVersion version) {

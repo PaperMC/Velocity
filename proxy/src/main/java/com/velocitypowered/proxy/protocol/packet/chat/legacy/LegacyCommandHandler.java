@@ -24,11 +24,20 @@ import com.velocitypowered.proxy.protocol.packet.chat.RateLimitedCommandHandler;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Handles commands issued through the legacy (pre-1.19) chat packet.
+ */
 public class LegacyCommandHandler extends RateLimitedCommandHandler<LegacyChatPacket> {
 
   private final ConnectedPlayer player;
   private final VelocityServer server;
 
+  /**
+   * Creates a legacy command handler for the given player.
+   *
+   * @param player the player whose commands are handled
+   * @param server the proxy server
+   */
   public LegacyCommandHandler(ConnectedPlayer player, VelocityServer server) {
     super(player, server);
     this.player = player;

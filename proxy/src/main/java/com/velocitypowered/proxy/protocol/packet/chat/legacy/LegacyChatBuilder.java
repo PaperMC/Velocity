@@ -25,6 +25,9 @@ import java.util.UUID;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 
+/**
+ * A chat builder that produces legacy (pre-1.19) chat packets.
+ */
 public class LegacyChatBuilder extends ChatBuilderV2 {
 
   public LegacyChatBuilder(ProtocolVersion version) {

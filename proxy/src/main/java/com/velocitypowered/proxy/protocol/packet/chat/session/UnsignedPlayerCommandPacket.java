@@ -24,6 +24,9 @@ import com.velocitypowered.proxy.protocol.packet.chat.LastSeenMessages;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * A player command that carries no signature, used when a signed command is not required.
+ */
 public class UnsignedPlayerCommandPacket extends SessionPlayerCommandPacket {
 
   @Override

@@ -23,6 +23,9 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The packet that moves a connection from the play phase back into the configuration phase.
+ */
 public class StartUpdatePacket implements MinecraftPacket {
   public static final StartUpdatePacket INSTANCE = new StartUpdatePacket();
 

@@ -25,6 +25,9 @@ import com.velocitypowered.proxy.protocol.packet.chat.LastSeenMessages;
 import io.netty.buffer.ByteBuf;
 import java.time.Instant;
 
+/**
+ * A session-signed (1.19.1+) player chat message.
+ */
 public class SessionPlayerChatPacket implements MinecraftPacket {
 
   protected String message;
@@ -100,6 +103,12 @@ public class SessionPlayerChatPacket implements MinecraftPacket {
     return signature;
   }
 
+  /**
+   * Returns a copy of this packet carrying the given last-seen messages.
+   *
+   * @param lastSeenMessages the last-seen messages to attach
+   * @return the copied packet
+   */
   public SessionPlayerChatPacket withLastSeenMessages(LastSeenMessages lastSeenMessages) {
     SessionPlayerChatPacket packet = new SessionPlayerChatPacket();
     packet.message = message;

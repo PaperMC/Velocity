@@ -29,6 +29,9 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The serverbound packet requesting tab-completion suggestions for a partially typed command.
+ */
 public class TabCompleteRequestPacket implements MinecraftPacket {
 
   private static final int VANILLA_MAX_TAB_COMPLETE_LEN = 2048;
@@ -39,6 +42,12 @@ public class TabCompleteRequestPacket implements MinecraftPacket {
   private boolean hasPosition;
   private long position;
 
+  /**
+   * Returns the partial command being completed.
+   *
+   * @return the command
+   * @throws IllegalStateException if no command has been set
+   */
   public String getCommand() {
     if (command == null) {
       throw new IllegalStateException("Command is not specified");

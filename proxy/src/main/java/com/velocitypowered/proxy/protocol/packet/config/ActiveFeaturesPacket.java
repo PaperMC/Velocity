@@ -24,6 +24,9 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 
+/**
+ * The clientbound configuration packet listing the feature flags active on the server.
+ */
 public class ActiveFeaturesPacket implements MinecraftPacket {
 
   private Key[] activeFeatures;

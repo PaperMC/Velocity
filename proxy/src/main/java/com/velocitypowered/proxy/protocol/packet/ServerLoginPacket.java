@@ -29,6 +29,9 @@ import io.netty.buffer.ByteBuf;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The serverbound packet that begins the login phase, carrying the player's chosen username.
+ */
 public class ServerLoginPacket implements MinecraftPacket {
 
   private static final QuietDecoderException EMPTY_USERNAME = new QuietDecoderException(
@@ -46,12 +49,24 @@ public class ServerLoginPacket implements MinecraftPacket {
     this.playerKey = playerKey;
   }
 
+  /**
+   * Creates a server login packet for the given player.
+   *
+   * @param username the username supplied by the client
+   * @param holderUuid the UUID supplied by the client, or {@code null} if none
+   */
   public ServerLoginPacket(String username, @Nullable UUID holderUuid) {
     this.username = Preconditions.checkNotNull(username, "username");
     this.holderUuid = holderUuid;
     this.playerKey = null;
   }
 
+  /**
+   * Returns the username supplied by the client.
+   *
+   * @return the username
+   * @throws IllegalStateException if no username has been set
+   */
   public String getUsername() {
     if (username == null) {
       throw new IllegalStateException("No username found!");

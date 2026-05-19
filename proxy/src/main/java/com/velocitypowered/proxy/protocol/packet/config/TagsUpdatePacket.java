@@ -26,6 +26,9 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 import java.util.Map;
 
+/**
+ * The clientbound configuration packet that updates the client's registry tags.
+ */
 public class TagsUpdatePacket implements MinecraftPacket {
 
   private Map<String, Map<String, int[]>> tags;

@@ -23,6 +23,10 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The packet that signals completion of the configuration phase, returning the connection to
+ * the play phase.
+ */
 public class FinishedUpdatePacket implements MinecraftPacket {
   public static final FinishedUpdatePacket INSTANCE = new FinishedUpdatePacket();
 

@@ -27,6 +27,9 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.sound.SoundStop;
 
+/**
+ * The clientbound packet instructing the client to stop one or more currently playing sounds.
+ */
 public class ClientboundStopSoundPacket implements MinecraftPacket {
 
   private @Nullable Sound.Source source;

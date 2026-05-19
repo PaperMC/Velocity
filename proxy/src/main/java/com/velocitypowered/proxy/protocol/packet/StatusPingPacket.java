@@ -24,6 +24,9 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The packet exchanged during a server list ping to measure connection latency.
+ */
 public class StatusPingPacket implements MinecraftPacket {
 
   private long randomId;

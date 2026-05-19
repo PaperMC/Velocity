@@ -26,6 +26,9 @@ import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.text.Component;
 
+/**
+ * The clientbound packet that sets the header and footer text of the player list.
+ */
 public class HeaderAndFooterPacket implements MinecraftPacket {
 
   private final ComponentHolder header;

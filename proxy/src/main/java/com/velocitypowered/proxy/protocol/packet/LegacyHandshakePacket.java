@@ -23,6 +23,9 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The legacy handshake packet used by clients performing a pre-1.7 server list ping.
+ */
 public class LegacyHandshakePacket implements MinecraftPacket {
 
   @Override

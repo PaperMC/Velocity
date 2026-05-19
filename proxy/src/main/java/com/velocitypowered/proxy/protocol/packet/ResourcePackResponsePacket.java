@@ -27,6 +27,9 @@ import io.netty.buffer.ByteBuf;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
+/**
+ * The serverbound packet carrying the client's response to a resource pack request.
+ */
 public class ResourcePackResponsePacket implements MinecraftPacket {
 
   private UUID id;
@@ -36,12 +39,25 @@ public class ResourcePackResponsePacket implements MinecraftPacket {
   public ResourcePackResponsePacket() {
   }
 
+  /**
+   * Creates a resource pack response with the given values.
+   *
+   * @param id the id of the resource pack being responded to
+   * @param hash the hash of the resource pack
+   * @param status the status reported by the client
+   */
   public ResourcePackResponsePacket(UUID id, String hash, @MonotonicNonNull Status status) {
     this.id = id;
     this.hash = hash;
     this.status = status;
   }
 
+  /**
+   * Returns the response status reported by the client.
+   *
+   * @return the status
+   * @throws IllegalStateException if the packet has not been deserialized
+   */
   public Status getStatus() {
     if (status == null) {
       throw new IllegalStateException("Packet not yet deserialized");

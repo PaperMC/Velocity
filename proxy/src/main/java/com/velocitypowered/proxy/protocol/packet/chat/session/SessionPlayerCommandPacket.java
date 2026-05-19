@@ -30,6 +30,9 @@ import java.time.Instant;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * A session-signed (1.19.1+) player command, including its per-argument signatures.
+ */
 public class SessionPlayerCommandPacket implements MinecraftPacket {
 
   protected String command;
@@ -90,6 +93,14 @@ public class SessionPlayerCommandPacket implements MinecraftPacket {
         + '}';
   }
 
+  /**
+   * Returns a command packet carrying the given last-seen messages, producing an unsigned
+   * command when none are supplied.
+   *
+   * @param lastSeenMessages the last-seen messages to attach, or {@code null} for an unsigned
+   *     command
+   * @return the resulting command packet
+   */
   public SessionPlayerCommandPacket withLastSeenMessages(@Nullable LastSeenMessages lastSeenMessages) {
     if (lastSeenMessages == null) {
       UnsignedPlayerCommandPacket packet = new UnsignedPlayerCommandPacket();
@@ -105,6 +116,9 @@ public class SessionPlayerCommandPacket implements MinecraftPacket {
     return packet;
   }
 
+  /**
+   * The collection of per-argument signatures attached to a signed command.
+   */
   public static class ArgumentSignatures {
 
     private final List<ArgumentSignature> entries;
@@ -113,6 +127,11 @@ public class SessionPlayerCommandPacket implements MinecraftPacket {
       this.entries = List.of();
     }
 
+    /**
+     * Reads a set of argument signatures from the buffer.
+     *
+     * @param buf the buffer to read from
+     */
     public ArgumentSignatures(ByteBuf buf) {
       int size = ProtocolUtils.readVarInt(buf);
       if (size > 8) {
@@ -130,6 +149,11 @@ public class SessionPlayerCommandPacket implements MinecraftPacket {
       return this.entries.isEmpty();
     }
 
+    /**
+     * Writes these argument signatures to the buffer.
+     *
+     * @param buf the buffer to write to
+     */
     public void encode(ByteBuf buf) {
       ProtocolUtils.writeVarInt(buf, entries.size());
       for (ArgumentSignature entry : entries) {
@@ -145,6 +169,9 @@ public class SessionPlayerCommandPacket implements MinecraftPacket {
     }
   }
 
+  /**
+   * A single argument name paired with its signature bytes.
+   */
   public static class ArgumentSignature {
 
     private final String name;

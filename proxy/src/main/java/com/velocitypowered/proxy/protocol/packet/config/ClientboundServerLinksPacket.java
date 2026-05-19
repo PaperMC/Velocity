@@ -25,6 +25,9 @@ import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 import java.util.List;
 
+/**
+ * The clientbound packet that provides the client with a set of server links.
+ */
 public class ClientboundServerLinksPacket implements MinecraftPacket {
 
   private List<ServerLink> serverLinks;
@@ -64,6 +67,13 @@ public class ClientboundServerLinksPacket implements MinecraftPacket {
     return serverLinks;
   }
 
+  /**
+   * A single server link entry.
+   *
+   * @param id the built-in link type id, or {@code -1} when a custom label is used
+   * @param displayName the label shown for the link
+   * @param url the link target
+   */
   public record ServerLink(int id, ComponentHolder displayName, String url) {
 
     private static ServerLink read(ByteBuf buf, ProtocolVersion version) {

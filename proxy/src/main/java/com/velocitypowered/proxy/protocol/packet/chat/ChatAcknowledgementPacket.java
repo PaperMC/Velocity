@@ -23,6 +23,9 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The serverbound packet by which the client acknowledges the chat messages it has received.
+ */
 public class ChatAcknowledgementPacket implements MinecraftPacket {
   int offset;
 

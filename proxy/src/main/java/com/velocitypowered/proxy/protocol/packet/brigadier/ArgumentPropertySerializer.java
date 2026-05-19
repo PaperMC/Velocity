@@ -21,6 +21,11 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Serializes and deserializes the properties of a command argument type.
+ *
+ * @param <T> the argument property type handled by this serializer
+ */
 public interface ArgumentPropertySerializer<T> {
 
   @Nullable T deserialize(ByteBuf buf, ProtocolVersion protocolVersion);

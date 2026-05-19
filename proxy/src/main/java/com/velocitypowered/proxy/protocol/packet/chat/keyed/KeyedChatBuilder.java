@@ -26,6 +26,9 @@ import com.velocitypowered.proxy.protocol.packet.chat.SystemChatPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderV2;
 import net.kyori.adventure.text.Component;
 
+/**
+ * A chat builder that produces keyed (1.19-1.19.1) signed chat packets.
+ */
 public class KeyedChatBuilder extends ChatBuilderV2 {
 
   public KeyedChatBuilder(ProtocolVersion version) {

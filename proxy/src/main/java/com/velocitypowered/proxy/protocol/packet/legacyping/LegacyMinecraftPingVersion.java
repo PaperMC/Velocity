@@ -17,6 +17,9 @@
 
 package com.velocitypowered.proxy.protocol.packet.legacyping;
 
+/**
+ * The legacy server list ping protocol versions, distinguishing the pre-1.7 ping formats.
+ */
 public enum LegacyMinecraftPingVersion {
   MINECRAFT_1_3,
   MINECRAFT_1_4,

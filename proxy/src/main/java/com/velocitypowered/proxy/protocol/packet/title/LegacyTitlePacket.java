@@ -24,6 +24,9 @@ import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The legacy combined title packet used before titles were split into separate packets.
+ */
 public class LegacyTitlePacket extends GenericTitlePacket {
 
   private @Nullable ComponentHolder component;

@@ -29,6 +29,9 @@ import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The play-phase plugin message packet, used to exchange custom payloads on a named channel.
+ */
 public class PluginMessagePacket extends DeferredByteBufHolder implements MinecraftPacket {
 
   private static final int MAX_PAYLOAD_SIZE_CLIENTBOUND = getPayloadLimit(Direction.CLIENTBOUND);
@@ -46,6 +49,12 @@ public class PluginMessagePacket extends DeferredByteBufHolder implements Minecr
     this.channel = channel;
   }
 
+  /**
+   * Returns the channel this message was sent on.
+   *
+   * @return the channel
+   * @throws IllegalStateException if no channel has been set
+   */
   public String getChannel() {
     if (channel == null) {
       throw new IllegalStateException("Channel is not specified.");

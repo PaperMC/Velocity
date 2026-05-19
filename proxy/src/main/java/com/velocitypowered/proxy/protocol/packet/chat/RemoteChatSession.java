@@ -26,6 +26,10 @@ import java.util.Objects;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Represents a player's signed chat session, holding the session id and public key used to
+ * verify messages.
+ */
 public class RemoteChatSession implements ChatSession {
 
   private final @Nullable UUID sessionId;

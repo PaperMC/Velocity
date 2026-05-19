@@ -22,6 +22,9 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The packet that clears the currently displayed title.
+ */
 public class TitleClearPacket extends GenericTitlePacket {
 
   public TitleClearPacket() {

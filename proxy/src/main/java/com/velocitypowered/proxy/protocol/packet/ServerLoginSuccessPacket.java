@@ -30,6 +30,9 @@ import java.util.List;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The clientbound packet that completes the login phase and confirms the player's identity.
+ */
 public class ServerLoginSuccessPacket implements MinecraftPacket {
 
   private @Nullable UUID uuid;
@@ -38,6 +41,12 @@ public class ServerLoginSuccessPacket implements MinecraftPacket {
   private static final boolean strictErrorHandling = VelocityProperties
           .readBoolean("velocity.strictErrorHandling", true);
 
+  /**
+   * Returns the player's unique id.
+   *
+   * @return the player UUID
+   * @throws IllegalStateException if no UUID has been set
+   */
   public UUID getUuid() {
     if (uuid == null) {
       throw new IllegalStateException("No UUID specified!");
@@ -49,6 +58,12 @@ public class ServerLoginSuccessPacket implements MinecraftPacket {
     this.uuid = uuid;
   }
 
+  /**
+   * Returns the player's username.
+   *
+   * @return the username
+   * @throws IllegalStateException if no username has been set
+   */
   public String getUsername() {
     if (username == null) {
       throw new IllegalStateException("No username specified!");

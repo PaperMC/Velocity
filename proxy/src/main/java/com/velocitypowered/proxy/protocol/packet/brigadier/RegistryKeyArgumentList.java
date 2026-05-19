@@ -21,14 +21,23 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * A collection of the registry-key argument variants used by modern command arguments.
+ */
 public final class RegistryKeyArgumentList {
 
+  /**
+   * A registry-key argument that accepts either a single resource or a tag.
+   */
   public static class ResourceOrTag extends RegistryKeyArgument {
 
     public ResourceOrTag(String identifier) {
       super(identifier);
     }
 
+    /**
+     * The argument property serializer for {@link ResourceOrTag} arguments.
+     */
     public static class Serializer implements ArgumentPropertySerializer<ResourceOrTag> {
 
       static final ResourceOrTag.Serializer REGISTRY = new ResourceOrTag.Serializer();
@@ -45,12 +54,18 @@ public final class RegistryKeyArgumentList {
     }
   }
 
+  /**
+   * A registry-key argument that accepts either a resource key or a tag key.
+   */
   public static class ResourceOrTagKey extends RegistryKeyArgument {
 
     public ResourceOrTagKey(String identifier) {
       super(identifier);
     }
 
+    /**
+     * The argument property serializer for {@link ResourceOrTagKey} arguments.
+     */
     public static class Serializer implements ArgumentPropertySerializer<ResourceOrTagKey> {
 
       static final ResourceOrTagKey.Serializer REGISTRY = new ResourceOrTagKey.Serializer();
@@ -67,12 +82,18 @@ public final class RegistryKeyArgumentList {
     }
   }
 
+  /**
+   * A registry-key argument that accepts a resource selector.
+   */
   public static class ResourceSelector extends RegistryKeyArgument {
 
     public ResourceSelector(String identifier) {
       super(identifier);
     }
 
+    /**
+     * The argument property serializer for {@link ResourceSelector} arguments.
+     */
     public static class Serializer implements ArgumentPropertySerializer<ResourceSelector> {
 
       static final ResourceSelector.Serializer REGISTRY = new ResourceSelector.Serializer();
@@ -89,12 +110,18 @@ public final class RegistryKeyArgumentList {
     }
   }
 
+  /**
+   * A registry-key argument that accepts a single resource key.
+   */
   public static class ResourceKey extends RegistryKeyArgument {
 
     public ResourceKey(String identifier) {
       super(identifier);
     }
 
+    /**
+     * The argument property serializer for {@link ResourceKey} arguments.
+     */
     public static class Serializer implements ArgumentPropertySerializer<ResourceKey> {
 
       static final ResourceKey.Serializer REGISTRY = new ResourceKey.Serializer();

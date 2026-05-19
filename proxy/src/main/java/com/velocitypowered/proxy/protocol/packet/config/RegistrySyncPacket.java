@@ -25,6 +25,9 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The clientbound configuration packet that synchronizes a game registry with the client.
+ */
 public class RegistrySyncPacket extends DeferredByteBufHolder implements MinecraftPacket {
 
   public RegistrySyncPacket() {

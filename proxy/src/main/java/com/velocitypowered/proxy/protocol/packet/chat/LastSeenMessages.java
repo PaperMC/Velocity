@@ -23,6 +23,10 @@ import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
 import java.util.BitSet;
 
+/**
+ * Represents the set of recently seen chat messages a client acknowledges when sending signed
+ * chat.
+ */
 public class LastSeenMessages {
 
   public static final int WINDOW_SIZE = 20;
@@ -35,12 +39,25 @@ public class LastSeenMessages {
     this(0, new BitSet(), (byte) 0);
   }
 
+  /**
+   * Creates a last-seen messages record with the given values.
+   *
+   * @param offset the index offset of the acknowledged window
+   * @param acknowledged the bit set of acknowledged messages
+   * @param checksum the checksum of the acknowledged messages
+   */
   public LastSeenMessages(int offset, BitSet acknowledged, byte checksum) {
     this.offset = offset;
     this.acknowledged = acknowledged;
     this.checksum = checksum;
   }
 
+  /**
+   * Reads a last-seen messages record from the buffer.
+   *
+   * @param buf the buffer to read from
+   * @param protocolVersion the protocol version being decoded
+   */
   public LastSeenMessages(ByteBuf buf, ProtocolVersion protocolVersion) {
     this.offset = ProtocolUtils.readVarInt(buf);
 
@@ -53,6 +70,12 @@ public class LastSeenMessages {
     }
   }
 
+  /**
+   * Writes this last-seen messages record to the buffer.
+   *
+   * @param buf the buffer to write to
+   * @param protocolVersion the protocol version being encoded
+   */
   public void encode(ByteBuf buf, ProtocolVersion protocolVersion) {
     ProtocolUtils.writeVarInt(buf, offset);
     buf.writeBytes(Arrays.copyOf(acknowledged.toByteArray(), DIV_FLOOR));

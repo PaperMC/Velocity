@@ -30,6 +30,9 @@ import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * Handles keyed (1.19-1.19.1) signed player chat packets.
+ */
 public class KeyedChatHandler implements
     com.velocitypowered.proxy.protocol.packet.chat.ChatHandler<KeyedPlayerChatPacket> {
 
@@ -48,6 +51,12 @@ public class KeyedChatHandler implements
     return KeyedPlayerChatPacket.class;
   }
 
+  /**
+   * Logs that a plugin attempted to cancel a signed chat message, which is no longer permitted.
+   *
+   * @param logger the logger to report through
+   * @param player the player whose message was affected
+   */
   public static void invalidCancel(Logger logger, ConnectedPlayer player) {
     logger.fatal("A plugin tried to cancel a signed chat message."
         + " This is no longer possible in 1.19.1 and newer. "
@@ -56,6 +65,12 @@ public class KeyedChatHandler implements
         + "Contact your network administrator."));
   }
 
+  /**
+   * Logs that a plugin attempted to modify a signed chat message, which is no longer permitted.
+   *
+   * @param logger the logger to report through
+   * @param player the player whose message was affected
+   */
   public static void invalidChange(Logger logger, ConnectedPlayer player) {
     logger.fatal("A plugin tried to change a signed chat message. "
         + "This is no longer possible in 1.19.1 and newer. "

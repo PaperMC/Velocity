@@ -34,6 +34,9 @@ import java.util.List;
 import java.util.UUID;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * The clientbound packet that adds new player list entries or updates fields of existing ones.
+ */
 public class UpsertPlayerInfoPacket implements MinecraftPacket {
 
   private static final Action[] ALL_ACTIONS = Action.class.getEnumConstants();
@@ -133,6 +136,9 @@ public class UpsertPlayerInfoPacket implements MinecraftPacket {
     return handler.handle(this);
   }
 
+  /**
+   * The set of fields that an {@link UpsertPlayerInfoPacket} can add or update for a player.
+   */
   public enum Action {
     ADD_PLAYER((ignored, buf, info) -> { // read
       info.profile = new GameProfile(
@@ -213,6 +219,9 @@ public class UpsertPlayerInfoPacket implements MinecraftPacket {
     }
   }
 
+  /**
+   * The player list data carried for a single player in an {@link UpsertPlayerInfoPacket}.
+   */
   public static class Entry {
 
     private final UUID profileId;

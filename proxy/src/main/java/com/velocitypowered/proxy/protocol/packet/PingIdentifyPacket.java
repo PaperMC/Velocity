@@ -23,6 +23,10 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * A packet carrying an identifier that the receiver echoes back, used to match a ping with its
+ * response.
+ */
 public class PingIdentifyPacket implements MinecraftPacket {
 
   private int id;

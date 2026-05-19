@@ -25,6 +25,9 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 import java.util.UUID;
 
+/**
+ * The clientbound packet instructing the client to remove a previously applied resource pack.
+ */
 public class RemoveResourcePackPacket implements MinecraftPacket {
 
   private UUID id;

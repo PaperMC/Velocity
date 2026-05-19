@@ -23,6 +23,9 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The clientbound packet carrying a system chat message, which is not attributed to a player.
+ */
 public class SystemChatPacket implements MinecraftPacket {
 
   public SystemChatPacket() {

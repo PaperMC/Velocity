@@ -35,6 +35,9 @@ import java.util.List;
 import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * A keyed (1.19-1.19.1) signed player command, including its per-argument signatures.
+ */
 public class KeyedPlayerCommandPacket implements MinecraftPacket {
 
   private static final int MAX_NUM_ARGUMENTS = 8;

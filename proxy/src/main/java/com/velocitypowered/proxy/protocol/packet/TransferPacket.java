@@ -25,6 +25,9 @@ import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * The clientbound packet instructing the client to transfer to another server.
+ */
 public class TransferPacket implements MinecraftPacket {
   private String host;
   private int port;
@@ -37,6 +40,11 @@ public class TransferPacket implements MinecraftPacket {
     this.port = port;
   }
 
+  /**
+   * Returns the destination address the client is asked to transfer to.
+   *
+   * @return the destination address, or {@code null} if no host has been set
+   */
   @Nullable
   public InetSocketAddress address() {
     if (host == null) {

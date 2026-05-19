@@ -28,6 +28,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * A command argument type whose value is a key into a game registry.
+ */
 public class RegistryKeyArgument implements ArgumentType<String> {
 
   private static final List<String> EXAMPLES = Arrays.asList("foo", "foo:bar", "012");

@@ -23,6 +23,10 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The serverbound configuration packet by which the client accepts the server's code of
+ * conduct.
+ */
 public class CodeOfConductAcceptPacket implements MinecraftPacket {
 
   public static final CodeOfConductAcceptPacket INSTANCE = new CodeOfConductAcceptPacket();

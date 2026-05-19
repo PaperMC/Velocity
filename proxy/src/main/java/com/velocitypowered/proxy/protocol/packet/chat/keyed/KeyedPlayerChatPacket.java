@@ -29,6 +29,9 @@ import io.netty.buffer.ByteBuf;
 import java.time.Instant;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * A keyed (1.19-1.19.1) signed player chat message.
+ */
 public class KeyedPlayerChatPacket implements MinecraftPacket {
 
   private String message;

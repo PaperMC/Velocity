@@ -33,6 +33,9 @@ import java.util.regex.Pattern;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The clientbound packet asking the client to download and apply a resource pack.
+ */
 public class ResourcePackRequestPacket implements MinecraftPacket {
 
   private @MonotonicNonNull UUID id; // 1.20.3+
@@ -124,6 +127,11 @@ public class ResourcePackRequestPacket implements MinecraftPacket {
     }
   }
 
+  /**
+   * Builds the resource pack info described by this packet.
+   *
+   * @return the resource pack info prompted by the server
+   */
   public VelocityResourcePackInfo toServerPromptedPack() {
     final ResourcePackInfo.Builder builder =
         new VelocityResourcePackInfo.BuilderImpl(Preconditions.checkNotNull(url))

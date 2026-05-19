@@ -28,6 +28,9 @@ import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The base class for protocol-version-specific builders that assemble outbound chat packets.
+ */
 public abstract class ChatBuilderV2 {
 
   protected final ProtocolVersion version;

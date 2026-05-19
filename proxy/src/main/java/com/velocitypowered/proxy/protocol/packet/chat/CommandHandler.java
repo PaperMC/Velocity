@@ -31,6 +31,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Handles inbound player command packets of a specific type.
+ *
+ * @param <T> the command packet type handled by this handler
+ */
 public interface CommandHandler<T extends MinecraftPacket> {
 
   Logger logger = LogManager.getLogger(CommandHandler.class);
@@ -39,6 +44,12 @@ public interface CommandHandler<T extends MinecraftPacket> {
 
   void handlePlayerCommandInternal(T packet);
 
+  /**
+   * Handles the given packet if it matches this handler's packet type.
+   *
+   * @param packet the packet to handle
+   * @return {@code true} if the packet was handled by this handler
+   */
   default boolean handlePlayerCommand(MinecraftPacket packet) {
     if (packetClass().isInstance(packet)) {
       handlePlayerCommandInternal(packetClass().cast(packet));
@@ -54,6 +65,17 @@ public interface CommandHandler<T extends MinecraftPacket> {
         .thenApply(hasRunPacketFunction);
   }
 
+  /**
+   * Runs the command event and queues the resulting packet so it is sent in chat order.
+   *
+   * @param server the proxy server
+   * @param player the player who issued the command
+   * @param futurePacketCreator builds the packet to forward once the command event completes
+   * @param message the raw command text
+   * @param timestamp the time the command was issued
+   * @param lastSeenMessages the last-seen messages reported with the command, or {@code null}
+   * @param invocationInfo the command invocation metadata
+   */
   default void queueCommandResult(VelocityServer server, ConnectedPlayer player,
       BiFunction<CommandExecuteEvent, LastSeenMessages, CompletableFuture<MinecraftPacket>> futurePacketCreator,
       String message, Instant timestamp, @Nullable LastSeenMessages lastSeenMessages,

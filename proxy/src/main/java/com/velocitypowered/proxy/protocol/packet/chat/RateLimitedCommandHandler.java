@@ -22,6 +22,11 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import net.kyori.adventure.text.Component;
 
+/**
+ * A command handler that applies the proxy's command rate limit before dispatching a command.
+ *
+ * @param <T> the command packet type handled by this handler
+ */
 public abstract class RateLimitedCommandHandler<T extends MinecraftPacket> implements CommandHandler<T> {
 
   private final Player player;

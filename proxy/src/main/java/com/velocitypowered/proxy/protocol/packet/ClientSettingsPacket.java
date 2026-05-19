@@ -26,6 +26,10 @@ import io.netty.buffer.ByteBufUtil;
 import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The serverbound packet carrying a player's client settings, such as locale, view distance,
+ * and chat and skin preferences.
+ */
 public class ClientSettingsPacket implements MinecraftPacket {
   private @Nullable String locale;
   private byte viewDistance;
@@ -41,6 +45,19 @@ public class ClientSettingsPacket implements MinecraftPacket {
   public ClientSettingsPacket() {
   }
 
+  /**
+   * Creates a client settings packet with the given values.
+   *
+   * @param locale the client locale
+   * @param viewDistance the render distance, in chunks
+   * @param chatVisibility the chat visibility mode
+   * @param chatColors whether chat colors are enabled
+   * @param skinParts the bit mask of enabled skin parts
+   * @param mainHand the preferred main hand
+   * @param textFilteringEnabled whether server-side text filtering is enabled
+   * @param clientListingAllowed whether the client allows being listed in player lists
+   * @param particleStatus the particle display mode
+   */
   public ClientSettingsPacket(String locale, byte viewDistance, int chatVisibility, boolean chatColors,
                               short skinParts, int mainHand, boolean textFilteringEnabled, boolean clientListingAllowed,
                               int particleStatus) {
@@ -55,6 +72,12 @@ public class ClientSettingsPacket implements MinecraftPacket {
     this.particleStatus = particleStatus;
   }
 
+  /**
+   * Returns the client's locale.
+   *
+   * @return the locale
+   * @throws IllegalStateException if no locale has been set
+   */
   public String getLocale() {
     if (locale == null) {
       throw new IllegalStateException("No locale specified");

@@ -27,6 +27,10 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The initial serverbound handshake packet that selects the protocol version and the
+ * connection's next state.
+ */
 public class HandshakePacket implements MinecraftPacket {
 
   // This size was chosen to ensure Forge clients can still connect even with very long hostnames.

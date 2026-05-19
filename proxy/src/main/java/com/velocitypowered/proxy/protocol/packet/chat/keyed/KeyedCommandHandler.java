@@ -26,11 +26,20 @@ import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderV2;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 
+/**
+ * Handles keyed (1.19-1.19.1) signed player command packets.
+ */
 public class KeyedCommandHandler extends RateLimitedCommandHandler<KeyedPlayerCommandPacket> {
 
   private final ConnectedPlayer player;
   private final VelocityServer server;
 
+  /**
+   * Creates a keyed command handler for the given player.
+   *
+   * @param player the player whose commands are handled
+   * @param server the proxy server
+   */
   public KeyedCommandHandler(ConnectedPlayer player, VelocityServer server) {
     super(player, server);
     this.player = player;

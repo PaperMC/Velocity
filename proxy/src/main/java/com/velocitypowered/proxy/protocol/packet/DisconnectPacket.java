@@ -28,6 +28,9 @@ import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The clientbound packet that disconnects the client, carrying the reason shown to the player.
+ */
 public class DisconnectPacket implements MinecraftPacket {
 
   private @Nullable ComponentHolder reason;
@@ -42,6 +45,12 @@ public class DisconnectPacket implements MinecraftPacket {
     this.reason = Preconditions.checkNotNull(reason, "reason");
   }
 
+  /**
+   * Returns the disconnect reason.
+   *
+   * @return the reason component holder
+   * @throws IllegalStateException if no reason has been set
+   */
   public ComponentHolder getReason() {
     if (reason == null) {
       throw new IllegalStateException("No reason specified");
@@ -76,6 +85,15 @@ public class DisconnectPacket implements MinecraftPacket {
     return handler.handle(this);
   }
 
+  /**
+   * Creates a disconnect packet for the given reason, serialized for the supplied protocol
+   * version and connection state.
+   *
+   * @param component the reason to show the player
+   * @param version the protocol version to serialize for
+   * @param state the connection state the packet is sent in
+   * @return the disconnect packet
+   */
   public static DisconnectPacket create(Component component, ProtocolVersion version, StateRegistry state) {
     Preconditions.checkNotNull(component, "component");
     return new DisconnectPacket(state, new ComponentHolder(state == StateRegistry.LOGIN

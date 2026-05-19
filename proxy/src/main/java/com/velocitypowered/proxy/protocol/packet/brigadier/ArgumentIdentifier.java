@@ -24,6 +24,10 @@ import java.util.HashMap;
 import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Identifies a command argument type, pairing its string identifier with any version-specific
+ * numeric ids.
+ */
 public class ArgumentIdentifier {
 
   private final String identifier;

@@ -50,6 +50,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
+/**
+ * Holds a chat component in whichever form it was received and converts between the JSON,
+ * binary tag, and parsed representations on demand.
+ */
 public class ComponentHolder {
   private static final Logger logger = LogManager.getLogger(ComponentHolder.class);
   public static final int DEFAULT_MAX_STRING_SIZE = 262143;
@@ -74,6 +78,11 @@ public class ComponentHolder {
     this.binaryTag = binaryTag;
   }
 
+  /**
+   * Returns this holder's value as a parsed component, converting it if necessary.
+   *
+   * @return the component
+   */
   public Component getComponent() {
     if (component == null) {
       if (json != null) {
@@ -94,6 +103,11 @@ public class ComponentHolder {
     return component;
   }
 
+  /**
+   * Returns this holder's value as a JSON string, converting it if necessary.
+   *
+   * @return the JSON representation
+   */
   public String getJson() {
     if (json == null) {
       json = ProtocolUtils.getJsonChatSerializer(version).serialize(getComponent());
@@ -101,6 +115,11 @@ public class ComponentHolder {
     return json;
   }
 
+  /**
+   * Returns this holder's value as a binary tag, converting it if necessary.
+   *
+   * @return the binary tag representation
+   */
   public BinaryTag getBinaryTag() {
     if (binaryTag == null) {
       // TODO: replace this with adventure-text-serializer-nbt
@@ -109,6 +128,12 @@ public class ComponentHolder {
     return binaryTag;
   }
 
+  /**
+   * Converts a JSON component tree into its equivalent binary tag form.
+   *
+   * @param json the JSON element to convert
+   * @return the equivalent binary tag
+   */
   public static BinaryTag serialize(JsonElement json) {
     if (json instanceof JsonPrimitive jsonPrimitive) {
       if (jsonPrimitive.isNumber()) {
@@ -203,6 +228,12 @@ public class ComponentHolder {
     return EndBinaryTag.endBinaryTag();
   }
 
+  /**
+   * Converts a binary tag component tree into its equivalent JSON form.
+   *
+   * @param tag the binary tag to convert
+   * @return the equivalent JSON element
+   */
   public static JsonElement deserialize(BinaryTag tag) {
     return switch (tag.type().id()) {
       // BinaryTagTypes.BYTE
@@ -283,6 +314,13 @@ public class ComponentHolder {
     };
   }
 
+  /**
+   * Reads a component from the buffer in the form appropriate to the protocol version.
+   *
+   * @param buf the buffer to read from
+   * @param version the protocol version being decoded
+   * @return the component holder
+   */
   public static ComponentHolder read(ByteBuf buf, ProtocolVersion version) {
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
       return new ComponentHolder(version,
@@ -294,6 +332,11 @@ public class ComponentHolder {
     }
   }
 
+  /**
+   * Writes this component to the buffer in the form appropriate to the protocol version.
+   *
+   * @param buf the buffer to write to
+   */
   public void write(ByteBuf buf) {
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {
       ProtocolUtils.writeBinaryTag(buf, version, getBinaryTag());

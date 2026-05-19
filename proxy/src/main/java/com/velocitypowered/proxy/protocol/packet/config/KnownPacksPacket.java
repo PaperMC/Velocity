@@ -25,6 +25,9 @@ import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import java.util.List;
 
+/**
+ * The configuration packet exchanging the set of data packs known to each side.
+ */
 public class KnownPacksPacket implements MinecraftPacket {
 
   private static final int MAX_LENGTH_PACKS = Integer.getInteger("velocity.max-known-packs", 64);
@@ -65,6 +68,13 @@ public class KnownPacksPacket implements MinecraftPacket {
     return handler.handle(this);
   }
 
+  /**
+   * A single known data pack.
+   *
+   * @param namespace the pack namespace
+   * @param id the pack id
+   * @param version the pack version
+   */
   public record KnownPack(String namespace, String id, String version) {
     private static KnownPack read(ByteBuf buf) {
       return new KnownPack(ProtocolUtils.readString(buf), ProtocolUtils.readString(buf), ProtocolUtils.readString(buf));

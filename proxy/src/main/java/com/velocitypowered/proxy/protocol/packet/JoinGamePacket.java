@@ -29,6 +29,10 @@ import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The clientbound packet sent when a player joins a world, describing the dimension and
+ * initial game state.
+ */
 public class JoinGamePacket implements MinecraftPacket {
 
   private static final BinaryTagIO.Reader JOINGAME_READER = BinaryTagIO.reader(4 * 1024 * 1024);

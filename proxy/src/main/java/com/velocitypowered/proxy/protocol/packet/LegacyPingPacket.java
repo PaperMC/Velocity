@@ -26,6 +26,9 @@ import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The legacy server list ping packet sent by pre-1.7 clients.
+ */
 public class LegacyPingPacket implements MinecraftPacket {
 
   private final LegacyMinecraftPingVersion version;

@@ -101,6 +101,12 @@ public class ChatQueue implements AutoCloseable {
     });
   }
 
+  /**
+   * Queues a chat acknowledgement for the given offset so it is forwarded to the backend in
+   * order.
+   *
+   * @param offset the acknowledged message offset
+   */
   public void handleAcknowledgement(int offset) {
     queueTask((chatState, smc) -> {
       int ackCountToForward = chatState.accumulateAckCount(offset);
@@ -161,6 +167,13 @@ public class ChatQueue implements AutoCloseable {
     private ChatState() {
     }
 
+    /**
+     * Updates the tracked chat state from an incoming message and resolves its last-seen messages.
+     *
+     * @param timestamp the message timestamp, or {@code null} if the message is unsigned
+     * @param lastSeenMessages the last-seen messages reported by the message, or {@code null}
+     * @return the resolved last-seen messages, or {@code null} if unavailable
+     */
     @Nullable
     public LastSeenMessages updateFromMessage(@Nullable Instant timestamp, @Nullable LastSeenMessages lastSeenMessages) {
       if (timestamp != null) {
@@ -175,6 +188,12 @@ public class ChatQueue implements AutoCloseable {
       return null;
     }
 
+    /**
+     * Accumulates pending acknowledgements and reports how many should now be forwarded.
+     *
+     * @param ackCount the number of newly acknowledged messages
+     * @return the number of acknowledgements to forward
+     */
     public int accumulateAckCount(int ackCount) {
       int delayedAckCount = this.delayedAckCount.addAndGet(ackCount);
       int ackCountToForward = delayedAckCount - MINIMUM_DELAYED_ACK_COUNT;

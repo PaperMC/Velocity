@@ -23,6 +23,9 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The serverbound packet by which the client acknowledges that the login phase is complete.
+ */
 public class LoginAcknowledgedPacket implements MinecraftPacket {
 
   @Override

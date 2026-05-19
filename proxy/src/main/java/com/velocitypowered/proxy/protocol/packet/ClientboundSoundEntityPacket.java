@@ -26,6 +26,9 @@ import java.util.Random;
 import net.kyori.adventure.sound.Sound;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * The clientbound packet instructing the client to play a sound emitted by a specific entity.
+ */
 public class ClientboundSoundEntityPacket implements MinecraftPacket {
 
   private static final Random SEEDS_RANDOM = new Random();
@@ -37,6 +40,13 @@ public class ClientboundSoundEntityPacket implements MinecraftPacket {
   public ClientboundSoundEntityPacket() {
   }
 
+  /**
+   * Creates a sound-entity packet for the given sound and emitter.
+   *
+   * @param sound the sound to play
+   * @param fixedRange the fixed attenuation range, or {@code null} to use the default
+   * @param emitterEntityId the id of the entity emitting the sound
+   */
   public ClientboundSoundEntityPacket(Sound sound, @Nullable Float fixedRange, int emitterEntityId) {
     this.sound = sound;
     this.fixedRange = fixedRange;

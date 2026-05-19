@@ -24,6 +24,9 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The serverbound packet requesting the server's status during a server list ping.
+ */
 public class StatusRequestPacket implements MinecraftPacket {
 
   public static final StatusRequestPacket INSTANCE = new StatusRequestPacket();

@@ -23,6 +23,10 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The keep-alive packet exchanged in both directions to confirm the connection is still
+ * responsive.
+ */
 public class KeepAlivePacket implements MinecraftPacket {
 
   private long randomId;

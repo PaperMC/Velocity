@@ -33,6 +33,10 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The clientbound packet that adds, updates, or removes player list (tab list) entries on
+ * legacy clients.
+ */
 public class LegacyPlayerListItemPacket implements MinecraftPacket {
 
   public static final int ADD_PLAYER = 0;
@@ -172,6 +176,9 @@ public class LegacyPlayerListItemPacket implements MinecraftPacket {
     }
   }
 
+  /**
+   * A single player list entry carried by a {@link LegacyPlayerListItemPacket}.
+   */
   public static class Item {
 
     private final UUID uuid;
@@ -190,6 +197,12 @@ public class LegacyPlayerListItemPacket implements MinecraftPacket {
       this.uuid = uuid;
     }
 
+    /**
+     * Creates a player list item that mirrors an existing tab list entry.
+     *
+     * @param entry the tab list entry to copy
+     * @return the created item
+     */
     public static Item from(TabListEntry entry) {
       return new Item(entry.getProfile().getId())
           .setName(entry.getProfile().getName())

@@ -24,6 +24,10 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.util.Map;
 
+/**
+ * The clientbound packet supplying custom key-value details to include in client crash
+ * reports.
+ */
 public class ClientboundCustomReportDetailsPacket implements MinecraftPacket {
 
   private Map<String, String> details;

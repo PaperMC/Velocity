@@ -27,6 +27,9 @@ import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.nbt.BinaryTag;
 import net.kyori.adventure.nbt.BinaryTagIO;
 
+/**
+ * The clientbound packet instructing the client to display a dialog.
+ */
 public class DialogShowPacket implements MinecraftPacket {
 
   private final StateRegistry state;

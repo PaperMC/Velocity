@@ -28,6 +28,10 @@ import io.netty.buffer.Unpooled;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * An argument type that carries the raw, mod-supplied property data of an otherwise unknown
+ * argument.
+ */
 public class ModArgumentProperty implements ArgumentType<ByteBuf> {
 
   private final ArgumentIdentifier identifier;

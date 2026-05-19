@@ -23,6 +23,9 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The packet that sets the player's action bar text.
+ */
 public class TitleActionbarPacket extends GenericTitlePacket {
 
   private ComponentHolder component;

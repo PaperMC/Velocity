@@ -30,6 +30,9 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * Handles session-signed (1.19.1+) player chat packets.
+ */
 public class SessionChatHandler implements ChatHandler<SessionPlayerChatPacket> {
 
   private static final Logger logger = LogManager.getLogger(SessionChatHandler.class);

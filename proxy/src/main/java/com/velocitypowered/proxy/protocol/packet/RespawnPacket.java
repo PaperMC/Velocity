@@ -28,6 +28,9 @@ import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The clientbound packet that respawns the player, typically when changing dimensions.
+ */
 public class RespawnPacket implements MinecraftPacket {
 
   private int dimension;
@@ -46,6 +49,22 @@ public class RespawnPacket implements MinecraftPacket {
   public RespawnPacket() {
   }
 
+  /**
+   * Creates a respawn packet describing the target world and game state.
+   *
+   * @param dimension the dimension id
+   * @param partialHashedSeed the partial hashed world seed
+   * @param difficulty the world difficulty
+   * @param gamemode the player game mode
+   * @param levelType the level type
+   * @param dataToKeep the bit mask of player data to retain across the respawn
+   * @param dimensionInfo the dimension information
+   * @param previousGamemode the previous game mode
+   * @param currentDimensionData the registry data for the current dimension
+   * @param lastDeathPosition the last death position, or {@code null} if none
+   * @param portalCooldown the remaining portal cooldown, in ticks
+   * @param seaLevel the world sea level
+   */
   public RespawnPacket(int dimension, long partialHashedSeed, short difficulty, short gamemode,
                        String levelType, byte dataToKeep, DimensionInfo dimensionInfo,
                        short previousGamemode, CompoundBinaryTag currentDimensionData,
@@ -65,6 +84,12 @@ public class RespawnPacket implements MinecraftPacket {
     this.seaLevel = seaLevel;
   }
 
+  /**
+   * Creates a respawn packet that mirrors the state of the given join-game packet.
+   *
+   * @param joinGame the join-game packet to copy state from
+   * @return the created respawn packet
+   */
   public static RespawnPacket fromJoinGame(JoinGamePacket joinGame) {
     return new RespawnPacket(joinGame.getDimension(), joinGame.getPartialHashedSeed(),
         joinGame.getDifficulty(), joinGame.getGamemode(), joinGame.getLevelType(),

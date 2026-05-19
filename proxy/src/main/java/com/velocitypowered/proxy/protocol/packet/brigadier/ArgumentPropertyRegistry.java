@@ -49,6 +49,10 @@ import java.util.HashMap;
 import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * The registry mapping command argument types to the serializers used to encode and decode
+ * their properties.
+ */
 public class ArgumentPropertyRegistry {
 
   private ArgumentPropertyRegistry() {

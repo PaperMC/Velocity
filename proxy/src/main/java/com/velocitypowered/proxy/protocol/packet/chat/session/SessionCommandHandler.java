@@ -27,11 +27,20 @@ import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Handles session-signed (1.19.1+) player command packets.
+ */
 public class SessionCommandHandler extends RateLimitedCommandHandler<SessionPlayerCommandPacket> {
 
   private final ConnectedPlayer player;
   private final VelocityServer server;
 
+  /**
+   * Creates a session command handler for the given player.
+   *
+   * @param player the player whose commands are handled
+   * @param server the proxy server
+   */
   public SessionCommandHandler(ConnectedPlayer player, VelocityServer server) {
     super(player, server);
     this.player = player;

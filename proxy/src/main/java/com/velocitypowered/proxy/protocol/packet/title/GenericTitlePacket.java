@@ -23,8 +23,14 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The base class for the family of packets that control on-screen titles.
+ */
 public abstract class GenericTitlePacket implements MinecraftPacket {
 
+  /**
+   * The kinds of title update that a title packet can represent.
+   */
   public enum ActionType {
     SET_TITLE(0),
     SET_SUBTITLE(1),

@@ -23,6 +23,9 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The clientbound packet that adds, removes, or sets the chat auto-completion suggestions.
+ */
 public class PlayerChatCompletionPacket implements MinecraftPacket {
 
   private String[] completions;
@@ -71,6 +74,9 @@ public class PlayerChatCompletionPacket implements MinecraftPacket {
     return handler.handle(this);
   }
 
+  /**
+   * The operations a {@link PlayerChatCompletionPacket} can perform on the completion list.
+   */
   public enum Action {
     ADD,
     REMOVE,

@@ -22,6 +22,9 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The packet that sets the fade-in, stay, and fade-out timings for titles.
+ */
 public class TitleTimesPacket extends GenericTitlePacket {
 
   private int fadeIn;

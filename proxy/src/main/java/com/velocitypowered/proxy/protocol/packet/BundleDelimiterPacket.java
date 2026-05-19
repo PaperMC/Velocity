@@ -23,6 +23,10 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * A delimiter packet that marks the boundary of a packet bundle; the client treats every
+ * packet between two delimiters as a single atomic batch.
+ */
 public final class BundleDelimiterPacket implements MinecraftPacket {
   public static final BundleDelimiterPacket INSTANCE = new BundleDelimiterPacket();
 

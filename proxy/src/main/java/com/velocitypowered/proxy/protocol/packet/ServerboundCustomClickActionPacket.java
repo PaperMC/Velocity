@@ -25,6 +25,10 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The serverbound packet sent when the client triggers a custom click action, carrying its
+ * identifier and payload.
+ */
 public class ServerboundCustomClickActionPacket extends DeferredByteBufHolder implements MinecraftPacket {
 
   private static final int MAX_TAG_SIZE = 65536;

@@ -21,6 +21,9 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * An argument property serializer for {@link RegistryKeyArgument}, encoding its registry key.
+ */
 public class RegistryKeyArgumentSerializer implements
     ArgumentPropertySerializer<RegistryKeyArgument> {
 

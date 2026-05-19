@@ -25,6 +25,9 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The clientbound packet carrying the server's status during a server list ping.
+ */
 public class StatusResponsePacket implements MinecraftPacket {
 
   private @Nullable CharSequence status;
@@ -36,6 +39,12 @@ public class StatusResponsePacket implements MinecraftPacket {
     this.status = status;
   }
 
+  /**
+   * Returns the serialized status response.
+   *
+   * @return the status response
+   * @throws IllegalStateException if no status has been set
+   */
   public String getStatus() {
     if (status == null) {
       throw new IllegalStateException("Status is not specified");

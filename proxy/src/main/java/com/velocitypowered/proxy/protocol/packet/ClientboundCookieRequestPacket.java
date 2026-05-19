@@ -25,6 +25,10 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 
+/**
+ * The clientbound packet requesting that the client send back the cookie stored under a given
+ * key.
+ */
 public class ClientboundCookieRequestPacket implements MinecraftPacket {
 
   private Key key;

@@ -25,6 +25,9 @@ import io.netty.buffer.ByteBuf;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The legacy (pre-1.19) chat packet, used for both player and system messages.
+ */
 public class LegacyChatPacket implements MinecraftPacket {
 
   public static final byte CHAT_TYPE = (byte) 0;

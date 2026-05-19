@@ -26,6 +26,9 @@ import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The serverbound packet carrying the cookie the client has stored for a requested key.
+ */
 public class ServerboundCookieResponsePacket implements MinecraftPacket {
 
   private Key key;

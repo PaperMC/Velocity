@@ -23,6 +23,9 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatHandler;
 
+/**
+ * Handles legacy (pre-1.19) player chat packets.
+ */
 public class LegacyChatHandler implements ChatHandler<LegacyChatPacket> {
 
   private final VelocityServer server;

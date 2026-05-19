@@ -17,6 +17,9 @@
 
 package com.velocitypowered.proxy.protocol.packet.chat;
 
+/**
+ * The categories of chat message recognized by the legacy chat protocol.
+ */
 public enum ChatType {
   CHAT((byte) 0),
   SYSTEM((byte) 1),

@@ -19,6 +19,9 @@ package com.velocitypowered.proxy.protocol.packet.chat;
 
 import java.time.Instant;
 
+/**
+ * Tracks chat message timestamps to detect out-of-order or future-dated messages.
+ */
 public class ChatTimeKeeper {
 
   private Instant lastTimestamp;
@@ -27,6 +30,12 @@ public class ChatTimeKeeper {
     this.lastTimestamp = Instant.MIN;
   }
 
+  /**
+   * Records the given timestamp and reports whether it is valid relative to the last one seen.
+   *
+   * @param instant the timestamp of the latest message
+   * @return {@code true} if the timestamp is in order
+   */
   public boolean update(Instant instant) {
     if (instant.isBefore(this.lastTimestamp)) {
       this.lastTimestamp = instant;

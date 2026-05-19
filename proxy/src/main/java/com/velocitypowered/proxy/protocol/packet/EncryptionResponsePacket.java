@@ -29,6 +29,10 @@ import io.netty.buffer.ByteBuf;
 import java.util.Arrays;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The serverbound login packet carrying the client's encrypted shared secret and verification
+ * token.
+ */
 public class EncryptionResponsePacket implements MinecraftPacket {
 
   private static final QuietDecoderException NO_SALT = new QuietDecoderException(
@@ -46,6 +50,12 @@ public class EncryptionResponsePacket implements MinecraftPacket {
     return verifyToken.clone();
   }
 
+  /**
+   * Returns the salt used when signing the verification token.
+   *
+   * @return the salt
+   * @throws com.velocitypowered.proxy.protocol.netty.QuietDecoderException if no salt is present
+   */
   public long getSalt() {
     if (salt == null) {
       throw NO_SALT;

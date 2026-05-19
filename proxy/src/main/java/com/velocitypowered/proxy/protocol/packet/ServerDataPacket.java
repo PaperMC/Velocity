@@ -29,6 +29,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * The clientbound packet carrying server metadata, such as the description, icon, and secure-
+ * chat status.
+ */
 public class ServerDataPacket implements MinecraftPacket {
 
   private @Nullable ComponentHolder description;
@@ -38,6 +42,13 @@ public class ServerDataPacket implements MinecraftPacket {
   public ServerDataPacket() {
   }
 
+  /**
+   * Creates a server data packet with the given values.
+   *
+   * @param description the server description, or {@code null} if none
+   * @param favicon the server icon, or {@code null} if none
+   * @param secureChatEnforced whether secure chat is enforced
+   */
   public ServerDataPacket(@Nullable ComponentHolder description, @Nullable Favicon favicon,
                           boolean secureChatEnforced) {
     this.description = description;

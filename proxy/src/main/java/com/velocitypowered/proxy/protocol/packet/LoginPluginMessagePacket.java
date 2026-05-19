@@ -27,6 +27,10 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * The clientbound login-phase plugin message, used to exchange custom data before the play
+ * phase begins.
+ */
 public class LoginPluginMessagePacket extends DeferredByteBufHolder implements MinecraftPacket {
 
   private int id;
@@ -36,6 +40,13 @@ public class LoginPluginMessagePacket extends DeferredByteBufHolder implements M
     super(null);
   }
 
+  /**
+   * Creates a login plugin message for the given channel and payload.
+   *
+   * @param id the message id used to correlate the response
+   * @param channel the channel the message is sent on
+   * @param data the message payload
+   */
   public LoginPluginMessagePacket(int id, @Nullable String channel, ByteBuf data) {
     super(data);
     this.id = id;
@@ -46,6 +57,12 @@ public class LoginPluginMessagePacket extends DeferredByteBufHolder implements M
     return id;
   }
 
+  /**
+   * Returns the channel this message was sent on.
+   *
+   * @return the channel
+   * @throws IllegalStateException if no channel has been set
+   */
   public String getChannel() {
     if (channel == null) {
       throw new IllegalStateException("Channel is not specified!");

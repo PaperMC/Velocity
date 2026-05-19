@@ -23,6 +23,9 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * The clientbound packet instructing the client to close any dialog currently shown.
+ */
 public class DialogClearPacket implements MinecraftPacket {
 
   public static final DialogClearPacket INSTANCE = new DialogClearPacket();

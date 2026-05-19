@@ -21,6 +21,9 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * An argument property serializer that encodes an argument type as a single registry id.
+ */
 public class RegistryIdArgumentSerializer implements ArgumentPropertySerializer<Integer> {
 
   static final RegistryIdArgumentSerializer REGISTRY_ID = new RegistryIdArgumentSerializer();
