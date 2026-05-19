@@ -25,6 +25,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.permission.Tristate;
+import com.velocitypowered.api.util.ProxyVersion;
 import com.velocitypowered.natives.compression.VelocityCompressor;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
@@ -32,10 +33,10 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.zip.DataFormatException;
 import net.kyori.adventure.text.Component;
@@ -148,13 +149,13 @@ public final class BvCommand {
                           .filter(e -> e.getRequirement().test(source))
                           .map(LiteralCommandNode::getName)
                           .collect(Collectors.joining("|"));
-                      sendHelp(source, availableCommands.isEmpty() ? "status" : availableCommands);
+                      if (availableCommands.isEmpty()) {
+                        sendCopyright(source, server);
+                      } else {
+                        sendHelp(source, availableCommands);
+                      }
                       return Command.SINGLE_SUCCESS;
-                    })
-                    .requires(commands.stream()
-                        .map(LiteralCommandNode::getRequirement)
-                        .reduce(Predicate::or)
-                        .orElseThrow()),
+                    }),
                 ArgumentBuilder::then,
                 ArgumentBuilder::then
             )
@@ -464,6 +465,24 @@ public final class BvCommand {
         "bvelocity.command.help-benchmark",
         ROOT_COMMAND + " compression benchmark 32768 64"
     );
+  }
+
+  private static void sendCopyright(CommandSource source, VelocityServer server) {
+    final ProxyVersion version = server.getVersion();
+    sendHeader(source, Component.text(version.getName(), ACCENT));
+    sendStatLine(source, Component.text()
+        .append(Component.text("Version: ", ACCENT))
+        .append(Component.text(version.getVersion(), VALUE))
+        .build());
+    sendStatLine(source, Component.text()
+        .append(Component.text("Author: ", ACCENT))
+        .append(Component.text("NotCoral", VALUE))
+        .append(Component.text(" (Springbringer)", NamedTextColor.GRAY))
+        .build());
+    sendStatLine(source, Component.text()
+        .append(Component.text("Copyright: ", ACCENT))
+        .append(Component.text("(C) " + LocalDate.now().getYear() + " NotCoral", VALUE))
+        .build());
   }
 
   private static void sendSectionTitle(CommandSource source, String translationKey) {

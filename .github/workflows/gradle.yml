@@ -21,3 +21,9 @@ jobs:
         distribution: 'zulu'
     - name: Build with Gradle
       run: ./gradlew build
+    - name: Upload bVelocity Jar
+      uses: actions/upload-artifact@v7
+      with:
+        name: bVelocity
+        path: proxy/build/libs/bVelocity-*.jar
+        if-no-files-found: error
