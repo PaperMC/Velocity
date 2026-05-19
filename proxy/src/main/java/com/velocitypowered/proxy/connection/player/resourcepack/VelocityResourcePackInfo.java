@@ -73,7 +73,7 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
   }
 
   @Override
-  public byte @Nullable[] getHash() {
+  public byte @Nullable [] getHash() {
     return hash == null ? null : hash.clone(); // Thanks spotbugs, very helpful.
   }
 
@@ -122,11 +122,15 @@ public final class VelocityResourcePackInfo implements ResourcePackInfo {
             .build();
   }
 
-  @SuppressWarnings("checkstyle:MissingJavadocMethod")
-  public static ResourcePackInfo fromAdventureRequest(
-          final ResourcePackRequest request,
-          final net.kyori.adventure.resource.ResourcePackInfo pack
-  ) {
+  /**
+   * Creates a resource pack info from an Adventure resource pack request and one of its packs.
+   *
+   * @param request the Adventure resource pack request supplying the forced flag and prompt
+   * @param pack the individual Adventure pack to convert
+   * @return the resource pack info
+   */
+  public static ResourcePackInfo fromAdventureRequest(final ResourcePackRequest request,
+                                                      final net.kyori.adventure.resource.ResourcePackInfo pack) {
     return new BuilderImpl(pack.uri().toString())
             .setHash(pack.hash().isEmpty() ? null : ByteBufUtil.decodeHexDump(pack.hash()))
             .setId(pack.id())

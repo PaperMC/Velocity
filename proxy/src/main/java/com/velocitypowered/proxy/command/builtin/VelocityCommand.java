@@ -72,7 +72,13 @@ import org.apache.logging.log4j.Logger;
 public final class VelocityCommand {
   private static final String USAGE = "/velocity <%s>";
 
-  @SuppressWarnings("checkstyle:MissingJavadocMethod")
+  /**
+   * Creates the {@code /velocity} command, including its {@code dump}, {@code heap},
+   * {@code info}, {@code plugins}, and {@code reload} subcommands.
+   *
+   * @param server the proxy server
+   * @return the {@code /velocity} command
+   */
   public static BrigadierCommand create(final VelocityServer server) {
     final LiteralCommandNode<CommandSource> dump = BrigadierCommand.literalArgumentBuilder("dump")
         .requires(source -> source.getPermissionValue("velocity.command.dump") == Tristate.TRUE)
@@ -268,7 +274,6 @@ public final class VelocityCommand {
 
   private record Dump(ProxyServer server) implements Command<CommandSource> {
     private static final Logger logger = LogManager.getLogger(Dump.class);
-
 
     @Override
     public int run(final CommandContext<CommandSource> context) {

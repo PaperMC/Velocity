@@ -30,7 +30,6 @@ package com.velocitypowered.proxy.util;
  * <p>This class is not thread-safe. If multiple threads access an instance concurrently,
  * external synchronization is required.</p>
  */
-@SuppressWarnings("checkstyle:WhitespaceAfter") // Not our class
 public final class IntervalledCounter {
 
   private static final int INITIAL_SIZE = 8;
@@ -219,7 +218,7 @@ public final class IntervalledCounter {
    * @return the rate in units per second for the current window
    */
   public double getRate() {
-    return (double)this.sum / ((double)this.interval * 1.0E-9);
+    return (double) this.sum / ((double) this.interval * 1.0E-9);
   }
 
   /**

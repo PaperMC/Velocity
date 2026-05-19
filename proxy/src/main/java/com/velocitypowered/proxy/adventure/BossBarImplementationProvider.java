@@ -21,8 +21,10 @@ import com.google.auto.service.AutoService;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.bossbar.BossBarImplementation;
 
+/**
+ * The {@link BossBarImplementation.Provider} that supplies Velocity's boss bar implementation.
+ */
 @AutoService(BossBarImplementation.Provider.class)
-@SuppressWarnings("MissingJavadocType")
 public class BossBarImplementationProvider implements BossBarImplementation.Provider {
   @Override
   public BossBarImplementation create(final BossBar bar) {

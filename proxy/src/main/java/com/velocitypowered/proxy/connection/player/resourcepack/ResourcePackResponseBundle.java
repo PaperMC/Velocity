@@ -20,7 +20,14 @@ package com.velocitypowered.proxy.connection.player.resourcepack;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import java.util.UUID;
 
-@SuppressWarnings("checkstyle:MissingJavadocType")
+/**
+ * Bundles the details of a resource pack response: the pack it refers to and the status the
+ * player reported for it.
+ *
+ * @param uuid the unique id of the resource pack
+ * @param hash the hash of the resource pack
+ * @param status the status the player reported for the pack
+ */
 public record ResourcePackResponseBundle(UUID uuid, String hash,
                                          PlayerResourcePackStatusEvent.Status status) {
 }

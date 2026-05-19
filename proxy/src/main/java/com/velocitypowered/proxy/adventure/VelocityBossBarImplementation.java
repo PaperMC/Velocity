@@ -31,7 +31,6 @@ import net.kyori.adventure.text.Component;
 /**
  * Implementation of a {@link BossBarImplementation}.
  */
-@SuppressWarnings("MissingJavadocMethod")
 public final class VelocityBossBarImplementation implements BossBar.Listener,
     BossBarImplementation {
   private final Set<ConnectedPlayer> viewers = Collections.newSetFromMap(
@@ -47,6 +46,13 @@ public final class VelocityBossBarImplementation implements BossBar.Listener,
     this.bar = bar;
   }
 
+  /**
+   * Registers the given player as a viewer of this boss bar, sending them the boss bar if they
+   * were not already viewing it.
+   *
+   * @param viewer the player to add as a viewer
+   * @return {@code true} if the player was newly added, {@code false} if already a viewer
+   */
   public boolean viewerAdd(final ConnectedPlayer viewer) {
     if (this.viewers.add(viewer)) {
       final ComponentHolder name = new ComponentHolder(
@@ -59,6 +65,12 @@ public final class VelocityBossBarImplementation implements BossBar.Listener,
     return false;
   }
 
+  /**
+   * Sends this boss bar to the given player by writing the add packet directly to their
+   * connection, without registering them as a tracked viewer.
+   *
+   * @param viewer the player to send the boss bar to
+   */
   public void createDirect(final ConnectedPlayer viewer) {
     final ComponentHolder name = new ComponentHolder(
         viewer.getProtocolVersion(),
@@ -67,6 +79,13 @@ public final class VelocityBossBarImplementation implements BossBar.Listener,
     viewer.getConnection().write(BossBarPacket.createAddPacket(this.id, this.bar, name));
   }
 
+  /**
+   * Unregisters the given player as a viewer of this boss bar, sending them the removal packet
+   * if they were viewing it.
+   *
+   * @param viewer the player to remove as a viewer
+   * @return {@code true} if the player was a viewer and has been removed
+   */
   public boolean viewerRemove(final ConnectedPlayer viewer) {
     if (this.viewers.remove(viewer)) {
       viewer.getBossBarManager().remove(this, BossBarPacket.createRemovePacket(this.id, this.bar));

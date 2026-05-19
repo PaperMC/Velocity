@@ -25,7 +25,12 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
-@SuppressWarnings("checkstyle:MissingJavadocType")
+/**
+ * The legacy disconnect packet sent to pre-1.7 clients, carrying either a server list ping
+ * response or a kick message encoded in the legacy format.
+ *
+ * @param reason the legacy-encoded disconnect string
+ */
 public record LegacyDisconnect(String reason) {
 
   private static final ServerPing.Players FAKE_PLAYERS = new ServerPing.Players(0, 0,
@@ -60,8 +65,8 @@ public record LegacyDisconnect(String reason) {
               LEGACY_COLOR_CODE + "1",
               Integer.toString(response.getVersion().getProtocol()),
               response.getVersion().getName(),
-              getFirstLine(LegacyComponentSerializer.legacySection().serialize(response
-                  .getDescriptionComponent())),
+              getFirstLine(LegacyComponentSerializer.legacySection().serialize(
+                  response.getDescriptionComponent())),
               Integer.toString(players.getOnline()),
               Integer.toString(players.getMax())
         ));

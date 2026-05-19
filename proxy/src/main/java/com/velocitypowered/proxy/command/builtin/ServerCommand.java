@@ -46,7 +46,13 @@ public final class ServerCommand {
   private static final String SERVER_ARG = "server";
   public static final int MAX_SERVERS_TO_LIST = 50;
 
-  @SuppressWarnings("checkstyle:MissingJavadocMethod")
+  /**
+   * Creates the {@code /server} command, which lists the available servers and connects the
+   * player to a chosen one.
+   *
+   * @param server the proxy server
+   * @return the {@code /server} command
+   */
   public static BrigadierCommand create(final ProxyServer server) {
     final LiteralCommandNode<CommandSource> node = BrigadierCommand
         .literalArgumentBuilder("server")
@@ -124,7 +130,7 @@ public final class ServerCommand {
   }
 
   private static TextComponent formatServerComponent(final String currentPlayerServer,
-                                              final RegisteredServer server) {
+                                                     final RegisteredServer server) {
     final ServerInfo serverInfo = server.getServerInfo();
     final TextComponent.Builder serverTextComponent = Component.text()
             .content(serverInfo.getName());

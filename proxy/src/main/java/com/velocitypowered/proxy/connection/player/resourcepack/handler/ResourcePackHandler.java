@@ -56,7 +56,7 @@ public abstract sealed class ResourcePackHandler
    * @return a new ResourcePackHandler
    */
   public static @NotNull ResourcePackHandler create(final ConnectedPlayer player,
-                                           final VelocityServer server) {
+                                                    final VelocityServer server) {
     final ProtocolVersion protocolVersion = player.getProtocolVersion();
     if (protocolVersion.lessThan(ProtocolVersion.MINECRAFT_1_17)) {
       return new LegacyResourcePackHandler(player, server);
@@ -172,7 +172,12 @@ public abstract sealed class ResourcePackHandler
    */
   public abstract boolean hasPackAppliedByHash(final byte[] hash);
 
-  @SuppressWarnings("checkstyle:MissingJavadocMethod")
+  /**
+   * Ensures the resource pack with the given hash has not already been applied to the player.
+   *
+   * @param hash the resource pack hash to check
+   * @throws IllegalStateException if a pack with this hash has already been applied
+   */
   public void checkAlreadyAppliedPack(final byte[] hash) {
     if (this.hasPackAppliedByHash(hash)) {
       throw new IllegalStateException("Cannot apply a resource pack already applied");

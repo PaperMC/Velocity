@@ -275,7 +275,12 @@ public final class ConnectionManager {
     return this.serverChannelInitializer;
   }
 
-  @SuppressWarnings("checkstyle:MissingJavadocMethod")
+  /**
+   * Creates an {@link HttpClient} that executes its asynchronous tasks on Velocity's worker
+   * event loop group.
+   *
+   * @return a new {@link HttpClient}
+   */
   public HttpClient createHttpClient() {
     return HttpClient.newBuilder()
             .executor(this.workerGroup)

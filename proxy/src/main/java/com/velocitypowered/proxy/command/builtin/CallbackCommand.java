@@ -31,7 +31,11 @@ import java.util.UUID;
  */
 public final class CallbackCommand implements Command<CommandSource> {
 
-  @SuppressWarnings("checkstyle:MissingJavadocMethod")
+  /**
+   * Creates the brigadier command that backs Adventure click callbacks.
+   *
+   * @return the {@code velocity:callback} command
+   */
   public static BrigadierCommand create() {
     final LiteralCommandNode<CommandSource> node = BrigadierCommand
         .literalArgumentBuilder("velocity:callback")
