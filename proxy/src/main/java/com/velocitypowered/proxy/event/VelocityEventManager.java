@@ -243,7 +243,7 @@ public class VelocityEventManager implements EventManager {
     } else {
       type = untargetedVoidHandlerType;
     }
-    return LambdaFactory.create(type.defineClassesWith(lookup), methodHandle);
+    return LambdaFactory.create(type.defineClassesWith(methodHandlesLookup), methodHandle);
   }
 
   static final class MethodHandlerInfo {

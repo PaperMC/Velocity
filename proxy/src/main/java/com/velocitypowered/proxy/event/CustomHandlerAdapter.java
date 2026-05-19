@@ -60,9 +60,7 @@ final class CustomHandlerAdapter<F> {
   UntargetedEventHandler buildUntargetedHandler(final Method method)
       throws IllegalAccessException {
     final MethodHandle methodHandle = methodHandlesLookup.unreflect(method);
-    final MethodHandles.Lookup defineLookup = MethodHandles.privateLookupIn(
-        method.getDeclaringClass(), methodHandlesLookup);
-    final LambdaType<F> lambdaType = functionType.defineClassesWith(defineLookup);
+    final LambdaType<F> lambdaType = functionType.defineClassesWith(methodHandlesLookup);
     final F invokeFunction = LambdaFactory.create(lambdaType, methodHandle);
     final BiFunction<Object, Object, EventTask> handlerFunction =
         handlerBuilder.apply(invokeFunction);
