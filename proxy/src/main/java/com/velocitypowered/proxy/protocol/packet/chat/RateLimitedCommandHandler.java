@@ -61,7 +61,10 @@ public abstract class RateLimitedCommandHandler<T extends MinecraftPacket> imple
         return false;
     }
 
-    // Implementations forward the packet through the chat queue WITHOUT firing
-    // CommandExecuteEvent - rate-limited commands are intentionally not seen by plugins.
+    /**
+     * Forwards a rate-limited command packet through the chat queue.
+     *
+     * @param packet the rate-limited command packet to forward
+     */
     protected abstract void forwardRateLimited(T packet);
 }

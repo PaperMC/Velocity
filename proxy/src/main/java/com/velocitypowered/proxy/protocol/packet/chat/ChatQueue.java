@@ -110,7 +110,6 @@ public class ChatQueue implements AutoCloseable {
     });
   }
 
-  @SuppressWarnings("resource")
   private <T extends MinecraftPacket> CompletableFuture<Void> writePacket(T packet, MinecraftConnection smc) {
     CompletableFuture<Void> result = new CompletableFuture<>();
     smc.eventLoop().execute(() -> {
