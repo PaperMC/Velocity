@@ -150,7 +150,10 @@ dependencies {
 
     implementation(libs.jopt)
     implementation(libs.terminalconsoleappender)
-    runtimeOnly(libs.jline)
+    implementation(libs.jline.terminal)
+    implementation(libs.jline.reader)
+    runtimeOnly(libs.jline.terminal.jni)
+    runtimeOnly(libs.jline.terminal.ffm)
     runtimeOnly(libs.disruptor)
     implementation(libs.fastutil)
     implementation(platform(libs.adventure.bom))

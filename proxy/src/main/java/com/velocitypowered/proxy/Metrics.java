@@ -140,7 +140,7 @@ public class Metrics {
         } else {
           // of course, it really wouldn't be all that simple if they didn't add a quirk, now
           // would it valid strings for the major may potentially include values such as -ea to
-          // denote a pre release
+          // denote a prerelease
           Matcher versionMatcher = Pattern.compile("\\d+").matcher(majorVersion);
           if (versionMatcher.find()) {
             majorVersion = versionMatcher.group(0);
