@@ -22,7 +22,7 @@ public interface ChannelMessageSink {
    * @param data the data to send
    * @return whether or not the message could be sent
    */
-  boolean sendPluginMessage(@NotNull ChannelIdentifier identifier, byte @NotNull[] data);
+  boolean sendPluginMessage(@NotNull ChannelIdentifier identifier, byte @NotNull [] data);
 
   /**
    * Sends a plugin message to this target.
@@ -41,7 +41,6 @@ public interface ChannelMessageSink {
    * @return whether the message could be sent
    */
   @ApiStatus.Experimental
-  boolean sendPluginMessage(
-          @NotNull ChannelIdentifier identifier,
-          @NotNull PluginMessageEncoder dataEncoder);
+  boolean sendPluginMessage(@NotNull ChannelIdentifier identifier,
+                            @NotNull PluginMessageEncoder dataEncoder);
 }
