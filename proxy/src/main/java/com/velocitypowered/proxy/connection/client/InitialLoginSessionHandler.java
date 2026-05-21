@@ -268,7 +268,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
               inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
             }
           }, mcConnection.eventLoop())
-          .thenRun(() -> {
+          .whenComplete((ignored, throwable) -> {
             try {
               httpClient.close();
             } catch (Exception e) {
