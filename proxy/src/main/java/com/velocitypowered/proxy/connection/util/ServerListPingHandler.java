@@ -57,16 +57,16 @@ public class ServerListPingHandler {
     List<ServerPing.SamplePlayer> samplePlayers;
     if (configuration.getSamplePlayersInPing()) {
       List<ServerPing.SamplePlayer> unshuffledPlayers = server.getAllPlayers().stream()
-              .map(p -> {
-                if (p.getPlayerSettings().isClientListingAllowed()) {
-                  return new ServerPing.SamplePlayer(p.getUsername(), p.getUniqueId());
-                } else {
-                  return ServerPing.SamplePlayer.ANONYMOUS;
-                }
-              })
-              .collect(Collectors.toList());
+          .map(p -> {
+            if (p.getPlayerSettings().isClientListingAllowed()) {
+              return new ServerPing.SamplePlayer(p.getUsername(), p.getUniqueId());
+            } else {
+              return ServerPing.SamplePlayer.ANONYMOUS;
+            }
+          })
+          .collect(Collectors.toList());
       Collections.shuffle(unshuffledPlayers);
-      samplePlayers = unshuffledPlayers.subList(0, Math.min(12, server.getPlayerCount()));
+      samplePlayers = unshuffledPlayers.subList(0, Math.min(12, unshuffledPlayers.size()));
     } else {
       samplePlayers = ImmutableList.of();
     }
