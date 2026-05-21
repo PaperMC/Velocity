@@ -31,8 +31,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TabCompleteRequestPacket implements MinecraftPacket {
 
-  private static final int VANILLA_MAX_TAB_COMPLETE_LEN = 2048;
-
   private @Nullable String command;
   private int transactionId;
   private boolean assumeCommand;
@@ -97,9 +95,11 @@ public class TabCompleteRequestPacket implements MinecraftPacket {
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     if (version.noLessThan(MINECRAFT_1_13)) {
       this.transactionId = ProtocolUtils.readVarInt(buf);
-      this.command = ProtocolUtils.readString(buf, VANILLA_MAX_TAB_COMPLETE_LEN);
+
+      // 1.13 only supports a max length of 256: https://bugs.mojang.com/browse/MC/issues/MC-132663
+      this.command = ProtocolUtils.readString(buf, version.equals(MINECRAFT_1_13) ? 256 : 32500);
     } else {
-      this.command = ProtocolUtils.readString(buf, VANILLA_MAX_TAB_COMPLETE_LEN);
+      this.command = ProtocolUtils.readString(buf, 32767);
       if (version.noLessThan(MINECRAFT_1_9)) {
         this.assumeCommand = buf.readBoolean();
       }
