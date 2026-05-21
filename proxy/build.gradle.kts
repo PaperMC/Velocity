@@ -112,6 +112,15 @@ tasks {
         workingDir = file("run").also(File::mkdirs)
         standardInput = System.`in` // Doesn't work?
     }
+
+    withType<JavaCompile>().configureEach {
+        options.compilerArgs.addAll(
+            listOf(
+                "-Alog4j.graalvm.groupId=${project.group}",
+                "-Alog4j.graalvm.artifactId=${project.name}"
+            )
+        )
+    }
 }
 
 val projectVersion = version as String
