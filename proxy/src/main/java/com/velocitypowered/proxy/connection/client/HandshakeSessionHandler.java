@@ -42,6 +42,7 @@ import com.velocitypowered.proxy.protocol.packet.LegacyPingPacket;
 import io.netty.buffer.ByteBuf;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.Locale;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -92,8 +93,14 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
       LOGGER.error("{} provided invalid protocol {}", this, handshake.getNextStatus());
       connection.close(true);
     } else {
+      String cleaned = cleanVhost(handshake.getServerAddress());
+      final String matched = server.getConfiguration()
+          .resolveMatchedForcedHost(cleaned.toLowerCase(Locale.ROOT));
+      if (matched != null && !matched.equalsIgnoreCase(cleaned)) {
+        cleaned = matched;
+      }
       final InitialInboundConnection ic = new InitialInboundConnection(connection,
-              cleanVhost(handshake.getServerAddress()), handshake);
+              cleaned, handshake);
       if (handshake.getIntent() == HandshakeIntent.TRANSFER
               && !server.getConfiguration().isAcceptTransfers()) {
         ic.disconnect(Component.translatable("multiplayer.disconnect.transfers_disabled"));

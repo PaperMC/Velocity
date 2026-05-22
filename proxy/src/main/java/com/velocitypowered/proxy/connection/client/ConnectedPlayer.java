@@ -888,8 +888,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       String virtualHostStr = getVirtualHost().map(InetSocketAddress::getHostString)
           .orElse("")
           .toLowerCase(Locale.ROOT);
-      serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(virtualHostStr,
-          Collections.emptyList());
+      String matchedHost = server.getConfiguration().resolveMatchedForcedHost(virtualHostStr);
+      serversToTry = matchedHost != null
+          ? server.getConfiguration().getForcedHosts().get(matchedHost)
+          : Collections.emptyList();
     }
 
     if (serversToTry.isEmpty()) {

@@ -1,5 +1,5 @@
 # Config version. Do not change this
-config-version = "2.7"
+config-version = "2.8"
 
 # What port should the proxy be bound to? By default, we'll bind to all addresses on port 25565.
 bind = "0.0.0.0:25565"
@@ -102,6 +102,14 @@ try = [
 "minigames.example.com" = [
     "minigames"
 ]
+
+# When enabled, if no exact forced host match is found, Velocity will check if the hostname
+# is a subdomain of any configured forced host (on a dot boundary). This is useful when DNS
+# services (e.g., Cloudflare proxied SRV records) prepend prefixes to your hostname.
+# For example, if "play.example.com" is a forced host and a player connects via
+# "_dc-srv.abc123.play.example.com", it will match "play.example.com".
+# Default: false
+subdomain-matching = false
 
 [advanced]
 # How large a Minecraft packet has to be before we compress it. Setting this to zero will

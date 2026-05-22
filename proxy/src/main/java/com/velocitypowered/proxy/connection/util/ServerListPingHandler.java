@@ -174,8 +174,10 @@ public class ServerListPingHandler {
       String virtualHostStr = connection.getVirtualHost().map(InetSocketAddress::getHostString)
           .map(str -> str.toLowerCase(Locale.ROOT))
           .orElse("");
-      List<String> serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(
-          virtualHostStr, server.getConfiguration().getAttemptConnectionOrder());
+      String matchedHost = server.getConfiguration().resolveMatchedForcedHost(virtualHostStr);
+      List<String> serversToTry = matchedHost != null
+          ? server.getConfiguration().getForcedHosts().get(matchedHost)
+          : server.getConfiguration().getAttemptConnectionOrder();
       return attemptPingPassthrough(connection, passthroughMode, serversToTry, shownVersion, virtualHostStr);
     }
   }

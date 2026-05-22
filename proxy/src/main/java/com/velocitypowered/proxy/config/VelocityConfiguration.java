@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.config;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -27,6 +28,7 @@ import com.google.gson.annotations.Expose;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.config.migration.ConfigurationMigration;
+import com.velocitypowered.proxy.config.migration.ForcedHostSubdomainMigration;
 import com.velocitypowered.proxy.config.migration.ForwardingMigration;
 import com.velocitypowered.proxy.config.migration.KeyAuthenticationMigration;
 import com.velocitypowered.proxy.config.migration.MiniMessageTranslationsMigration;
@@ -326,6 +328,45 @@ public class VelocityConfiguration implements ProxyConfig {
     return forcedHosts.getForcedHosts();
   }
 
+  /**
+   * Resolves the forced host key for a given virtual hostname.
+   * If subdomain matching is enabled, falls back to suffix matching on domain
+   * boundaries when an exact match is not found.
+   *
+   * @param virtualHost the lowercased virtual hostname to look up
+   * @return the matching forced host key, or null if no match
+   */
+  public @Nullable String resolveMatchedForcedHost(String virtualHost) {
+    return resolveMatchedForcedHost(forcedHosts.getForcedHosts(), virtualHost,
+        forcedHosts.isSubdomainMatching());
+  }
+
+  @VisibleForTesting
+  static @Nullable String resolveMatchedForcedHost(Map<String, List<String>> forcedHosts,
+      String virtualHost, boolean subdomainMatching) {
+    // Try exact match first (always)
+    if (forcedHosts.containsKey(virtualHost)) {
+      return virtualHost;
+    }
+
+    // If subdomain matching is enabled, try suffix matching on domain boundaries
+    if (subdomainMatching && !virtualHost.isEmpty()) {
+      for (String configuredHost : forcedHosts.keySet()) {
+        if (virtualHost.endsWith("." + configuredHost)) {
+          logger.debug("Forced host subdomain match: '{}' matched configured host '{}'",
+              virtualHost, configuredHost);
+          return configuredHost;
+        }
+      }
+    }
+
+    if (!virtualHost.isEmpty()) {
+      logger.debug("No forced host match for virtual host '{}' (subdomain-matching: {})",
+          virtualHost, subdomainMatching);
+    }
+    return null;
+  }
+
   @Override
   public int getCompressionThreshold() {
     return advanced.getCompressionThreshold();
@@ -511,7 +552,8 @@ public class VelocityConfiguration implements ProxyConfig {
           new KeyAuthenticationMigration(),
           new MotdMigration(),
           new MiniMessageTranslationsMigration(),
-          new TransferIntegrationMigration()
+          new TransferIntegrationMigration(),
+          new ForcedHostSubdomainMigration()
       };
 
       for (final ConfigurationMigration migration : migrations) {
@@ -638,6 +680,9 @@ public class VelocityConfiguration implements ProxyConfig {
       if (config != null) {
         Map<String, String> servers = new HashMap<>();
         for (UnmodifiableConfig.Entry entry : config.entrySet()) {
+          if ("subdomain-matching".equals(entry.getKey())) {
+            continue;
+          }
           if (entry.getValue() instanceof String) {
             servers.put(cleanServerName(entry.getKey()), entry.getValue());
           } else {
@@ -701,6 +746,7 @@ public class VelocityConfiguration implements ProxyConfig {
         "factions.example.com", ImmutableList.of("factions"),
         "minigames.example.com", ImmutableList.of("minigames")
     );
+    private boolean subdomainMatching = false;
 
     private ForcedHosts() {
     }
@@ -709,18 +755,22 @@ public class VelocityConfiguration implements ProxyConfig {
       if (config != null) {
         Map<String, List<String>> forcedHosts = new HashMap<>();
         for (UnmodifiableConfig.Entry entry : config.entrySet()) {
+          if ("subdomain-matching".equals(entry.getKey())) {
+            continue;
+          }
           if (entry.getValue() instanceof String) {
             forcedHosts.put(entry.getKey().toLowerCase(Locale.ROOT),
                 ImmutableList.of(entry.getValue()));
           } else if (entry.getValue() instanceof List) {
             forcedHosts.put(entry.getKey().toLowerCase(Locale.ROOT),
                 ImmutableList.copyOf((List<String>) entry.getValue()));
-          } else {
+          } else if (!(entry.getValue() instanceof Boolean)) {
             throw new IllegalStateException(
                 "Invalid value of type " + entry.getValue().getClass() + " in forced hosts!");
           }
         }
         this.forcedHosts = ImmutableMap.copyOf(forcedHosts);
+        this.subdomainMatching = config.getOrElse("subdomain-matching", false);
       }
     }
 
@@ -732,6 +782,10 @@ public class VelocityConfiguration implements ProxyConfig {
       return forcedHosts;
     }
 
+    private boolean isSubdomainMatching() {
+      return subdomainMatching;
+    }
+
     private void setForcedHosts(Map<String, List<String>> forcedHosts) {
       this.forcedHosts = forcedHosts;
     }
@@ -740,6 +794,7 @@ public class VelocityConfiguration implements ProxyConfig {
     public String toString() {
       return "ForcedHosts{"
           + "forcedHosts=" + forcedHosts
+          + ", subdomainMatching=" + subdomainMatching
           + '}';
     }
   }
