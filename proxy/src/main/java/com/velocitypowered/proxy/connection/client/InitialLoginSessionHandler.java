@@ -269,13 +269,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
             }
           }, mcConnection.eventLoop())
           .whenComplete((ignored, throwable) -> {
-            try {
-              httpClient.close();
-            } catch (Exception e) {
-              // In Java 21, the HttpClient does not throw any Exception
-              // when trying to clean its resources, so this should not happen
-              logger.error("An unknown error occurred while trying to close an HttpClient", e);
-            }
+            httpClient.close();
           });
     } catch (GeneralSecurityException e) {
       logger.error("Unable to enable encryption", e);
