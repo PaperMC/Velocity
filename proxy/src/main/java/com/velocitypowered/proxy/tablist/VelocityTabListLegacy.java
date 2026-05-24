@@ -149,6 +149,12 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
     return new VelocityTabListEntryLegacy(this, profile, displayName, latency, gameMode);
   }
 
+  @Override
+  public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
+                                 int gameMode, @Nullable ChatSession chatSession, boolean listed, int listOrder, boolean showHat) {
+    return new VelocityTabListEntryLegacy(this, profile, displayName, latency, gameMode);
+  }
+
   /**
    * Generates a random UUID v4 using {@link ThreadLocalRandom}. The result is a structurally valid
    * UUID v4 but is not cryptographically secure
