@@ -31,6 +31,7 @@ import com.velocitypowered.api.event.player.configuration.PlayerEnteredConfigura
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.ConnectionTypes;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -65,6 +66,7 @@ import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerCommandPa
 import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChatHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChatPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyCommandHandler;
+import com.velocitypowered.proxy.protocol.packet.chat.session.ChatSessionUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionChatHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionCommandHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChatPacket;
@@ -239,6 +241,30 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     }
     player.getConnectedServer().ensureConnected().write(packet);
     return true; // will forward onto the server
+  }
+
+  @Override
+  public boolean handle(ChatSessionUpdatePacket packet) {
+    // If client UUIDs are not forwarded to the backend, the client players's
+    // profile key signature will not be valid for the backend player's offline
+    // UUID, and the backend will kick the client with "Invalid signature for
+    // profile public key". The Notchian server does not require the client to
+    // send this packet if enforce-secure-profile=false, so we can simply
+    // filter it.
+
+    // Note: if the Notchian client did not receive a valid profile key pair
+    // from the authentication server, it also will not send this packet to the
+    // server (net/minecraft/client/multiplayer/ClientPacketListener.java).
+    if (server.getConfiguration().getPlayerInfoForwardingMode() == PlayerInfoForwarding.NONE) {
+      return true;
+    }
+
+    VelocityServerConnection serverConnection = player.getConnectedServer();
+    if (serverConnection == null) {
+      return true;
+    }
+    serverConnection.ensureConnected().write(packet);
+    return true;
   }
 
   @Override

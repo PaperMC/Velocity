@@ -102,6 +102,7 @@ import com.velocitypowered.proxy.protocol.packet.chat.SystemChatPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerChatPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerCommandPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChatPacket;
+import com.velocitypowered.proxy.protocol.packet.chat.session.ChatSessionUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChatPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommandPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.session.UnsignedPlayerCommandPacket;
@@ -321,6 +322,19 @@ public enum StateRegistry {
           map(0x07, MINECRAFT_1_21_2, false),
           map(0x08, MINECRAFT_1_21_6, false),
           map(0x09, MINECRAFT_26_1, false));
+      serverbound.register(
+          ChatSessionUpdatePacket.class,
+          ChatSessionUpdatePacket::new,
+          map(0x20, MINECRAFT_1_19_3, false),
+          map(0x06, MINECRAFT_1_19_4, false),
+          map(0x06, MINECRAFT_1_20_2, false),
+          map(0x07, MINECRAFT_1_20_5, false),
+          map(0x07, MINECRAFT_1_21, false),
+          map(0x08, MINECRAFT_1_21_2, false),
+          map(0x08, MINECRAFT_1_21_4, false),
+          map(0x09, MINECRAFT_1_21_6, false),
+          map(0x09, MINECRAFT_1_21_9, false),
+          map(0x0A, MINECRAFT_26_1, false));
       serverbound.register(
           ClientSettingsPacket.class,
           ClientSettingsPacket::new,
