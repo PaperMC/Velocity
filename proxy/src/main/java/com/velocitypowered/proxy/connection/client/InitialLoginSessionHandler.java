@@ -25,6 +25,7 @@ import static com.velocitypowered.proxy.crypto.EncryptionUtils.generateServerId;
 
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Longs;
+import com.velocitypowered.api.event.connection.PostAuthEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent.PreLoginComponentResult;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -65,10 +66,9 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 public class InitialLoginSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(InitialLoginSessionHandler.class);
-  private static final String MOJANG_HASJOINED_URL =
-      System.getProperty("mojang.sessionserver",
-              "https://sessionserver.mojang.com/session/minecraft/hasJoined")
-          .concat("?username=%s&serverId=%s");
+  private static final String MOJANG_HASJOINED_URL = System.getProperty("mojang.sessionserver",
+      "https://sessionserver.mojang.com/session/minecraft/hasJoined")
+      .concat("?username=%s&serverId=%s");
 
   private final VelocityServer server;
   private final MinecraftConnection mcConnection;
@@ -79,12 +79,12 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
   private final boolean forceKeyAuthentication;
 
   InitialLoginSessionHandler(VelocityServer server, MinecraftConnection mcConnection,
-                             LoginInboundConnection inbound) {
+      LoginInboundConnection inbound) {
     this.server = Preconditions.checkNotNull(server, "server");
     this.mcConnection = Preconditions.checkNotNull(mcConnection, "mcConnection");
     this.inbound = Preconditions.checkNotNull(inbound, "inbound");
     this.forceKeyAuthentication = VelocityProperties.readBoolean(
-            "auth.forceSecureProfiles", server.getConfiguration().isForceKeyAuthentication());
+        "auth.forceSecureProfiles", server.getConfiguration().isForceKeyAuthentication());
   }
 
   @Override
@@ -210,11 +210,11 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
       }
 
       final HttpRequest httpRequest = HttpRequest.newBuilder()
-              .setHeader("User-Agent",
-                      server.getVersion().getName() + "/" + server.getVersion().getVersion())
-              .uri(URI.create(url))
-              .build();
-      //noinspection resource
+          .setHeader("User-Agent",
+              server.getVersion().getName() + "/" + server.getVersion().getVersion())
+          .uri(URI.create(url))
+          .build();
+      // noinspection resource
       final HttpClient httpClient = server.createHttpClient();
       httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
           .whenCompleteAsync((response, throwable) -> {
@@ -229,37 +229,80 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
               return;
             }
 
-            // Go ahead and enable encryption. Once the client sends EncryptionResponse, encryption
+            // Go ahead and enable encryption. Once the client sends EncryptionResponse,
+            // encryption
             // is enabled.
             try {
               mcConnection.enableEncryption(decryptedSharedSecret);
             } catch (GeneralSecurityException e) {
               logger.error("Unable to enable encryption for connection", e);
-              // At this point, the connection is encrypted, but something's wrong on our side and
+              // At this point, the connection is encrypted, but something's wrong on our side
+              // and
               // we can't do anything about it.
               mcConnection.close(true);
               return;
             }
 
             if (response.statusCode() == 200) {
-              final GameProfile profile = GENERAL_GSON.fromJson(response.body(),
-                  GameProfile.class);
-              // Not so fast, now we verify the public key for 1.19.1+
+              final GameProfile profile = GENERAL_GSON.fromJson(response.body(), GameProfile.class);
+
+              // Verify public key for 1.19.1+
               if (inbound.getIdentifiedKey() != null
                   && inbound.getIdentifiedKey().getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
                   && inbound.getIdentifiedKey() instanceof final IdentifiedKeyImpl key) {
                 if (!key.internalAddHolder(profile.getId())) {
                   inbound.disconnect(
                       Component.translatable("multiplayer.disconnect.invalid_public_key"));
+                  return;
                 }
               }
-              // All went well, initialize the session.
-              mcConnection.setActiveSessionHandler(StateRegistry.LOGIN,
-                  new AuthSessionHandler(server, inbound, profile, true, serverId));
+
+              // Fire PostAuthEvent for online (verified) player
+              PostAuthEvent authEvent = new PostAuthEvent(inbound, login.getUsername(), true, profile);
+              server.getEventManager().fire(authEvent).thenAcceptAsync(event -> {
+                if (mcConnection.isClosed()) {
+                  return;
+                }
+
+                if (!event.getResult().isAllowed()) {
+                  inbound.disconnect(event.getResult().getReasonComponent()
+                      .orElse(Component.translatable("multiplayer.disconnect.kicked")));
+                  return;
+                }
+
+                if (event.getResult().isAllowOffline()) {
+                  // Plugin downgraded online player to offline mode
+                  mcConnection.setActiveSessionHandler(StateRegistry.LOGIN,
+                      new AuthSessionHandler(server, inbound,
+                          GameProfile.forOfflinePlayer(login.getUsername()), false, null));
+                } else {
+                  // Normal online path
+                  mcConnection.setActiveSessionHandler(StateRegistry.LOGIN,
+                      new AuthSessionHandler(server, inbound, profile, true, serverId));
+                }
+              }, mcConnection.eventLoop());
+
             } else if (response.statusCode() == 204) {
-              // Apparently an offline-mode user logged onto this online-mode proxy.
-              inbound.disconnect(
-                  Component.translatable("velocity.error.online-mode-only", NamedTextColor.RED));
+              // Cracked/offline player — fire PostAuthEvent instead of instant kick
+              PostAuthEvent authEvent = new PostAuthEvent(inbound, login.getUsername(), false, null);
+              server.getEventManager().fire(authEvent).thenAcceptAsync(event -> {
+                if (mcConnection.isClosed()) {
+                  return;
+                }
+
+                if (event.getResult().isAllowOffline()) {
+                  // Plugin explicitly allowed this offline player
+                  mcConnection.setActiveSessionHandler(StateRegistry.LOGIN,
+                      new AuthSessionHandler(server, inbound,
+                          GameProfile.forOfflinePlayer(login.getUsername()), false, null));
+                } else {
+                  // Denied — use reason if provided, fallback to default
+                  inbound.disconnect(event.getResult().getReasonComponent()
+                      .orElse(Component.translatable(
+                          "velocity.error.online-mode-only", NamedTextColor.RED)));
+                }
+              }, mcConnection.eventLoop());
+
             } else {
               // Something else went wrong
               logger.error(

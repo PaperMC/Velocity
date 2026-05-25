@@ -1,0 +1,26 @@
+# ---- ONE TIME SETUP ----
+git clone https://github.com/YOUR_USERNAME/Velocity.git
+cd Velocity
+git remote add upstream https://github.com/PaperMC/Velocity.git
+git checkout -b munpe/offline-whitelist
+
+# ---- MAKING CHANGES ----
+git add .
+git commit -m "your message"
+git push origin munpe/offline-whitelist
+
+# ---- PULLING UPSTREAM UPDATES ----
+git fetch upstream
+git checkout main
+git merge upstream/main
+git push origin main
+git checkout munpe/offline-whitelist
+git rebase main
+# fix conflicts if any
+git add .
+git rebase --continue
+git push origin munpe/offline-whitelist --force
+
+# ---- BUILD ----
+./gradlew build -x test
+./gradlew :api:publishToMavenLocal
