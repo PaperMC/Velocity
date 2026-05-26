@@ -24,6 +24,7 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_20_3;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_20_5;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_21_5;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_21_6;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_26_2;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentIdentifier.id;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentIdentifier.mapSet;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.DoubleArgumentPropertySerializer.DOUBLE;
@@ -281,6 +282,7 @@ public class ArgumentPropertyRegistry {
 
     empty(id("minecraft:hex_color", mapSet(MINECRAFT_1_21_6, 17))); // added in 1.21.6
     empty(id("minecraft:dialog", mapSet(MINECRAFT_1_21_6, 55))); // added in 1.21.6
+    empty(id("minecraft:team_color", mapSet(MINECRAFT_26_2, 16))); // added in 26.2
 
     // Crossstitch support
     register(id("crossstitch:mod_argument", mapSet(MINECRAFT_1_19, -256)), ModArgumentProperty.class, MOD);

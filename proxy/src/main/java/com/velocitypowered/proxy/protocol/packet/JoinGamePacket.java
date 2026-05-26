@@ -52,6 +52,7 @@ public class JoinGamePacket implements MinecraftPacket {
   private @Nullable Pair<String, Long> lastDeathPosition; // 1.19+
   private int portalCooldown; // 1.20+
   private int seaLevel; // 1.21.2+
+  private boolean onlineMode; // 26.2+
   private boolean enforcesSecureChat; // 1.20.5+
 
   public int getEntityId() {
@@ -358,6 +359,10 @@ public class JoinGamePacket implements MinecraftPacket {
       this.seaLevel = ProtocolUtils.readVarInt(buf);
     }
 
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_26_2)) {
+      this.onlineMode = buf.readBoolean();
+    }
+
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
       this.enforcesSecureChat = buf.readBoolean();
     }
@@ -508,6 +513,10 @@ public class JoinGamePacket implements MinecraftPacket {
 
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_21_2)) {
       ProtocolUtils.writeVarInt(buf, seaLevel);
+    }
+
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_26_2)) {
+      buf.writeBoolean(this.onlineMode);
     }
 
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
