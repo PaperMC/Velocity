@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
 import net.kyori.adventure.dialog.DialogLike;
 import net.kyori.adventure.identity.Identified;
@@ -532,4 +533,19 @@ public interface Player extends
    * @sinceMinecraft 1.21
    */
   void setServerLinks(@NotNull List<ServerLink> links);
+
+  /**
+   * Rebuilds and resends this player's command list, combining the commands offered by the
+   * player's current server with the proxy's own commands.
+   *
+   * <p>This is useful when the set of available commands has changed and the client's command
+   * list needs to be refreshed, for example after a command is registered or unregistered at
+   * runtime. The {@link com.velocitypowered.api.event.command.PlayerAvailableCommandsEvent} is
+   * fired before the updated list is sent, giving listeners a final chance to modify it.
+   *
+   * <p>This method is non-blocking; the command list is sent asynchronously.
+   *
+   * @return a future that completes once the command list has been sent
+   */
+  CompletableFuture<Void> sendAvailableCommands();
 }

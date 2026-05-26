@@ -21,9 +21,6 @@ import static com.velocitypowered.proxy.connection.backend.BungeeCordMessageResp
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.mojang.brigadier.tree.RootCommandNode;
-import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.event.command.PlayerAvailableCommandsEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.connection.PreTransferEvent;
 import com.velocitypowered.api.event.player.CookieRequestEvent;
@@ -36,7 +33,6 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
-import com.velocitypowered.proxy.command.CommandGraphInjector;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.client.ClientPlaySessionHandler;
@@ -358,26 +354,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(AvailableCommandsPacket commands) {
-    RootCommandNode<CommandSource> rootNode = commands.getRootNode();
-    if (server.getConfiguration().isAnnounceProxyCommands()) {
-      // Inject commands from the proxy.
-      final CommandGraphInjector<CommandSource> injector = server.getCommandManager().getInjector();
-      injector.inject(rootNode, serverConn.getPlayer());
-
-      // In 1.21.6 a confirmation prompt was added when executing a command via `run_command` click
-      // action if the command is unknown. To prevent this prompt we have to send the command.
-      if (this.playerConnection.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_21_6)) {
-        rootNode.removeChildByName("velocity:callback");
-      }
-    }
-
-    server.getEventManager().fire(
-            new PlayerAvailableCommandsEvent(serverConn.getPlayer(), rootNode))
-        .thenAcceptAsync(event -> playerConnection.write(commands), playerConnection.eventLoop())
-        .exceptionally((ex) -> {
-          logger.error("Exception while handling available commands for {}", playerConnection, ex);
-          return null;
-        });
+    serverConn.setBackendCommandsNode(commands.getRootNode());
+    serverConn.getPlayer().sendAvailableCommands(serverConn);
     return true;
   }
 
