@@ -76,7 +76,7 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
   }
 
   @Override
-  public void clearAppliedResourcePacks() {
+  protected void doClearAppliedResourcePacks() {
     this.outstandingResourcePacks.clear();
     this.pendingResourcePacks.clear();
     this.appliedResourcePacks.clear();
@@ -126,8 +126,9 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
     final ResourcePackInfo queued = outstandingResourcePacks.isEmpty() ? null :
         peek ? outstandingResourcePacks.getFirst() : outstandingResourcePacks.removeFirst();
 
-    server.getEventManager()
-            .fire(new PlayerResourcePackStatusEvent(this.player, uuid, bundle.status(), queued))
+    dispatchPackCallback(uuid, bundle.status())
+            .thenCompose(v -> server.getEventManager()
+                  .fire(new PlayerResourcePackStatusEvent(this.player, uuid, bundle.status(), queued)))
             .thenAcceptAsync(event -> {
               if (event.getStatus() == PlayerResourcePackStatusEvent.Status.DECLINED
                       && event.getPackInfo() != null && event.getPackInfo().getShouldForce()
