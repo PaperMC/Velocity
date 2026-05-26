@@ -77,7 +77,7 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
   }
 
   @Override
-  public void clearAppliedResourcePacks() {
+  protected void doClearAppliedResourcePacks() {
     // This is valid only for players with 1.20.2 versions
     this.appliedResourcePack = null;
   }
@@ -132,9 +132,9 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
     final ResourcePackInfo queued = peek
             ? outstandingResourcePacks.peek() : outstandingResourcePacks.poll();
 
-    server.getEventManager()
-            .fire(new PlayerResourcePackStatusEvent(
-                this.player, bundle.uuid(), bundle.status(), queued))
+    dispatchPackCallback(bundle.uuid(), bundle.status())
+            .thenCompose(v -> server.getEventManager()
+                  .fire(new PlayerResourcePackStatusEvent(this.player, bundle.uuid(), bundle.status(), queued)))
             .thenAcceptAsync(event -> {
               if (shouldDisconnectForForcePack(event)) {
                 event.getPlayer().disconnect(Component

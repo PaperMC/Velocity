@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.connection.player.resourcepack.handler;
 
+import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
@@ -29,8 +30,14 @@ import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBufUtil;
 import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import net.kyori.adventure.resource.ResourcePackCallback;
 import net.kyori.adventure.resource.ResourcePackRequest;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,8 +46,12 @@ import org.jetbrains.annotations.Nullable;
  */
 public abstract sealed class ResourcePackHandler
         permits LegacyResourcePackHandler, ModernResourcePackHandler {
+  private static final Logger LOGGER = LogManager.getLogger(ResourcePackHandler.class);
+
   protected final ConnectedPlayer player;
   protected final VelocityServer server;
+
+  private final Map<UUID, ResourcePackCallback> packCallbacks = new ConcurrentHashMap<>();
 
   protected ResourcePackHandler(final ConnectedPlayer player, final VelocityServer server) {
     this.player = player;
@@ -78,7 +89,15 @@ public abstract sealed class ResourcePackHandler
   /**
    * Clears the applied resource pack field.
    */
-  public abstract void clearAppliedResourcePacks();
+  public final void clearAppliedResourcePacks() {
+    packCallbacks.clear();
+    doClearAppliedResourcePacks();
+  }
+
+  /**
+   * Clears the applied resource pack field.
+   */
+  protected abstract void doClearAppliedResourcePacks();
 
   public abstract boolean remove(final UUID id);
 
@@ -93,9 +112,14 @@ public abstract sealed class ResourcePackHandler
    * empty.
    */
   public void queueResourcePack(final @NotNull ResourcePackRequest request) {
+    ResourcePackCallback callback = request.callback();
+    boolean trackCallback = callback != ResourcePackCallback.noOp();
     for (final net.kyori.adventure.resource.ResourcePackInfo pack : request.packs()) {
       final ResourcePackInfo resourcePackInfo = VelocityResourcePackInfo.fromAdventureRequest(request, pack);
       this.checkAlreadyAppliedPack(resourcePackInfo.getHash());
+      if (trackCallback) {
+        packCallbacks.put(resourcePackInfo.getId(), callback);
+      }
       queueResourcePack(resourcePackInfo);
     }
   }
@@ -162,6 +186,37 @@ public abstract sealed class ResourcePackHandler
       }
     }
     return handled;
+  }
+
+  /**
+   * Invokes the Adventure {@link ResourcePackCallback} (if any) registered for the given pack
+   * UUID via {@code sendResourcePacks(ResourcePackRequest)}, then evicts the entry on a terminal
+   * status. Called by the per-version handlers when a {@code ResourcePackResponsePacket} arrives,
+   * before the {@link PlayerResourcePackStatusEvent} fire so the two cannot observe each other
+   * mid-flight. Callback execution is dispatched asynchronously off the player's connection event
+   * loop, since slow plugin callback handlers would otherwise stall the player's IO thread.
+   *
+   * @param uuid   the pack UUID from the client response
+   * @param status the Velocity-side status reported by the client
+   * @return a future that completes once the registered callback returns, or an already-completed
+   *         future when no callback was registered
+   */
+  protected CompletableFuture<Void> dispatchPackCallback(@NotNull UUID uuid,
+                                                         @NotNull PlayerResourcePackStatusEvent.Status status) {
+    ResourcePackCallback callback = status.isIntermediate()
+        ? packCallbacks.get(uuid)
+        : packCallbacks.remove(uuid);
+    if (callback == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    return CompletableFuture.runAsync(() -> {
+      try {
+        callback.packEventReceived(uuid, status.adventureStatus(), player);
+      } catch (Throwable t) {
+        LOGGER.error("Couldn't pass resource pack callback for pack {} to {}", uuid, player, t);
+      }
+    });
   }
 
   /**
