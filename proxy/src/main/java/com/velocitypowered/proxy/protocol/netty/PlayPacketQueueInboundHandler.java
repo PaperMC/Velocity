@@ -49,6 +49,8 @@ public class PlayPacketQueueInboundHandler extends ChannelDuplexHandler {
       "Queue too big (greater than " + MAXIMUM_SIZE + " bytes)");
 
   private final StateRegistry.PacketRegistry.ProtocolRegistry registry;
+  private final boolean discardStaleInbound;
+
   private final Queue<Object> queue = new ArrayDeque<>();
   private int queueSize = 0;
 
@@ -57,8 +59,10 @@ public class PlayPacketQueueInboundHandler extends ChannelDuplexHandler {
    *
    * @param version the protocol version
    */
-  public PlayPacketQueueInboundHandler(ProtocolVersion version, ProtocolUtils.Direction direction) {
+  public PlayPacketQueueInboundHandler(ProtocolVersion version, ProtocolUtils.Direction direction,
+                                       boolean discardStaleInbound) {
     this.registry = StateRegistry.CONFIG.getProtocolRegistry(direction, version);
+    this.discardStaleInbound = discardStaleInbound;
   }
 
   @Override
@@ -70,6 +74,13 @@ public class PlayPacketQueueInboundHandler extends ChannelDuplexHandler {
         ctx.fireChannelRead(msg);
         return;
       }
+    }
+
+    if (this.discardStaleInbound) {
+      // Re-entering configuration: this play packet belongs to the previous play session and
+      // must not be replayed into the next one, so drop it rather than queueing it.
+      ReferenceCountUtil.release(msg);
+      return;
     }
 
     int length = 0;

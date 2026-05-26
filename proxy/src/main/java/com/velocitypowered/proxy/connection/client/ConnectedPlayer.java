@@ -1384,8 +1384,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
           connection.write(StartUpdatePacket.INSTANCE);
           connection.pendingConfigurationSwitch = true;
           connection.getChannel().pipeline().get(MinecraftEncoder.class).setState(StateRegistry.CONFIG);
-          // Make sure we don't send any play packets to the player after update start
-          connection.addPlayPacketQueueOutboundHandler();
+          // Queue clientbound play packets, and drop stale serverbound ones, during reconfiguration
+          connection.addReconfigurationPlayPacketQueueHandler();
         }, connection.eventLoop()).exceptionally((ex) -> {
           logger.error("Error switching player connection to config state", ex);
           return null;
