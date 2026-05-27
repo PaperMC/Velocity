@@ -31,6 +31,7 @@ import com.velocitypowered.proxy.config.migration.ForwardingMigration;
 import com.velocitypowered.proxy.config.migration.KeyAuthenticationMigration;
 import com.velocitypowered.proxy.config.migration.MiniMessageTranslationsMigration;
 import com.velocitypowered.proxy.config.migration.MotdMigration;
+import com.velocitypowered.proxy.config.migration.PacketLimiterMigration;
 import com.velocitypowered.proxy.config.migration.TransferIntegrationMigration;
 import com.velocitypowered.proxy.util.AddressUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -511,7 +512,8 @@ public class VelocityConfiguration implements ProxyConfig {
           new KeyAuthenticationMigration(),
           new MotdMigration(),
           new MiniMessageTranslationsMigration(),
-          new TransferIntegrationMigration()
+          new TransferIntegrationMigration(),
+          new PacketLimiterMigration()
       };
 
       for (final ConfigurationMigration migration : migrations) {
@@ -1004,12 +1006,13 @@ public class VelocityConfiguration implements ProxyConfig {
   /**
    * Configuration for packet limiting.
    *
-   * @param interval the interval in seconds to measure packets over
-   * @param pps      the maximum number of packets per second allowed
-   * @param bytes    the maximum number of bytes per second allowed
+   * @param interval                the interval in seconds to measure packets over
+   * @param pps                     the maximum number of packets per second allowed
+   * @param bytes                   the maximum number of bytes per second allowed
+   * @param bytesAfterDecompression the maximum number of decompressed bytes per second allowed
    */
-  public record PacketLimiterConfig(int interval, int pps, int bytes) {
-    public static PacketLimiterConfig DEFAULT = new PacketLimiterConfig(7, 500, -1);
+  public record PacketLimiterConfig(int interval, int pps, int bytes, int bytesAfterDecompression) {
+    public static PacketLimiterConfig DEFAULT = new PacketLimiterConfig(7, -1, -1, 5242880);
 
     /**
      * returns a PacketLimiterConfig from a config section, or the default if the section is null.
@@ -1022,7 +1025,8 @@ public class VelocityConfiguration implements ProxyConfig {
         return new PacketLimiterConfig(
             config.getIntOrElse("interval", DEFAULT.interval()),
             config.getIntOrElse("packets-per-second", DEFAULT.pps()),
-            config.getIntOrElse("bytes-per-second", DEFAULT.bytes())
+            config.getIntOrElse("bytes-per-second", DEFAULT.bytes()),
+            config.getIntOrElse("decompressed-bytes-per-second", DEFAULT.bytesAfterDecompression())
         );
       } else {
         return DEFAULT;
