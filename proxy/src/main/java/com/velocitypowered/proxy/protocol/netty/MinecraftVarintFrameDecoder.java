@@ -159,10 +159,10 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
     int expectedMinLen = packet.decodeExpectedMinLength(in, direction, registry.version);
     int expectedMaxLen = packet.decodeExpectedMaxLength(in, direction, registry.version);
     if (expectedMaxLen != -1 && payloadLength > expectedMaxLen) {
-      throw handleOverflow(packet, expectedMaxLen, in.readableBytes());
+      throw handleOverflow(packet, expectedMaxLen, payloadLength);
     }
     if (payloadLength < expectedMinLen) {
-      throw handleUnderflow(packet, expectedMaxLen, in.readableBytes());
+      throw handleUnderflow(packet, expectedMinLen, payloadLength);
     }
 
     in.readerIndex(index);
