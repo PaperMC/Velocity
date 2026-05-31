@@ -344,8 +344,9 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     // Snoop the backend's player list header/footer so the proxy's tracked values stay in sync
     // with what the player actually sees.
     serverConn.getPlayer().setPlayerListHeaderAndFooterSilent(
-        packet.getHeader().getComponent(), packet.getFooter().getComponent());
-    return false; // forward
+        packet.getHeader().getComponent(),
+        packet.getFooter().getComponent());
+    return false;
   }
 
   @Override

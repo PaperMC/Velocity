@@ -479,13 +479,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     return this.playerListFooter;
   }
 
-  /**
-   * Updates the tracked player list header and footer without sending a packet.
-   *
-   * @param header the new player list header
-   * @param footer the new player list footer
-   */
-  public void setPlayerListHeaderAndFooterSilent(final Component header, final Component footer) {
+  public void setPlayerListHeaderAndFooterSilent(@NonNull final Component header,
+                                                 @NonNull final Component footer) {
     this.playerListHeader = header;
     this.playerListFooter = footer;
   }
