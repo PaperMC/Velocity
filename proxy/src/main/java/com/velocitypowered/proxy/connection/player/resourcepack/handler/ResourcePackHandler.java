@@ -202,8 +202,12 @@ public abstract sealed class ResourcePackHandler
    * @return a future that completes once the registered callback returns, or an already-completed
    *         future when no callback was registered
    */
-  protected CompletableFuture<Void> dispatchPackCallback(@NotNull UUID uuid,
+  protected CompletableFuture<Void> dispatchPackCallback(@Nullable UUID uuid,
                                                          @NotNull PlayerResourcePackStatusEvent.Status status) {
+    if (uuid == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
     ResourcePackCallback callback = status.isIntermediate()
         ? packCallbacks.get(uuid)
         : packCallbacks.remove(uuid);
