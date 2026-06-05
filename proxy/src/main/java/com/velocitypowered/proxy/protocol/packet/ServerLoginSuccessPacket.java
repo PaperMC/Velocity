@@ -69,6 +69,10 @@ public class ServerLoginSuccessPacket implements MinecraftPacket {
     this.properties = properties;
   }
 
+  public void setSessionId(@Nullable UUID sessionId) {
+    this.sessionId = sessionId;
+  }
+
   @Override
   public String toString() {
     return "ServerLoginSuccess{"

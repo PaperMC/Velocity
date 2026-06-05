@@ -94,6 +94,8 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     final ConnectedPlayer player = serverConn.getPlayer();
     final VelocityServerConnection existingConnection = player.getConnectedServer();
 
+    packet.setOnlineMode(player.isOnlineMode());
+
     if (existingConnection != null) {
       // Shut down the existing server connection.
       player.setConnectedServer(null);

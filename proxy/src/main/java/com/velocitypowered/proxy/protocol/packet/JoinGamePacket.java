@@ -191,6 +191,10 @@ public class JoinGamePacket implements MinecraftPacket {
     this.seaLevel = seaLevel;
   }
 
+  public void setOnlineMode(boolean onlineMode) {
+    this.onlineMode = onlineMode;
+  }
+
   public boolean getEnforcesSecureChat() {
     return this.enforcesSecureChat;
   }
@@ -214,7 +218,7 @@ public class JoinGamePacket implements MinecraftPacket {
         dimensionInfo + '\'' + ", currentDimensionData='" + currentDimensionData + '\'' +
         ", previousGamemode=" + previousGamemode + ", simulationDistance=" + simulationDistance +
         ", lastDeathPosition='" + lastDeathPosition + '\'' + ", portalCooldown=" + portalCooldown +
-        ", seaLevel=" + seaLevel +
+        ", seaLevel=" + seaLevel + ", onlineMode=" + this.onlineMode +
         '}';
   }
 
