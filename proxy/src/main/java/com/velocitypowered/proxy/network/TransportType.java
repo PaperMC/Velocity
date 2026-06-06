@@ -127,7 +127,7 @@ public enum TransportType {
     if (address instanceof DomainSocketAddress) {
       if (this.domainServerSocketChannelFactory == null) {
         throw new IllegalArgumentException(
-                "Domain sockets are not available for non-Linux platforms");
+                "Domain sockets are not available for non-Unix platforms");
       }
       return this.domainServerSocketChannelFactory;
     }
@@ -144,7 +144,7 @@ public enum TransportType {
     if (address instanceof DomainSocketAddress) {
       if (this.domainSocketChannelFactory == null) {
         throw new IllegalArgumentException(
-                "Domain sockets are not available for non-Linux platforms");
+                "Domain sockets are not available for non-Unix platforms");
       }
       return this.domainSocketChannelFactory;
     }
