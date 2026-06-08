@@ -89,12 +89,10 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(JoinGamePacket packet) {
-    MinecraftConnection smc = serverConn.ensureConnected();
+    final MinecraftConnection smc = serverConn.ensureConnected();
     final RegisteredServer previousServer = serverConn.getPreviousServer().orElse(null);
     final ConnectedPlayer player = serverConn.getPlayer();
     final VelocityServerConnection existingConnection = player.getConnectedServer();
-
-    packet.setOnlineMode(player.isOnlineMode());
 
     if (existingConnection != null) {
       // Shut down the existing server connection.
@@ -107,6 +105,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
 
     // Reset Tablist header and footer to prevent desync
     player.clearPlayerListHeaderAndFooter();
+
+    // Override online mode
+    packet.setOnlineMode(player.isOnlineMode());
 
     // The goods are in hand! We got JoinGame. Let's transition completely to the new state.
     smc.setAutoReading(false);
