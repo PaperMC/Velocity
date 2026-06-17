@@ -21,7 +21,6 @@ import com.electronwill.nightconfig.core.CommentedConfig;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.annotations.Expose;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.proxy.util.AddressUtil;
@@ -40,6 +39,7 @@ import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+import org.spongepowered.configurate.objectmapping.meta.Setting;
 
 /**
  * Velocity's configuration.
@@ -49,50 +49,32 @@ public class VelocityConfiguration implements ProxyConfig {
 
   private static final Logger logger = LogManager.getLogger(VelocityConfiguration.class);
 
-  @Expose
   private String bind = "0.0.0.0:25565";
-  @Expose
   private String motd = "<aqua>A Velocity Server";
-  @Expose
   private int showMaxPlayers = 500;
-  @Expose
   private boolean onlineMode = true;
-  @Expose
   private boolean preventClientProxyConnections = false;
-  @Expose
   private PlayerInfoForwarding playerInfoForwardingMode = PlayerInfoForwarding.NONE;
-  private byte[] forwardingSecret = generateRandomString(12).getBytes(StandardCharsets.UTF_8);
-  @Expose
+  private transient byte[] forwardingSecret =
+      generateRandomString(12).getBytes(StandardCharsets.UTF_8);
   private boolean announceForge = false;
-  @Expose
+  @Setting("kick-existing-players")
   private boolean onlineModeKickExistingPlayers = false;
-  @Expose
   private PingPassthroughMode pingPassthrough = PingPassthroughMode.DEFAULT;
-  @Expose
   private boolean samplePlayersInPing = false;
-  private final Servers servers;
-  private final ForcedHosts forcedHosts;
-  @Expose
-  private final Advanced advanced;
-  @Expose
-  private final Query query;
-  private final Metrics metrics;
-  @Expose
+  private Servers servers = new Servers();
+  private ForcedHosts forcedHosts = new ForcedHosts();
+  private Advanced advanced = new Advanced();
+  private Query query = new Query();
+  private Metrics metrics = new Metrics();
   private boolean enablePlayerAddressLogging = true;
-  private net.kyori.adventure.text.@MonotonicNonNull Component motdAsComponent;
-  private @Nullable Favicon favicon;
-  @Expose
+  private transient net.kyori.adventure.text.@MonotonicNonNull Component motdAsComponent;
+  private transient @Nullable Favicon favicon;
   private boolean forceKeyAuthentication = true; // Added in 1.19
-  @Expose
+  @Setting("packet-limiter")
   private PacketLimiterConfig packetLimiterConfig = PacketLimiterConfig.DEFAULT;
 
-  private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
-                                Query query, Metrics metrics) {
-    this.servers = servers;
-    this.forcedHosts = forcedHosts;
-    this.advanced = advanced;
-    this.query = query;
-    this.metrics = metrics;
+  VelocityConfiguration() {
   }
 
   VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
@@ -501,7 +483,7 @@ public class VelocityConfiguration implements ProxyConfig {
       this.attemptConnectionOrder = attemptConnectionOrder;
     }
 
-    private Map<String, String> getServers() {
+    Map<String, String> getServers() {
       return servers;
     }
 
@@ -553,7 +535,7 @@ public class VelocityConfiguration implements ProxyConfig {
       this.forcedHosts = forcedHosts;
     }
 
-    private Map<String, List<String>> getForcedHosts() {
+    Map<String, List<String>> getForcedHosts() {
       return forcedHosts;
     }
 
@@ -569,47 +551,30 @@ public class VelocityConfiguration implements ProxyConfig {
     }
   }
 
+  @ConfigSerializable
   static class Advanced {
 
-    @Expose
     private int compressionThreshold = 256;
-    @Expose
     private int compressionLevel = -1;
-    @Expose
     private int loginRatelimit = 3000;
-    @Expose
     private int connectionTimeout = 5000;
-    @Expose
     private int readTimeout = 30000;
-    @Expose
+    @Setting("haproxy-protocol")
     private boolean proxyProtocol = false;
-    @Expose
     private boolean tcpFastOpen = false;
-    @Expose
     private boolean bungeePluginMessageChannel = true;
-    @Expose
     private boolean showPingRequests = false;
-    @Expose
     private boolean failoverOnUnexpectedServerDisconnect = true;
-    @Expose
     private boolean announceProxyCommands = true;
-    @Expose
     private boolean logCommandExecutions = false;
-    @Expose
     private boolean logPlayerConnections = true;
-    @Expose
+    @Setting("accepts-transfers")
     private boolean acceptTransfers = false;
-    @Expose
     private boolean enableReusePort = false;
-    @Expose
     private int commandRateLimit = 50;
-    @Expose
     private boolean forwardCommandsIfRateLimited = true;
-    @Expose
     private int kickAfterRateLimitedCommands = 5;
-    @Expose
     private int tabCompleteRateLimit = 50;
-    @Expose
     private int kickAfterRateLimitedTabCompletes = 10;
 
     Advanced() {
@@ -752,15 +717,15 @@ public class VelocityConfiguration implements ProxyConfig {
     }
   }
 
+  @ConfigSerializable
   static class Query {
 
-    @Expose
+    @Setting("enabled")
     private boolean queryEnabled = false;
-    @Expose
+    @Setting("port")
     private int queryPort = 25565;
-    @Expose
+    @Setting("map")
     private String queryMap = "Velocity";
-    @Expose
     private boolean showPlugins = false;
 
     Query() {
@@ -803,6 +768,7 @@ public class VelocityConfiguration implements ProxyConfig {
   /**
    * Configuration for metrics.
    */
+  @ConfigSerializable
   public static class Metrics {
 
     private boolean enabled = true;
