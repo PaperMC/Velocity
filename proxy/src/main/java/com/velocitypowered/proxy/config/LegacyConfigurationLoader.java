@@ -45,12 +45,27 @@ import java.util.Locale;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Legacy configuration loader for Velocity.
  */
 public class LegacyConfigurationLoader {
   private static final Logger logger = LogManager.getLogger(LegacyConfigurationLoader.class);
+
+  /**
+   * Reads the raw {@code forwarding-secret-file} value from a legacy TOML configuration, so a
+   * custom secret location can be preserved when migrating to {@code velocity.yml}.
+   *
+   * @param path the legacy configuration path
+   * @return the configured forwarding-secret-file, or {@code null} if unset
+   */
+  static @Nullable String readForwardingSecretFile(final Path path) {
+    try (CommentedFileConfig config = CommentedFileConfig.builder(path).build()) {
+      config.load();
+      return config.get("forwarding-secret-file");
+    }
+  }
 
   /**
    * Reads the Velocity configuration from {@code path}.

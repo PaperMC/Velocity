@@ -282,6 +282,10 @@ public class VelocityConfiguration implements ProxyConfig {
     return forwardingSecret.clone();
   }
 
+  void setForwardingSecret(final byte[] forwardingSecret) {
+    this.forwardingSecret = forwardingSecret;
+  }
+
   @Override
   public Map<String, String> getServers() {
     return servers.getServers();

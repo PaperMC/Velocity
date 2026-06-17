@@ -20,12 +20,18 @@ package com.velocitypowered.proxy.config;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurationNode;
@@ -41,6 +47,24 @@ import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
  */
 public final class ConfigurationLoader {
 
+  private static final Logger logger = LogManager.getLogger(ConfigurationLoader.class);
+
+  private static final String DEFAULT_CONFIG_RESOURCE = "default-velocity.yml";
+  private static final Path DEFAULT_CONFIG_PATH = Path.of("velocity.yml");
+  private static final Path LEGACY_CONFIG_PATH = Path.of("velocity.toml");
+  private static final String FORWARDING_SECRET_FILE_KEY = "forwarding-secret-file";
+  private static final String DEFAULT_FORWARDING_SECRET_FILE = "forwarding.secret";
+  static final String CONFIG_VERSION_KEY = "config-version";
+
+  /**
+   * Current {@code velocity.yml} schema version. Files are born at this version (either freshly
+   * written from the bundled default or stamped during a {@code velocity.toml} migration). Once a
+   * YAML-schema migration is needed, drive upgrades from here via
+   * {@link org.spongepowered.configurate.transformation.ConfigurationTransformation#versionedBuilder()}
+   * keyed on {@link #CONFIG_VERSION_KEY}.
+   */
+  static final int CURRENT_CONFIG_VERSION = 1;
+
   /**
    * ObjectMapper factory configured to map {@code camelCase} fields onto {@code lower-case-dashed}
    * configuration keys, matching the historical TOML key style.
@@ -50,6 +74,117 @@ public final class ConfigurationLoader {
       .build();
 
   private ConfigurationLoader() {
+  }
+
+  /**
+   * Loads the Velocity configuration from {@code velocity.yml}, migrating a legacy
+   * {@code velocity.toml} or writing the documented default on first start as needed.
+   *
+   * @return the loaded configuration
+   * @throws IOException if the configuration could not be read or written
+   */
+  public static VelocityConfiguration loadConfiguration() throws IOException {
+    return loadConfiguration(DEFAULT_CONFIG_PATH, LEGACY_CONFIG_PATH);
+  }
+
+  /**
+   * Loads the Velocity configuration from {@code path}, migrating {@code legacyPath} or writing the
+   * documented default if {@code path} does not yet exist.
+   *
+   * @param path the YAML configuration path
+   * @param legacyPath the legacy TOML configuration path to migrate from, if present
+   * @return the loaded configuration
+   * @throws IOException if the configuration could not be read or written
+   */
+  static VelocityConfiguration loadConfiguration(final Path path, final Path legacyPath)
+      throws IOException {
+    if (Files.notExists(path) && Files.exists(legacyPath)) {
+      migrateFromLegacy(legacyPath, path);
+    }
+
+    if (Files.notExists(path)) {
+      // Fresh install: copy the documented default verbatim so its comments are preserved.
+      writeDefaultConfig(path);
+    }
+
+    // Absent keys fall back to the model's field defaults (matching the old getOrElse behaviour),
+    // so there is no need to merge the bundled default back into the user's file here.
+    final CommentedConfigurationNode node = yamlLoader(path).build().load();
+    final VelocityConfiguration config = node.get(VelocityConfiguration.class);
+    if (config == null) {
+      throw new IOException("Unable to deserialize configuration from " + path);
+    }
+    config.setForwardingSecret(readForwardingSecret(node));
+    return config;
+  }
+
+  /**
+   * Converts a legacy {@code velocity.toml} to {@code velocity.yml}. The legacy night-config
+   * migrations are run first to normalise the file, then it is written out as YAML stamped with the
+   * current schema version and the old file is preserved as {@code velocity.toml.migrated}.
+   */
+  private static void migrateFromLegacy(final Path legacyPath, final Path path) throws IOException {
+    logger.info("Found a legacy {}; migrating it to {}.",
+        legacyPath.getFileName(), path.getFileName());
+    final VelocityConfiguration legacy = LegacyConfigurationLoader.read(legacyPath);
+
+    final YamlConfigurationLoader loader = yamlLoader(path).build();
+    final CommentedConfigurationNode node = loader.createNode();
+    node.set(VelocityConfiguration.class, legacy);
+    // forwarding-secret-file is a bootstrap pointer, not a mapped field; carry it across so a
+    // custom secret location keeps working after migration.
+    final String secretFile = LegacyConfigurationLoader.readForwardingSecretFile(legacyPath);
+    if (secretFile != null) {
+      node.node(FORWARDING_SECRET_FILE_KEY).set(secretFile);
+    }
+    node.node(CONFIG_VERSION_KEY).set(CURRENT_CONFIG_VERSION);
+    loader.save(node);
+
+    final Path archived = legacyPath.resolveSibling(legacyPath.getFileName().toString()
+        + ".migrated");
+    Files.move(legacyPath, archived, StandardCopyOption.REPLACE_EXISTING);
+    logger.info("Migration complete. Your old configuration has been preserved as {}.",
+        archived.getFileName());
+  }
+
+  private static void writeDefaultConfig(final Path path) throws IOException {
+    try (InputStream in = ConfigurationLoader.class.getClassLoader()
+        .getResourceAsStream(DEFAULT_CONFIG_RESOURCE)) {
+      if (in == null) {
+        throw new IOException(DEFAULT_CONFIG_RESOURCE + " is missing from the classpath");
+      }
+      Files.copy(in, path);
+    }
+  }
+
+  /**
+   * Resolves the player-info forwarding secret. Mirrors the legacy behaviour: prefer the
+   * {@code VELOCITY_FORWARDING_SECRET} environment variable, otherwise read (creating if absent) the
+   * file pointed at by {@code forwarding-secret-file}. The secret is deliberately kept out of
+   * {@code velocity.yml}.
+   */
+  private static byte[] readForwardingSecret(final ConfigurationNode node) throws IOException {
+    String secret = System.getenv().getOrDefault("VELOCITY_FORWARDING_SECRET", "");
+    if (secret.isBlank()) {
+      final String secretFile = node.node(FORWARDING_SECRET_FILE_KEY)
+          .getString(DEFAULT_FORWARDING_SECRET_FILE);
+      final Path secretPath = Path.of(secretFile);
+      if (Files.exists(secretPath)) {
+        if (Files.isRegularFile(secretPath)) {
+          secret = String.join("", Files.readAllLines(secretPath));
+        } else {
+          throw new IOException(
+              "The file " + secretFile + " is not a valid file or it is a directory.");
+        }
+      } else {
+        Files.createFile(secretPath);
+        Files.writeString(secretPath, secret = VelocityConfiguration.generateRandomString(12),
+            StandardCharsets.UTF_8);
+        logger.info("The forwarding-secret-file does not exist. A new file has been created at {}",
+            secretFile);
+      }
+    }
+    return secret.getBytes(StandardCharsets.UTF_8);
   }
 
   /**

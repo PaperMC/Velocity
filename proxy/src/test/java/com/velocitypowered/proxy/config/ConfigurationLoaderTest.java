@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.config;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -32,6 +33,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.spongepowered.configurate.CommentedConfigurationNode;
 
 class ConfigurationLoaderTest {
 
@@ -123,6 +125,58 @@ class ConfigurationLoaderTest {
     final Path roundTripped = dir.resolve("velocity-roundtrip.yml");
     ConfigurationLoader.save(ConfigurationLoader.load(path), roundTripped);
     assertConfig(ConfigurationLoader.load(roundTripped));
+  }
+
+  /**
+   * A legacy {@code velocity.toml} must be converted to {@code velocity.yml}: values carried over,
+   * the schema version stamped, a custom forwarding-secret-file preserved, and the old file
+   * archived as {@code velocity.toml.migrated}.
+   */
+  @Test
+  void migratesLegacyTomlToYaml(@TempDir final Path dir) throws IOException {
+    final Path secret = dir.resolve("forwarding.secret");
+    Files.writeString(secret, "supersecretvalue");
+
+    final Path toml = dir.resolve("velocity.toml");
+    final String secretLiteral = secret.toString().replace("\\", "\\\\");
+    Files.writeString(toml, """
+        config-version = "2.8"
+        bind = "0.0.0.0:25599"
+        show-max-players = 321
+        online-mode = false
+        player-info-forwarding-mode = "MODERN"
+        forwarding-secret-file = "%s"
+
+        [servers]
+        hub = "10.0.0.1:25565"
+        try = ["hub"]
+
+        [advanced]
+        haproxy-protocol = true
+        accepts-transfers = true
+        """.formatted(secretLiteral));
+
+    final Path yaml = dir.resolve("velocity.yml");
+    final VelocityConfiguration config = ConfigurationLoader.loadConfiguration(yaml, toml);
+
+    assertTrue(Files.exists(yaml));
+    assertFalse(Files.exists(toml));
+    assertTrue(Files.exists(dir.resolve("velocity.toml.migrated")));
+
+    assertEquals(321, config.getShowMaxPlayers());
+    assertFalse(config.isOnlineMode());
+    assertEquals(PlayerInfoForwarding.MODERN, config.getPlayerInfoForwardingMode());
+    assertEquals(ImmutableMap.of("hub", "10.0.0.1:25565"), config.getServers());
+    assertEquals(ImmutableList.of("hub"), config.getAttemptConnectionOrder());
+    assertTrue(config.isProxyProtocol());
+    assertTrue(config.isAcceptTransfers());
+    assertArrayEquals("supersecretvalue".getBytes(StandardCharsets.UTF_8),
+        config.getForwardingSecret());
+
+    final CommentedConfigurationNode node = ConfigurationLoader.yamlLoader(yaml).build().load();
+    assertEquals(ConfigurationLoader.CURRENT_CONFIG_VERSION,
+        node.node(ConfigurationLoader.CONFIG_VERSION_KEY).getInt());
+    assertEquals(secret.toString(), node.node("forwarding-secret-file").getString());
   }
 
   private static void assertConfig(final VelocityConfiguration config) {
