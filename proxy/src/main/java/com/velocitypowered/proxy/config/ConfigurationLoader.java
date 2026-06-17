@@ -259,7 +259,7 @@ public final class ConfigurationLoader {
     public VelocityConfiguration.Servers deserialize(final Type type, final ConfigurationNode node)
         throws SerializationException {
       final Map<String, String> servers = new LinkedHashMap<>();
-      List<String> attemptConnectionOrder = ImmutableList.of("lobby");
+      List<String> attemptConnectionOrder = ImmutableList.of();
       for (final Map.Entry<Object, ? extends ConfigurationNode> entry
           : node.childrenMap().entrySet()) {
         final String key = entry.getKey().toString();

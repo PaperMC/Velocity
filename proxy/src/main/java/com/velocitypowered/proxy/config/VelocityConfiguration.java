@@ -472,12 +472,11 @@ public class VelocityConfiguration implements ProxyConfig {
 
   static class Servers {
 
-    private Map<String, String> servers = ImmutableMap.of(
-        "lobby", "127.0.0.1:30066",
-        "factions", "127.0.0.1:30067",
-        "minigames", "127.0.0.1:30068"
-    );
-    private List<String> attemptConnectionOrder = ImmutableList.of("lobby");
+    // Example entries live in default-velocity.yml, not here: the code default must stay empty so
+    // that a user who removes the section gets an empty map rather than resurrected examples that
+    // reference servers they no longer have.
+    private Map<String, String> servers = ImmutableMap.of();
+    private List<String> attemptConnectionOrder = ImmutableList.of();
 
     Servers() {
     }
@@ -526,11 +525,10 @@ public class VelocityConfiguration implements ProxyConfig {
 
   static class ForcedHosts {
 
-    private Map<String, List<String>> forcedHosts = ImmutableMap.of(
-        "lobby.example.com", ImmutableList.of("lobby"),
-        "factions.example.com", ImmutableList.of("factions"),
-        "minigames.example.com", ImmutableList.of("minigames")
-    );
+    // Example entries live in default-velocity.yml, not here: the code default must stay empty so
+    // that removing the section yields no forced hosts rather than examples pointing at servers the
+    // user does not have (which would fail validation).
+    private Map<String, List<String>> forcedHosts = ImmutableMap.of();
 
     ForcedHosts() {
     }

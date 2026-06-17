@@ -179,6 +179,26 @@ class ConfigurationLoaderTest {
     assertEquals(secret.toString(), node.node("forwarding-secret-file").getString());
   }
 
+  /**
+   * Removing the {@code forced-hosts}/{@code try} sections must leave them empty rather than
+   * resurrecting the bundled example entries, which would reference servers the user does not have
+   * and fail validation.
+   */
+  @Test
+  void removedSectionsDoNotResurrectDefaults(@TempDir final Path dir) throws IOException {
+    final Path path = dir.resolve("velocity.yml");
+    Files.writeString(path, """
+        servers:
+          only: "1.2.3.4:25565"
+        """, StandardCharsets.UTF_8);
+
+    final VelocityConfiguration config = ConfigurationLoader.load(path);
+
+    assertEquals(ImmutableMap.of("only", "1.2.3.4:25565"), config.getServers());
+    assertTrue(config.getForcedHosts().isEmpty());
+    assertTrue(config.getAttemptConnectionOrder().isEmpty());
+  }
+
   private static void assertConfig(final VelocityConfiguration config) {
     assertEquals(123, config.getShowMaxPlayers());
     assertFalse(config.isOnlineMode());
