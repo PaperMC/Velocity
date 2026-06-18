@@ -31,6 +31,7 @@ import com.velocitypowered.proxy.config.migration.ForwardingMigration;
 import com.velocitypowered.proxy.config.migration.KeyAuthenticationMigration;
 import com.velocitypowered.proxy.config.migration.MiniMessageTranslationsMigration;
 import com.velocitypowered.proxy.config.migration.MotdMigration;
+import com.velocitypowered.proxy.config.migration.MotdMultilineMigration;
 import com.velocitypowered.proxy.config.migration.PacketLimiterMigration;
 import com.velocitypowered.proxy.config.migration.TransferIntegrationMigration;
 import com.velocitypowered.proxy.util.AddressUtil;
@@ -48,6 +49,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -64,7 +66,7 @@ public class VelocityConfiguration implements ProxyConfig {
   @Expose
   private String bind = "0.0.0.0:25565";
   @Expose
-  private String motd = "<aqua>A Velocity Server";
+  private List<String> motd = ImmutableList.of("<aqua>A Velocity Server");
   @Expose
   private int showMaxPlayers = 500;
   @Expose
@@ -91,7 +93,7 @@ public class VelocityConfiguration implements ProxyConfig {
   private final Metrics metrics;
   @Expose
   private boolean enablePlayerAddressLogging = true;
-  private net.kyori.adventure.text.@MonotonicNonNull Component motdAsComponent;
+  private @MonotonicNonNull Component motdAsComponent;
   private @Nullable Favicon favicon;
   @Expose
   private boolean forceKeyAuthentication = true; // Added in 1.19
@@ -107,7 +109,7 @@ public class VelocityConfiguration implements ProxyConfig {
     this.metrics = metrics;
   }
 
-  private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
+  private VelocityConfiguration(String bind, List<String> motd, int showMaxPlayers, boolean onlineMode,
       boolean preventClientProxyConnections, boolean announceForge,
       PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
       boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough,
@@ -282,9 +284,12 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   @Override
-  public net.kyori.adventure.text.Component getMotd() {
+  public Component getMotd() {
     if (motdAsComponent == null) {
-      motdAsComponent = MiniMessage.miniMessage().deserialize(motd);
+      motdAsComponent = motd.stream()
+          .map(MiniMessage.miniMessage()::deserialize)
+          .reduce((a, b) -> a.appendNewline().append(b))
+          .orElseGet(Component::empty);
     }
     return motdAsComponent;
   }
@@ -513,7 +518,8 @@ public class VelocityConfiguration implements ProxyConfig {
           new MotdMigration(),
           new MiniMessageTranslationsMigration(),
           new TransferIntegrationMigration(),
-          new PacketLimiterMigration()
+          new PacketLimiterMigration(),
+          new MotdMultilineMigration()
       };
 
       for (final ConfigurationMigration migration : migrations) {
@@ -545,7 +551,7 @@ public class VelocityConfiguration implements ProxyConfig {
         }
       }
       final byte[] forwardingSecret = forwardingSecretString.getBytes(StandardCharsets.UTF_8);
-      final String motd = config.getOrElse("motd", "<#09add3>A Velocity Server");
+      final List<String> motd = config.getOrElse("motd", ImmutableList.of("<#09add3>A Velocity Server"));
 
       // Read the rest of the config
       final CommentedConfig serversConfig = config.get("servers");
