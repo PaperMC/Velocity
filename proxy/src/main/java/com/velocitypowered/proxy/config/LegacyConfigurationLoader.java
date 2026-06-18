@@ -55,7 +55,7 @@ public class LegacyConfigurationLoader {
 
   /**
    * Reads the raw {@code forwarding-secret-file} value from a legacy TOML configuration, so a
-   * custom secret location can be preserved when migrating to {@code velocity.yml}.
+   * custom secret location can be preserved when migrating to {@code velocity.yaml}.
    *
    * @param path the legacy configuration path
    * @return the configured forwarding-secret-file, or {@code null} if unset

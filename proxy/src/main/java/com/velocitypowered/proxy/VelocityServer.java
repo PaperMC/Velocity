@@ -415,7 +415,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
       commandManager.setAnnounceProxyCommands(configuration.isAnnounceProxyCommands());
     } catch (Exception e) {
-      logger.error("Unable to read/load/save your velocity.yml. The server will shut down.", e);
+      logger.error("Unable to read/load/save your velocity.yaml. The server will shut down.", e);
       LogManager.shutdown();
       System.exit(1);
     }
@@ -478,7 +478,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
    * Reloads the proxy's configuration.
    *
    * @return {@code true} if successful, {@code false} if we can't read the configuration
-   * @throws IOException if we can't read {@code velocity.yml}
+   * @throws IOException if we can't read {@code velocity.yaml}
    */
   public boolean reloadConfiguration() throws IOException {
     VelocityConfiguration newConfiguration = ConfigurationLoader.loadConfiguration();

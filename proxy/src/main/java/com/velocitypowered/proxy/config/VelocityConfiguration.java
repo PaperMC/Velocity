@@ -472,7 +472,7 @@ public class VelocityConfiguration implements ProxyConfig {
 
   static class Servers {
 
-    // Example entries live in default-velocity.yml, not here: the code default must stay empty so
+    // Example entries live in default-velocity.yaml, not here: the code default must stay empty so
     // that a user who removes the section gets an empty map rather than resurrected examples that
     // reference servers they no longer have.
     private Map<String, String> servers = ImmutableMap.of();
@@ -525,7 +525,7 @@ public class VelocityConfiguration implements ProxyConfig {
 
   static class ForcedHosts {
 
-    // Example entries live in default-velocity.yml, not here: the code default must stay empty so
+    // Example entries live in default-velocity.yaml, not here: the code default must stay empty so
     // that removing the section yields no forced hosts rather than examples pointing at servers the
     // user does not have (which would fail validation).
     private Map<String, List<String>> forcedHosts = ImmutableMap.of();

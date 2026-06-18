@@ -49,15 +49,15 @@ public final class ConfigurationLoader {
 
   private static final Logger logger = LogManager.getLogger(ConfigurationLoader.class);
 
-  private static final String DEFAULT_CONFIG_RESOURCE = "default-velocity.yml";
-  private static final Path DEFAULT_CONFIG_PATH = Path.of("velocity.yml");
+  private static final String DEFAULT_CONFIG_RESOURCE = "default-velocity.yaml";
+  private static final Path DEFAULT_CONFIG_PATH = Path.of("velocity.yaml");
   private static final Path LEGACY_CONFIG_PATH = Path.of("velocity.toml");
   private static final String FORWARDING_SECRET_FILE_KEY = "forwarding-secret-file";
   private static final String DEFAULT_FORWARDING_SECRET_FILE = "forwarding.secret";
   static final String CONFIG_VERSION_KEY = "config-version";
 
   /**
-   * Current {@code velocity.yml} schema version. Files are born at this version (either freshly
+   * Current {@code velocity.yaml} schema version. Files are born at this version (either freshly
    * written from the bundled default or stamped during a {@code velocity.toml} migration). Once a
    * YAML-schema migration is needed, drive upgrades from here via
    * {@link org.spongepowered.configurate.transformation.ConfigurationTransformation#versionedBuilder()}
@@ -77,7 +77,7 @@ public final class ConfigurationLoader {
   }
 
   /**
-   * Loads the Velocity configuration from {@code velocity.yml}, migrating a legacy
+   * Loads the Velocity configuration from {@code velocity.yaml}, migrating a legacy
    * {@code velocity.toml} or writing the documented default on first start as needed.
    *
    * @return the loaded configuration
@@ -119,7 +119,7 @@ public final class ConfigurationLoader {
   }
 
   /**
-   * Converts a legacy {@code velocity.toml} to {@code velocity.yml}. The legacy night-config
+   * Converts a legacy {@code velocity.toml} to {@code velocity.yaml}. The legacy night-config
    * migrations are run first to normalise the file, then it is written out as YAML stamped with the
    * current schema version and the old file is preserved as {@code velocity.toml.migrated}.
    */
@@ -161,7 +161,7 @@ public final class ConfigurationLoader {
    * Resolves the player-info forwarding secret. Mirrors the legacy behaviour: prefer the
    * {@code VELOCITY_FORWARDING_SECRET} environment variable, otherwise read (creating if absent) the
    * file pointed at by {@code forwarding-secret-file}. The secret is deliberately kept out of
-   * {@code velocity.yml}.
+   * {@code velocity.yaml}.
    */
   private static byte[] readForwardingSecret(final ConfigurationNode node) throws IOException {
     String secret = System.getenv().getOrDefault("VELOCITY_FORWARDING_SECRET", "");

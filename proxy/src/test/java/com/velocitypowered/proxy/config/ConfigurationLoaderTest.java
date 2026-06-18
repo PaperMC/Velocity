@@ -44,10 +44,10 @@ class ConfigurationLoaderTest {
    */
   @Test
   void bundledDefaultLoads(@TempDir final Path dir) throws IOException {
-    final Path path = dir.resolve("velocity.yml");
+    final Path path = dir.resolve("velocity.yaml");
     try (InputStream in = ConfigurationLoaderTest.class.getClassLoader()
-        .getResourceAsStream("default-velocity.yml")) {
-      assertNotNull(in, "default-velocity.yml is missing from resources");
+        .getResourceAsStream("default-velocity.yaml")) {
+      assertNotNull(in, "default-velocity.yaml is missing from resources");
       Files.copy(in, path);
     }
 
@@ -116,19 +116,19 @@ class ConfigurationLoaderTest {
         metrics:
           enabled: false
         """;
-    final Path path = dir.resolve("velocity.yml");
+    final Path path = dir.resolve("velocity.yaml");
     Files.writeString(path, yaml, StandardCharsets.UTF_8);
 
     assertConfig(ConfigurationLoader.load(path));
 
     // Round trip: save the loaded config out and read it back; everything must still match.
-    final Path roundTripped = dir.resolve("velocity-roundtrip.yml");
+    final Path roundTripped = dir.resolve("velocity-roundtrip.yaml");
     ConfigurationLoader.save(ConfigurationLoader.load(path), roundTripped);
     assertConfig(ConfigurationLoader.load(roundTripped));
   }
 
   /**
-   * A legacy {@code velocity.toml} must be converted to {@code velocity.yml}: values carried over,
+   * A legacy {@code velocity.toml} must be converted to {@code velocity.yaml}: values carried over,
    * the schema version stamped, a custom forwarding-secret-file preserved, and the old file
    * archived as {@code velocity.toml.migrated}.
    */
@@ -156,7 +156,7 @@ class ConfigurationLoaderTest {
         accepts-transfers = true
         """.formatted(secretLiteral));
 
-    final Path yaml = dir.resolve("velocity.yml");
+    final Path yaml = dir.resolve("velocity.yaml");
     final VelocityConfiguration config = ConfigurationLoader.loadConfiguration(yaml, toml);
 
     assertTrue(Files.exists(yaml));
@@ -186,7 +186,7 @@ class ConfigurationLoaderTest {
    */
   @Test
   void removedSectionsDoNotResurrectDefaults(@TempDir final Path dir) throws IOException {
-    final Path path = dir.resolve("velocity.yml");
+    final Path path = dir.resolve("velocity.yaml");
     Files.writeString(path, """
         servers:
           only: "1.2.3.4:25565"
