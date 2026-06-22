@@ -28,11 +28,13 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PingPassthroughMode;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
+import com.velocitypowered.proxy.util.AddressUtil;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -175,7 +177,16 @@ public class ServerListPingHandler {
           .map(str -> str.toLowerCase(Locale.ROOT))
           .orElse("");
       List<String> serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(
-          virtualHostStr, server.getConfiguration().getAttemptConnectionOrder());
+              virtualHostStr,
+              server.getConfiguration()
+                      .getForcedHosts()
+                      .entrySet()
+                      .stream()
+                      .filter(entry -> AddressUtil.isHostMatchingPattern(entry.getKey(), virtualHostStr))
+                      .map(Map.Entry::getValue)
+                      .findFirst()
+                      .orElse(server.getConfiguration().getAttemptConnectionOrder())
+      );
       return attemptPingPassthrough(connection, passthroughMode, serversToTry, shownVersion, virtualHostStr);
     }
   }

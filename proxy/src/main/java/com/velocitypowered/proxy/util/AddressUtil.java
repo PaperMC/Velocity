@@ -74,4 +74,37 @@ public final class AddressUtil {
     int port = uri.getPort() == -1 ? DEFAULT_MINECRAFT_PORT : uri.getPort();
     return new InetSocketAddress(uri.getHost(), port);
   }
+
+  /**
+   * Tests whether a host matches a pattern whose labels may be the
+   * wildcard {@code "*"}. Each {@code "*"} matches exactly one label; all other
+   * labels match case-insensitively.
+   *
+   * @param pattern the pattern to match against, for example, {@code *.soulrealms.net}
+   * @param host the virtual host to test, for example, {@code play.soulrealms.net}
+   * @return true if the host matches the pattern, false otherwise
+   */
+  public static boolean isHostMatchingPattern(String pattern, String host) {
+    if (host == null || pattern == null) {
+      return false;
+    }
+
+    String[] patternDomains = pattern.split("\\.");
+    String[] strDomains = host.split("\\.");
+
+    if (patternDomains.length != strDomains.length) {
+      return false;
+    }
+
+    for (int i = 0; patternDomains.length > i; i++) {
+      String patternDomain = patternDomains[i];
+      String strDomain = strDomains[i];
+
+      if (!patternDomain.equals("*") && !strDomain.equalsIgnoreCase(patternDomain)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 }
