@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2021 Velocity Contributors
+ * Copyright (C) 2018-2026 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,12 +24,35 @@ import org.junit.jupiter.api.Test;
 class ForcedHostsTest {
   @Test
   void testIsHostMatchingPattern() {
-    Assertions.assertTrue(AddressUtil.isHostMatchingPattern("*.miscpvp.org", "play.miscpvp.org"));
-    Assertions.assertTrue(AddressUtil.isHostMatchingPattern("*.miscpvp.org", "yt.miscpvp.org"));
-    Assertions.assertTrue(AddressUtil.isHostMatchingPattern("*.miscpvp.org", "ip.miscpvp.org"));
-    Assertions.assertTrue(AddressUtil.isHostMatchingPattern("test.*.miscpvp.org", "test.example.miscpvp.org"));
-    Assertions.assertFalse(AddressUtil.isHostMatchingPattern("*.miscpvp.org", "test.example.miscpvp.org"));
-    Assertions.assertFalse(AddressUtil.isHostMatchingPattern("*.miscpvp.org", "miscpvp.org"));
-    Assertions.assertFalse(AddressUtil.isHostMatchingPattern("miscpvp.minehunt.gg", "ip.miscpvp.org"));
+    // One wildcard, should match
+    Assertions.assertTrue(AddressUtil.isHostMatchingPattern("*.example.com", "play.example.com"));
+    Assertions.assertTrue(AddressUtil.isHostMatchingPattern("*.example.com", "a.example.com"));
+    Assertions.assertTrue(AddressUtil.isHostMatchingPattern("b.*.example.com", "b.a.example.com"));
+
+    // Different number of labels should not match
+    Assertions.assertFalse(AddressUtil.isHostMatchingPattern("*.example.com", "a.b.example.com"));
+
+    // Wildcards should not match apex domains
+    Assertions.assertFalse(AddressUtil.isHostMatchingPattern("*.example.com", "example.com"));
+
+    // Exact matches should match
+    Assertions.assertTrue(AddressUtil.isHostMatchingPattern("example.com", "example.com"));
+    Assertions.assertTrue(AddressUtil.isHostMatchingPattern("play.example.com", "play.example.com"));
+
+    // Different domains shouldn't match
+    Assertions.assertFalse(AddressUtil.isHostMatchingPattern("otherdomain.com", "example.com"));
+    Assertions.assertFalse(AddressUtil.isHostMatchingPattern("a.otherdomain.com", "a.example.com"));
+
+    // Malformed patterns and hosts
+    Assertions.assertFalse(AddressUtil.isHostMatchingPattern(null, "example.com"));
+    Assertions.assertFalse(AddressUtil.isHostMatchingPattern("example.com", null));
+    Assertions.assertFalse(AddressUtil.isHostMatchingPattern(null, null));
+
+    // Case insensitivity
+    Assertions.assertTrue(AddressUtil.isHostMatchingPattern("Example.COM", "example.com"));
+    Assertions.assertTrue(AddressUtil.isHostMatchingPattern("*.Example.com", "play.EXAMPLE.com"));
+
+    // Multiple wildcards
+    Assertions.assertTrue(AddressUtil.isHostMatchingPattern("*.*.example.com", "a.b.example.com"));
   }
 }
