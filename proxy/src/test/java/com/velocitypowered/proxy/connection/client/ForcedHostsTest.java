@@ -10,7 +10,8 @@ class ForcedHostsTest {
         Assertions.assertTrue(AddressUtil.isHostMatchingPattern("*.miscpvp.org", "play.miscpvp.org"));
         Assertions.assertTrue(AddressUtil.isHostMatchingPattern("*.miscpvp.org", "yt.miscpvp.org"));
         Assertions.assertTrue(AddressUtil.isHostMatchingPattern("*.miscpvp.org", "ip.miscpvp.org"));
-
+        Assertions.assertTrue(AddressUtil.isHostMatchingPattern("test.*.miscpvp.org", "test.example.miscpvp.org"));
+        Assertions.assertFalse(AddressUtil.isHostMatchingPattern("*.miscpvp.org", "test.example.miscpvp.org"));
         Assertions.assertFalse(AddressUtil.isHostMatchingPattern("*.miscpvp.org", "miscpvp.org"));
         Assertions.assertFalse(AddressUtil.isHostMatchingPattern("miscpvp.minehunt.gg", "ip.miscpvp.org"));
     }
