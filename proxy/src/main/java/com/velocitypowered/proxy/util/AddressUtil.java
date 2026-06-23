@@ -19,6 +19,8 @@ package com.velocitypowered.proxy.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.net.InetAddresses;
+
+import javax.annotation.Nullable;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -80,11 +82,11 @@ public final class AddressUtil {
    * wildcard {@code "*"}. Each {@code "*"} matches exactly one label; all other
    * labels match case-insensitively.
    *
-   * @param pattern the pattern to match against, for example, {@code *.soulrealms.net}
-   * @param host the virtual host to test, for example, {@code play.soulrealms.net}
+   * @param pattern the pattern to match against, for example, {@code *.example.com}
+   * @param host the virtual host to test, for example, {@code play.example.com}
    * @return true if the host matches the pattern, false otherwise
    */
-  public static boolean isHostMatchingPattern(String pattern, String host) {
+  public static boolean isHostMatchingPattern(@Nullable String pattern, @Nullable String host) {
     if (host == null || pattern == null) {
       return false;
     }
@@ -96,7 +98,7 @@ public final class AddressUtil {
       return false;
     }
 
-    for (int i = 0; patternDomains.length > i; i++) {
+    for (int i = 0; i < patternDomains.length; i++) {
       String patternDomain = patternDomains[i];
       String strDomain = strDomains[i];
 
