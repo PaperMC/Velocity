@@ -176,7 +176,7 @@ public class ServerListPingHandler {
           .map(str -> str.toLowerCase(Locale.ROOT))
           .orElse("");
       List<String> serversToTry = AddressUtil.resolveForcedHostServers(server, virtualHostStr)
-          .orElseGet(() -> server.getConfiguration().getAttemptConnectionOrder());
+          .orElseGet(server.getConfiguration()::getAttemptConnectionOrder);
       return attemptPingPassthrough(connection, passthroughMode, serversToTry, shownVersion, virtualHostStr);
     }
   }
