@@ -19,11 +19,14 @@ package com.velocitypowered.proxy.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.net.InetAddresses;
-
-import javax.annotation.Nullable;
+import com.velocitypowered.proxy.VelocityServer;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * Utilities to parse addresses.
@@ -108,5 +111,37 @@ public final class AddressUtil {
     }
 
     return true;
+  }
+
+  /**
+   * Resolves the list of servers configured for a given virtual host via forced hosts. An exact
+   * match on the virtual host is preferred. Then, if none exist, the configured forced host patterns are
+   * checked in turn and the first matching pattern's servers are returned.
+   *
+   * @param server the proxy server providing the forced host configuration
+   * @param virtualHostStr the virtual host the client connected with
+   * @return the servers for the matching forced host, or {@link Optional#empty()} if none match
+   */
+  public static Optional<List<String>> resolveForcedHostServers(VelocityServer server, String virtualHostStr) {
+    Map<String, List<String>> forcedHosts = server.getConfiguration().getForcedHosts();
+
+    // Check for exact match
+    List<String> exactMatch = forcedHosts.get(virtualHostStr);
+
+    if (exactMatch != null) {
+      return Optional.of(exactMatch);
+    }
+
+    // Check for pattern match
+    for (Map.Entry<String, List<String>> entry : forcedHosts.entrySet()) {
+      String virtualHostPattern = entry.getKey();
+
+      if (AddressUtil.isHostMatchingPattern(virtualHostPattern, virtualHostStr)) {
+        return Optional.of(entry.getValue());
+      }
+    }
+
+    // No match
+    return Optional.empty();
   }
 }

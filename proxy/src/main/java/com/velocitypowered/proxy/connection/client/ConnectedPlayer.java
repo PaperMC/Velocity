@@ -112,7 +112,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -892,17 +891,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       String virtualHostStr = getVirtualHost().map(InetSocketAddress::getHostString)
           .orElse("")
           .toLowerCase(Locale.ROOT);
-      serversToTry = server.getConfiguration().getForcedHosts().getOrDefault(
-              virtualHostStr,
-              server.getConfiguration()
-                      .getForcedHosts()
-                      .entrySet()
-                      .stream()
-                      .filter(entry -> AddressUtil.isHostMatchingPattern(entry.getKey(), virtualHostStr))
-                      .map(Map.Entry::getValue)
-                      .findFirst()
-                      .orElse(Collections.emptyList())
-      );
+      serversToTry = AddressUtil.resolveForcedHostServers(server, virtualHostStr).orElseGet(Collections::emptyList);
     }
 
     if (serversToTry.isEmpty()) {
