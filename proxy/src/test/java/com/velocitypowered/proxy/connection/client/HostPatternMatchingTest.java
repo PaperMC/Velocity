@@ -21,38 +21,51 @@ import com.velocitypowered.proxy.util.AddressUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class ForcedHostsTest {
+class HostPatternMatchingTest {
   @Test
-  void testIsHostMatchingPattern() {
-    // One wildcard, should match
+  void testOneWildcardMatches() {
     Assertions.assertTrue(AddressUtil.isHostMatchingPattern("*.example.com", "play.example.com"));
     Assertions.assertTrue(AddressUtil.isHostMatchingPattern("*.example.com", "a.example.com"));
     Assertions.assertTrue(AddressUtil.isHostMatchingPattern("b.*.example.com", "b.a.example.com"));
+  }
 
-    // Different number of labels should not match
+  @Test
+  void testMultipleWildcardsMatch() {
+    Assertions.assertTrue(AddressUtil.isHostMatchingPattern("*.*.example.com", "a.b.example.com"));
+  }
+
+  @Test
+  void testDifferentNumberOfLabelsDoNotMatch() {
     Assertions.assertFalse(AddressUtil.isHostMatchingPattern("*.example.com", "a.b.example.com"));
+  }
 
-    // Wildcards should not match apex domains
+  @Test
+  void testWildcardsDoNotMatchApexDomain() {
     Assertions.assertFalse(AddressUtil.isHostMatchingPattern("*.example.com", "example.com"));
+  }
 
-    // Exact matches should match
+  @Test
+  void testExactMatchesMatch() {
     Assertions.assertTrue(AddressUtil.isHostMatchingPattern("example.com", "example.com"));
     Assertions.assertTrue(AddressUtil.isHostMatchingPattern("play.example.com", "play.example.com"));
+  }
 
-    // Different domains shouldn't match
+  @Test
+  void testDifferentDomainsDoNotMatch() {
     Assertions.assertFalse(AddressUtil.isHostMatchingPattern("otherdomain.com", "example.com"));
     Assertions.assertFalse(AddressUtil.isHostMatchingPattern("a.otherdomain.com", "a.example.com"));
+  }
 
-    // Malformed patterns and hosts
+  @Test
+  void testMalformedArgumentsDoNotMatch() {
     Assertions.assertFalse(AddressUtil.isHostMatchingPattern(null, "example.com"));
     Assertions.assertFalse(AddressUtil.isHostMatchingPattern("example.com", null));
     Assertions.assertFalse(AddressUtil.isHostMatchingPattern(null, null));
+  }
 
-    // Case insensitivity
+  @Test
+  void testCaseInsensitivityMatches() {
     Assertions.assertTrue(AddressUtil.isHostMatchingPattern("Example.COM", "example.com"));
     Assertions.assertTrue(AddressUtil.isHostMatchingPattern("*.Example.com", "play.EXAMPLE.com"));
-
-    // Multiple wildcards
-    Assertions.assertTrue(AddressUtil.isHostMatchingPattern("*.*.example.com", "a.b.example.com"));
   }
 }
