@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026 NotCoral
+ * Copyright (C) 2018-2026 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.google.gson.annotations.Expose;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -128,6 +127,8 @@ public final class BvConfiguration {
   }
 
   /**
+   * Returns the compression settings.
+   *
    * @return the compression settings
    */
   public Compression getCompression() {
@@ -135,6 +136,8 @@ public final class BvConfiguration {
   }
 
   /**
+   * Returns the optimization settings.
+   *
    * @return the optimization settings
    */
   public Optimization getOptimization() {
@@ -174,6 +177,8 @@ public final class BvConfiguration {
     }
 
     /**
+     * Returns the minimum packet size, in bytes, before compression is applied.
+     *
      * @return the minimum packet size, in bytes, before compression is applied
      */
     public int getCompressionThreshold() {
@@ -181,6 +186,8 @@ public final class BvConfiguration {
     }
 
     /**
+     * Returns the configured compression level, or {@code -1} for the bVelocity auto default.
+     *
      * @return the configured compression level, or {@code -1} for the bVelocity auto default
      */
     public int getCompressionLevel() {
@@ -229,6 +236,8 @@ public final class BvConfiguration {
     }
 
     /**
+     * Returns whether outbound writes are consolidated into fewer flushes.
+     *
      * @return whether outbound writes are consolidated into fewer flushes
      */
     public boolean isFlushConsolidationEnabled() {
@@ -236,6 +245,8 @@ public final class BvConfiguration {
     }
 
     /**
+     * Returns the maximum number of pending writes buffered before a flush is issued.
+     *
      * @return the maximum number of pending writes buffered before a flush is issued
      */
     public int getFlushConsolidationThreshold() {
@@ -243,6 +254,9 @@ public final class BvConfiguration {
     }
 
     /**
+     * Returns the headroom, in bytes, added above the uncompressed size when pre-allocating the
+     * compressed-output buffer.
+     *
      * @return the headroom, in bytes, added above the uncompressed size when pre-allocating the
      *     compressed-output buffer
      */
@@ -251,6 +265,8 @@ public final class BvConfiguration {
     }
 
     /**
+     * Returns whether per-packet compression statistics are collected for {@code /bv compression}.
+     *
      * @return whether per-packet compression statistics are collected for {@code /bv compression}
      */
     public boolean isCompressionStatsEnabled() {

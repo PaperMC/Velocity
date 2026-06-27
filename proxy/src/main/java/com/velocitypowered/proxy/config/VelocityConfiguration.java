@@ -332,6 +332,10 @@ public class VelocityConfiguration implements ProxyConfig {
   /**
    * Attaches the bVelocity-specific configuration backing the compression getters.
    *
+   * <p>This is wired by {@code VelocityServer} after both {@code velocity.toml} and
+   * {@code bvelocity.toml} have been loaded, so the {@link ProxyConfig} compression getters
+   * continue to resolve against the relocated compression settings.
+   *
    * @param bvConfiguration the bVelocity configuration
    */
   public void setBvConfiguration(BvConfiguration bvConfiguration) {
@@ -339,6 +343,8 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   /**
+   * Returns the bVelocity-specific configuration (compression + optimizations).
+   *
    * @return the bVelocity-specific configuration (compression + optimizations)
    */
   public BvConfiguration getBvConfiguration() {

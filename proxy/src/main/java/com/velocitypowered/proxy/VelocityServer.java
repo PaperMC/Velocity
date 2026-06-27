@@ -46,7 +46,8 @@ import com.velocitypowered.proxy.command.builtin.SendCommand;
 import com.velocitypowered.proxy.command.builtin.ServerCommand;
 import com.velocitypowered.proxy.command.builtin.ShutdownCommand;
 import com.velocitypowered.proxy.command.builtin.VelocityCommand;
-import com.velocitypowered.proxy.config.VelocityConfiguration;import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import com.velocitypowered.proxy.config.VelocityConfiguration;
+import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.player.resourcepack.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ServerListPingHandler;
 import com.velocitypowered.proxy.console.VelocityConsole;
@@ -200,6 +201,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   /**
+   * Returns the bVelocity-specific configuration loaded from {@code bvelocity.toml}.
+   *
    * @return the bVelocity-specific configuration loaded from {@code bvelocity.toml}
    */
   public BvConfiguration getBvConfiguration() {

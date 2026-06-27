@@ -17,9 +17,9 @@
 
 package com.velocitypowered.proxy.network;
 
+import static com.velocitypowered.proxy.network.Connections.FLUSH_CONSOLIDATION;
 import static com.velocitypowered.proxy.network.Connections.FRAME_DECODER;
 import static com.velocitypowered.proxy.network.Connections.FRAME_ENCODER;
-import static com.velocitypowered.proxy.network.Connections.FLUSH_CONSOLIDATION;
 import static com.velocitypowered.proxy.network.Connections.LEGACY_PING_DECODER;
 import static com.velocitypowered.proxy.network.Connections.LEGACY_PING_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.MINECRAFT_DECODER;
