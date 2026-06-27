@@ -24,6 +24,7 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_20_3;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_20_5;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_21_5;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_21_6;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_26_2;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentIdentifier.id;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentIdentifier.mapSet;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.DoubleArgumentPropertySerializer.DOUBLE;
@@ -207,7 +208,7 @@ public class ArgumentPropertyRegistry {
     empty(id("minecraft:block_predicate", mapSet(MINECRAFT_1_19, 13)));
     empty(id("minecraft:item_stack", mapSet(MINECRAFT_1_19, 14)));
     empty(id("minecraft:item_predicate", mapSet(MINECRAFT_1_19, 15)));
-    empty(id("minecraft:color", mapSet(MINECRAFT_1_19, 16)));
+    empty(id("minecraft:color", mapSet(MINECRAFT_26_2, -1), mapSet(MINECRAFT_1_19, 16))); // renamed to team_color in 26.2
     empty(id("minecraft:component", mapSet(MINECRAFT_1_21_6, 18), mapSet(MINECRAFT_1_19, 17)));
     empty(id("minecraft:style", mapSet(MINECRAFT_1_21_6, 19), mapSet(MINECRAFT_1_20_3, 18))); // added 1.20.3
     empty(id("minecraft:message", mapSet(MINECRAFT_1_21_6, 20), mapSet(MINECRAFT_1_20_3, 19), mapSet(MINECRAFT_1_19, 18)));
@@ -281,6 +282,7 @@ public class ArgumentPropertyRegistry {
 
     empty(id("minecraft:hex_color", mapSet(MINECRAFT_1_21_6, 17))); // added in 1.21.6
     empty(id("minecraft:dialog", mapSet(MINECRAFT_1_21_6, 55))); // added in 1.21.6
+    empty(id("minecraft:team_color", mapSet(MINECRAFT_26_2, 16))); // renamed from color in 26.2
 
     // Crossstitch support
     register(id("crossstitch:mod_argument", mapSet(MINECRAFT_1_19, -256)), ModArgumentProperty.class, MOD);
