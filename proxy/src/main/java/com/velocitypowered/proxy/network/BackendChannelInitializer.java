@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.network;
 import static com.velocitypowered.proxy.network.Connections.FLOW_HANDLER;
 import static com.velocitypowered.proxy.network.Connections.FRAME_DECODER;
 import static com.velocitypowered.proxy.network.Connections.FRAME_ENCODER;
+import static com.velocitypowered.proxy.network.Connections.FLUSH_CONSOLIDATION;
 import static com.velocitypowered.proxy.network.Connections.MINECRAFT_DECODER;
 import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.READ_TIMEOUT;
@@ -33,6 +34,7 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
+import io.netty.handler.flush.FlushConsolidationHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import java.util.concurrent.TimeUnit;
 
@@ -55,7 +57,17 @@ public class BackendChannelInitializer extends ChannelInitializer<Channel> {
         .addLast(READ_TIMEOUT,
             new ReadTimeoutHandler(server.getConfiguration().getReadTimeout(),
                 TimeUnit.MILLISECONDS))
-        .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
+        .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE);
+
+    // Optional outbound flush consolidation for the proxy→backend direction, mirroring the
+    // server (client-facing) initializer. Driven by bvelocity.toml.
+    final var optimization = this.server.getBvConfiguration().getOptimization();
+    if (optimization.isFlushConsolidationEnabled()) {
+      ch.pipeline().addLast(FLUSH_CONSOLIDATION, new FlushConsolidationHandler(
+          optimization.getFlushConsolidationThreshold(), true));
+    }
+
+    ch.pipeline()
         .addLast(MINECRAFT_DECODER,
             new MinecraftDecoder(ProtocolUtils.Direction.CLIENTBOUND))
         .addLast(FLOW_HANDLER, new AutoReadHolderHandler())

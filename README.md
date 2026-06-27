@@ -22,13 +22,26 @@ If you are moving from stock Velocity, the migration is straightforward:
 5. Keep using the same forwarding mode and `forwarding.secret`.
 6. Start bVelocity and verify the startup banner shows `bVelocity 1.0.0-SNAPSHOT`.
 
+### Where bVelocity settings live
+
+bVelocity keeps `velocity.toml` in lock-step with upstream Velocity, so every setting bVelocity
+owns lives in a separate `bvelocity.toml` that is created on first boot if absent. Specifically:
+
+- **Compression** (`compression-threshold`, `compression-level`) has moved here from
+  `velocity.toml`'s `[advanced]` block. If you previously set these in `velocity.toml`, move
+  them into `bvelocity.toml`'s `[compression]` section; the old keys in `velocity.toml` are
+  ignored.
+- **Optimization knobs** (flush consolidation, output-buffer headroom, compression-statistics
+  collection) live in `bvelocity.toml`'s `[optimization]` section.
+
 Things you should check after switching:
 
-- `compression-threshold`
+- `compression-threshold` (in `bvelocity.toml`)
   - If you were happy with upstream behavior, note that bVelocity defaults to `128`, not `256`.
-- `compression-level`
+- `compression-level` (in `bvelocity.toml`)
   - Upstream operators often leave this at `-1` and assume “normal” compression.
-  - In bVelocity, `-1` means an aggressive default.
+  - In bVelocity, `-1` resolves to a proxy-preferred level tuned for the ratio sweet spot
+    (`native=6 / java=6`), not the upstream zlib default of 6-from-`-1`.
 - plugins and forwarding
   - The proxy is still Velocity-based. Existing Velocity plugins and modern forwarding setups should continue to work.
 - monitoring expectations
@@ -43,34 +56,43 @@ Recommended migration strategy for cautious operators:
 
 ## Recommended Settings
 
-For most networks that want lower bandwidth usage without getting reckless:
+For most networks that want lower bandwidth usage without getting reckless, edit
+`bvelocity.toml`:
+
+```toml
+[compression]
+compression-threshold = 128
+compression-level = -1
+```
+
+and leave these upstream knobs in `velocity.toml`:
 
 ```toml
 [advanced]
-compression-threshold = 128
-compression-level = -1
 tcp-fast-open = true
 log-command-executions = true
 log-player-connections = true
 ```
 
-If you want a more conservative profile:
+If you want a more conservative profile (in `bvelocity.toml`):
 
 ```toml
-[advanced]
+[compression]
 compression-threshold = 192
 compression-level = 9
 ```
 
-If you want to chase bandwidth reduction aggressively:
+If you want to chase bandwidth reduction aggressively (in `bvelocity.toml`):
 
 ```toml
-[advanced]
+[compression]
 compression-threshold = 64
 compression-level = 12
 ```
 
 Be honest about the tradeoff: lower threshold and higher compression level can reduce wire usage further, but they also cost CPU. bVelocity gives you the tooling to measure that tradeoff live instead of guessing.
+
+Note on the `-1` default: bVelocity tunes the auto level to the compression-ratio sweet spot rather than the absolute maximum. On typical Minecraft traffic the ratio plateaus well below level 12 while CPU cost keeps climbing linearly, so `-1` resolves to a level that captures nearly all of the savings at a fraction of the cost. Run `/bv compression benchmark` on your own traffic to confirm, and dial the level up explicitly if your benchmark shows meaningful gains at higher levels.
 
 ## Building
 
@@ -134,7 +156,7 @@ And the matching live traffic window reported:
 ◆ bVelocity Compression Stats
 │ Window: 285s
 │ Backend: libdeflate (Linux x86_64)
-│ Threshold: 128 | Level: auto(native=12/java=9)
+│ Threshold: 128 | Level: auto(native=6/java=6)
 │ Packets total=58796 compressed=9634 passthrough=49162
 │ Raw payload: 84.70 MiB | Wire bytes: 9.27 MiB
 │ Compressed payload: 84.03 MiB | Compressed wire: 8.51 MiB

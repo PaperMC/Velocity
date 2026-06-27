@@ -112,17 +112,8 @@ try = [
 ]
 
 [advanced]
-# How large a Minecraft packet has to be before we compress it. Setting this to zero will
-# compress all packets, and setting it to -1 will disable compression entirely.
-compression-threshold = 128
-
-# How much compression should be done. bVelocity accepts 0-12 here:
-# - Java fallback supports up to 9.
-# - Native libdeflate supports up to 12.
-# The default is -1, which uses an aggressive proxy-preferred level:
-# - 12 for native libdeflate
-# - 9 for the Java fallback
-compression-level = -1
+# Compression has moved to bvelocity.toml. Configure compression-threshold and
+# compression-level there; the [advanced] block below holds only upstream Velocity settings.
 
 # How fast (in milliseconds) are clients allowed to connect after the last connection? By
 # default, this is three seconds. Disable this by setting this to 0.

@@ -53,6 +53,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import top.notcoral.velocity.config.BvConfiguration;
 
 /**
  * Velocity's configuration.
@@ -97,6 +98,13 @@ public class VelocityConfiguration implements ProxyConfig {
   private boolean forceKeyAuthentication = true; // Added in 1.19
   @Expose
   private PacketLimiterConfig packetLimiterConfig = PacketLimiterConfig.DEFAULT;
+
+  /**
+   * The bVelocity-specific configuration that owns the compression subsystem (relocated out of
+   * {@code velocity.toml}'s {@code [advanced]} block). Lazily attached after construction so the
+   * compression getters required by the {@link ProxyConfig} API continue to resolve.
+   */
+  private @MonotonicNonNull BvConfiguration bvConfiguration;
 
   private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
       Query query, Metrics metrics) {
@@ -215,22 +223,6 @@ public class VelocityConfiguration implements ProxyConfig {
       valid = false;
     }
 
-    if (advanced.compressionLevel < -1 || advanced.compressionLevel > 12) {
-      logger.error("Invalid compression level {}", advanced.compressionLevel);
-      valid = false;
-    } else if (advanced.compressionLevel == 0) {
-      logger.warn("ALL packets going through the proxy will be uncompressed. This will increase "
-          + "bandwidth usage.");
-    }
-
-    if (advanced.compressionThreshold < -1) {
-      logger.error("Invalid compression threshold {}", advanced.compressionLevel);
-      valid = false;
-    } else if (advanced.compressionThreshold == 0) {
-      logger.warn("ALL packets going through the proxy will be compressed. This will compromise "
-          + "throughput and increase CPU usage!");
-    }
-
     if (advanced.loginRatelimit < 0) {
       logger.error("Invalid login ratelimit {}ms", advanced.loginRatelimit);
       valid = false;
@@ -329,12 +321,28 @@ public class VelocityConfiguration implements ProxyConfig {
 
   @Override
   public int getCompressionThreshold() {
-    return advanced.getCompressionThreshold();
+    return bvConfiguration.getCompression().getCompressionThreshold();
   }
 
   @Override
   public int getCompressionLevel() {
-    return advanced.getCompressionLevel();
+    return bvConfiguration.getCompression().getCompressionLevel();
+  }
+
+  /**
+   * Attaches the bVelocity-specific configuration backing the compression getters.
+   *
+   * @param bvConfiguration the bVelocity configuration
+   */
+  public void setBvConfiguration(BvConfiguration bvConfiguration) {
+    this.bvConfiguration = bvConfiguration;
+  }
+
+  /**
+   * @return the bVelocity-specific configuration (compression + optimizations)
+   */
+  public BvConfiguration getBvConfiguration() {
+    return bvConfiguration;
   }
 
   @Override
@@ -580,7 +588,7 @@ public class VelocityConfiguration implements ProxyConfig {
         throw new RuntimeException("The forwarding-secret file must not be empty.");
       }
 
-      return new VelocityConfiguration(
+      final VelocityConfiguration configuration = new VelocityConfiguration(
               bind,
               motd,
               maxPlayers,
@@ -601,6 +609,9 @@ public class VelocityConfiguration implements ProxyConfig {
               forceKeyAuthentication,
               packetLimiterConfig
       );
+      // Compression lives in bvelocity.toml; VelocityServer.attachBvConfiguration() wires the
+      // loaded BvConfiguration onto this object so the ProxyConfig compression getters resolve.
+      return configuration;
     }
   }
 
@@ -749,10 +760,6 @@ public class VelocityConfiguration implements ProxyConfig {
   private static class Advanced {
 
     @Expose
-    private int compressionThreshold = 256;
-    @Expose
-    private int compressionLevel = -1;
-    @Expose
     private int loginRatelimit = 3000;
     @Expose
     private int connectionTimeout = 5000;
@@ -794,8 +801,6 @@ public class VelocityConfiguration implements ProxyConfig {
 
     private Advanced(CommentedConfig config) {
       if (config != null) {
-        this.compressionThreshold = config.getIntOrElse("compression-threshold", 128);
-        this.compressionLevel = config.getIntOrElse("compression-level", -1);
         this.loginRatelimit = config.getIntOrElse("login-ratelimit", 3000);
         this.connectionTimeout = config.getIntOrElse("connection-timeout", 5000);
         this.readTimeout = config.getIntOrElse("read-timeout", 30000);
@@ -820,14 +825,6 @@ public class VelocityConfiguration implements ProxyConfig {
         this.tabCompleteRateLimit = config.getIntOrElse("tab-complete-rate-limit", 10); // very lenient
         this.kickAfterRateLimitedTabCompletes = config.getIntOrElse("kick-after-rate-limited-tab-completes", 0);
       }
-    }
-
-    public int getCompressionThreshold() {
-      return compressionThreshold;
-    }
-
-    public int getCompressionLevel() {
-      return compressionLevel;
     }
 
     public int getLoginRatelimit() {
@@ -909,9 +906,7 @@ public class VelocityConfiguration implements ProxyConfig {
     @Override
     public String toString() {
       return "Advanced{"
-          + "compressionThreshold=" + compressionThreshold
-          + ", compressionLevel=" + compressionLevel
-          + ", loginRatelimit=" + loginRatelimit
+          + "loginRatelimit=" + loginRatelimit
           + ", connectionTimeout=" + connectionTimeout
           + ", readTimeout=" + readTimeout
           + ", proxyProtocol=" + proxyProtocol

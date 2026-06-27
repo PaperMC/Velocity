@@ -46,8 +46,7 @@ import com.velocitypowered.proxy.command.builtin.SendCommand;
 import com.velocitypowered.proxy.command.builtin.ServerCommand;
 import com.velocitypowered.proxy.command.builtin.ShutdownCommand;
 import com.velocitypowered.proxy.command.builtin.VelocityCommand;
-import com.velocitypowered.proxy.config.VelocityConfiguration;
-import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import com.velocitypowered.proxy.config.VelocityConfiguration;import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.player.resourcepack.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ServerListPingHandler;
 import com.velocitypowered.proxy.console.VelocityConsole;
@@ -114,6 +113,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import top.notcoral.velocity.command.BvCommand;
+import top.notcoral.velocity.config.BvConfiguration;
 
 /**
  * Implementation of {@link ProxyServer}.
@@ -157,6 +157,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   private final ConnectionManager cm;
   private final ProxyOptions options;
   private @MonotonicNonNull VelocityConfiguration configuration;
+  private @MonotonicNonNull BvConfiguration bvConfiguration;
   private @MonotonicNonNull KeyPair serverKeyPair;
   private final ServerMap servers;
   private final VelocityCommandManager commandManager;
@@ -196,6 +197,13 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   @Override
   public VelocityConfiguration getConfiguration() {
     return this.configuration;
+  }
+
+  /**
+   * @return the bVelocity-specific configuration loaded from {@code bvelocity.toml}
+   */
+  public BvConfiguration getBvConfiguration() {
+    return this.bvConfiguration;
   }
 
   @Override
@@ -427,6 +435,25 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       LogManager.shutdown();
       System.exit(1);
     }
+
+    try {
+      Path bvConfigPath = Path.of("bvelocity.toml");
+      bvConfiguration = BvConfiguration.read(bvConfigPath);
+
+      if (!bvConfiguration.validate()) {
+        logger.error("Your bvelocity.toml is invalid. bVelocity will not start up until the errors "
+            + "are resolved.");
+        LogManager.shutdown();
+        System.exit(1);
+      }
+      // Wire the freshly loaded BvConfiguration onto the VelocityConfiguration so the ProxyConfig
+      // compression getters (used by AuthSessionHandler / MinecraftConnection / BvCommand) resolve.
+      configuration.setBvConfiguration(bvConfiguration);
+    } catch (Exception e) {
+      logger.error("Unable to read/load/save your bvelocity.toml. The server will shut down.", e);
+      LogManager.shutdown();
+      System.exit(1);
+    }
   }
 
   private void loadPlugins() {
@@ -495,6 +522,19 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     if (!newConfiguration.validate()) {
       return false;
     }
+
+    // Reload the bVelocity-specific configuration too. Compression-threshold / -level only affect
+    // newly established connections, so a reload does not disturb existing players; the
+    // optimization knobs apply to freshly initialized pipelines.
+    Path bvConfigPath = Path.of("bvelocity.toml");
+    BvConfiguration newBvConfiguration = BvConfiguration.read(bvConfigPath);
+    if (!newBvConfiguration.validate()) {
+      return false;
+    }
+    this.bvConfiguration = newBvConfiguration;
+    // Keep the ProxyConfig compression getters in sync — VelocityConfiguration.read() already
+    // attached its own BvConfiguration, but a reload must point at the freshly loaded one.
+    newConfiguration.setBvConfiguration(newBvConfiguration);
 
     // Re-register servers. If a server is being replaced, make sure to note what players need to
     // move back to a fallback server.

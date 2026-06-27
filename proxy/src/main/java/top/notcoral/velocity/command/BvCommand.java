@@ -167,8 +167,9 @@ public final class BvCommand {
     @Override
     public int run(CommandContext<CommandSource> context) {
       final CommandSource source = context.getSource();
-      final int configuredLevel = server.getConfiguration().getCompressionLevel();
-      final String effectiveLevel = configuredLevel == -1 ? "auto(native=12/java=9)"
+      final var compression = server.getBvConfiguration().getCompression();
+      final int configuredLevel = compression.getCompressionLevel();
+      final String effectiveLevel = configuredLevel == -1 ? "auto(native=6/java=6)"
           : Integer.toString(configuredLevel);
 
       sendSectionTitle(source, "bvelocity.command.status-title");
@@ -178,7 +179,7 @@ public final class BvCommand {
           Argument.string("backend", Natives.compress.getLoadedVariant()),
           Argument.string(
               "threshold",
-              Integer.toString(server.getConfiguration().getCompressionThreshold())
+              Integer.toString(compression.getCompressionThreshold())
           ),
           Argument.string("level", effectiveLevel)
       ));
@@ -192,7 +193,7 @@ public final class BvCommand {
           VALUE,
           Argument.string(
               "threshold",
-              Integer.toString(server.getConfiguration().getCompressionThreshold())
+              Integer.toString(compression.getCompressionThreshold())
           )
       ));
       sendStatLine(source, Component.translatable(
@@ -229,14 +230,15 @@ public final class BvCommand {
     @Override
     public int run(CommandContext<CommandSource> context) {
       final CommandSource source = context.getSource();
-      final int configuredLevel = server.getConfiguration().getCompressionLevel();
+      final var compression = server.getBvConfiguration().getCompression();
+      final int configuredLevel = compression.getCompressionLevel();
       sendSectionTitle(source, "bvelocity.command.config-title");
       sendStatLine(source, Component.translatable(
           "bvelocity.command.status-threshold",
           VALUE,
           Argument.string(
               "threshold",
-              Integer.toString(server.getConfiguration().getCompressionThreshold())
+              Integer.toString(compression.getCompressionThreshold())
           )
       ));
       sendStatLine(source, Component.translatable(
@@ -247,8 +249,8 @@ public final class BvCommand {
       sendStatLine(source, Component.translatable(
           "bvelocity.command.config-defaults",
           VALUE,
-          Argument.string("native", "12"),
-          Argument.string("java", "9")
+          Argument.string("native", "6"),
+          Argument.string("java", "6")
       ));
       return Command.SINGLE_SUCCESS;
     }
@@ -259,6 +261,7 @@ public final class BvCommand {
     @Override
     public int run(CommandContext<CommandSource> context) {
       final CommandSource source = context.getSource();
+      final var compression = server.getBvConfiguration().getCompression();
       final BvCompressionStats.Snapshot snapshot =
           BvCompressionStats.INSTANCE.snapshot();
 
@@ -278,11 +281,11 @@ public final class BvCommand {
           VALUE,
           Argument.string(
               "threshold",
-              Integer.toString(server.getConfiguration().getCompressionThreshold())
+              Integer.toString(compression.getCompressionThreshold())
           ),
           Argument.string(
               "level",
-              describeLevel(server.getConfiguration().getCompressionLevel())
+              describeLevel(compression.getCompressionLevel())
           )
       ));
       sendStatLine(source, Component.translatable(
@@ -407,7 +410,7 @@ public final class BvCommand {
 
   private static String describeLevel(int configuredLevel) {
     return configuredLevel == -1
-        ? "auto(native=12/java=9)"
+        ? "auto(native=6/java=6)"
         : Integer.toString(configuredLevel);
   }
 

@@ -27,8 +27,12 @@ final class CompressionLevelUtil {
   private static final int MIN_LEVEL = 1;
   private static final int JAVA_MAX_LEVEL = 9;
   private static final int LIBDEFLATE_MAX_LEVEL = 12;
-  private static final int AGGRESSIVE_NATIVE_DEFAULT = 12;
-  private static final int AGGRESSIVE_JAVA_DEFAULT = 9;
+  // libdeflate's compression ratio saturates well below its maximum level on real Minecraft
+  // traffic (chunks, NBT, chat) while its CPU cost keeps climbing linearly. The shipped benchmark
+  // shows level 6 already reaching the plateau at a fraction of the level 12 latency, so the
+  // proxy-preferred aggressive default targets the ratio sweet spot rather than the absolute floor.
+  private static final int AGGRESSIVE_NATIVE_DEFAULT = 6;
+  private static final int AGGRESSIVE_JAVA_DEFAULT = 6;
 
   private CompressionLevelUtil() {
     throw new AssertionError();

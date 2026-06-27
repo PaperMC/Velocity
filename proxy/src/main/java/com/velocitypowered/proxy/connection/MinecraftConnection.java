@@ -562,11 +562,14 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
         decoder.setThreshold(threshold);
         encoder.setThreshold(threshold);
       } else {
+        final var bvConfig = server.getBvConfiguration();
+        final var optimization = bvConfig.getOptimization();
         int level = server.getConfiguration().getCompressionLevel();
         VelocityCompressor compressor = Natives.compress.get().create(level);
         final MinecraftDecoder minecraftDecoder = (MinecraftDecoder) channel.pipeline().get(MINECRAFT_DECODER);
 
-        encoder = new MinecraftCompressorAndLengthEncoder(threshold, compressor);
+        encoder = new MinecraftCompressorAndLengthEncoder(threshold, compressor,
+            optimization.getCompressBoundHeadroom(), optimization.isCompressionStatsEnabled());
         decoder = new MinecraftCompressDecoder(threshold, compressor, minecraftDecoder.getDirection());
 
         channel.pipeline().remove(FRAME_ENCODER);

@@ -1,0 +1,65 @@
+# bVelocity-specific configuration.
+#
+# This file is the single home for every setting bVelocity adds or repurposes relative to
+# upstream Velocity. velocity.toml stays in lock-step with upstream; anything bVelocity owns
+# lives here. If this file is absent on first boot, it is seeded from the bundled defaults.
+#
+# Reload with the standard Velocity reload mechanism. Changes to compression-threshold /
+# compression-level take effect for newly established connections; flush-consolidation and
+# compress-bound-headroom apply to newly initialized channel pipelines.
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Compression
+# ──────────────────────────────────────────────────────────────────────────────
+# These two settings were relocated here from velocity.toml's [advanced] block. They are the
+# protocol-level Minecraft compression knobs and behave exactly as they did there.
+
+[compression]
+
+# How large a Minecraft packet has to be before we compress it. Setting this to zero will
+# compress all packets, and setting it to -1 will disable compression entirely.
+compression-threshold = 128
+
+# How much compression should be done. bVelocity accepts 0-12 here:
+# - Java fallback supports up to 9.
+# - Native libdeflate supports up to 12.
+# The default is -1, which uses a proxy-preferred aggressive level tuned for the
+# compression-ratio sweet spot on typical Minecraft traffic (the ratio plateaus well
+# below the maximum level, while CPU cost keeps climbing):
+# - 6 for native libdeflate
+# - 6 for the Java fallback
+compression-level = -1
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Optimization
+# ──────────────────────────────────────────────────────────────────────────────
+# bVelocity network and compression-path optimizations. These are safe by default; flip
+# them off only if you have a specific reason to.
+
+[optimization]
+
+# Consolidate outbound writes into fewer flushes. Minecraft traffic is bursty (a backend
+# tick can push dozens of packets to one player at once); without consolidation each packet
+# triggers its own flush syscall. Consolidating collapses those into a single flush per
+# burst, reducing user/kernel transitions on the write path. Disabling restores the
+# per-packet flush behavior of stock Velocity.
+flush-consolidation-enabled = true
+
+# Maximum number of pending writes buffered before a flush is issued. Larger values
+# consolidate more aggressively (fewer flushes) at the cost of holding writes slightly
+# longer. 256 is large enough to absorb a full backend tick burst for one player.
+flush-consolidation-threshold = 256
+
+# Headroom, in bytes, added above the uncompressed size when pre-allocating the
+# compressed-output buffer. zlib's stored-block worst case collapses to roughly
+# input + 11 for the dominant sub-64KiB Minecraft packet range, so a small fixed headroom
+# pre-allocates enough that the compressor's grow-loop (which discards a full compression
+# pass on insufficient room) almost never triggers. Lower values save a little memory at
+# the cost of more grow-loop retries; 0 is not recommended.
+compress-bound-headroom = 16
+
+# Collect per-packet compression statistics (packet counts, raw vs. wire bytes, savings)
+# for the /bv compression command. Collection is cheap (a few LongAdder writes per packet)
+# but not free; operators chasing maximum throughput can disable it to make the encode
+# hot path fully zero-overhead. When disabled, /bv compression reports an empty window.
+compression-stats-enabled = true

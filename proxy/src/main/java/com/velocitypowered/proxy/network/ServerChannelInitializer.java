@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.network;
 
 import static com.velocitypowered.proxy.network.Connections.FRAME_DECODER;
 import static com.velocitypowered.proxy.network.Connections.FRAME_ENCODER;
+import static com.velocitypowered.proxy.network.Connections.FLUSH_CONSOLIDATION;
 import static com.velocitypowered.proxy.network.Connections.LEGACY_PING_DECODER;
 import static com.velocitypowered.proxy.network.Connections.LEGACY_PING_ENCODER;
 import static com.velocitypowered.proxy.network.Connections.MINECRAFT_DECODER;
@@ -41,6 +42,7 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
+import io.netty.handler.flush.FlushConsolidationHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import java.util.concurrent.TimeUnit;
 
@@ -65,7 +67,17 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
             new ReadTimeoutHandler(this.server.getConfiguration().getReadTimeout(),
                 TimeUnit.MILLISECONDS))
         .addLast(LEGACY_PING_ENCODER, LegacyPingEncoder.INSTANCE)
-        .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE)
+        .addLast(FRAME_ENCODER, MinecraftVarintLengthEncoder.INSTANCE);
+
+    // Optional outbound flush consolidation, driven by bvelocity.toml. Reduces per-packet flush
+    // syscalls on bursty Minecraft traffic; disabled restores stock per-packet flush behavior.
+    final var optimization = this.server.getBvConfiguration().getOptimization();
+    if (optimization.isFlushConsolidationEnabled()) {
+      ch.pipeline().addLast(FLUSH_CONSOLIDATION, new FlushConsolidationHandler(
+          optimization.getFlushConsolidationThreshold(), true));
+    }
+
+    ch.pipeline()
         .addLast(MINECRAFT_DECODER, new MinecraftDecoder(ProtocolUtils.Direction.SERVERBOUND))
         .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(ProtocolUtils.Direction.CLIENTBOUND));
 
