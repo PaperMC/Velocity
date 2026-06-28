@@ -32,16 +32,19 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
  * An implementation of {@code InetNameResolver} that performs blocking DNS name lookups
- * in a separate thread, avoiding blocking the Netty threads for an extended period of time
- * and without the downsides of Netty's native DNS resolver.
+ * on a small bounded pool of separate threads, avoiding blocking the Netty threads for an
+ * extended period of time and without the downsides of Netty's native DNS resolver.
  */
 public final class SeparatePoolInetNameResolver extends InetNameResolver {
+
+  private static final int MAX_RESOLVE_THREADS = 8;
 
   private final ExecutorService resolveExecutor;
   private final InetNameResolver delegate;
@@ -56,9 +59,10 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
    */
   public SeparatePoolInetNameResolver(EventExecutor executor) {
     super(executor);
-    this.resolveExecutor = Executors.newSingleThreadExecutor(
+    this.resolveExecutor = new ThreadPoolExecutor(0, MAX_RESOLVE_THREADS,
+        60L, TimeUnit.SECONDS, new SynchronousQueue<>(),
         new ThreadFactoryBuilder()
-            .setNameFormat("Velocity DNS Resolver")
+            .setNameFormat("Velocity DNS Resolver #%d")
             .setDaemon(true)
             .build());
     this.delegate = new DefaultNameResolver(executor);
