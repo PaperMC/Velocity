@@ -21,6 +21,7 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import java.time.Instant;
 import java.util.BitSet;
@@ -111,14 +112,30 @@ public class ChatQueue implements AutoCloseable {
   }
 
   private <T extends MinecraftPacket> CompletableFuture<Void> writePacket(T packet, MinecraftConnection smc) {
-    return CompletableFuture.runAsync(() -> {
-      if (!closed && !smc.isClosed()) {
-        ChannelFuture future = smc.write(packet);
-        if (future != null) {
-          future.awaitUninterruptibly();
-        }
+    if (closed || smc.isClosed()) {
+      return CompletableFuture.completedFuture(null);
+    }
+    final ChannelFuture future = smc.write(packet);
+    if (future == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+    // bVelocity: do not block the event loop waiting for the write. The original
+    // implementation called future.awaitUninterruptibly() from a task scheduled on the event loop,
+    // which blocks that loop's thread until the flush completes. If the peer stops reading and the
+    // socket send buffer fills, writeAndFlush only completes once OP_WRITE fires — but the loop
+    // thread is parked here and cannot process OP_WRITE, stalling every connection on that loop.
+    // Using a listener continuation keeps the loop free to run while the write is in flight, while
+    // still preserving the per-player ordering guarantee: callers chain off the returned future via
+    // head.thenCompose(...), so the next packet is only written once this one resolves.
+    final CompletableFuture<Void> done = new CompletableFuture<>();
+    future.addListener((ChannelFutureListener) f -> {
+      if (f.isSuccess()) {
+        done.complete(null);
+      } else {
+        done.completeExceptionally(f.cause());
       }
-    }, smc.eventLoop());
+    });
+    return done;
   }
 
   @Override
