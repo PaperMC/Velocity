@@ -520,38 +520,53 @@ public final class BvCommand {
 
   private static BenchmarkResult benchmark(int level, byte[] payload, int rounds) {
     try (VelocityCompressor compressor = Natives.compress.get().create(level)) {
+      // bVelocity: hoist the ByteBufs out of the round loop. Unpooled direct buffers are expensive
+      // to allocate (each is a native malloc plus a deallocation guard), and the prior per-round
+      // allocation of source/encoded/decoded plus an encoded.copy() and a wrapped expected buffer
+      // — five buffers every round — dominated wall-clock and pressured the allocator during
+      // measurement. The buffers are reset between rounds: deflate/inflate only advance indices
+      // and never mutate the source payload, so reuse is safe. encoded is sized to libdeflate's
+      // compressBound (input + input/2 + headroom) so the grow-loop — which discards a full
+      // compression pass on insufficient room and would pollute the timing — never triggers. A
+      // small JIT warmup phase runs the same loop without recording, so averageNanos reflects
+      // steady-state rather than first-invocation interpreter overhead.
+      final int encodedCapacity = payload.length + (payload.length >> 1) + 64;
+      final int warmup = rounds >> 3;
+      final ByteBuf source = Unpooled.directBuffer(payload.length);
+      final ByteBuf encoded = Unpooled.directBuffer(encodedCapacity);
+      final ByteBuf decoded = Unpooled.directBuffer(payload.length);
+      final ByteBuf expected = Unpooled.wrappedBuffer(payload);
+      source.writeBytes(payload);
+
       long totalNanos = 0L;
       int encodedBytes = 0;
-      for (int index = 0; index < rounds; index++) {
-        ByteBuf source = Unpooled.directBuffer(payload.length);
-        ByteBuf encoded = Unpooled.directBuffer(Math.max(512, payload.length));
-        ByteBuf decoded = Unpooled.directBuffer(payload.length);
-        ByteBuf encodedCopy = null;
-        ByteBuf expected = null;
-        source.writeBytes(payload);
-        long started = System.nanoTime();
-        try {
+      try {
+        for (int index = 0; index < rounds + warmup; index++) {
+          source.readerIndex(0);
+          encoded.clear();
+          decoded.clear();
+
+          final boolean timing = index >= warmup;
+          final long started = timing ? System.nanoTime() : 0L;
           compressor.deflate(source, encoded);
-          totalNanos += System.nanoTime() - started;
-          encodedBytes = encoded.readableBytes();
-          encodedCopy = encoded.copy();
-          compressor.inflate(encodedCopy, decoded, payload.length);
-          expected = Unpooled.wrappedBuffer(payload);
-          decoded.readerIndex(0);
+          if (timing) {
+            totalNanos += System.nanoTime() - started;
+            encodedBytes = encoded.readableBytes();
+          }
+
+          // Round-trip verify using encoded directly. inflate only advances readerIndex (which the
+          // next round's clear() resets), so the previous per-round encoded.copy() — a full malloc
+          // plus memcpy of the compressed payload — is eliminated.
+          compressor.inflate(encoded, decoded, payload.length);
           if (!ByteBufUtil.equals(expected, decoded)) {
             throw new DataFormatException("Decoded payload did not match source data.");
           }
-        } finally {
-          if (encodedCopy != null) {
-            encodedCopy.release();
-          }
-          if (expected != null) {
-            expected.release();
-          }
-          source.release();
-          encoded.release();
-          decoded.release();
         }
+      } finally {
+        expected.release();
+        source.release();
+        encoded.release();
+        decoded.release();
       }
       return new BenchmarkResult(encodedBytes, totalNanos / rounds);
     } catch (DataFormatException ex) {
