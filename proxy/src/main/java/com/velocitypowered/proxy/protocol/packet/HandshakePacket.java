@@ -114,6 +114,11 @@ public class HandshakePacket implements MinecraftPacket {
     return 7;
   }
 
+
+  @Override
+  public boolean hasLengthChecks() {
+    return true;
+  }
   @Override
   public int decodeExpectedMaxLength(ByteBuf buf, ProtocolUtils.Direction direction,
                                ProtocolVersion version) {
@@ -122,8 +127,12 @@ public class HandshakePacket implements MinecraftPacket {
 
   @Override
   public int encodeSizeHint(Direction direction, ProtocolVersion version) {
-    // We could compute an exact size, but 4KiB ought to be enough to encode all reasonable
-    // sizes of this packet.
-    return 4 * 1024;
+    // bVelocity: compute an exact size instead of reserving a flat 4KiB. The payload is
+    // varint(protocolVersion) + string(serverAddress) + short(port) + varint(nextStatus), which in
+    // practice is ~70 bytes; the previous 4KiB hint over-allocated (and zeroed) ~4KB per handshake.
+    return ProtocolUtils.varIntBytes(this.protocolVersion.getProtocol())
+        + ProtocolUtils.stringSizeHint(this.serverAddress)
+        + 2
+        + ProtocolUtils.varIntBytes(this.nextStatus);
   }
 }

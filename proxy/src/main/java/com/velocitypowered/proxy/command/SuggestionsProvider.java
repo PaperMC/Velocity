@@ -36,7 +36,6 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.proxy.command.brigadier.VelocityArgumentCommandNode;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -93,27 +92,36 @@ final class SuggestionsProvider<S> {
    */
   private CompletableFuture<Suggestions> provideSuggestions(
       final StringReader reader, final CommandContextBuilder<S> context) {
+    // bVelocity: only the structural lookups (resolving the alias literal and snapshotting the
+    // root's children) need the lock — brigadier's command tree is a non-thread-safe LinkedHashMap
+    // whose getChildren() live view must not be iterated outside the lock. The permission checks
+    // (canUse) and plugin suggestion providers (listSuggestions) below can run arbitrary, possibly
+    // slow plugin code; doing that under the shared read lock serialized every player's Tab
+    // completion. We snapshot under the lock, then release it before invoking any plugin code.
+    final StringRange aliasRange = this.consumeAlias(reader);
+    final String alias = aliasRange.get(reader).toLowerCase(Locale.ENGLISH);
+
+    final LiteralCommandNode<S> literal;
+    final List<CommandNode<S>> aliases;
     lock.lock();
     try {
-      final StringRange aliasRange = this.consumeAlias(reader);
-      final String alias = aliasRange.get(reader).toLowerCase(Locale.ENGLISH);
-      final LiteralCommandNode<S> literal =
-          (LiteralCommandNode<S>) context.getRootNode().getChild(alias);
-
-      final boolean hasArguments = reader.canRead();
-      if (hasArguments) {
-        if (literal == null) {
-          // Input has arguments for non-registered alias
-          return Suggestions.empty();
-        }
-        context.withNode(literal, aliasRange);
-        reader.skip(); // separator
-        return this.provideArgumentsSuggestions(literal, reader, context);
-      } else {
-        return this.provideAliasSuggestions(reader, context);
-      }
+      literal = (LiteralCommandNode<S>) context.getRootNode().getChild(alias);
+      aliases = new ArrayList<>(context.getRootNode().getChildren());
     } finally {
       lock.unlock();
+    }
+
+    final boolean hasArguments = reader.canRead();
+    if (hasArguments) {
+      if (literal == null) {
+        // Input has arguments for non-registered alias
+        return Suggestions.empty();
+      }
+      context.withNode(literal, aliasRange);
+      reader.skip(); // separator
+      return this.provideArgumentsSuggestions(literal, reader, context);
+    } else {
+      return this.provideAliasSuggestions(reader, context, aliases);
     }
   }
 
@@ -143,10 +151,12 @@ final class SuggestionsProvider<S> {
    *
    * @param reader       the input reader
    * @param contextSoFar an empty context
+   * @param aliases      a snapshot of the root's children taken under the lock
    * @return a future that completes with the suggestions
    */
   private CompletableFuture<Suggestions> provideAliasSuggestions(
-      final StringReader reader, final CommandContextBuilder<S> contextSoFar) {
+      final StringReader reader, final CommandContextBuilder<S> contextSoFar,
+      final List<CommandNode<S>> aliases) {
     final S source = contextSoFar.getSource();
     // Lowercase the alias here so all comparisons can be case-sensitive (cheaper)
     // TODO Is this actually faster? It may incur an allocation
@@ -156,7 +166,6 @@ final class SuggestionsProvider<S> {
       return new SuggestionsBuilder(input, 0).buildFuture();
     }
 
-    final Collection<CommandNode<S>> aliases = contextSoFar.getRootNode().getChildren();
     @SuppressWarnings("unchecked")
     final CompletableFuture<Suggestions>[] futures = new CompletableFuture[aliases.size()];
     int i = 0;
@@ -194,20 +203,36 @@ final class SuggestionsProvider<S> {
       final CommandContextBuilder<S> contextSoFar) {
     final S source = contextSoFar.getSource();
     final String fullInput = reader.getString();
-    final VelocityArgumentCommandNode<S, ?> argsNode = VelocityCommands.getArgumentsNode(alias);
-    if (argsNode == null) {
-      // This is a BrigadierCommand, fallback to regular suggestions
-      reader.setCursor(0);
-      final ParseResults<S> parse = this.dispatcher.parse(reader, source);
-      try {
-        return this.dispatcher.getCompletionSuggestions(parse);
-      } catch (final Throwable e) {
-        // Ugly, ugly swallowing of everything Throwable, because plugins are naughty.
-        LOGGER.error("Command node cannot provide suggestions for " + fullInput, e);
-        return Suggestions.empty();
+
+    // bVelocity: the structural lookups (resolving the arguments node, the BrigadierCommand
+    // whole-tree fallback parse, and the hint-presence check) read the live command tree and must
+    // hold the lock. The permission checks and the plugin suggestion provider (listSuggestions)
+    // below run arbitrary, possibly slow plugin code and are deferred to run lock-free so a slow
+    // provider on one player's Tab completion does not block every other player's.
+    final VelocityArgumentCommandNode<S, ?> argsNode;
+    final boolean hasHints;
+    lock.lock();
+    try {
+      argsNode = VelocityCommands.getArgumentsNode(alias);
+      if (argsNode == null) {
+        // This is a BrigadierCommand, fallback to regular suggestions. The brigadier parse and
+        // completion-suggestion traversal walk the whole tree, so they stay under the lock.
+        reader.setCursor(0);
+        final ParseResults<S> parse = this.dispatcher.parse(reader, source);
+        try {
+          return this.dispatcher.getCompletionSuggestions(parse);
+        } catch (final Throwable e) {
+          // Ugly, ugly swallowing of everything Throwable, because plugins are naughty.
+          LOGGER.error("Command node cannot provide suggestions for " + fullInput, e);
+          return Suggestions.empty();
+        }
       }
+      hasHints = alias.getChildren().size() > 1;
+    } finally {
+      lock.unlock();
     }
 
+    // Plugin code below runs lock-free on the captured argsNode reference.
     if (!argsNode.canUse(source)) {
       return Suggestions.empty();
     }
@@ -224,16 +249,17 @@ final class SuggestionsProvider<S> {
       return Suggestions.empty();
     }
 
-    // Ask the command for suggestions via the arguments node
+    // Ask the command for suggestions via the arguments node (runs the plugin's suggestion provider)
     reader.setCursor(start);
     final CompletableFuture<Suggestions> cmdSuggestions =
         this.getArgumentsNodeSuggestions(argsNode, reader, context);
-    final boolean hasHints = alias.getChildren().size() > 1;
     if (!hasHints) {
       return this.merge(fullInput, cmdSuggestions);
     }
 
-    // Parse the hint nodes to get remaining suggestions
+    // Parse the hint nodes to get remaining suggestions. getHintSuggestions walks the alias's
+    // children via brigadier, so it runs under the lock; cmdSuggestions was already kicked off
+    // lock-free above and completes independently.
     reader.setCursor(start);
     final CompletableFuture<Suggestions> hintSuggestions =
         this.getHintSuggestions(alias, reader, contextSoFar);

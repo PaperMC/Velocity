@@ -123,6 +123,34 @@ public final class BvConfiguration {
       valid = false;
     }
 
+    if (optimization.eventLoopThreads < 0) {
+      logger.error("event-loop-threads must be >= 0 (0 = Netty default), got {}",
+          optimization.eventLoopThreads);
+      valid = false;
+    }
+
+    if (optimization.bossThreads < 1) {
+      logger.error("boss-threads must be >= 1, got {}", optimization.bossThreads);
+      valid = false;
+    }
+
+    if (optimization.dnsResolverThreads < 1) {
+      logger.error("dns-resolver-threads must be >= 1, got {}", optimization.dnsResolverThreads);
+      valid = false;
+    }
+
+    if (optimization.dnsCacheTtlSeconds < 0) {
+      logger.error("dns-cache-ttl-seconds must be >= 0, got {}",
+          optimization.dnsCacheTtlSeconds);
+      valid = false;
+    }
+
+    if (optimization.dnsNegativeCacheTtlSeconds < 0) {
+      logger.error("dns-negative-cache-ttl-seconds must be >= 0, got {}",
+          optimization.dnsNegativeCacheTtlSeconds);
+      valid = false;
+    }
+
     return valid;
   }
 
@@ -216,6 +244,16 @@ public final class BvConfiguration {
     private int compressBoundHeadroom;
     @Expose
     private boolean compressionStatsEnabled;
+    @Expose
+    private int eventLoopThreads;
+    @Expose
+    private int bossThreads;
+    @Expose
+    private int dnsResolverThreads;
+    @Expose
+    private int dnsCacheTtlSeconds;
+    @Expose
+    private int dnsNegativeCacheTtlSeconds;
 
     private Optimization() {
     }
@@ -227,11 +265,22 @@ public final class BvConfiguration {
             "flush-consolidation-threshold", 256);
         this.compressBoundHeadroom = config.getIntOrElse("compress-bound-headroom", 16);
         this.compressionStatsEnabled = config.getOrElse("compression-stats-enabled", true);
+        this.eventLoopThreads = config.getIntOrElse("event-loop-threads", 0);
+        this.bossThreads = config.getIntOrElse("boss-threads", 1);
+        this.dnsResolverThreads = config.getIntOrElse("dns-resolver-threads", 2);
+        this.dnsCacheTtlSeconds = config.getIntOrElse("dns-cache-ttl-seconds", 30);
+        this.dnsNegativeCacheTtlSeconds =
+            config.getIntOrElse("dns-negative-cache-ttl-seconds", 3);
       } else {
         this.flushConsolidationEnabled = true;
         this.flushConsolidationThreshold = 256;
         this.compressBoundHeadroom = 16;
         this.compressionStatsEnabled = true;
+        this.eventLoopThreads = 0;
+        this.bossThreads = 1;
+        this.dnsResolverThreads = 2;
+        this.dnsCacheTtlSeconds = 30;
+        this.dnsNegativeCacheTtlSeconds = 3;
       }
     }
 
@@ -273,6 +322,53 @@ public final class BvConfiguration {
       return compressionStatsEnabled;
     }
 
+    /**
+     * Returns the number of Netty worker (event-loop) threads, or {@code 0} for Netty's default of
+     * {@code 2 * availableProcessors()}.
+     *
+     * @return the worker thread count, or {@code 0} for the Netty default
+     */
+    public int getEventLoopThreads() {
+      return eventLoopThreads;
+    }
+
+    /**
+     * Returns the number of Netty boss (acceptor) threads. Ignored when SO_REUSEPORT is enabled
+     * (each worker binds its own socket then).
+     *
+     * @return the boss thread count
+     */
+    public int getBossThreads() {
+      return bossThreads;
+    }
+
+    /**
+     * Returns the number of threads in the DNS resolver pool.
+     *
+     * @return the DNS resolver thread count
+     */
+    public int getDnsResolverThreads() {
+      return dnsResolverThreads;
+    }
+
+    /**
+     * Returns the positive DNS cache TTL, in seconds.
+     *
+     * @return the positive DNS cache TTL, in seconds
+     */
+    public int getDnsCacheTtlSeconds() {
+      return dnsCacheTtlSeconds;
+    }
+
+    /**
+     * Returns the negative DNS cache TTL, in seconds. {@code 0} disables negative caching.
+     *
+     * @return the negative DNS cache TTL, in seconds
+     */
+    public int getDnsNegativeCacheTtlSeconds() {
+      return dnsNegativeCacheTtlSeconds;
+    }
+
     @Override
     public String toString() {
       return "Optimization{"
@@ -280,6 +376,11 @@ public final class BvConfiguration {
           + ", flushConsolidationThreshold=" + flushConsolidationThreshold
           + ", compressBoundHeadroom=" + compressBoundHeadroom
           + ", compressionStatsEnabled=" + compressionStatsEnabled
+          + ", eventLoopThreads=" + eventLoopThreads
+          + ", bossThreads=" + bossThreads
+          + ", dnsResolverThreads=" + dnsResolverThreads
+          + ", dnsCacheTtlSeconds=" + dnsCacheTtlSeconds
+          + ", dnsNegativeCacheTtlSeconds=" + dnsNegativeCacheTtlSeconds
           + '}';
     }
   }

@@ -63,3 +63,32 @@ compress-bound-headroom = 16
 # but not free; operators chasing maximum throughput can disable it to make the encode
 # hot path fully zero-overhead. When disabled, /bv compression reports an empty window.
 compression-stats-enabled = true
+
+# Number of Netty worker (event-loop) threads handling client and backend connections.
+# 0 (the default) uses Netty's default of 2 * availableProcessors(), which is right for most
+# deployments. Lower this on heavily oversold VPS hosts (where availableProcessors() is inflated),
+# or raise it on large bare-metal hosts if profiling shows event-loop contention. Takes effect on
+# the next proxy start; not hot-reloadable.
+event-loop-threads = 0
+
+# Number of Netty boss (acceptor) threads. A single acceptor is enough unless you are accepting
+# tens of thousands of new connections per second; ignored entirely when SO_REUSEPORT is enabled
+# (each worker binds its own listening socket in that mode). Takes effect on the next proxy start.
+boss-threads = 1
+
+# Number of threads in the DNS resolver pool that resolves backend server hostnames. Blocking DNS
+# lookups run off the Netty event loops here; a pool larger than 1 prevents one slow lookup (e.g. a
+# stalled upstream) from serializing every other player's backend connection. 2 is enough for most
+# networks; raise it if you run many backends across distinct hostnames and see slow switch-overs.
+dns-resolver-threads = 2
+
+# Positive DNS cache TTL, in seconds. A successfully resolved hostname is reused for this long
+# before re-querying. 30s balances freshness against DNS load; raise it for stable backends with
+# long-lived records, lower it (toward 5) if you rely on short-TTL DNS for backend failover.
+dns-cache-ttl-seconds = 30
+
+# Negative DNS cache TTL, in seconds. A failed lookup is remembered for this long so a dead or
+# misconfigured backend hostname is not re-queried on every connection attempt (each of which can
+# block for the system DNS timeout). 0 disables negative caching. Keep this small: NXDOMAIN/SERVFAIL
+# results here are not distinguished, so a transient failure should clear quickly.
+dns-negative-cache-ttl-seconds = 3

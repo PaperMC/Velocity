@@ -149,6 +149,11 @@ public class ServerLoginPacket implements MinecraftPacket {
     }
   }
 
+
+  @Override
+  public boolean hasLengthChecks() {
+    return true;
+  }
   @Override
   public int decodeExpectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
     // Accommodate the rare (but likely malicious) use of UTF-8 usernames, since it is technically

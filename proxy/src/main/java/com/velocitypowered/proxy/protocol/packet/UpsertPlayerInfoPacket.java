@@ -26,8 +26,6 @@ import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -87,17 +85,22 @@ public class UpsertPlayerInfoPacket implements MinecraftPacket {
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
       ProtocolVersion protocolVersion) {
-    byte[] bytes = new byte[-Math.floorDiv(-ALL_ACTIONS.length, 8)];
-    buf.readBytes(bytes);
-    BitSet actionSet = BitSet.valueOf(bytes);
-
+    // bVelocity: the action mask is exactly 1 byte (8 actions fit in a byte; BitSet is overkill
+    // and allocated a byte[] + BitSet wrapper on every decode). Read the mask directly and test
+    // bits, matching BitSet's little-endian bit ordering (bit 0 == lowest bit of byte 0).
+    byte actionMask = buf.readByte();
     for (int idx = 0; idx < ALL_ACTIONS.length; idx++) {
-      if (actionSet.get(idx)) {
+      if ((actionMask & (1 << idx)) != 0) {
         addAction(ALL_ACTIONS[idx]);
       }
     }
 
     int length = ProtocolUtils.readVarInt(buf);
+    this.entries.clear();
+    if (this.entries instanceof ArrayList<Entry> arrayList) {
+      // bVelocity: pre-size to the declared length to avoid ArrayList growth copies.
+      arrayList.ensureCapacity(length);
+    }
     for (int idx = 0; idx < length; idx++) {
       Entry entry = new Entry(ProtocolUtils.readUuid(buf));
       for (Action action : this.actions) {
@@ -110,13 +113,13 @@ public class UpsertPlayerInfoPacket implements MinecraftPacket {
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction,
       ProtocolVersion protocolVersion) {
-    BitSet set = new BitSet(ALL_ACTIONS.length);
-    for (int idx = 0; idx < ALL_ACTIONS.length; idx++) {
-      set.set(idx, this.actions.contains(ALL_ACTIONS[idx]));
+    // bVelocity: build the 1-byte action mask with bit arithmetic instead of allocating a BitSet,
+    // byte[], and an Arrays.copyOf on every encode.
+    byte actionMask = 0;
+    for (Action action : this.actions) {
+      actionMask |= (1 << action.ordinal());
     }
-
-    byte[] bytes = set.toByteArray();
-    buf.writeBytes(Arrays.copyOf(bytes, -Math.floorDiv(-ALL_ACTIONS.length, 8)));
+    buf.writeByte(actionMask);
 
     ProtocolUtils.writeVarInt(buf, this.entries.size());
     for (Entry entry : this.entries) {

@@ -38,6 +38,11 @@ public class CodeOfConductAcceptPacket implements MinecraftPacket {
   public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
   }
 
+
+  @Override
+  public boolean hasLengthChecks() {
+    return true;
+  }
   @Override
   public int decodeExpectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
     return 0;

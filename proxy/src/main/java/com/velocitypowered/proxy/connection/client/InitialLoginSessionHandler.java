@@ -267,10 +267,9 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
                   response.statusCode(), login.getUsername(), playerIp);
               inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
             }
-          }, mcConnection.eventLoop())
-          .whenComplete((ignored, throwable) -> {
-            httpClient.close();
-          });
+          }, mcConnection.eventLoop());
+      // bVelocity: the HttpClient is now a shared singleton (see ConnectionManager) whose lifecycle
+      // is tied to the proxy, so we no longer close it per-login.
     } catch (GeneralSecurityException e) {
       logger.error("Unable to enable encryption", e);
       mcConnection.close(true);

@@ -46,4 +46,19 @@ public interface MinecraftPacket {
       ProtocolVersion version) {
     return -1;
   }
+
+  /**
+   * Indicates whether this packet overrides {@link #decodeExpectedMinLength} / {@link #decodeExpectedMaxLength}
+   * to enforce wire-size bounds during decoding.
+   *
+   * <p>bVelocity: the decoder only calls the length-sanity check path when this is {@code true}. The
+   * vast majority of packets do not override those methods (they return the inert {@code -1}/{@code 0}
+   * defaults), so skipping two virtual dispatches per inbound packet on the hot decode path is a
+   * worthwhile win. Packets that genuinely enforce bounds override this to return {@code true}.
+   *
+   * @return {@code true} if the decoder should run length sanity checks for this packet
+   */
+  default boolean hasLengthChecks() {
+    return false;
+  }
 }

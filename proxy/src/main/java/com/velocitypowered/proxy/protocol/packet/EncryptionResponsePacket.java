@@ -106,6 +106,11 @@ public class EncryptionResponsePacket implements MinecraftPacket {
     return handler.handle(this);
   }
 
+
+  @Override
+  public boolean hasLengthChecks() {
+    return true;
+  }
   @Override
   public int decodeExpectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
     // It turns out these come out to the same length, whether we're talking >=1.8 or not.

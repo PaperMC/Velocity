@@ -80,6 +80,11 @@ public class ResourcePackResponsePacket implements MinecraftPacket {
     ProtocolUtils.writeVarInt(buf, status.ordinal());
   }
 
+
+  @Override
+  public boolean hasLengthChecks() {
+    return true;
+  }
   @Override
   public int decodeExpectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_3)) {

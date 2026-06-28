@@ -40,6 +40,7 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 import io.netty.util.concurrent.MultithreadEventExecutorGroup;
 import java.net.InetSocketAddress;
 import java.net.http.HttpClient;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
@@ -56,8 +57,6 @@ public final class ConnectionManager {
   private static final Logger LOGGER = LogManager.getLogger(ConnectionManager.class);
   private final Multimap<InetSocketAddress, Endpoint> endpoints = HashMultimap.create();
   private final TransportType transportType;
-  private final EventLoopGroup bossGroup;
-  private final EventLoopGroup workerGroup;
   private final VelocityServer server;
   // These are intentionally made public for plugins like ViaVersion, which inject their own
   // protocol logic into the proxy.
@@ -66,7 +65,16 @@ public final class ConnectionManager {
   @SuppressWarnings("WeakerAccess")
   public final BackendChannelInitializerHolder backendChannelInitializer;
 
-  private final SeparatePoolInetNameResolver resolver;
+  // bVelocity: the event-loop groups and DNS resolver are created lazily on first use rather than
+  // in the constructor. The constructor runs before bvelocity.toml is read (VelocityServer builds
+  // this ConnectionManager before loading its configuration), so eager construction would force us
+  // to use fixed defaults for the now-configurable event-loop / boss / DNS thread counts. Lazy
+  // initialization defers creation until bind()/createWorker() are called, by which point the
+  // bVelocity configuration is loaded.
+  private volatile EventLoopGroup bossGroup;
+  private volatile EventLoopGroup workerGroup;
+  private volatile SeparatePoolInetNameResolver resolver;
+  private volatile HttpClient sharedHttpClient;
 
   /**
    * Initializes the {@code ConnectionManager}.
@@ -76,13 +84,64 @@ public final class ConnectionManager {
   public ConnectionManager(VelocityServer server) {
     this.server = server;
     this.transportType = TransportType.bestType();
-    this.bossGroup = this.transportType.createEventLoopGroup(TransportType.Type.BOSS);
-    this.workerGroup = this.transportType.createEventLoopGroup(TransportType.Type.WORKER);
     this.serverChannelInitializer = new ServerChannelInitializerHolder(
         new ServerChannelInitializer(this.server));
     this.backendChannelInitializer = new BackendChannelInitializerHolder(
         new BackendChannelInitializer(this.server));
-    this.resolver = new SeparatePoolInetNameResolver(GlobalEventExecutor.INSTANCE);
+  }
+
+  private EventLoopGroup bossGroup() {
+    EventLoopGroup group = this.bossGroup;
+    if (group == null) {
+      synchronized (this) {
+        group = this.bossGroup;
+        if (group == null) {
+          // bVelocity: respect the configured boss thread count (default 1). A single acceptor is
+          // sufficient for non-REUSEPORT mode; REUSEPORT bypasses the boss group entirely.
+          final int bossThreads = this.server.getBvConfiguration().getOptimization()
+              .getBossThreads();
+          group = this.transportType.createEventLoopGroup(TransportType.Type.BOSS, bossThreads);
+          this.bossGroup = group;
+        }
+      }
+    }
+    return group;
+  }
+
+  private EventLoopGroup workerGroup() {
+    EventLoopGroup group = this.workerGroup;
+    if (group == null) {
+      synchronized (this) {
+        group = this.workerGroup;
+        if (group == null) {
+          // bVelocity: respect the configured worker thread count (0 = Netty default 2*CPU).
+          final int eventLoopThreads = this.server.getBvConfiguration().getOptimization()
+              .getEventLoopThreads();
+          group = this.transportType.createEventLoopGroup(TransportType.Type.WORKER, eventLoopThreads);
+          this.workerGroup = group;
+        }
+      }
+    }
+    return group;
+  }
+
+  private SeparatePoolInetNameResolver resolver() {
+    SeparatePoolInetNameResolver r = this.resolver;
+    if (r == null) {
+      synchronized (this) {
+        r = this.resolver;
+        if (r == null) {
+          final var optimization = this.server.getBvConfiguration().getOptimization();
+          r = new SeparatePoolInetNameResolver(
+              GlobalEventExecutor.INSTANCE,
+              optimization.getDnsResolverThreads(),
+              optimization.getDnsCacheTtlSeconds(),
+              optimization.getDnsNegativeCacheTtlSeconds());
+          this.resolver = r;
+        }
+      }
+    }
+    return r;
   }
 
   public void logChannelInformation() {
@@ -111,13 +170,13 @@ public final class ConnectionManager {
     if (server.getConfiguration().isEnableReusePort()) {
       // We don't need a boss group, since each worker will bind to the socket
       bootstrap.option(UnixChannelOption.SO_REUSEPORT, true)
-          .group(this.workerGroup);
+          .group(this.workerGroup());
     } else {
-      bootstrap.group(this.bossGroup, this.workerGroup);
+      bootstrap.group(this.bossGroup(), this.workerGroup());
     }
 
     final int binds = server.getConfiguration().isEnableReusePort()
-        ? ((MultithreadEventExecutorGroup) this.workerGroup).executorCount() : 1;
+        ? ((MultithreadEventExecutorGroup) this.workerGroup()).executorCount() : 1;
 
     for (int bind = 0; bind < binds; bind++) {
       // Wait for each bind to open. If we encounter any errors, don't try to bind again.
@@ -164,7 +223,7 @@ public final class ConnectionManager {
     InetSocketAddress address = new InetSocketAddress(hostname, port);
     final Bootstrap bootstrap = new Bootstrap()
         .channelFactory(this.transportType.datagramChannelFactory)
-        .group(this.workerGroup)
+        .group(this.workerGroup())
         .handler(new GameSpyQueryHandler(this.server))
         .localAddress(address);
     bootstrap.bind()
@@ -193,10 +252,22 @@ public final class ConnectionManager {
     Bootstrap bootstrap = new Bootstrap()
         .channelFactory(this.transportType.socketChannelFactory)
         .option(ChannelOption.TCP_NODELAY, true)
+        // bVelocity: mirror the client-facing water mark on the backend connection. The default
+        // 32KiB/64KiB water mark is ~32x smaller than the 1MiB/2MiB front-end mark; with the
+        // back-end channel tripping its high water mark long before the front-end would, the
+        // AutoReadHolderHandler back-pressure loop never closes cleanly and introduces spurious
+        // autoRead toggling under bursty traffic.
+        .option(ChannelOption.WRITE_BUFFER_WATER_MARK, SERVER_WRITE_MARK)
+        // bVelocity: symmetry with the client-facing listener. The back-end connection carries the
+        // same class of traffic and benefits from the same low-delay/throughput ToS hint, and
+        // SO_KEEPALIVE guards against NAT/firewall conntrack expiry silently dropping idle
+        // long-lived back-end connections before the read-timeout notices.
+        .option(ChannelOption.IP_TOS, 0x18)
+        .option(ChannelOption.SO_KEEPALIVE, true)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
             this.server.getConfiguration().getConnectTimeout())
-        .group(group == null ? this.workerGroup : group)
-        .resolver(this.resolver.asGroup());
+        .group(group == null ? this.workerGroup() : group)
+        .resolver(this.resolver().asGroup());
     if (server.getConfiguration().useTcpFastOpen()) {
       bootstrap.option(ChannelOption.TCP_FASTOPEN_CONNECT, true);
     }
@@ -264,11 +335,18 @@ public final class ConnectionManager {
   public void shutdown() {
     this.closeEndpoints(true);
 
-    this.resolver.shutdown();
+    final SeparatePoolInetNameResolver r = this.resolver;
+    if (r != null) {
+      r.shutdown();
+    }
+    final HttpClient httpClient = this.sharedHttpClient;
+    if (httpClient != null) {
+      httpClient.close();
+    }
   }
 
   public EventLoopGroup getBossGroup() {
-    return bossGroup;
+    return bossGroup();
   }
 
   public ServerChannelInitializerHolder getServerChannelInitializer() {
@@ -277,9 +355,24 @@ public final class ConnectionManager {
 
   @SuppressWarnings("checkstyle:MissingJavadocMethod")
   public HttpClient createHttpClient() {
-    return HttpClient.newBuilder()
-            .executor(this.workerGroup)
-            .build();
+    HttpClient client = this.sharedHttpClient;
+    if (client == null) {
+      synchronized (this) {
+        client = this.sharedHttpClient;
+        if (client == null) {
+          // bVelocity: share a single HttpClient across all hasJoined authentications rather than
+          // building (and tearing down) one per login. A shared client reuses its TLS context and
+          // keep-alive connection pool across players, saving a TLS handshake (1-2 RTT) per login.
+          // It still runs on the Netty worker group instead of the ForkJoinPool common pool.
+          client = HttpClient.newBuilder()
+              .executor(this.workerGroup())
+              .connectTimeout(Duration.ofMillis(this.server.getConfiguration().getConnectTimeout()))
+              .build();
+          this.sharedHttpClient = client;
+        }
+      }
+    }
+    return client;
   }
 
   public BackendChannelInitializerHolder getBackendChannelInitializer() {

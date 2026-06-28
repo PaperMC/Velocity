@@ -116,6 +116,11 @@ public class PluginMessagePacket extends DeferredByteBufHolder implements Minecr
 
   }
 
+
+  @Override
+  public boolean hasLengthChecks() {
+    return true;
+  }
   @Override
   public int decodeExpectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
     return ProtocolUtils.DEFAULT_MAX_STRING_BYTES +

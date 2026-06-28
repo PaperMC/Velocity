@@ -206,6 +206,11 @@ public class ClientSettingsPacket implements MinecraftPacket {
     return handler.handle(this);
   }
 
+
+  @Override
+  public boolean hasLengthChecks() {
+    return true;
+  }
   @Override
   public int decodeExpectedMaxLength(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     return 1 + ByteBufUtil.utf8MaxBytes(16) + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1;

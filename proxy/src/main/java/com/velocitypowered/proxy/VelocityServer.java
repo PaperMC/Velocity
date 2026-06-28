@@ -154,6 +154,12 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       .create();
   private static final int PRE_SHUTDOWN_TIMEOUT =
             Integer.getInteger("velocity.pre-shutdown-timeout", 10);
+  // bVelocity: cap how long a reload waits for in-flight player evacuations. connectWithIndication
+  // does not time out on its own, so an unbounded latch.await() would hang the reload (and the
+  // console thread driving it) forever if a backend or event loop stalls. Mirrors the shutdown
+  // path's bounded playersTeardownFuture.get(10, SECONDS).
+  private static final int RELOAD_EVACUATE_TIMEOUT =
+            Integer.getInteger("velocity.reload-evacuate-timeout", 10);
 
   private final ConnectionManager cm;
   private final ProxyOptions options;
@@ -581,7 +587,10 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
         }
       }
       try {
-        latch.await();
+        if (!latch.await(RELOAD_EVACUATE_TIMEOUT, TimeUnit.SECONDS)) {
+          logger.warn("Reload took over {} seconds evacuating players; continuing.",
+              RELOAD_EVACUATE_TIMEOUT);
+        }
       } catch (InterruptedException e) {
         logger.error("Interrupted whilst moving players", e);
         Thread.currentThread().interrupt();

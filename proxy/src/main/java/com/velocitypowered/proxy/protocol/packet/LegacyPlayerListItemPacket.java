@@ -64,6 +64,11 @@ public class LegacyPlayerListItemPacket implements MinecraftPacket {
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       action = ProtocolUtils.readVarInt(buf);
       int length = ProtocolUtils.readVarInt(buf);
+      // bVelocity: pre-size the items list to the declared length to avoid ArrayList growth copies.
+      this.items.clear();
+      if (this.items instanceof ArrayList<Item> arrayList) {
+        arrayList.ensureCapacity(length);
+      }
 
       for (int i = 0; i < length; i++) {
         Item item = new Item(ProtocolUtils.readUuid(buf));

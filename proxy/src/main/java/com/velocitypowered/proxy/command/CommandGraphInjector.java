@@ -27,7 +27,9 @@ import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
 import com.velocitypowered.proxy.command.brigadier.VelocityArgumentCommandNode;
+import java.util.ArrayList;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import org.checkerframework.checker.lock.qual.GuardedBy;
@@ -56,6 +58,27 @@ public final class CommandGraphInjector<S> {
   // the root node we are copying nodes from to the destination node.
 
   /**
+   * A read-only snapshot of a {@link CommandNode} taken under the injector's lock, capturing the
+   * node reference plus snapshots of its children and redirect target. Brigadier's
+   * {@code getChildren()} returns a live view over a non-thread-safe {@code LinkedHashMap}, so
+   * iterating it outside the lock risks a {@code ConcurrentModificationException}. Snapshots let
+   * the permission checks and node copying (which run plugin code) proceed without holding the
+   * lock, so a slow {@code canUse} predicate on one player's switch no longer blocks command
+   * parsing/suggestions for every other player.
+   */
+  private static final class Snapshot<S> {
+
+    final CommandNode<S> node;
+    final List<Snapshot<S>> children = new ArrayList<>();
+    @Nullable
+    Snapshot<S> redirect;
+
+    Snapshot(final CommandNode<S> node) {
+      this.node = node;
+    }
+  }
+
+  /**
    * Adds the node from the root node of this injector to the given root node, respecting the
    * requirements satisfied by the given source.
    *
@@ -66,48 +89,88 @@ public final class CommandGraphInjector<S> {
    * @param source the command source to inject the nodes for
    */
   public void inject(final RootCommandNode<S> dest, final S source) {
+    final RootCommandNode<S> origin = this.dispatcher.getRoot();
+
+    // bVelocity: snapshot the reachable command tree under the lock, then release it. The
+    // permission checks (canUse) and node copying below may run arbitrary plugin code that can be
+    // slow; doing that work under the read lock serializes every player's command-graph injection
+    // (and, via the shared lock, Tab completion and command parsing). Snapshots are consistent at
+    // capture time; a concurrent command registration may let a player see a slightly stale tree,
+    // which is acceptable.
+    final List<Snapshot<S>> rootChildren;
+    final Map<CommandNode<S>, Snapshot<S>> snapshots = new IdentityHashMap<>();
     lock.lock();
     try {
-      final Map<CommandNode<S>, CommandNode<S>> done = new IdentityHashMap<>();
-      final RootCommandNode<S> origin = this.dispatcher.getRoot();
-      final CommandContextBuilder<S> rootContext =
-          new CommandContextBuilder<>(this.dispatcher, source, origin, 0);
-
-      // Filter alias nodes
-      for (final CommandNode<S> node : origin.getChildren()) {
-        if (!node.canUse(source)) {
-          continue;
-        }
-
-        final CommandContextBuilder<S> context = rootContext.copy()
-            .withNode(node, ALIAS_RANGE);
-        if (!node.canUse(context, ALIAS_READER)) {
-          continue;
-        }
-
-        final LiteralCommandNode<S> asLiteral = (LiteralCommandNode<S>) node;
-        final LiteralCommandNode<S> copy = asLiteral.createBuilder().build();
-        final VelocityArgumentCommandNode<S, ?> argsNode =
-            VelocityCommands.getArgumentsNode(asLiteral);
-        if (argsNode == null) {
-          // This literal is associated to a BrigadierCommand, filter normally.
-          this.copyChildren(node, copy, source, done);
-        } else {
-          // Copy all children nodes (arguments node and hints)
-          for (final CommandNode<S> child : node.getChildren()) {
-            copy.addChild(child);
-          }
-        }
-        this.addAlias(copy, dest);
+      rootChildren = new ArrayList<>();
+      for (final CommandNode<S> child : origin.getChildren()) {
+        rootChildren.add(this.snapshot(child, snapshots));
       }
     } finally {
       lock.unlock();
     }
+
+    final Map<CommandNode<S>, CommandNode<S>> done = new IdentityHashMap<>();
+    final CommandContextBuilder<S> rootContext =
+        new CommandContextBuilder<>(this.dispatcher, source, origin, 0);
+
+    // Filter alias nodes
+    for (final Snapshot<S> snap : rootChildren) {
+      final CommandNode<S> node = snap.node;
+      if (!node.canUse(source)) {
+        continue;
+      }
+
+      final CommandContextBuilder<S> context = rootContext.copy()
+          .withNode(node, ALIAS_RANGE);
+      if (!node.canUse(context, ALIAS_READER)) {
+        continue;
+      }
+
+      final LiteralCommandNode<S> asLiteral = (LiteralCommandNode<S>) node;
+      final LiteralCommandNode<S> copy = asLiteral.createBuilder().build();
+      final VelocityArgumentCommandNode<S, ?> argsNode = findArgumentsNode(snap);
+      if (argsNode == null) {
+        // This literal is associated to a BrigadierCommand, filter normally.
+        this.copyChildren(snap, copy, source, done);
+      } else {
+        // Copy all children nodes (arguments node and hints)
+        for (final Snapshot<S> child : snap.children) {
+          copy.addChild(child.node);
+        }
+      }
+      this.addAlias(copy, dest);
+    }
   }
 
-  private @Nullable CommandNode<S> filterNode(final CommandNode<S> node, final S source, final Map<CommandNode<S>, CommandNode<S>> done) {
-    if (done.containsKey(node)) {
-      return done.get(node);
+  /**
+   * Recursively captures a snapshot of the given node (and its reachable descendants / redirect
+   * target) into {@code visited}, deduplicating by node identity to handle redirects and cycles.
+   * Must be called under the lock.
+   */
+  private Snapshot<S> snapshot(final CommandNode<S> node,
+      final Map<CommandNode<S>, Snapshot<S>> visited) {
+    Snapshot<S> snap = visited.get(node);
+    if (snap != null) {
+      return snap;
+    }
+    snap = new Snapshot<>(node);
+    visited.put(node, snap);
+    for (final CommandNode<S> child : node.getChildren()) {
+      snap.children.add(this.snapshot(child, visited));
+    }
+    final CommandNode<S> redirect = node.getRedirect();
+    if (redirect != null) {
+      snap.redirect = this.snapshot(redirect, visited);
+    }
+    return snap;
+  }
+
+  private @Nullable CommandNode<S> filterNode(final Snapshot<S> snap, final S source,
+      final Map<CommandNode<S>, CommandNode<S>> done) {
+    final CommandNode<S> node = snap.node;
+    final CommandNode<S> existing = done.get(node);
+    if (existing != null) {
+      return existing;
     }
     // We only check the non-context requirement when filtering alias nodes.
     // Otherwise, we would need to manually craft context builder and reader instances,
@@ -118,26 +181,49 @@ public final class CommandGraphInjector<S> {
       return null;
     }
     final ArgumentBuilder<S, ?> builder = node.createBuilder();
-    if (node.getRedirect() != null) {
+    if (snap.redirect != null) {
       // Redirects to non-Brigadier commands are not supported. Luckily,
       // we don't expose the root node to API users, so they can't access
       // nodes associated to other commands.
-      final CommandNode<S> target = this.filterNode(node.getRedirect(), source, done);
+      final CommandNode<S> target = this.filterNode(snap.redirect, source, done);
       builder.forward(target, builder.getRedirectModifier(), builder.isFork());
     }
     final CommandNode<S> result = builder.build();
     done.put(node, result);
-    this.copyChildren(node, result, source, done);
+    for (final Snapshot<S> child : snap.children) {
+      final CommandNode<S> filtered = this.filterNode(child, source, done);
+      if (filtered != null) {
+        result.addChild(filtered);
+      }
+    }
     return result;
   }
 
-  private void copyChildren(final CommandNode<S> parent, final CommandNode<S> dest, final S source, final Map<CommandNode<S>, CommandNode<S>> done) {
-    for (final CommandNode<S> child : parent.getChildren()) {
+  private void copyChildren(final Snapshot<S> parent, final CommandNode<S> dest, final S source,
+      final Map<CommandNode<S>, CommandNode<S>> done) {
+    for (final Snapshot<S> child : parent.children) {
       final CommandNode<S> filtered = this.filterNode(child, source, done);
       if (filtered != null) {
         dest.addChild(filtered);
       }
     }
+  }
+
+  /**
+   * Finds the arguments node among a snapshot's children without touching the live command tree.
+   *
+   * @param snap the alias snapshot
+   * @param <S>  the source type
+   * @return the arguments node, or {@code null} if not present
+   */
+  private static <S> @Nullable VelocityArgumentCommandNode<S, ?> findArgumentsNode(
+      final Snapshot<S> snap) {
+    for (final Snapshot<S> child : snap.children) {
+      if (VelocityCommands.isArgumentsNode(child.node)) {
+        return (VelocityArgumentCommandNode<S, ?>) child.node;
+      }
+    }
+    return null;
   }
 
   private void addAlias(final LiteralCommandNode<S> node, final RootCommandNode<S> dest) {

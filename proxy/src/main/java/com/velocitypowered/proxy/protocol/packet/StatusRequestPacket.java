@@ -52,6 +52,11 @@ public class StatusRequestPacket implements MinecraftPacket {
     return handler.handle(this);
   }
 
+
+  @Override
+  public boolean hasLengthChecks() {
+    return true;
+  }
   @Override
   public int decodeExpectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
     return 0;

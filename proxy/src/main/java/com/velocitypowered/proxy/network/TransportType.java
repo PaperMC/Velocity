@@ -46,6 +46,8 @@ import io.netty.channel.uring.IoUringServerSocketChannel;
 import io.netty.channel.uring.IoUringSocketChannel;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.Supplier;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Enumerates the supported transports for Velocity.
@@ -91,15 +93,28 @@ public enum TransportType {
     return this.name;
   }
 
+  private static final Logger LOGGER = LogManager.getLogger(TransportType.class);
+
   /**
    * Creates a new event loop group for the given type.
+   *
+   * @param type the type of event loop group to create
+   * @param threadCount the number of threads to use, or {@code 0} for Netty's default ({@code 2 * cpu})
+   * @return the event loop group
+   */
+  public EventLoopGroup createEventLoopGroup(final Type type, final int threadCount) {
+    return new MultiThreadIoEventLoopGroup(
+        threadCount, createThreadFactory(this.name, type), this.ioHandlerFactorySupplier.get());
+  }
+
+  /**
+   * Creates a new event loop group for the given type using Netty's default thread count.
    *
    * @param type the type of event loop group to create
    * @return the event loop group
    */
   public EventLoopGroup createEventLoopGroup(final Type type) {
-    return new MultiThreadIoEventLoopGroup(
-        0, createThreadFactory(this.name, type), this.ioHandlerFactorySupplier.get());
+    return createEventLoopGroup(type, 0);
   }
 
   private static ThreadFactory createThreadFactory(final String name, final Type type) {
@@ -109,6 +124,10 @@ public enum TransportType {
   /**
    * Determines the "best" transport to initialize.
    *
+   * <p>bVelocity: when a native transport is requested but unavailable, log the underlying cause so
+   * operators can distinguish a silent NIO fallback (an order-of-magnitude performance regression)
+   * from a genuine business problem.
+   *
    * @return the transport to use
    */
   public static TransportType bestType() {
@@ -116,13 +135,19 @@ public enum TransportType {
       return NIO;
     }
 
-    if (IoUring.isAvailable() && Boolean.getBoolean("velocity.enable-iouring-transport")) {
+    final boolean iouringRequested = Boolean.getBoolean("velocity.enable-iouring-transport");
+    if (iouringRequested && !IoUring.isAvailable()) {
+      LOGGER.warn("io_uring transport was requested (-Dvelocity.enable-iouring-transport) but is "
+          + "unavailable; falling back. Cause: {}", IoUring.unavailabilityCause());
+    } else if (IoUring.isAvailable() && iouringRequested) {
       return IO_URING;
     }
 
     if (Epoll.isAvailable()) {
       return EPOLL;
     }
+    LOGGER.warn("Epoll native transport is unavailable, falling back to NIO. Cause: {}",
+        Epoll.unavailabilityCause());
 
     if (KQueue.isAvailable()) {
       return KQUEUE;
