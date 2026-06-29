@@ -26,12 +26,17 @@ import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.util.ProxyVersion;
+import com.velocitypowered.natives.compression.CompressionLevelUtil;
+import com.velocitypowered.natives.compression.CompressorUtils;
 import com.velocitypowered.natives.compression.VelocityCompressor;
+import com.velocitypowered.natives.util.MoreByteBufUtils;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
+import io.netty.buffer.UnpooledByteBufAllocator;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
@@ -169,8 +174,7 @@ public final class BvCommand {
       final CommandSource source = context.getSource();
       final var compression = server.getBvConfiguration().getCompression();
       final int configuredLevel = compression.getCompressionLevel();
-      final String effectiveLevel = configuredLevel == -1 ? "auto(native=6/java=6)"
-          : Integer.toString(configuredLevel);
+      final String effectiveLevel = describeLevel(configuredLevel);
 
       sendSectionTitle(source, "bvelocity.command.status-title");
       sendStatLine(source, Component.translatable(
@@ -249,8 +253,8 @@ public final class BvCommand {
       sendStatLine(source, Component.translatable(
           "bvelocity.command.config-defaults",
           VALUE,
-          Argument.string("native", "6"),
-          Argument.string("java", "6")
+          Argument.string("native", Integer.toString(CompressionLevelUtil.AGGRESSIVE_NATIVE_DEFAULT)),
+          Argument.string("java", Integer.toString(CompressionLevelUtil.AGGRESSIVE_JAVA_DEFAULT))
       ));
       return Command.SINGLE_SUCCESS;
     }
@@ -410,12 +414,15 @@ public final class BvCommand {
 
   private static String describeLevel(int configuredLevel) {
     return configuredLevel == -1
-        ? "auto(native=6/java=6)"
+        ? "auto(native=" + CompressionLevelUtil.AGGRESSIVE_NATIVE_DEFAULT
+            + "/java=" + CompressionLevelUtil.AGGRESSIVE_JAVA_DEFAULT + ")"
         : Integer.toString(configuredLevel);
   }
 
   private static int maxSupportedLevel() {
-    return Natives.compress.getLoadedVariant().toLowerCase(Locale.ROOT).contains("java") ? 9 : 12;
+    return Natives.compress.getLoadedVariant().toLowerCase(Locale.ROOT).contains("java")
+        ? CompressionLevelUtil.JAVA_MAX_LEVEL
+        : CompressionLevelUtil.LIBDEFLATE_MAX_LEVEL;
   }
 
   private static String percentSaved(long rawBytes, long encodedBytes) {
@@ -526,15 +533,18 @@ public final class BvCommand {
       // — five buffers every round — dominated wall-clock and pressured the allocator during
       // measurement. The buffers are reset between rounds: deflate/inflate only advance indices
       // and never mutate the source payload, so reuse is safe. encoded is sized to libdeflate's
-      // compressBound (input + input/2 + headroom) so the grow-loop — which discards a full
-      // compression pass on insufficient room and would pollute the timing — never triggers. A
-      // small JIT warmup phase runs the same loop without recording, so averageNanos reflects
-      // steady-state rather than first-invocation interpreter overhead.
-      final int encodedCapacity = payload.length + (payload.length >> 1) + 64;
+      // compressBound (see CompressorUtils) so the grow-loop — which discards a full compression
+      // pass on insufficient room and would pollute the timing — never triggers. Buffers are
+      // allocated via the compressor's preferred buffer type (matching the production encode path)
+      // so the measurement reflects the buffer type actually in use. A small JIT warmup phase runs
+      // the same loop without recording, so averageNanos reflects steady-state rather than
+      // first-invocation interpreter overhead.
+      final int encodedCapacity = CompressorUtils.compressBound(payload.length);
       final int warmup = rounds >> 3;
-      final ByteBuf source = Unpooled.directBuffer(payload.length);
-      final ByteBuf encoded = Unpooled.directBuffer(encodedCapacity);
-      final ByteBuf decoded = Unpooled.directBuffer(payload.length);
+      final ByteBufAllocator alloc = UnpooledByteBufAllocator.DEFAULT;
+      final ByteBuf source = MoreByteBufUtils.preferredBuffer(alloc, compressor, payload.length);
+      final ByteBuf encoded = MoreByteBufUtils.preferredBuffer(alloc, compressor, encodedCapacity);
+      final ByteBuf decoded = MoreByteBufUtils.preferredBuffer(alloc, compressor, payload.length);
       final ByteBuf expected = Unpooled.wrappedBuffer(payload);
       source.writeBytes(payload);
 

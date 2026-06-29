@@ -22,17 +22,21 @@ import java.util.zip.Deflater;
 /**
  * Normalizes user-provided compression levels for the available compressor implementations.
  */
-final class CompressionLevelUtil {
+public final class CompressionLevelUtil {
 
   private static final int MIN_LEVEL = 1;
-  private static final int JAVA_MAX_LEVEL = 9;
-  private static final int LIBDEFLATE_MAX_LEVEL = 12;
+  /** Maximum level supported by the Java {@link Deflater}-based compressor. */
+  public static final int JAVA_MAX_LEVEL = 9;
+  /** Maximum level supported by the native libdeflate compressor. */
+  public static final int LIBDEFLATE_MAX_LEVEL = 12;
   // libdeflate's compression ratio saturates well below its maximum level on real Minecraft
   // traffic (chunks, NBT, chat) while its CPU cost keeps climbing linearly. The shipped benchmark
   // shows level 6 already reaching the plateau at a fraction of the level 12 latency, so the
   // proxy-preferred aggressive default targets the ratio sweet spot rather than the absolute floor.
-  private static final int AGGRESSIVE_NATIVE_DEFAULT = 6;
-  private static final int AGGRESSIVE_JAVA_DEFAULT = 6;
+  /** The level resolved from {@link Deflater#DEFAULT_COMPRESSION} on the native backend. */
+  public static final int AGGRESSIVE_NATIVE_DEFAULT = 6;
+  /** The level resolved from {@link Deflater#DEFAULT_COMPRESSION} on the Java backend. */
+  public static final int AGGRESSIVE_JAVA_DEFAULT = 6;
 
   private CompressionLevelUtil() {
     throw new AssertionError();
