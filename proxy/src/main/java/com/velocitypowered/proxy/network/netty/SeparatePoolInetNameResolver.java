@@ -103,6 +103,11 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
             List<InetAddress> all = (List<InetAddress>) future.getNow();
             cache.put(inetHost, all);
             promise.trySuccess(all.getFirst());
+          } else if (future.isCancelled()) {
+            // bVelocity: a cancelled lookup (e.g. the connecting player disconnected mid-resolve)
+            // is not a DNS failure — do not poison the negative cache, which would otherwise lock
+            // every other player out of this backend for the negative TTL.
+            promise.tryFailure(future.cause());
           } else {
             recordNegative(inetHost);
             promise.tryFailure(future.cause());
@@ -131,6 +136,9 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
       promise.addListener(future -> {
         if (future.isSuccess()) {
           cache.put(inetHost, (List<InetAddress>) future.getNow());
+        } else if (future.isCancelled()) {
+          // bVelocity: see doResolve — a cancellation (player disconnect mid-resolve) is not a DNS
+          // failure and must not pollute the negative cache.
         } else {
           recordNegative(inetHost);
         }
@@ -168,8 +176,16 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
     }
   }
 
+  /**
+   * Shuts down the resolver thread pool and releases the lazily-created {@link AddressResolverGroup}.
+   */
   public void shutdown() {
     this.resolveExecutor.shutdown();
+    // bVelocity: the lazily-created AddressResolverGroup caches per-executor AddressResolver
+    // instances; close it so those (and their references) are released on shutdown / reload.
+    if (this.resolverGroup != null) {
+      this.resolverGroup.close();
+    }
   }
 
   /**
