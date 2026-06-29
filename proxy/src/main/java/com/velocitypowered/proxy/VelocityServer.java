@@ -617,6 +617,14 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
     commandManager.setAnnounceProxyCommands(newConfiguration.isAnnounceProxyCommands());
     ipAttemptLimiter = Ratelimiters.createWithMilliseconds(newConfiguration.getLoginRatelimit());
+
+    // bVelocity: the shared hasJoined HttpClient pins connect-timeout at build time, so if the
+    // operator changed connect-timeout in this reload, drop the cached client so the next login
+    // rebuilds it with the new value. Compare before reassigning this.configuration below.
+    if (configuration.getConnectTimeout() != newConfiguration.getConnectTimeout()) {
+      this.cm.rebuildHttpClient();
+    }
+
     this.configuration = newConfiguration;
     eventManager.fireAndForget(new ProxyReloadEvent());
     return true;

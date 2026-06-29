@@ -345,7 +345,21 @@ public final class ConnectionManager {
     }
   }
 
+  /**
+   * Returns the boss event-loop group. Under SO_REUSEPORT no boss group is created during bind, so
+   * the worker group is returned instead (see the comment inside for why).
+   *
+   * @return the boss event-loop group (or the worker group under SO_REUSEPORT)
+   */
   public EventLoopGroup getBossGroup() {
+    // bVelocity: under SO_REUSEPORT each worker binds its own listening socket, so no boss group is
+    // created during bind(). The sole caller (VelocityServer#awaitProxyShutdown) only needs a group
+    // whose terminationFuture never completes (to park the main thread until JVM exit). Returning
+    // the worker group here avoids lazily materializing an otherwise-unused, never-shut-down boss
+    // group — which would leak a non-daemon thread — and keeps the park behavior identical.
+    if (this.server.getConfiguration().isEnableReusePort()) {
+      return workerGroup();
+    }
     return bossGroup();
   }
 
@@ -373,6 +387,24 @@ public final class ConnectionManager {
       }
     }
     return client;
+  }
+
+  /**
+   * Drops the cached {@link HttpClient} so the next {@link #createHttpClient()} rebuilds it with
+   * the current configuration (notably connect-timeout, which is fixed at build time and otherwise
+   * would survive a {@code velocity reload} unchanged).
+   *
+   * <p>Any in-flight request on the old client may be failed by the close.
+   */
+  public void rebuildHttpClient() {
+    final HttpClient old;
+    synchronized (this) {
+      old = this.sharedHttpClient;
+      this.sharedHttpClient = null;
+    }
+    if (old != null) {
+      old.close();
+    }
   }
 
   public BackendChannelInitializerHolder getBackendChannelInitializer() {
