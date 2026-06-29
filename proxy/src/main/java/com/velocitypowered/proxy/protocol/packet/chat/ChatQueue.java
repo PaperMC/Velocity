@@ -22,10 +22,15 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import java.time.Instant;
 import java.util.BitSet;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
@@ -35,11 +40,26 @@ import java.util.function.Function;
  */
 public class ChatQueue implements AutoCloseable {
 
+  private static final Logger LOGGER = LogManager.getLogger(ChatQueue.class);
+
+  // bVelocity: backpressure water marks on the head-chain depth. Netty's WriteBufferWaterMark does
+  // not engage here because the queue serializes writes (one packet in flight per player), so the
+  // outbound buffer never crosses the high mark. Without these marks a peer that stops reading
+  // would let the head chain grow without bound (each pending task pins a MinecraftPacket + ByteBuf).
+  // HIGH/LOW provide hysteresis for toggling client autoRead; HARD_MAX is the safety net that
+  // disconnects a player whose backend is wedged beyond recovery. LOW >= 2*WINDOW_SIZE leaves room
+  // for the acknowledgement window so normal bursts don't flap autoRead.
+  private static final int BACKPRESSURE_LOW = 2 * LastSeenMessages.WINDOW_SIZE;
+  private static final int BACKPRESSURE_HIGH = 4 * LastSeenMessages.WINDOW_SIZE;
+  private static final int BACKPRESSURE_HARD_MAX = 8 * LastSeenMessages.WINDOW_SIZE;
+  private static final long WRITE_TIMEOUT_MILLIS = 15_000L;
+
   private final Object internalLock = new Object();
   private final ConnectedPlayer player;
   private final ChatState chatState = new ChatState();
   private CompletableFuture<Void> head = CompletableFuture.completedFuture(null);
-
+  private final AtomicInteger pending = new AtomicInteger();
+  private volatile boolean autoReadPaused;
   private volatile boolean closed;
 
   /**
@@ -57,6 +77,26 @@ public class ChatQueue implements AutoCloseable {
         throw new IllegalStateException("ChatQueue has already been closed");
       }
       MinecraftConnection smc = player.ensureAndGetCurrentServer().ensureConnected();
+
+      // bVelocity: backpressure on the head-chain depth. The write path no longer blocks the event
+      // loop (see writePacket), so a peer that stops reading would otherwise let this chain grow
+      // without bound. Throttle inbound reads on the client connection when the queue deepens past
+      // HIGH, and resume once it drains below LOW — reusing the existing AutoReadHolderHandler path
+      // rather than blocking a thread. HARD_MAX disconnects a player whose backend is wedged.
+      final int depth = pending.incrementAndGet();
+      if (depth >= BACKPRESSURE_HARD_MAX) {
+        pending.decrementAndGet();
+        LOGGER.warn("ChatQueue for {} exceeded {} pending packets; disconnecting (wedged backend?).",
+            player, BACKPRESSURE_HARD_MAX);
+        player.disconnect(Component.translatable("velocity.error.player-connection-error",
+            NamedTextColor.RED));
+        return;
+      }
+      if (depth >= BACKPRESSURE_HIGH && !autoReadPaused) {
+        autoReadPaused = true;
+        pauseClientAutoRead();
+      }
+
       head = head.thenCompose(v -> {
         if (closed) {
           return CompletableFuture.completedFuture(null);
@@ -66,7 +106,34 @@ public class ChatQueue implements AutoCloseable {
         } catch (Throwable ignored) {
           return CompletableFuture.completedFuture(null);
         }
-      });
+      }).whenComplete((ignored, throwable) -> drainPending());
+    }
+  }
+
+  private void drainPending() {
+    final int depth = pending.decrementAndGet();
+    if (depth <= BACKPRESSURE_LOW && autoReadPaused) {
+      autoReadPaused = false;
+      resumeClientAutoRead();
+    }
+  }
+
+  /**
+   * Pauses autoRead on the player's client connection so inbound chat/command packets are held by
+   * the existing {@code AutoReadHolderHandler} instead of piling onto the head chain. Must run on
+   * that connection's event loop ({@link MinecraftConnection#setAutoReading(boolean)} asserts it).
+   */
+  private void pauseClientAutoRead() {
+    final MinecraftConnection conn = player.getConnection();
+    if (conn != null && !conn.isClosed()) {
+      conn.eventLoop().execute(() -> conn.setAutoReading(false));
+    }
+  }
+
+  private void resumeClientAutoRead() {
+    final MinecraftConnection conn = player.getConnection();
+    if (conn != null && !conn.isClosed()) {
+      conn.eventLoop().execute(() -> conn.setAutoReading(true));
     }
   }
 
@@ -135,12 +202,25 @@ public class ChatQueue implements AutoCloseable {
         done.completeExceptionally(f.cause());
       }
     });
+    // bVelocity: bound the write so a wedged backend (peer stops reading, OP_WRITE never fires)
+    // fails the chain instead of letting the head chain pile up to the HARD_MAX disconnect. The
+    // timeout fires on the write's own event loop; completeExceptionally is a no-op if the listener
+    // already completed the future.
+    smc.eventLoop().schedule(() -> done.completeExceptionally(
+        new java.util.concurrent.TimeoutException("ChatQueue write timed out")), WRITE_TIMEOUT_MILLIS,
+        TimeUnit.MILLISECONDS);
     return done;
   }
 
   @Override
   public void close() {
     closed = true;
+    // bVelocity: ensure we never leave the client connection with autoRead paused after this queue
+    // is discarded (e.g. on server switch). A fresh ChatQueue starts unpaused.
+    if (autoReadPaused) {
+      autoReadPaused = false;
+      resumeClientAutoRead();
+    }
   }
 
   private interface Task {
