@@ -258,11 +258,18 @@ final class SuggestionsProvider<S> {
     }
 
     // Parse the hint nodes to get remaining suggestions. getHintSuggestions walks the alias's
-    // children via brigadier, so it runs under the lock; cmdSuggestions was already kicked off
-    // lock-free above and completes independently.
+    // children via brigadier (getRelevantNodes/getChildren return live views over the non-thread-
+    // safe LinkedHashMap), so it must run under the lock — the same reason the BrigadierCommand
+    // fallback parse above stays locked. cmdSuggestions was already kicked off lock-free above and
+    // completes independently.
     reader.setCursor(start);
-    final CompletableFuture<Suggestions> hintSuggestions =
-        this.getHintSuggestions(alias, reader, contextSoFar);
+    final CompletableFuture<Suggestions> hintSuggestions;
+    lock.lock();
+    try {
+      hintSuggestions = this.getHintSuggestions(alias, reader, contextSoFar);
+    } finally {
+      lock.unlock();
+    }
     return this.merge(fullInput, cmdSuggestions, hintSuggestions);
   }
 
