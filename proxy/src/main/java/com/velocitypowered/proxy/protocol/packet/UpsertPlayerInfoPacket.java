@@ -36,6 +36,18 @@ public class UpsertPlayerInfoPacket implements MinecraftPacket {
 
   private static final Action[] ALL_ACTIONS = Action.class.getEnumConstants();
 
+  static {
+    // bVelocity: the action mask is encoded as a single byte (8 bits). The current Action enum has
+    // exactly 8 constants, so this holds today; fail fast at class load if a future protocol
+    // version adds a 9th action so the 1-byte mask code below is revisited rather than silently
+    // truncating the high bit and desynchronizing the stream.
+    if (ALL_ACTIONS.length > 8) {
+      throw new IllegalStateException(
+          "UpsertPlayerInfoPacket uses a 1-byte action mask but Action has " + ALL_ACTIONS.length
+              + " constants (>8); rework the mask encoding.");
+    }
+  }
+
   private final EnumSet<Action> actions;
   private final List<Entry> entries;
 
@@ -98,8 +110,12 @@ public class UpsertPlayerInfoPacket implements MinecraftPacket {
     int length = ProtocolUtils.readVarInt(buf);
     this.entries.clear();
     if (this.entries instanceof ArrayList<Entry> arrayList) {
-      // bVelocity: pre-size to the declared length to avoid ArrayList growth copies.
-      arrayList.ensureCapacity(length);
+      // bVelocity: pre-size to the declared length to avoid ArrayList growth copies. The length
+      // comes from an unbounded 5-byte varint and is attacker/backend-controlled, so clamp it to
+      // the remaining readable bytes (each entry is at least a 16-byte UUID) and Short.MAX_VALUE
+      // (the same upper bound ProtocolUtils.newList uses) to stop a tiny packet from forcing a
+      // multi-GB Object[] allocation via ensureCapacity (OOM DoS).
+      arrayList.ensureCapacity(Math.min(length, Math.min(buf.readableBytes() >>> 4, Short.MAX_VALUE)));
     }
     for (int idx = 0; idx < length; idx++) {
       Entry entry = new Entry(ProtocolUtils.readUuid(buf));

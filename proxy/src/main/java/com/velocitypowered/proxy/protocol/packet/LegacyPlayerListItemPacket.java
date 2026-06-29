@@ -65,9 +65,13 @@ public class LegacyPlayerListItemPacket implements MinecraftPacket {
       action = ProtocolUtils.readVarInt(buf);
       int length = ProtocolUtils.readVarInt(buf);
       // bVelocity: pre-size the items list to the declared length to avoid ArrayList growth copies.
+      // The length is an unbounded 5-byte varint from the backend; clamp it to the remaining
+      // readable bytes (each item carries at least a 16-byte UUID) and Short.MAX_VALUE (the bound
+      // ProtocolUtils.newList uses) so a small packet can't force a multi-GB Object[] allocation
+      // via ensureCapacity (OOM DoS).
       this.items.clear();
       if (this.items instanceof ArrayList<Item> arrayList) {
-        arrayList.ensureCapacity(length);
+        arrayList.ensureCapacity(Math.min(length, Math.min(buf.readableBytes() >>> 4, Short.MAX_VALUE)));
       }
 
       for (int i = 0; i < length; i++) {
