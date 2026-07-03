@@ -128,12 +128,13 @@ public class Metrics {
   }
 
   /**
-   * Reconstructs the {@code java.version} system property value from a
-   * {@link Runtime.Version}, i.e. {@code $VNUM(-$PRE)?} with the build and
-   * optional segments omitted.
+   * Recreates the exact {@code java.version} system property value from a {@link Runtime.Version}.
+   *
+   * <p>Per <a href="https://openjdk.org/jeps/223">JEP 223</a>, {@code java.version} is
+   * {@code $VNUM(-$PRE)?}; the build and optional segments only appear in {@code java.runtime.version}.
    *
    * @param v the runtime version
-   * @return the version and pre-release parts joined as {@code java.version} would render them
+   * @return the value {@code java.version} would hold on this JVM
    */
   private static String javaVersion(Runtime.Version v) {
     return v.version().stream()
