@@ -23,8 +23,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bstats.MetricsBase;
@@ -120,25 +118,11 @@ public class Metrics {
           () -> server.getVersion().getVersion()));
 
       metrics.addCustomChart(new DrilldownPie("java_version", () -> {
-        Map<String, Map<String, Integer>> map = new HashMap<>();
-        String javaVersion = System.getProperty("java.version");
-        Map<String, Integer> entry = new HashMap<>();
-        entry.put(javaVersion, 1);
+        Runtime.Version version = Runtime.version();
 
-        // http://openjdk.java.net/jeps/223
-        // The java.version system property returns $major[.$minor][.$security][-ea].
-        String majorVersion = javaVersion.split("\\.")[0];
-
-        // valid strings for the major may potentially include values such as -ea to denote a
-        // pre-release
-        Matcher versionMatcher = Pattern.compile("\\d+").matcher(majorVersion);
-        if (versionMatcher.find()) {
-          majorVersion = versionMatcher.group(0);
-        }
-        String release = "Java " + majorVersion;
-        map.put(release, entry);
-
-        return map;
+        return Map.of(
+            "Java " + version.feature(),
+            Map.of(System.getProperty("java.version"), 1));
       }));
     }
   }
