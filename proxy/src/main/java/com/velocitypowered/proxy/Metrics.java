@@ -21,8 +21,8 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bstats.MetricsBase;
@@ -122,9 +122,23 @@ public class Metrics {
 
         return Map.of(
             "Java " + version.feature(),
-            Map.of(System.getProperty("java.version"), 1));
+            Map.of(javaVersion(version), 1));
       }));
     }
   }
 
+  /**
+   * Reconstructs the {@code java.version} system property value from a
+   * {@link Runtime.Version}, i.e. {@code $VNUM(-$PRE)?} with the build and
+   * optional segments omitted.
+   *
+   * @param v the runtime version
+   * @return the version and pre-release parts joined as {@code java.version} would render them
+   */
+  private static String javaVersion(Runtime.Version v) {
+    return v.version().stream()
+        .map(Object::toString)
+        .collect(Collectors.joining("."))
+        + v.pre().map(p -> "-" + p).orElse("");
+  }
 }
