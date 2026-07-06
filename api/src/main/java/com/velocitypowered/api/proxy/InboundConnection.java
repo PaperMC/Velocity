@@ -12,6 +12,7 @@ import com.velocitypowered.api.network.ProtocolState;
 import com.velocitypowered.api.network.ProtocolVersion;
 import java.net.InetSocketAddress;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Represents an incoming connection to the proxy.
@@ -70,11 +71,13 @@ public interface InboundConnection {
   HandshakeIntent getHandshakeIntent();
 
   /**
-   * Returns a unique, stable identifier for this connection.
+   * Returns a unique, stable UUID for this connection, generated at
+   * connection creation time. The UUID remains consistent across all
+   * login-phase events for the same TCP connection.
    *
-   * @return the connection id
+   * @return the connection UUID, or {@code null} if not supported
    */
-  default long getConnectionId() {
-    return -1;
+  default UUID getConnectionId() {
+    return null;
   }
 }

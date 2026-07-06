@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.connection.util;
 
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
+import java.util.UUID;
 
 /**
  * Base internal interface for a {@link InboundConnection}.
@@ -28,7 +29,7 @@ public interface VelocityInboundConnection extends InboundConnection {
   MinecraftConnection getConnection();
 
   @Override
-  default long getConnectionId() {
+  default UUID getConnectionId() {
     return getConnection().getConnectionId();
   }
 }
