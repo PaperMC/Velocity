@@ -26,4 +26,9 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 public interface VelocityInboundConnection extends InboundConnection {
 
   MinecraftConnection getConnection();
+
+  @Override
+  default long getConnectionId() {
+    return getConnection().getConnectionId();
+  }
 }

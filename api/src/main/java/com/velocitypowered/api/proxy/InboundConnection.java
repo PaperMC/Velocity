@@ -68,4 +68,13 @@ public interface InboundConnection {
    * @return the intent of the connection
    */
   HandshakeIntent getHandshakeIntent();
+
+  /**
+   * Returns a unique, stable identifier for this connection.
+   *
+   * @return the connection id
+   */
+  default long getConnectionId() {
+    return -1;
+  }
 }

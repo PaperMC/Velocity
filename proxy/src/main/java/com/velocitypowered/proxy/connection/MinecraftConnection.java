@@ -86,7 +86,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   private static final Logger logger = LogManager.getLogger(MinecraftConnection.class);
+  private static final java.util.concurrent.atomic.AtomicLong CONNECTION_ID_COUNTER =
+      new java.util.concurrent.atomic.AtomicLong();
 
+  private final long connectionId = CONNECTION_ID_COUNTER.incrementAndGet();
   private final Channel channel;
   public boolean pendingConfigurationSwitch = false;
   private SocketAddress remoteAddress;
@@ -320,6 +323,15 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   public Channel getChannel() {
     return channel;
+  }
+
+  /**
+   * Returns a unique, stable identifier for this connection.
+   *
+   * @return the connection id
+   */
+  public long getConnectionId() {
+    return connectionId;
   }
 
   public boolean isClosed() {

@@ -183,4 +183,9 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
   public HandshakeIntent getHandshakeIntent() {
     return delegate.getHandshakeIntent();
   }
+
+  @Override
+  public long getConnectionId() {
+    return delegate.getConnectionId();
+  }
 }
