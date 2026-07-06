@@ -322,6 +322,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
+  public long getConnectionId() {
+    return connection.getConnectionId();
+  }
+
+  @Override
   public long getPing() {
     return this.ping;
   }
