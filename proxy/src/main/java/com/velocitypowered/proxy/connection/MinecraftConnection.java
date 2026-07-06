@@ -72,6 +72,7 @@ import java.security.GeneralSecurityException;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -86,10 +87,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   private static final Logger logger = LogManager.getLogger(MinecraftConnection.class);
-  private static final java.util.concurrent.atomic.AtomicLong CONNECTION_ID_COUNTER =
-      new java.util.concurrent.atomic.AtomicLong();
 
-  private final long connectionId = CONNECTION_ID_COUNTER.incrementAndGet();
+  private final UUID connectionId = UUID.randomUUID();
   private final Channel channel;
   public boolean pendingConfigurationSwitch = false;
   private SocketAddress remoteAddress;
@@ -326,11 +325,12 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   }
 
   /**
-   * Returns a unique, stable identifier for this connection.
+   * Returns a unique, stable UUID for this connection, generated at
+   * connection creation time.
    *
-   * @return the connection id
+   * @return the connection UUID
    */
-  public long getConnectionId() {
+  public UUID getConnectionId() {
     return connectionId;
   }
 
