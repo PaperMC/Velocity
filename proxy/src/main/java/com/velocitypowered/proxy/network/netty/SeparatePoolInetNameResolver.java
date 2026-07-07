@@ -32,8 +32,8 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -59,12 +59,15 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
    */
   public SeparatePoolInetNameResolver(EventExecutor executor) {
     super(executor);
-    this.resolveExecutor = new ThreadPoolExecutor(0, MAX_RESOLVE_THREADS,
-        60L, TimeUnit.SECONDS, new SynchronousQueue<>(),
+    ThreadPoolExecutor resolveExecutor = new ThreadPoolExecutor(
+        MAX_RESOLVE_THREADS, MAX_RESOLVE_THREADS,
+        60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(),
         new ThreadFactoryBuilder()
             .setNameFormat("Velocity DNS Resolver #%d")
             .setDaemon(true)
             .build());
+    resolveExecutor.allowCoreThreadTimeOut(true);
+    this.resolveExecutor = resolveExecutor;
     this.delegate = new DefaultNameResolver(executor);
     this.cache = Caffeine.newBuilder()
         .expireAfterWrite(30, TimeUnit.SECONDS)
