@@ -71,13 +71,12 @@ public interface InboundConnection {
   HandshakeIntent getHandshakeIntent();
 
   /**
-   * Returns a unique, stable UUID for this connection, generated at
-   * connection creation time. The UUID remains consistent across all
-   * login-phase events for the same TCP connection.
+   * Returns the unique, stable session UUID for this connection, generated when
+   * the client initially connects to the proxy. The session id remains consistent
+   * across all login-phase events and all proxy-to-backend connections for the
+   * same player session.
    *
-   * @return the connection UUID, or {@code null} if not supported
+   * @return the session UUID, never {@code null}
    */
-  default UUID getConnectionId() {
-    return null;
-  }
+  UUID getSessionId();
 }
