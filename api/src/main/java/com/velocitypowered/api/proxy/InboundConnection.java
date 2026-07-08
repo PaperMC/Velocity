@@ -74,7 +74,7 @@ public interface InboundConnection {
    * Returns the unique, stable session UUID for this connection, generated when
    * the client initially connects to the proxy. The session id remains consistent
    * across all login-phase events and all proxy-to-backend connections for the
-   * same player session.
+   * same player session. This should not be confused with Mojang's server-wide play session ID introduced in Minecraft 26.2.
    *
    * @return the session UUID, never {@code null}
    */

@@ -325,13 +325,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     return channel;
   }
 
-  /**
-   * Returns the session UUID for this connection. Client connections have a
-   * unique session UUID; backend connections share the client's session UUID;
-   * ping connections have {@code null}.
-   *
-   * @return the session UUID, or {@code null} for ping connections
-   */
+
   public @Nullable UUID getSessionId() {
     return sessionId;
   }
