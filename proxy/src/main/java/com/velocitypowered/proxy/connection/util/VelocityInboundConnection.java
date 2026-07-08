@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.connection.util;
 
 import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -30,6 +31,6 @@ public interface VelocityInboundConnection extends InboundConnection {
 
   @Override
   default UUID getSessionId() {
-    return getConnection().getSessionId();
+    return Objects.requireNonNull(getConnection().getSessionId(), "sessionId");
   }
 }
