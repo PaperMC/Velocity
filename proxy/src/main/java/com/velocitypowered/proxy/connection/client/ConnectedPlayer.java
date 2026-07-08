@@ -322,8 +322,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public UUID getConnectionId() {
-    return connection.getConnectionId();
+  public UUID getSessionId() {
+    return connection.getSessionId();
   }
 
   @Override

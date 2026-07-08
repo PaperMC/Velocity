@@ -88,7 +88,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   private static final Logger logger = LogManager.getLogger(MinecraftConnection.class);
 
-  private final UUID connectionId = UUID.randomUUID();
+  private final @Nullable UUID sessionId;
   private final Channel channel;
   public boolean pendingConfigurationSwitch = false;
   private SocketAddress remoteAddress;
@@ -107,10 +107,11 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * @param channel the channel on the connection
    * @param server  the Velocity instance
    */
-  public MinecraftConnection(Channel channel, VelocityServer server) {
+  public MinecraftConnection(Channel channel, VelocityServer server, @Nullable UUID sessionId) {
     this.channel = channel;
     this.remoteAddress = channel.remoteAddress();
     this.server = server;
+    this.sessionId = sessionId;
     this.state = StateRegistry.HANDSHAKE;
 
     this.sessionHandlers = new EnumMap<>(StateRegistry.class);
@@ -325,13 +326,14 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   }
 
   /**
-   * Returns a unique, stable UUID for this connection, generated at
-   * connection creation time.
+   * Returns the session UUID for this connection. Client connections have a
+   * unique session UUID; backend connections share the client's session UUID;
+   * ping connections have {@code null}.
    *
-   * @return the connection UUID
+   * @return the session UUID, or {@code null} for ping connections
    */
-  public UUID getConnectionId() {
-    return connectionId;
+  public @Nullable UUID getSessionId() {
+    return sessionId;
   }
 
   public boolean isClosed() {

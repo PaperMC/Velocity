@@ -29,7 +29,7 @@ public interface VelocityInboundConnection extends InboundConnection {
   MinecraftConnection getConnection();
 
   @Override
-  default UUID getConnectionId() {
-    return getConnection().getConnectionId();
+  default UUID getSessionId() {
+    return getConnection().getSessionId();
   }
 }

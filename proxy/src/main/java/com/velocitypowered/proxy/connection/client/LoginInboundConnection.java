@@ -186,7 +186,7 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
   }
 
   @Override
-  public UUID getConnectionId() {
-    return delegate.getConnectionId();
+  public UUID getSessionId() {
+    return delegate.getSessionId();
   }
 }
