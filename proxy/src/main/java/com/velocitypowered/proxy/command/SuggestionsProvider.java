@@ -34,7 +34,7 @@ import com.velocitypowered.api.command.Command;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.proxy.command.brigadier.VelocityArgumentCommandNode;
+import com.velocitypowered.proxy.command.brigadier.CustomArgumentCommandNode;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -194,7 +194,7 @@ final class SuggestionsProvider<S> {
       final CommandContextBuilder<S> contextSoFar) {
     final S source = contextSoFar.getSource();
     final String fullInput = reader.getString();
-    final VelocityArgumentCommandNode<S, ?> argsNode = VelocityCommands.getArgumentsNode(alias);
+    final CustomArgumentCommandNode<S, ?, ?> argsNode = VelocityCommands.getArgumentsNode(alias);
     if (argsNode == null) {
       // This is a BrigadierCommand, fallback to regular suggestions
       reader.setCursor(0);
@@ -252,7 +252,7 @@ final class SuggestionsProvider<S> {
    * @return a future that completes with the suggestions
    */
   private CompletableFuture<Suggestions> getArgumentsNodeSuggestions(
-      final VelocityArgumentCommandNode<S, ?> node, final StringReader reader,
+      final CustomArgumentCommandNode<S, ?, ?> node, final StringReader reader,
       final CommandContextBuilder<S> context) {
     final int start = reader.getCursor();
     final String fullInput = reader.getString();

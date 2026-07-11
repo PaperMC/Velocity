@@ -26,7 +26,7 @@ import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
-import com.velocitypowered.proxy.command.brigadier.VelocityArgumentCommandNode;
+import com.velocitypowered.proxy.command.brigadier.CustomArgumentCommandNode;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
@@ -87,7 +87,7 @@ public final class CommandGraphInjector<S> {
 
         final LiteralCommandNode<S> asLiteral = (LiteralCommandNode<S>) node;
         final LiteralCommandNode<S> copy = asLiteral.createBuilder().build();
-        final VelocityArgumentCommandNode<S, ?> argsNode =
+        final CustomArgumentCommandNode<S, ?, ?> argsNode =
             VelocityCommands.getArgumentsNode(asLiteral);
         if (argsNode == null) {
           // This literal is associated to a BrigadierCommand, filter normally.
@@ -117,7 +117,14 @@ public final class CommandGraphInjector<S> {
     if (!node.canUse(source)) {
       return null;
     }
-    final ArgumentBuilder<S, ?> builder = node.createBuilder();
+
+    final ArgumentBuilder<S, ?> builder;
+    if (node instanceof CustomArgumentCommandNode<S, ?, ?> customArgumentCommandNode) {
+      builder = customArgumentCommandNode.createCustomArgBuilder();
+    } else {
+      builder = node.createBuilder();
+    }
+
     if (node.getRedirect() != null) {
       // Redirects to non-Brigadier commands are not supported. Luckily,
       // we don't expose the root node to API users, so they can't access

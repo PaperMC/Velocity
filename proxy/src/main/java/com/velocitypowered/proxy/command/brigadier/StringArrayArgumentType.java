@@ -21,7 +21,9 @@ import com.google.common.base.Splitter;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.velocitypowered.api.command.CustomArgumentType;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -30,7 +32,7 @@ import java.util.List;
  * An argument type that parses the remaining contents of a {@link StringReader}, splitting the
  * input into words and placing the results in a string array.
  */
-public final class StringArrayArgumentType implements ArgumentType<String[]> {
+public final class StringArrayArgumentType implements CustomArgumentType<String[], String> {
 
   public static final StringArrayArgumentType INSTANCE = new StringArrayArgumentType();
   public static final String[] EMPTY = new String[0];
@@ -50,6 +52,11 @@ public final class StringArrayArgumentType implements ArgumentType<String[]> {
       return EMPTY;
     }
     return WORD_SPLITTER.splitToList(text).toArray(EMPTY);
+  }
+
+  @Override
+  public ArgumentType<String> getNativeType() {
+    return StringArgumentType.greedyString();
   }
 
   @Override

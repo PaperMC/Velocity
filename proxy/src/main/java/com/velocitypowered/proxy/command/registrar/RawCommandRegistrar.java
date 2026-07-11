@@ -17,9 +17,11 @@
 
 package com.velocitypowered.proxy.command.registrar;
 
+import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.RootCommandNode;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.CustomArgumentType;
 import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.proxy.command.invocation.RawCommandInvocation;
 import java.util.concurrent.locks.Lock;
@@ -28,10 +30,22 @@ import java.util.concurrent.locks.Lock;
  * Registers {@link RawCommand}s in a root node.
  */
 public final class RawCommandRegistrar
-    extends InvocableCommandRegistrar<RawCommand, RawCommand.Invocation, String> {
+    extends InvocableCommandRegistrar<RawCommand, RawCommand.Invocation, String, String> {
+
+  private static final CustomArgumentType.Converted<String, String> nopCustomArgument = new CustomArgumentType.Converted<>() {
+    @Override
+    public String convert(String nativeType) {
+      return nativeType;
+    }
+
+    @Override
+    public ArgumentType<String> getNativeType() {
+      return StringArgumentType.greedyString();
+    }
+  };
 
   public RawCommandRegistrar(final RootCommandNode<CommandSource> root, final Lock lock) {
-    super(root, lock, RawCommandInvocation.FACTORY, StringArgumentType.greedyString());
+    super(root, lock, RawCommandInvocation.FACTORY, nopCustomArgument);
   }
 
   @Override

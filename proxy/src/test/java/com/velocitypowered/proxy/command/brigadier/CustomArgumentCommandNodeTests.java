@@ -17,7 +17,6 @@
 
 package com.velocitypowered.proxy.command.brigadier;
 
-import static com.velocitypowered.proxy.command.brigadier.VelocityArgumentBuilder.velocityArgument;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -36,10 +35,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for {@link VelocityArgumentCommandNode}.
+ * Tests for {@link CustomArgumentCommandNode}.
  */
 @SuppressWarnings("unchecked")
-public class VelocityArgumentCommandNodeTests {
+public class CustomArgumentCommandNodeTests {
 
   private static final StringArrayArgumentType STRING_ARRAY = StringArrayArgumentType.INSTANCE;
 
@@ -54,8 +53,8 @@ public class VelocityArgumentCommandNodeTests {
 
   @Test
   void testParse() throws CommandSyntaxException {
-    final VelocityArgumentCommandNode<Object, String[]> node =
-        velocityArgument("foo", STRING_ARRAY).build();
+    final CustomArgumentCommandNode<Object, String[], String> node =
+            CustomArgumentBuilder.argument("foo", STRING_ARRAY).build();
     final StringReader reader = new StringReader("hello world");
     node.parse(reader, this.contextBuilder);
 
@@ -76,8 +75,8 @@ public class VelocityArgumentCommandNodeTests {
 
   @Test
   void testDefaultSuggestions() throws CommandSyntaxException {
-    final VelocityArgumentCommandNode<Object, String[]> node =
-        velocityArgument("foo", STRING_ARRAY).build();
+    final CustomArgumentCommandNode<Object, String[], String> node =
+            CustomArgumentBuilder.argument("foo", STRING_ARRAY).build();
     final Suggestions result = node.listSuggestions(
         this.contextBuilder.build(""), new SuggestionsBuilder("", 0)).join();
 
@@ -88,8 +87,8 @@ public class VelocityArgumentCommandNodeTests {
   // and filtering is already tested in Brigadier.
   @Test
   void testCustomSuggestions() throws CommandSyntaxException {
-    final VelocityArgumentCommandNode<Object, String[]> node =
-        velocityArgument("foo", STRING_ARRAY)
+    final CustomArgumentCommandNode<Object, String[], String> node =
+       CustomArgumentBuilder.argument("foo", STRING_ARRAY)
             .suggests((context, builder) -> {
               builder.suggest("bar");
               builder.suggest("baz");
