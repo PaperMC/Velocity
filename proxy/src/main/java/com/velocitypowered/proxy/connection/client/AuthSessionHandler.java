@@ -100,13 +100,16 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
       ConnectedPlayer player = new ConnectedPlayer(server, profileEvent.getGameProfile(),
           mcConnection, inbound.getVirtualHost().orElse(null), inbound.getRawVirtualHost().orElse(null), onlineMode,
           inbound.getHandshakeIntent(), inbound.getIdentifiedKey());
-      this.connectedPlayer = player;
       if (!server.canRegisterConnection(player)) {
         player.disconnect0(
             Component.translatable("velocity.error.already-connected-proxy", NamedTextColor.RED),
             true);
         return CompletableFuture.completedFuture(null);
       }
+      // Only take teardown ownership after the duplicate login gate passes.
+      // Before this point, a rejected preregistration connection must not run
+      // ConnectedPlayer teardown.
+      this.connectedPlayer = player;
 
       if (server.getConfiguration().isLogPlayerConnections()) {
         logger.info("{} has connected", player);
