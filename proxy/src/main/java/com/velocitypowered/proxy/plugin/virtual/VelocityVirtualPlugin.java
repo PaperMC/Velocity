@@ -21,6 +21,7 @@ package com.velocitypowered.proxy.plugin.virtual;
  * A singleton plugin object that represents the Velocity proxy itself.
  */
 public class VelocityVirtualPlugin {
+
   @SuppressWarnings("InstantiationOfUtilityClass")
   public static final VelocityVirtualPlugin INSTANCE = new VelocityVirtualPlugin();
 

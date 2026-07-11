@@ -36,6 +36,7 @@ import org.apache.logging.log4j.core.pattern.PatternParser;
 @Plugin(name = "stripAnsi", category = PatternConverter.CATEGORY)
 @ConverterKeys("stripAnsi")
 public class StripAnsiConverter extends LogEventPatternConverter {
+
   private static final Pattern ANSI_PATTERN = Pattern.compile("\u001B\\[[;\\d]*m");
   private final List<PatternFormatter> formatters;
 

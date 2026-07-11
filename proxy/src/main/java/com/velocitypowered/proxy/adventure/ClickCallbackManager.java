@@ -31,6 +31,7 @@ import org.checkerframework.checker.index.qual.NonNegative;
  * Click callback manager.
  */
 public class ClickCallbackManager {
+
   public static final ClickCallbackManager INSTANCE = new ClickCallbackManager();
 
   static final String COMMAND = "/velocity:callback ";

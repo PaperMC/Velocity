@@ -24,4 +24,5 @@ import org.jetbrains.annotations.NotNull;
  * @sinceMinecraft 1.20.2
  */
 public record PlayerEnteredConfigurationEvent(@NotNull Player player, ServerConnection server) {
+
 }

@@ -123,6 +123,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
   }
 
   private enum State {
+
     AWAITING_REQUEST,
     RECEIVED_REQUEST
   }

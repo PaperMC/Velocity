@@ -141,6 +141,7 @@ public class PlayerResourcePackStatusEvent {
    * Represents the possible statuses for the resource pack.
    */
   public enum Status {
+
     /**
      * The resource pack was applied successfully.
      */

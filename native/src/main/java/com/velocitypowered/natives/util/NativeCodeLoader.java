@@ -97,6 +97,7 @@ public final class NativeCodeLoader<T> implements Supplier<T> {
   }
 
   private enum Status {
+
     NOT_AVAILABLE,
     POSSIBLY_AVAILABLE,
     SETUP,

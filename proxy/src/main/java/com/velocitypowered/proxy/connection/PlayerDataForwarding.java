@@ -37,6 +37,7 @@ import org.jspecify.annotations.Nullable;
 
 @SuppressWarnings({"MissingJavadocMethod", "MissingJavadocType"})
 public final class PlayerDataForwarding {
+
   private static final String ALGORITHM = "HmacSHA256";
 
   public static final String CHANNEL = "velocity:player_info";

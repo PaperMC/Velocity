@@ -21,6 +21,7 @@ import java.util.Set;
  * Represents each Minecraft protocol version.
  */
 public enum ProtocolVersion implements Ordered<ProtocolVersion> {
+
   UNKNOWN(-1, "Unknown") {
     @Override
     public boolean isUnknown() {

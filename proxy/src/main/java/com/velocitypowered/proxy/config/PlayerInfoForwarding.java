@@ -21,6 +21,7 @@ package com.velocitypowered.proxy.config;
  * Supported player info forwarding methods.
  */
 public enum PlayerInfoForwarding {
+
   NONE,
   LEGACY,
   BUNGEEGUARD,

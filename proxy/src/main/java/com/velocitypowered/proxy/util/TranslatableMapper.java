@@ -29,6 +29,7 @@ import net.kyori.adventure.translation.GlobalTranslator;
  * Velocity Translation Mapper.
  */
 public enum TranslatableMapper implements BiConsumer<TranslatableComponent, Consumer<Component>> {
+
   INSTANCE;
 
   public static final ComponentFlattener FLATTENER = ComponentFlattener.basic().toBuilder()

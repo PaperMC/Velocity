@@ -25,6 +25,7 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
  * Legacy (Minecraft 1.17-1.20.2) ResourcePackHandler.
  */
 public final class Legacy117ResourcePackHandler extends LegacyResourcePackHandler {
+
   Legacy117ResourcePackHandler(final ConnectedPlayer player, final VelocityServer server) {
     super(player, server);
   }

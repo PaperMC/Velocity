@@ -43,6 +43,7 @@ import javax.crypto.Cipher;
  * Generic utilities for dealing with encryption operations in Minecraft.
  */
 public enum EncryptionUtils {
+
   ;
 
   public static final Pair<String, String> PEM_RSA_PUBLIC_KEY_DESCRIPTOR =

@@ -29,6 +29,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 @AwaitingEvent
 public class ServerLoginPluginMessageEvent implements ResultedEvent<ResponseResult> {
+
   private final ServerConnection connection;
   private final ChannelIdentifier identifier;
   private final byte[] contents;

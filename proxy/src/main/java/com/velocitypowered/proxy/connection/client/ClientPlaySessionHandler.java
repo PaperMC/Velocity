@@ -101,6 +101,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * center that joins backend servers with players.
  */
 public class ClientPlaySessionHandler implements MinecraftSessionHandler {
+
   private static final boolean BACKPRESSURE_LOG =
       Boolean.getBoolean("velocity.log-server-backpressure");
 

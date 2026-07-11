@@ -26,4 +26,5 @@ import org.jetbrains.annotations.NotNull;
  */
 @AwaitingEvent
 public record PlayerFinishConfigurationEvent(@NotNull Player player, @NotNull ServerConnection server) {
+
 }

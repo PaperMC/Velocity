@@ -39,6 +39,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public abstract sealed class ResourcePackHandler
         permits LegacyResourcePackHandler, ModernResourcePackHandler {
+
   protected final ConnectedPlayer player;
   protected final VelocityServer server;
 

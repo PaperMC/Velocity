@@ -23,6 +23,7 @@ import java.util.List;
  */
 @AwaitingEvent
 public class TabCompleteEvent {
+
   private final Player player;
   private final String partialMessage;
   private final List<String> suggestions;

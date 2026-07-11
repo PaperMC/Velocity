@@ -26,6 +26,7 @@ import java.net.InetSocketAddress;
 import org.jetbrains.annotations.Nullable;
 
 public class TransferPacket implements MinecraftPacket {
+
   private String host;
   private int port;
 

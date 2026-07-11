@@ -21,6 +21,7 @@ import com.velocitypowered.api.proxy.player.ResourcePackInfo;
  */
 @AwaitingEvent
 public class ServerResourcePackSendEvent implements ResultedEvent<ResultedEvent.GenericResult> {
+
   private GenericResult result;
   private final ResourcePackInfo receivedResourcePack;
   private ResourcePackInfo providedResourcePack;

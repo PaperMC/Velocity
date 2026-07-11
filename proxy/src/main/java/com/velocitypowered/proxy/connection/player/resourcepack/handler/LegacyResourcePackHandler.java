@@ -39,6 +39,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public sealed class LegacyResourcePackHandler extends ResourcePackHandler
         permits Legacy117ResourcePackHandler {
+
   protected @MonotonicNonNull Boolean previousResourceResponse;
   protected final Queue<ResourcePackInfo> outstandingResourcePacks = new ArrayDeque<>();
   private @Nullable ResourcePackInfo pendingResourcePack;

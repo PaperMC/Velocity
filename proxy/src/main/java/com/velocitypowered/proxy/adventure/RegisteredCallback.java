@@ -30,6 +30,7 @@ record RegisteredCallback(
     @Nullable AtomicInteger remainingUses,
     ClickCallback<Audience> callback
 ) {
+
   RegisteredCallback(
       final Duration duration,
       final int maxUses,

@@ -24,6 +24,7 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
 public class ChatAcknowledgementPacket implements MinecraftPacket {
+
     int offset;
 
     public ChatAcknowledgementPacket(int offset) {

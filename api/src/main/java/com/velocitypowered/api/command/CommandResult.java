@@ -11,6 +11,7 @@ package com.velocitypowered.api.command;
  * The result of a command invocation attempt.
  */
 public enum CommandResult {
+
   /**
    * The command was successfully executed by the proxy.
    */

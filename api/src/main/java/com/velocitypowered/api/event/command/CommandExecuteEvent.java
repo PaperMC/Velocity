@@ -109,6 +109,7 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
    * @since 3.4.0
    */
   public record InvocationInfo(SignedState signedState, Source source) {
+
   }
 
   /**
@@ -117,6 +118,7 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
    * @since 3.4.0
    */
   public enum SignedState {
+
     /**
      * Indicates that the command was executed from a signed source with signed message arguments,
      * This is currently only possible by typing a command in chat with signed arguments.
@@ -158,6 +160,7 @@ public final class CommandExecuteEvent implements ResultedEvent<CommandResult> {
    * @since 3.4.0
    */
   public enum Source {
+
     /**
      * Indicates that the command was invoked by a player.
      *

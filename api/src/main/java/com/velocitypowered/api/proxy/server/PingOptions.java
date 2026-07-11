@@ -25,6 +25,7 @@ import org.jetbrains.annotations.Nullable;
  * @see RegisteredServer#ping(PingOptions)
  */
 public final class PingOptions {
+
   /**
    * Default PingOptions.
    */
@@ -107,6 +108,7 @@ public final class PingOptions {
    * @since 3.2.0
    */
   public static final class Builder implements AbstractBuilder<PingOptions> {
+
     private ProtocolVersion protocolVersion = ProtocolVersion.UNKNOWN;
     private long timeout = 0;
     private String virtualHost = null;

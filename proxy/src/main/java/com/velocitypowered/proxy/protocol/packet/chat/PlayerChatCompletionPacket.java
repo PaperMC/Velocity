@@ -72,6 +72,7 @@ public class PlayerChatCompletionPacket implements MinecraftPacket {
   }
 
   public enum Action {
+
     ADD,
     REMOVE,
     SET

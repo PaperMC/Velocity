@@ -24,6 +24,7 @@ import org.apache.logging.log4j.Logger;
  * Creation of the configuration option "force-key-authentication".
  */
 public final class KeyAuthenticationMigration implements ConfigurationMigration {
+
   @Override
   public boolean shouldMigrate(final CommentedFileConfig config) {
     final double version = configVersion(config);

@@ -85,6 +85,7 @@ public final class ProxyQueryEvent {
    * Represents the type of query the client is asking for.
    */
   public enum QueryType {
+
     /**
      * Basic query asks only a subset of information, such as hostname, game type (hardcoded to
      * <pre>MINECRAFT</pre>), map, current players, max players, proxy port and proxy hostname.

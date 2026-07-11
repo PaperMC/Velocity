@@ -24,6 +24,7 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
 public class StartUpdatePacket implements MinecraftPacket {
+
   public static final StartUpdatePacket INSTANCE = new StartUpdatePacket();
 
   private StartUpdatePacket() {

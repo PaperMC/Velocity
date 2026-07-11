@@ -134,6 +134,7 @@ public class UpsertPlayerInfoPacket implements MinecraftPacket {
   }
 
   public enum Action {
+
     ADD_PLAYER((ignored, buf, info) -> { // read
       info.profile = new GameProfile(
           info.profileId,

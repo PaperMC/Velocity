@@ -26,6 +26,7 @@ import io.netty.buffer.ByteBuf;
 public abstract class GenericTitlePacket implements MinecraftPacket {
 
   public enum ActionType {
+
     SET_TITLE(0),
     SET_SUBTITLE(1),
     SET_ACTION_BAR(2),

@@ -18,6 +18,7 @@
 package com.velocitypowered.proxy.protocol.packet.chat;
 
 public enum ChatType {
+
   CHAT((byte) 0),
   SYSTEM((byte) 1),
   GAME_INFO((byte) 2);

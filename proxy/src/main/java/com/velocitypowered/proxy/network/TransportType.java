@@ -51,6 +51,7 @@ import java.util.function.Supplier;
  * Enumerates the supported transports for Velocity.
  */
 public enum TransportType {
+
   NIO("NIO", NioServerSocketChannel::new,
       NioSocketChannel::new,
       NioDatagramChannel::new,
@@ -135,6 +136,7 @@ public enum TransportType {
    * Event loop group types.
    */
   public enum Type {
+
     /**
      * Accepts connections and distributes them to workers.
      */

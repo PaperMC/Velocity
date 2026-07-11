@@ -56,6 +56,7 @@ import net.kyori.option.OptionSchema;
  * Utilities for writing and reading data in the Minecraft protocol.
  */
 public enum ProtocolUtils {
+
   ;
 
   private static final GsonComponentSerializer PRE_1_16_SERIALIZER =
@@ -885,6 +886,7 @@ public enum ProtocolUtils {
    * Represents the direction in which a packet flows.
    */
   public enum Direction {
+
     SERVERBOUND,
     CLIENTBOUND
   }

@@ -26,6 +26,7 @@ import org.jspecify.annotations.Nullable;
  * The effective cap over the full window equals limitPerSecond * windowSeconds.
  */
 public final class SimpleBytesPerSecondLimiter implements PacketLimiter {
+
   @Nullable
   private final IntervalledCounter bytesCounter;
   @Nullable

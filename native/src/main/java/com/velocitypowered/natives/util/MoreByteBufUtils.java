@@ -25,6 +25,7 @@ import io.netty.buffer.ByteBufAllocator;
  * Additional utilities for {@link ByteBuf}.
  */
 public class MoreByteBufUtils {
+
   private MoreByteBufUtils() {
     throw new AssertionError();
   }

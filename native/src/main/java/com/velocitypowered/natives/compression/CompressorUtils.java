@@ -18,6 +18,7 @@
 package com.velocitypowered.natives.compression;
 
 class CompressorUtils {
+
   /**
    * The default preferred output buffer size for zlib.
    */

@@ -15,6 +15,7 @@ import com.velocitypowered.api.proxy.Player;
  * not wait on the result of this event.
  */
 public final class PlayerClientBrandEvent {
+
   private final Player player;
   private final String brand;
 

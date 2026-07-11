@@ -59,6 +59,7 @@ public interface IdentifiedKey extends KeySigned {
    * The different versions of player keys, per Minecraft version.
    */
   enum Revision implements Ordered<Revision> {
+
     GENERIC_V1(ImmutableSet.of(), ImmutableSet.of(ProtocolVersion.MINECRAFT_1_19)),
     LINKED_V2(ImmutableSet.of(), ImmutableSet.of(ProtocolVersion.MINECRAFT_1_19_1));
 

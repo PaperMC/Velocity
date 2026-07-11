@@ -43,6 +43,7 @@ import net.kyori.adventure.text.minimessage.translation.Argument;
  * Implements Velocity's {@code /server} command.
  */
 public final class ServerCommand {
+
   private static final String SERVER_ARG = "server";
   public static final int MAX_SERVERS_TO_LIST = 50;
 

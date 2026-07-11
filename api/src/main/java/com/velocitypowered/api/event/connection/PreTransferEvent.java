@@ -24,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 @AwaitingEvent
 @ApiStatus.Experimental
 public final class PreTransferEvent implements ResultedEvent<PreTransferEvent.TransferResult> {
+
   private final InetSocketAddress originalAddress;
   private final Player player;
   private TransferResult result = TransferResult.ALLOWED;
@@ -56,6 +57,7 @@ public final class PreTransferEvent implements ResultedEvent<PreTransferEvent.Tr
    * Transfer Result of a player to another host.
    */
   public static class TransferResult implements ResultedEvent.Result {
+
     private static final TransferResult ALLOWED = new TransferResult(true, null);
     private static final TransferResult DENIED = new TransferResult(false, null);
 

@@ -24,6 +24,7 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
 public final class BundleDelimiterPacket implements MinecraftPacket {
+
   public static final BundleDelimiterPacket INSTANCE = new BundleDelimiterPacket();
 
   private BundleDelimiterPacket() {

@@ -24,6 +24,7 @@ import net.kyori.adventure.bossbar.BossBarImplementation;
 @AutoService(BossBarImplementation.Provider.class)
 @SuppressWarnings("MissingJavadocType")
 public class BossBarImplementationProvider implements BossBarImplementation.Provider {
+
   @Override
   public BossBarImplementation create(final BossBar bar) {
     final VelocityBossBarImplementation impl = new VelocityBossBarImplementation(bar);

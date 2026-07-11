@@ -61,6 +61,7 @@ import org.apache.logging.log4j.Logger;
  * Handles the client config stage.
  */
 public class ClientConfigSessionHandler implements MinecraftSessionHandler {
+
   private static final boolean BACKPRESSURE_LOG =
       Boolean.getBoolean("velocity.log-server-backpressure");
 

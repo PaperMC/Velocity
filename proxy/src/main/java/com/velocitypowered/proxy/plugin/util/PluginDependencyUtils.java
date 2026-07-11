@@ -122,6 +122,7 @@ public class PluginDependencyUtils {
   }
 
   private enum Mark {
+
     NOT_VISITED,
     VISITING,
     VISITED

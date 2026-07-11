@@ -11,6 +11,7 @@ package com.velocitypowered.api.network;
  * Represents each listener type.
  */
 public enum ListenerType {
+
   MINECRAFT("Minecraft"),
   QUERY("Query");
 

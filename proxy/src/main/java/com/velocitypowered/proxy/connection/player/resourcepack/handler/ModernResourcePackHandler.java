@@ -40,6 +40,7 @@ import org.jetbrains.annotations.Nullable;
  * Modern (Minecraft 1.20.3+) ResourcePackHandler
  */
 public final class ModernResourcePackHandler extends ResourcePackHandler {
+
   private final ListMultimap<UUID, ResourcePackInfo> outstandingResourcePacks =
       Multimaps.newListMultimap(new ConcurrentHashMap<>(), LinkedList::new);
   private final Map<UUID, ResourcePackInfo> pendingResourcePacks = new ConcurrentHashMap<>();

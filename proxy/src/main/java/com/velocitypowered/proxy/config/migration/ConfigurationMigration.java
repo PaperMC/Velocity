@@ -31,6 +31,7 @@ public sealed interface ConfigurationMigration
                 MiniMessageTranslationsMigration,
                 TransferIntegrationMigration,
                 PacketLimiterMigration {
+
   boolean shouldMigrate(CommentedFileConfig config);
 
   void migrate(CommentedFileConfig config, Logger logger) throws IOException;

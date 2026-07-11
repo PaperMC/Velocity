@@ -310,6 +310,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
   }
 
   private enum LoginState {
+
     LOGIN_PACKET_EXPECTED,
     LOGIN_PACKET_RECEIVED,
     ENCRYPTION_REQUEST_SENT,

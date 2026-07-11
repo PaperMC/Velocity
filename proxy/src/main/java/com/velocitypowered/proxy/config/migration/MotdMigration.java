@@ -27,6 +27,7 @@ import org.apache.logging.log4j.Logger;
  * Migrates MOTD builtin configuration from legacy or json format to MiniMessage.
  */
 public final class MotdMigration implements ConfigurationMigration {
+
   @Override
   public boolean shouldMigrate(final CommentedFileConfig config) {
     return configVersion(config) < 2.6;

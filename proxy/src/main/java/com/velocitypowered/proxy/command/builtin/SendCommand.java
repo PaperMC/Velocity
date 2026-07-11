@@ -41,6 +41,7 @@ import net.kyori.adventure.text.minimessage.translation.Argument;
  * Implements the Velocity default {@code /send} command.
  */
 public class SendCommand {
+
   private final ProxyServer server;
   private static final String SERVER_ARG = "server";
   private static final String PLAYER_ARG = "player";

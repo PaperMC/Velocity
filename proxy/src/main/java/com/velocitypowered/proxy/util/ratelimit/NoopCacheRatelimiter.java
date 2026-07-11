@@ -23,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
  * A {@link Ratelimiter} that does no rate-limiting.
  */
 enum NoopCacheRatelimiter implements Ratelimiter<Object> {
+
   INSTANCE;
 
   @Override

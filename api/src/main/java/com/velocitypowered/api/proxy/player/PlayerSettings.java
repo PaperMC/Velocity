@@ -86,6 +86,7 @@ public interface PlayerSettings {
    * The client's current chat display mode.
    */
   enum ChatMode {
+
     SHOWN,
     COMMANDS_ONLY,
     HIDDEN
@@ -95,6 +96,7 @@ public interface PlayerSettings {
    * The player's selected dominant hand.
    */
   enum MainHand {
+
     LEFT,
     RIGHT
   }
@@ -103,6 +105,7 @@ public interface PlayerSettings {
    * The client's current "Particles" option state.
    */
   enum ParticleStatus {
+
     ALL,
     DECREASED,
     MINIMAL

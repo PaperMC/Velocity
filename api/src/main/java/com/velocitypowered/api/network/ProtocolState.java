@@ -14,6 +14,7 @@ package com.velocitypowered.api.network;
  * @since 3.3.0
  */
 public enum ProtocolState {
+
   /**
    * Initial connection State.
    * <p>This status can be caused by a {@link HandshakeIntent#STATUS},

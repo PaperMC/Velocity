@@ -66,6 +66,7 @@ public class KnownPacksPacket implements MinecraftPacket {
     }
 
     public record KnownPack(String namespace, String id, String version) {
+
         private static KnownPack read(ByteBuf buf) {
             return new KnownPack(ProtocolUtils.readString(buf), ProtocolUtils.readString(buf), ProtocolUtils.readString(buf));
         }

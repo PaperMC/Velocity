@@ -290,6 +290,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
   }
 
   enum State {
+
     START, SUCCESS_SENT, ACKNOWLEDGED
   }
 }

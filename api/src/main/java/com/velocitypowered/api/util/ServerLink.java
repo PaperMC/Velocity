@@ -86,6 +86,7 @@ public final class ServerLink {
    * @apiNote {@link Type#BUG_REPORT} links are shown on the connection error screen
    */
   public enum Type {
+
     BUG_REPORT,
     COMMUNITY_GUIDELINES,
     SUPPORT,

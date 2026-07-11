@@ -72,6 +72,7 @@ import org.apache.logging.log4j.Logger;
  * 1.20.2+ switching. Yes, some of this is exceptionally stupid.
  */
 public class ConfigSessionHandler implements MinecraftSessionHandler {
+
   private static final boolean BACKPRESSURE_LOG =
       Boolean.getBoolean("velocity.log-server-backpressure");
 
@@ -412,6 +413,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
    * Represents the state of the configuration stage.
    */
   public enum State {
+
     START, NEGOTIATING, PLUGIN_MESSAGE_INTERRUPT, RESOURCE_PACK_INTERRUPT, COMPLETE
   }
 }

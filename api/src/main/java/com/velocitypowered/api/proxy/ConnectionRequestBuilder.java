@@ -88,6 +88,7 @@ public interface ConnectionRequestBuilder {
    * Represents the status of a connection request initiated by a {@link ConnectionRequestBuilder}.
    */
   enum Status {
+
     /**
      * The player was successfully connected to the server.
      */

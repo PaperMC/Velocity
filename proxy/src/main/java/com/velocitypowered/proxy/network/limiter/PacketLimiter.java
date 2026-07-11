@@ -22,6 +22,7 @@ package com.velocitypowered.proxy.network.limiter;
  * Implementations should be thread-safe.
  */
 public interface PacketLimiter {
+
   /**
    * Attempts to record the specified number of bytes within the current window.
    *

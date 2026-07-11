@@ -11,6 +11,7 @@ package com.velocitypowered.api.network;
  * Represents the ClientIntent of a client in the Handshake state.
  */
 public enum HandshakeIntent {
+
   STATUS(1),
   LOGIN(2),
   TRANSFER(3);

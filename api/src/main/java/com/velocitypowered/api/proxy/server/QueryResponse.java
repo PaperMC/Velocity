@@ -227,6 +227,7 @@ public final class QueryResponse {
    * A builder for {@link QueryResponse} objects.
    */
   public static final class Builder {
+
     private @MonotonicNonNull String hostname;
     private @MonotonicNonNull String gameVersion;
     private @MonotonicNonNull String map;

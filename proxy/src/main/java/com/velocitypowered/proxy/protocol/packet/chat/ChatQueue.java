@@ -127,6 +127,7 @@ public class ChatQueue implements AutoCloseable {
   }
 
   private interface Task {
+
     CompletableFuture<Void> update(ChatState chatState, MinecraftConnection smc);
   }
 
@@ -150,6 +151,7 @@ public class ChatQueue implements AutoCloseable {
    * updates.
    */
   public static class ChatState {
+
     private static final int MINIMUM_DELAYED_ACK_COUNT = LastSeenMessages.WINDOW_SIZE;
     private static final BitSet DUMMY_LAST_SEEN_MESSAGES = new BitSet();
 

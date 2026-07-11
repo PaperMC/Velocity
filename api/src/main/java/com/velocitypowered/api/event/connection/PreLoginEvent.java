@@ -193,6 +193,7 @@ public final class PreLoginEvent implements ResultedEvent<PreLoginEvent.PreLogin
     }
 
     private enum Result {
+
       ALLOWED,
       FORCE_ONLINE,
       FORCE_OFFLINE,

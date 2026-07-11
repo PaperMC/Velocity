@@ -28,6 +28,7 @@ import java.util.concurrent.CompletableFuture;
  * BundleDelimiterHandler.
  */
 public final class BundleDelimiterHandler {
+
   private final ConnectedPlayer player;
   private boolean inBundleSession = false;
   private CompletableFuture<Void> finishedBundleSessionFuture;

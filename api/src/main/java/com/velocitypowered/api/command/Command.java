@@ -30,4 +30,5 @@ import com.velocitypowered.api.proxy.Player;
  * </ul>
  */
 public sealed interface Command permits BrigadierCommand, InvocableCommand {
+
 }

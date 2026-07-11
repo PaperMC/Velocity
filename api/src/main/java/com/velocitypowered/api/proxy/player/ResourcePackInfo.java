@@ -165,6 +165,7 @@ public interface ResourcePackInfo extends ResourcePackRequestLike {
    * Represents the origin of the resource-pack.
    */
   enum Origin {
+
     /**
      * Resource-pack originated from the downstream server.
      */

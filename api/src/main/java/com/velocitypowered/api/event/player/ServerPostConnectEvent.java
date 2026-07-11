@@ -18,6 +18,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * firing.
  */
 public class ServerPostConnectEvent {
+
   private final Player player;
   private final RegisteredServer previousServer;
 

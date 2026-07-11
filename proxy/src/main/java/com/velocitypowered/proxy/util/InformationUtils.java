@@ -45,6 +45,7 @@ import java.util.Map;
  * Helper class for {@code /velocity dump}.
  */
 public enum InformationUtils {
+
   ;
 
   /**

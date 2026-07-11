@@ -11,6 +11,7 @@ package com.velocitypowered.api.util;
  * Represents where a chat message is going to be sent.
  */
 public enum MessagePosition {
+
   /**
    * The chat message will appear in the client's HUD. These messages can be filtered out by the
    * client.

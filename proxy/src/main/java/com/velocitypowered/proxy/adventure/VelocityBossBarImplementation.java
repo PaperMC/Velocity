@@ -34,6 +34,7 @@ import net.kyori.adventure.text.Component;
 @SuppressWarnings("MissingJavadocMethod")
 public final class VelocityBossBarImplementation implements BossBar.Listener,
     BossBarImplementation {
+
   private final Set<ConnectedPlayer> viewers = Collections.newSetFromMap(
       new MapMaker().weakKeys().makeMap());
   private final UUID id = UUID.randomUUID();

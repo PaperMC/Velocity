@@ -1012,6 +1012,7 @@ public class VelocityConfiguration implements ProxyConfig {
    * @param bytesAfterDecompression the maximum number of decompressed bytes per second allowed
    */
   public record PacketLimiterConfig(int interval, int pps, int bytes, int bytesAfterDecompression) {
+
     public static PacketLimiterConfig DEFAULT = new PacketLimiterConfig(7, -1, -1, 5242880);
 
     /**

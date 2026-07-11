@@ -18,6 +18,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * Represents a single entry in a {@link TabList}.
  */
 public interface TabListEntry extends KeyIdentifiable {
+
   /**
    * Returns the {@link ChatSession} associated with this entry.
    *

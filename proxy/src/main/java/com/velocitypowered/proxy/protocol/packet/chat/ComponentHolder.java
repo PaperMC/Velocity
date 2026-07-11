@@ -52,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ComponentHolder {
+
   private static final Logger logger = LogManager.getLogger(ComponentHolder.class);
   public static final int DEFAULT_MAX_STRING_SIZE = 262143;
 

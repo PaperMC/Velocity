@@ -70,6 +70,7 @@ import org.apache.logging.log4j.Logger;
  * Implements the {@code /velocity} command and friends.
  */
 public final class VelocityCommand {
+
   private static final String USAGE = "/velocity <%s>";
 
   @SuppressWarnings("checkstyle:MissingJavadocMethod")
@@ -267,6 +268,7 @@ public final class VelocityCommand {
   }
 
   private record Dump(ProxyServer server) implements Command<CommandSource> {
+
     private static final Logger logger = LogManager.getLogger(Dump.class);
 
 
@@ -326,6 +328,7 @@ public final class VelocityCommand {
    * Heap SubCommand.
    */
   public static final class Heap implements Command<CommandSource> {
+
     private static final Logger logger = LogManager.getLogger(Heap.class);
     private MethodHandle heapGenerator;
     private Consumer<CommandSource> heapConsumer;

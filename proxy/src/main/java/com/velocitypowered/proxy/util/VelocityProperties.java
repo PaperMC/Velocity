@@ -25,6 +25,7 @@ import static java.util.Objects.requireNonNull;
  * @since 3.3.0
  */
 public final class VelocityProperties {
+
   /**
    * Attempts to read a system property as boolean.
    *
