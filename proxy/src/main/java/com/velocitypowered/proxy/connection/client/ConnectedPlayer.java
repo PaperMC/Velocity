@@ -122,8 +122,6 @@ import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.permission.PermissionChecker;
-import net.kyori.adventure.platform.facet.FacetPointers;
-import net.kyori.adventure.platform.facet.FacetPointers.Type;
 import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.pointer.PointersSupplier;
 import net.kyori.adventure.resource.ResourcePackInfoLike;
@@ -165,7 +163,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
                   .resolving(Identity.DISPLAY_NAME, player -> Component.text(player.getUsername()))
                   .resolving(Identity.LOCALE, Player::getEffectiveLocale)
                   .resolving(PermissionChecker.POINTER, Player::getPermissionChecker)
-                  .resolving(FacetPointers.TYPE, player -> Type.PLAYER)
                   .build();
 
   /**

@@ -30,8 +30,6 @@ import java.util.List;
 import java.util.Locale;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.permission.PermissionChecker;
-import net.kyori.adventure.platform.facet.FacetPointers;
-import net.kyori.adventure.platform.facet.FacetPointers.Type;
 import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.pointer.PointersSupplier;
 import net.kyori.adventure.text.Component;
@@ -64,7 +62,6 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
       .resolving(PermissionChecker.POINTER, VelocityConsole::getPermissionChecker)
       .resolving(Identity.LOCALE, (console) -> ClosestLocaleMatcher.INSTANCE
           .lookupClosest(Locale.getDefault()))
-      .resolving(FacetPointers.TYPE, (console) -> Type.CONSOLE)
       .build();
 
   public VelocityConsole(VelocityServer server) {
