@@ -31,15 +31,19 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public interface CommandHandler<T extends MinecraftPacket> {
+public abstract class CommandHandler<T extends MinecraftPacket> {
 
-  Logger logger = LogManager.getLogger(CommandHandler.class);
+  protected final Logger logger;
 
-  Class<T> packetClass();
+  protected CommandHandler() {
+    this.logger = LogManager.getLogger(getClass());
+  }
 
-  void handlePlayerCommandInternal(T packet);
+  protected abstract Class<T> packetClass();
 
-  default boolean handlePlayerCommand(MinecraftPacket packet) {
+  protected abstract void handlePlayerCommandInternal(T packet);
+
+  public boolean handlePlayerCommand(MinecraftPacket packet) {
     if (packetClass().isInstance(packet)) {
       handlePlayerCommandInternal(packetClass().cast(packet));
       return true;
@@ -47,14 +51,14 @@ public interface CommandHandler<T extends MinecraftPacket> {
     return false;
   }
 
-  default CompletableFuture<MinecraftPacket> runCommand(VelocityServer server,
+  protected CompletableFuture<MinecraftPacket> runCommand(VelocityServer server,
       ConnectedPlayer player, String command,
       Function<Boolean, MinecraftPacket> hasRunPacketFunction) {
     return server.getCommandManager().executeImmediatelyAsync(player, command)
         .thenApply(hasRunPacketFunction);
   }
 
-  default void queueCommandResult(VelocityServer server, ConnectedPlayer player,
+  protected void queueCommandResult(VelocityServer server, ConnectedPlayer player,
       BiFunction<CommandExecuteEvent, LastSeenMessages, CompletableFuture<MinecraftPacket>> futurePacketCreator,
       String message, Instant timestamp, @Nullable LastSeenMessages lastSeenMessages,
                                   CommandExecuteEvent.InvocationInfo invocationInfo) {
@@ -74,5 +78,14 @@ public interface CommandHandler<T extends MinecraftPacket> {
                   Component.translatable("velocity.command.generic-error", NamedTextColor.RED));
               return null;
             }), timestamp, lastSeenMessages);
+  }
+
+  protected void alterSignableComponentError(String what, ConnectedPlayer player, MinecraftPacket packet) {
+      logger.fatal("A plugin tried to " + what + " a command with signable component(s). "
+              + "This is not supported. "
+              + "Disconnecting player " + player.getUsername() + ". Command packet: " + packet);
+      player.disconnect(Component.text(
+              "A proxy plugin caused an illegal protocol state. "
+                      + "Contact your network administrator."));
   }
 }
