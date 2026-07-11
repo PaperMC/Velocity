@@ -24,6 +24,10 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
+import com.mojang.brigadier.tree.CommandNode;
+import com.mojang.brigadier.tree.RootCommandNode;
+import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.event.command.PlayerAvailableCommandsEvent;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus;
 import com.velocitypowered.api.event.connection.PreTransferEvent;
@@ -59,6 +63,7 @@ import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.api.util.ServerLink;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.adventure.VelocityBossBarImplementation;
+import com.velocitypowered.proxy.command.CommandGraphInjector;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
@@ -71,6 +76,7 @@ import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.connection.util.VelocityInboundConnection;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
+import com.velocitypowered.proxy.protocol.packet.AvailableCommandsPacket;
 import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
@@ -667,6 +673,52 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   public void resetInFlightConnection() {
     connectionInFlight = null;
+  }
+
+  @Override
+  public CompletableFuture<Void> sendAvailableCommands() {
+    return sendAvailableCommands(this.connectedServer);
+  }
+
+  /**
+   * Rebuilds and resends this player's command list, combining the commands offered by the given
+   * {@link VelocityServerConnection}. This may be {@code null}, to not inject any backend server commands.
+   *
+   * @param conn the server connection to grab the {@link VelocityServerConnection#getBackendCommandsNode()} from,
+   *             or {@code null} to not inject any backend server commands
+   * @return a future that completes after the {@link AvailableCommandsPacket} packet has been sent to the player
+   */
+  public CompletableFuture<Void> sendAvailableCommands(@Nullable VelocityServerConnection conn) {
+    RootCommandNode<CommandSource> workingNode = new RootCommandNode<>();
+    if (conn != null) {
+      RootCommandNode<CommandSource> backendNode = conn.getBackendCommandsNode();
+      if (backendNode != null) {
+        for (CommandNode<CommandSource> child : backendNode.getChildren()) {
+          workingNode.addChild(child);
+        }
+      }
+    }
+
+    if (server.getConfiguration().isAnnounceProxyCommands()) {
+      // Inject commands from the proxy.
+      CommandGraphInjector<CommandSource> injector = server.getCommandManager().getInjector();
+      injector.inject(workingNode, this);
+
+      // In 1.21.6 a confirmation prompt was added when executing a command via `run_command` click
+      // action if the command is unknown. To prevent this prompt we have to send the command.
+      if (this.connection.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_21_6)) {
+        workingNode.removeChildByName("velocity:callback");
+      }
+    }
+
+    AvailableCommandsPacket packet = new AvailableCommandsPacket(workingNode);
+    return server.getEventManager()
+        .fire(new PlayerAvailableCommandsEvent(this, workingNode))
+        .thenAcceptAsync(event -> connection.write(packet), connection.eventLoop())
+        .exceptionally(ex -> {
+          logger.error("Exception while sending available commands to {}", this, ex);
+          return null;
+        });
   }
 
   /**
