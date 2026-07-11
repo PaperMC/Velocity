@@ -840,6 +840,8 @@ public enum StateRegistry {
   },
   LOGIN {
     {
+      final boolean registerLoginPluginMessagesForLegacyVersions =
+              Boolean.getBoolean("velocity.register-login-plugin-messages-for-legacy-versions");
       serverbound.register(ServerLoginPacket.class,
           ServerLoginPacket::new,
           map(0x00, MINECRAFT_1_7_2, false));
@@ -848,7 +850,8 @@ public enum StateRegistry {
           map(0x01, MINECRAFT_1_7_2, false));
       serverbound.register(
           LoginPluginResponsePacket.class, LoginPluginResponsePacket::new,
-          map(0x02, MINECRAFT_1_13, false));
+          map(0x02, registerLoginPluginMessagesForLegacyVersions
+                  ? MINECRAFT_1_7_2 : MINECRAFT_1_13, false));
       serverbound.register(
           LoginAcknowledgedPacket.class, LoginAcknowledgedPacket::new,
           map(0x03, MINECRAFT_1_20_2, false));
@@ -871,7 +874,8 @@ public enum StateRegistry {
       clientbound.register(
           LoginPluginMessagePacket.class,
           LoginPluginMessagePacket::new,
-          map(0x04, MINECRAFT_1_13, false));
+          map(0x04, registerLoginPluginMessagesForLegacyVersions
+                  ? MINECRAFT_1_7_2 : MINECRAFT_1_13, false));
       clientbound.register(
           ClientboundCookieRequestPacket.class, ClientboundCookieRequestPacket::new,
           map(0x05, MINECRAFT_1_20_5, false));
