@@ -462,6 +462,12 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     return this.playerListFooter;
   }
 
+  public void setPlayerListHeaderAndFooterSilent(@NonNull final Component header,
+                                                 @NonNull final Component footer) {
+    this.playerListHeader = header;
+    this.playerListFooter = footer;
+  }
+
   @Override
   public void sendPlayerListHeader(@NonNull final Component header) {
     this.sendPlayerListHeaderAndFooter(header, this.playerListFooter);

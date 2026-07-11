@@ -28,11 +28,10 @@ import net.kyori.adventure.text.Component;
 
 public class HeaderAndFooterPacket implements MinecraftPacket {
 
-  private final ComponentHolder header;
-  private final ComponentHolder footer;
+  private ComponentHolder header;
+  private ComponentHolder footer;
 
   public HeaderAndFooterPacket() {
-    throw new UnsupportedOperationException("Decode is not implemented");
   }
 
   public HeaderAndFooterPacket(ComponentHolder header, ComponentHolder footer) {
@@ -50,7 +49,8 @@ public class HeaderAndFooterPacket implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    throw new UnsupportedOperationException("Decode is not implemented");
+    header = ComponentHolder.read(buf, version);
+    footer = ComponentHolder.read(buf, version);
   }
 
   @Override
