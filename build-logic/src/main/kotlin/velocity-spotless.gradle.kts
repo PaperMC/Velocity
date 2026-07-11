@@ -12,5 +12,9 @@ extensions.configure<SpotlessExtension> {
             licenseHeaderFile(rootProject.file("HEADER.txt"))
         }
         removeUnusedImports()
+
+        // Force a single blank line after every type declaration's opening brace,
+        // e.g. after `class Foo {`, `interface Bar {`, `enum Baz {`, `record Qux(...) {`.
+        custom("blankLineAfterTypeHeader", BlankLineAfterTypeHeaderStep())
     }
 }
