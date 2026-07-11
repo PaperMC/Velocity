@@ -388,6 +388,14 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
             });
           }
 
+          try {
+            translationRegistry.registerAll(Locale.US, path.resolve("messages.properties"),
+                false);
+          } catch (IllegalArgumentException ignored) {
+            // Ignore duplicate translation key errors. We're loading these as fallback, so keys
+            // might already be present from the lang directory.
+          }
+
         } catch (IOException e) {
           logger.error("Encountered an I/O error whilst loading translations", e);
         }
