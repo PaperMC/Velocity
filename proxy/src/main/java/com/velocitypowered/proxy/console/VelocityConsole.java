@@ -25,13 +25,11 @@ import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
-import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.permission.PermissionChecker;
-import net.kyori.adventure.platform.facet.FacetPointers;
-import net.kyori.adventure.platform.facet.FacetPointers.Type;
 import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.pointer.PointersSupplier;
 import net.kyori.adventure.text.Component;
@@ -64,7 +62,6 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
       .resolving(PermissionChecker.POINTER, VelocityConsole::getPermissionChecker)
       .resolving(Identity.LOCALE, (console) -> ClosestLocaleMatcher.INSTANCE
           .lookupClosest(Locale.getDefault()))
-      .resolving(FacetPointers.TYPE, (console) -> Type.CONSOLE)
       .build();
 
   public VelocityConsole(VelocityServer server) {
@@ -72,8 +69,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   }
 
   @Override
-  public void sendMessage(@NonNull Identity identity, @NonNull Component message,
-      @NonNull MessageType messageType) {
+  public void sendMessage(@NonNull Component message) {
     componentLogger.info(message);
   }
 
@@ -111,6 +107,7 @@ public final class VelocityConsole extends SimpleTerminalConsole implements Cons
   protected LineReader buildReader(LineReaderBuilder builder) {
     return super.buildReader(builder
         .appName("bVelocity")
+        .variable(LineReader.HISTORY_FILE, Path.of(".console_history"))
         .completer((reader, parsedLine, list) -> {
           try {
             List<String> offers = this.server.getCommandManager()

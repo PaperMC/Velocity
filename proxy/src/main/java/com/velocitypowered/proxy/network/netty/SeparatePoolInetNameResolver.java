@@ -32,16 +32,19 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
  * An implementation of {@code InetNameResolver} that performs blocking DNS name lookups
- * in a separate thread, avoiding blocking the Netty threads for an extended period of time
- * and without the downsides of Netty's native DNS resolver.
+ * on a small bounded pool of separate threads, avoiding blocking the Netty threads for an
+ * extended period of time and without the downsides of Netty's native DNS resolver.
  */
 public final class SeparatePoolInetNameResolver extends InetNameResolver {
+
+  private static final int MAX_RESOLVE_THREADS = 8;
 
   private final ExecutorService resolveExecutor;
   private final InetNameResolver delegate;
@@ -61,11 +64,16 @@ public final class SeparatePoolInetNameResolver extends InetNameResolver {
   public SeparatePoolInetNameResolver(final EventExecutor executor, final int threadCount,
       final int cacheTtlSeconds, final int negativeCacheTtlSeconds) {
     super(executor);
-    this.resolveExecutor = Executors.newFixedThreadPool(Math.max(1, threadCount),
+    final int threads = Math.max(1, threadCount);
+    ThreadPoolExecutor resolveExecutor = new ThreadPoolExecutor(
+        threads, threads,
+        60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(),
         new ThreadFactoryBuilder()
             .setNameFormat("Velocity DNS Resolver #%d")
             .setDaemon(true)
             .build());
+    resolveExecutor.allowCoreThreadTimeOut(true);
+    this.resolveExecutor = resolveExecutor;
     this.delegate = new DefaultNameResolver(executor);
     this.cache = Caffeine.newBuilder()
         .expireAfterWrite(Math.max(0, cacheTtlSeconds), TimeUnit.SECONDS)
