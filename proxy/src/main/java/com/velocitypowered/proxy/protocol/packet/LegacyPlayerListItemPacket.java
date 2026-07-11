@@ -18,6 +18,7 @@
 package com.velocitypowered.proxy.protocol.packet;
 
 import com.google.common.collect.ImmutableList;
+import com.google.gson.JsonSyntaxException;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.player.TabListEntry;
@@ -26,6 +27,7 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import io.netty.handler.codec.DecoderException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -101,8 +103,12 @@ public class LegacyPlayerListItemPacket implements MinecraftPacket {
 
   private static @Nullable Component readOptionalComponent(ByteBuf buf, ProtocolVersion version) {
     if (buf.readBoolean()) {
-      return ProtocolUtils.getJsonChatSerializer(version)
+      try {
+        return ProtocolUtils.getJsonChatSerializer(version)
           .deserialize(ProtocolUtils.readString(buf));
+      } catch (JsonSyntaxException e) {
+        throw new DecoderException("Malformed JSON in player list item display name: " + e.getMessage(), e);
+      }
     }
     return null;
   }

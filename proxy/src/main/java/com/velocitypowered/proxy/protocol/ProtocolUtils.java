@@ -511,6 +511,9 @@ public enum ProtocolUtils {
     } catch (IOException thrown) {
       throw new DecoderException("Unable to parse BinaryTag, full error: " + thrown.getMessage());
     }
+    catch (NegativeArraySizeException e) {
+      throw new DecoderException("BinaryTag had a negative length, likely due to malformed input", e);
+    }
   }
 
   /**
