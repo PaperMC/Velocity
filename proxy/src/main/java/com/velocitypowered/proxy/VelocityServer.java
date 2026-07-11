@@ -428,15 +428,14 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
       if (!pluginPath.toFile().exists()) {
         Files.createDirectory(pluginPath);
-      } else {
-        if (!pluginPath.toFile().isDirectory()) {
-          logger.warn("Plugin location {} is not a directory, continuing without loading plugins",
-              pluginPath);
-          return;
-        }
-
-        pluginManager.loadPlugins(pluginPath);
+      } else if (!pluginPath.toFile().isDirectory()) {
+        logger.warn("Plugin location {} is not a directory, continuing without loading plugins",
+            pluginPath);
+        return;
       }
+
+      pluginManager.loadPlugins(pluginPath, options.getExtraPluginDirectories(),
+          options.getExtraPluginJars());
     } catch (Exception e) {
       logger.error("Couldn't load plugins", e);
     }

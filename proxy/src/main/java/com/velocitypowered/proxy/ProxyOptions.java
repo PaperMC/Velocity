@@ -21,6 +21,7 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.proxy.util.AddressUtil;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import joptsimple.OptionParser;
@@ -28,6 +29,8 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import joptsimple.ValueConversionException;
 import joptsimple.ValueConverter;
+import joptsimple.util.PathConverter;
+import joptsimple.util.PathProperties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -43,6 +46,8 @@ public final class ProxyOptions {
   private final @Nullable Boolean haproxy;
   private final boolean ignoreConfigServers;
   private final List<ServerInfo> servers;
+  private final List<Path> extraPluginJars;
+  private final List<Path> extraPluginDirectories;
 
   ProxyOptions(final String[] args) {
     final OptionParser parser = new OptionParser();
@@ -64,6 +69,18 @@ public final class ProxyOptions {
     final OptionSpec<Void> ignoreConfigServers = parser.accepts("ignore-config-servers",
             "Skip registering servers from the config file. "
                     + "Useful in dynamic setups or with the --add-server flag.");
+    final OptionSpec<Path> pluginFiles = parser.acceptsAll(
+            Arrays.asList("add-plugin", "add-extra-plugin"),
+            "Load an additional plugin from the specified jar file.")
+        .withRequiredArg()
+        .withValuesConvertedBy(new PathConverter(PathProperties.FILE_EXISTING,
+            PathProperties.READABLE));
+    final OptionSpec<Path> pluginDirectories = parser.acceptsAll(
+            Arrays.asList("add-plugin-dir", "add-extra-plugin-dir"),
+            "Load plugins from an additional directory.")
+        .withRequiredArg()
+        .withValuesConvertedBy(new PathConverter(PathProperties.DIRECTORY_EXISTING,
+            PathProperties.READABLE));
     final OptionSet set = parser.parse(args);
 
     this.help = set.has(help);
@@ -71,6 +88,8 @@ public final class ProxyOptions {
     this.haproxy = haproxy.value(set);
     this.servers = servers.values(set);
     this.ignoreConfigServers = set.has(ignoreConfigServers);
+    this.extraPluginJars = pluginFiles.values(set);
+    this.extraPluginDirectories = pluginDirectories.values(set);
 
     if (this.help) {
       try {
@@ -99,6 +118,14 @@ public final class ProxyOptions {
 
   public List<ServerInfo> getServers() {
     return this.servers;
+  }
+
+  public List<Path> getExtraPluginJars() {
+    return this.extraPluginJars;
+  }
+
+  public List<Path> getExtraPluginDirectories() {
+    return this.extraPluginDirectories;
   }
 
   private static class ServerInfoConverter implements ValueConverter<ServerInfo> {

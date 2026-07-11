@@ -80,40 +80,43 @@ public class VelocityPluginManager implements PluginManager {
   }
 
   /**
-   * Loads all plugins from the specified {@code directory}.
+   * Loads all plugins found by scanning the given {@code directory} and
+   * {@code extraDirectories}, along with the individual plugin jars given in {@code extraJars}.
    *
-   * @param directory the directory to load from
-   * @throws IOException if we could not open the directory
+   * @param directory the main directory to scan for plugin jars
+   * @param extraDirectories additional directories to scan for plugin jars
+   * @param extraJars individual plugin jars to load
+   * @throws IOException if we could not open one of the directories
    */
-  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-      justification = "I looked carefully and there's no way SpotBugs is right.")
-  public void loadPlugins(Path directory) throws IOException {
-    checkNotNull(directory, "directory");
-    checkArgument(directory.toFile().isDirectory(), "provided path isn't a directory");
-
+  public void loadPlugins(Path directory, List<Path> extraDirectories, List<Path> extraJars)
+      throws IOException {
     Map<String, PluginDescription> foundCandidates = new LinkedHashMap<>();
     JavaPluginLoader loader = new JavaPluginLoader(server, directory);
 
-    try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory,
-        p -> p.toFile().isFile() && p.toString().endsWith(".jar"))) {
-      for (Path path : stream) {
-        try {
-          PluginDescription candidate = loader.loadCandidate(path);
+    List<Path> candidates = new ArrayList<>();
+    collectPluginJars(directory, candidates);
+    for (Path extraDirectory : extraDirectories) {
+      collectPluginJars(extraDirectory, candidates);
+    }
+    candidates.addAll(extraJars);
 
-          // If we found a duplicate candidate (with the same ID), don't load it.
-          PluginDescription maybeExistingCandidate = foundCandidates.putIfAbsent(
-              candidate.getId(), candidate);
+    for (Path path : candidates) {
+      try {
+        PluginDescription candidate = loader.loadCandidate(path);
 
-          if (maybeExistingCandidate != null) {
-            logger.error("Refusing to load plugin at path {} since we already "
-                    + "loaded a plugin with the same ID {} from {}",
-                candidate.getSource().map(Objects::toString).orElse("<UNKNOWN>"),
-                candidate.getId(),
-                maybeExistingCandidate.getSource().map(Objects::toString).orElse("<UNKNOWN>"));
-          }
-        } catch (Throwable e) {
-          logger.error("Unable to load plugin {}", path, e);
+        // If we found a duplicate candidate (with the same ID), don't load it.
+        PluginDescription maybeExistingCandidate = foundCandidates.putIfAbsent(
+            candidate.getId(), candidate);
+
+        if (maybeExistingCandidate != null) {
+          logger.error("Refusing to load plugin at path {} since we already "
+                  + "loaded a plugin with the same ID {} from {}",
+              candidate.getSource().map(Objects::toString).orElse("<UNKNOWN>"),
+              candidate.getId(),
+              maybeExistingCandidate.getSource().map(Objects::toString).orElse("<UNKNOWN>"));
         }
+      } catch (Throwable e) {
+        logger.error("Unable to load plugin {}", path, e);
       }
     }
 
@@ -179,6 +182,17 @@ public class VelocityPluginManager implements PluginManager {
       logger.info("Loaded plugin {} {} by {}", description.getId(), description.getVersion()
           .orElse("<UNKNOWN>"), Joiner.on(", ").join(description.getAuthors()));
       registerPlugin(container);
+    }
+  }
+
+  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+      justification = "I looked carefully and there's no way SpotBugs is right.")
+  private static void collectPluginJars(Path directory, List<Path> candidates) throws IOException {
+    try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory,
+        p -> p.toFile().isFile() && p.toString().endsWith(".jar"))) {
+      for (Path path : stream) {
+        candidates.add(path);
+      }
     }
   }
 
