@@ -42,6 +42,12 @@ public class LegacyCommandHandler extends RateLimitedCommandHandler<LegacyChatPa
   }
 
   @Override
+  protected void forwardRateLimited(LegacyChatPacket packet) {
+    player.getChatQueue().queuePacket(
+        chatState -> packet);
+  }
+
+  @Override
   public void handlePlayerCommandInternal(LegacyChatPacket packet) {
     String command = packet.getMessage().substring(1);
     queueCommandResult(this.server, this.player, (event, newLastSeenMessages) -> {

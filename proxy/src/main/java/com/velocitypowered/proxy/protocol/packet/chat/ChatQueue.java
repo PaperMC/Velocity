@@ -111,14 +111,26 @@ public class ChatQueue implements AutoCloseable {
   }
 
   private <T extends MinecraftPacket> CompletableFuture<Void> writePacket(T packet, MinecraftConnection smc) {
-    return CompletableFuture.runAsync(() -> {
-      if (!closed && !smc.isClosed()) {
+    CompletableFuture<Void> result = new CompletableFuture<>();
+    smc.eventLoop().execute(() -> {
+      try {
+        if (closed || smc.isClosed()) {
+          result.complete(null);
+          return;
+        }
         ChannelFuture future = smc.write(packet);
         if (future != null) {
-          future.awaitUninterruptibly();
+          // Advance the queue once the write completes; a failed write means the
+          // connection is already dying, so draining the queue regardless is fine.
+          future.addListener(f -> result.complete(null));
+        } else {
+          result.complete(null);
         }
+      } catch (Throwable t) {
+        result.completeExceptionally(t);
       }
-    }, smc.eventLoop());
+    });
+    return result;
   }
 
   @Override
