@@ -32,6 +32,7 @@ import com.velocitypowered.proxy.config.migration.KeyAuthenticationMigration;
 import com.velocitypowered.proxy.config.migration.MiniMessageTranslationsMigration;
 import com.velocitypowered.proxy.config.migration.MotdMigration;
 import com.velocitypowered.proxy.config.migration.PacketLimiterMigration;
+import com.velocitypowered.proxy.config.migration.ReadTimeoutMigration;
 import com.velocitypowered.proxy.config.migration.TransferIntegrationMigration;
 import com.velocitypowered.proxy.util.AddressUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -513,7 +514,8 @@ public class VelocityConfiguration implements ProxyConfig {
           new MotdMigration(),
           new MiniMessageTranslationsMigration(),
           new TransferIntegrationMigration(),
-          new PacketLimiterMigration()
+          new PacketLimiterMigration(),
+          new ReadTimeoutMigration()
       };
 
       for (final ConfigurationMigration migration : migrations) {
@@ -757,7 +759,7 @@ public class VelocityConfiguration implements ProxyConfig {
     @Expose
     private int connectionTimeout = 5000;
     @Expose
-    private int readTimeout = 30000;
+    private int readTimeout = 25000;
     @Expose
     private boolean proxyProtocol = false;
     @Expose
@@ -798,7 +800,7 @@ public class VelocityConfiguration implements ProxyConfig {
         this.compressionLevel = config.getIntOrElse("compression-level", -1);
         this.loginRatelimit = config.getIntOrElse("login-ratelimit", 3000);
         this.connectionTimeout = config.getIntOrElse("connection-timeout", 5000);
-        this.readTimeout = config.getIntOrElse("read-timeout", 30000);
+        this.readTimeout = config.getIntOrElse("read-timeout", 25000);
         if (config.contains("haproxy-protocol")) {
           this.proxyProtocol = config.getOrElse("haproxy-protocol", false);
         } else {
