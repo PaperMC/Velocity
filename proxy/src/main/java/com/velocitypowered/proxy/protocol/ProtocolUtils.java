@@ -356,8 +356,21 @@ public enum ProtocolUtils {
    * @return the decoded key array
    */
   public static Key[] readKeyArray(ByteBuf buf) {
+    return readKeyArray(buf, DEFAULT_MAX_STRING_SIZE);
+  }
+
+  /**
+   * Reads a standard Mojang Text namespaced:key array from the buffer, refusing
+   * to allocate more than {@code cap} entries.
+   *
+   * @param buf the buffer to read from
+   * @param cap the maximum number of entries to accept
+   * @return the decoded key array
+   */
+  public static Key[] readKeyArray(ByteBuf buf, int cap) {
     int length = readVarInt(buf);
     checkFrame(length >= 0, "Got a negative-length array (%s)", length);
+    checkFrame(length <= cap, "Bad array size (got %s, maximum is %s)", length, cap);
     checkFrame(buf.isReadable(length),
         "Trying to read an array that is too long (wanted %s, only have %s)", length,
         buf.readableBytes());
@@ -418,8 +431,21 @@ public enum ProtocolUtils {
    * @return an array of integers
    */
   public static int[] readIntegerArray(ByteBuf buf) {
+    return readIntegerArray(buf, DEFAULT_MAX_STRING_SIZE);
+  }
+
+  /**
+   * Reads an VarInt-prefixed array of VarInt integers from the {@code buf},
+   * refusing to allocate more than {@code cap} entries.
+   *
+   * @param buf the buffer to read from
+   * @param cap the maximum number of entries to accept
+   * @return an array of integers
+   */
+  public static int[] readIntegerArray(ByteBuf buf, int cap) {
     int len = readVarInt(buf);
     checkFrame(len >= 0, "Got a negative-length integer array (%s)", len);
+    checkFrame(len <= cap, "Bad integer array size (got %s, maximum is %s)", len, cap);
     checkFrame(buf.isReadable(len),
         "Trying to read an array that is too long (wanted %s, only have %s)", len,
         buf.readableBytes());
@@ -541,8 +567,21 @@ public enum ProtocolUtils {
    * @return the String array from the buffer
    */
   public static String[] readStringArray(ByteBuf buf) {
+    return readStringArray(buf, DEFAULT_MAX_STRING_SIZE);
+  }
+
+  /**
+   * Reads a String array from the {@code buf}, refusing to allocate more than
+   * {@code cap} entries.
+   *
+   * @param buf the buffer to read from
+   * @param cap the maximum number of entries to accept
+   * @return the String array from the buffer
+   */
+  public static String[] readStringArray(ByteBuf buf, int cap) {
     int length = readVarInt(buf);
     checkFrame(length >= 0, "Got a negative-length array (%s)", length);
+    checkFrame(length <= cap, "Bad array size (got %s, maximum is %s)", length, cap);
     checkFrame(buf.isReadable(length),
         "Trying to read an array that is too long (wanted %s, only have %s)", length,
         buf.readableBytes());
@@ -573,8 +612,21 @@ public enum ProtocolUtils {
    * @return the Integer array from the buffer
    */
   public static int[] readVarIntArray(ByteBuf buf) {
+    return readVarIntArray(buf, DEFAULT_MAX_STRING_SIZE);
+  }
+
+  /**
+   * Reads a VarInt-prefixed VarInt array from the {@code buf}, refusing to
+   * allocate more than {@code cap} entries.
+   *
+   * @param buf the buffer to read from
+   * @param cap the maximum number of entries to accept
+   * @return the Integer array from the buffer
+   */
+  public static int[] readVarIntArray(ByteBuf buf, int cap) {
     int length = readVarInt(buf);
     checkFrame(length >= 0, "Got a negative-length array (%s)", length);
+    checkFrame(length <= cap, "Bad array size (got %s, maximum is %s)", length, cap);
     checkFrame(buf.isReadable(length),
         "Trying to read an array that is too long (wanted %s, only have %s)", length,
         buf.readableBytes());

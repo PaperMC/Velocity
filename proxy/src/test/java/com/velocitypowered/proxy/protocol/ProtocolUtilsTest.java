@@ -20,7 +20,9 @@ package com.velocitypowered.proxy.protocol;
 import static com.velocitypowered.proxy.protocol.ProtocolUtils.encode21BitVarInt;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.velocitypowered.proxy.util.except.QuietDecoderException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -153,6 +155,65 @@ public class ProtocolUtilsTest {
       buf.writeByte(value & 0x7F | 0x80);
       value >>>= 7;
     }
+  }
+
+  @Test
+  void readIntegerArrayRejectsCountAboveCap() {
+    // length 4 stays inside the per-buffer "isReadable(length)" check (we put
+    // 5 bytes in the buffer below) but is above the cap of 2, so the new
+    // check is the one that must trip.
+    ByteBuf buf = Unpooled.buffer();
+    ProtocolUtils.writeVarInt(buf, 4);
+    for (int i = 0; i < 4; i++) {
+      ProtocolUtils.writeVarInt(buf, 0);
+    }
+    assertThrows(QuietDecoderException.class,
+        () -> ProtocolUtils.readIntegerArray(buf, 2));
+  }
+
+  @Test
+  void readVarIntArrayRejectsCountAboveCap() {
+    ByteBuf buf = Unpooled.buffer();
+    ProtocolUtils.writeVarInt(buf, 4);
+    for (int i = 0; i < 4; i++) {
+      ProtocolUtils.writeVarInt(buf, 0);
+    }
+    assertThrows(QuietDecoderException.class,
+        () -> ProtocolUtils.readVarIntArray(buf, 2));
+  }
+
+  @Test
+  void readStringArrayRejectsCountAboveCap() {
+    ByteBuf buf = Unpooled.buffer();
+    ProtocolUtils.writeVarInt(buf, 4);
+    for (int i = 0; i < 4; i++) {
+      ProtocolUtils.writeString(buf, "");
+    }
+    assertThrows(QuietDecoderException.class,
+        () -> ProtocolUtils.readStringArray(buf, 2));
+  }
+
+  @Test
+  void readIntegerArrayDefaultCapRejectsAmplificationAttempt() {
+    // PoC for the bug the cap is fixing. Pre-fix readIntegerArray only
+    // gated on isReadable(length), and length is a count of entries while
+    // isReadable counts bytes. A count of 256k packed as one-byte varints
+    // is 256 KiB on the wire but drives a 1 MiB int[] (4x amplification).
+    // The default cap of DEFAULT_MAX_STRING_SIZE = 65536 now rejects this.
+    int len = 256 * 1024;
+    ByteBuf buf = Unpooled.buffer();
+    ProtocolUtils.writeVarInt(buf, len);
+    for (int i = 0; i < len; i++) {
+      buf.writeByte(0);
+    }
+    int reader = buf.readerIndex();
+    assertThrows(QuietDecoderException.class,
+        () -> ProtocolUtils.readIntegerArray(buf));
+    // Same input is accepted when the cap is effectively disabled, which
+    // is the pre-fix behaviour: a 256k-element int[] gets allocated.
+    buf.readerIndex(reader);
+    int[] result = ProtocolUtils.readIntegerArray(buf, Integer.MAX_VALUE);
+    assertEquals(len, result.length);
   }
 
   private int conventionalWrittenBytes(int value) {
