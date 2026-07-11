@@ -23,6 +23,8 @@ import com.google.gson.annotations.Expose;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -43,15 +45,27 @@ public final class BvConfiguration {
 
   private static final Logger logger = LogManager.getLogger(BvConfiguration.class);
 
+  /**
+   * The legacy serializer used to render MiniMessage-parsed brand text into the section-symbol
+   * ({@code §}) form the Minecraft client expects inside the {@code minecraft:brand} payload.
+   * Hex colors are emitted so modern clients render them correctly.
+   */
+  private static final LegacyComponentSerializer BRAND_LEGACY_SERIALIZER =
+      LegacyComponentSerializer.builder().hexColors().build();
+
   @Expose
   private final Compression compression;
 
   @Expose
   private final Optimization optimization;
 
-  private BvConfiguration(Compression compression, Optimization optimization) {
+  @Expose
+  private final Brand brand;
+
+  private BvConfiguration(Compression compression, Optimization optimization, Brand brand) {
     this.compression = compression;
     this.optimization = optimization;
+    this.brand = brand;
   }
 
   /**
@@ -79,9 +93,11 @@ public final class BvConfiguration {
 
       final CommentedConfig compressionConfig = config.get("compression");
       final CommentedConfig optimizationConfig = config.get("optimization");
+      final CommentedConfig brandConfig = config.get("brand");
       return new BvConfiguration(
           new Compression(compressionConfig),
-          new Optimization(optimizationConfig)
+          new Optimization(optimizationConfig),
+          new Brand(brandConfig)
       );
     }
   }
@@ -151,6 +167,12 @@ public final class BvConfiguration {
       valid = false;
     }
 
+    if (brand.mode == BrandMode.CUSTOM && brand.customBrand.isBlank()) {
+      logger.error("brand-mode is 'custom' but custom-brand is empty in bvelocity.toml; "
+          + "set a value or switch brand-mode back to 'default'");
+      valid = false;
+    }
+
     return valid;
   }
 
@@ -172,11 +194,21 @@ public final class BvConfiguration {
     return optimization;
   }
 
+  /**
+   * Returns the F3 server-brand settings.
+   *
+   * @return the brand settings
+   */
+  public Brand getBrand() {
+    return brand;
+  }
+
   @Override
   public String toString() {
     return "BvConfiguration{"
         + "compression=" + compression
         + ", optimization=" + optimization
+        + ", brand=" + brand
         + '}';
   }
 
@@ -381,6 +413,90 @@ public final class BvConfiguration {
           + ", dnsResolverThreads=" + dnsResolverThreads
           + ", dnsCacheTtlSeconds=" + dnsCacheTtlSeconds
           + ", dnsNegativeCacheTtlSeconds=" + dnsNegativeCacheTtlSeconds
+          + '}';
+    }
+  }
+
+  /**
+   * Controls the F3 server-brand text shown in the upper-right of the client debug screen.
+   *
+   * <p>In {@link BrandMode#CUSTOM} the {@code custom-brand} string is parsed through MiniMessage
+   * ({@link MiniMessage#miniMessage()}) and serialized to the section-symbol form the client
+   * expects. The serialized result is cached for the lifetime of the configuration object, so a
+   * reload picks up new text via a fresh {@link BvConfiguration} instance.
+   */
+  public static final class Brand {
+
+    @Expose
+    private BrandMode mode;
+
+    @Expose
+    private String customBrand;
+
+    private transient String renderedCustomBrand;
+
+    private Brand() {
+    }
+
+    private Brand(CommentedConfig config) {
+      if (config != null) {
+        this.mode = config.getEnumOrElse("mode", BrandMode.DEFAULT);
+        this.customBrand = config.getOrElse("custom-brand", "<gradient:#ff7eb3:#ff758f>Custom Velocity</gradient>");
+      } else {
+        this.mode = BrandMode.DEFAULT;
+        this.customBrand = "<gradient:#ff7eb3:#ff758f>Custom Velocity</gradient>";
+      }
+      this.renderedCustomBrand = renderCustomBrand();
+    }
+
+    /**
+     * Returns the brand rendering mode.
+     *
+     * @return the brand rendering mode
+     */
+    public BrandMode getMode() {
+      return mode;
+    }
+
+    /**
+     * Returns the raw MiniMessage {@code custom-brand} string, as written in {@code bvelocity.toml}.
+     *
+     * @return the raw custom-brand string
+     */
+    public String getCustomBrand() {
+      return customBrand;
+    }
+
+    /**
+     * Returns the {@code custom-brand} parsed through MiniMessage and serialized to the
+     * section-symbol ({@code §}) form the Minecraft client renders inside the F3 brand field.
+     *
+     * @return the serialized custom brand, or an empty string when the configured text is blank
+     */
+    public String getRenderedCustomBrand() {
+      if (renderedCustomBrand == null) {
+        renderedCustomBrand = renderCustomBrand();
+      }
+      return renderedCustomBrand;
+    }
+
+    private String renderCustomBrand() {
+      if (customBrand == null || customBrand.isBlank()) {
+        return "";
+      }
+      try {
+        return BRAND_LEGACY_SERIALIZER.serialize(MiniMessage.miniMessage().deserialize(customBrand));
+      } catch (Exception e) {
+        logger.warn("Failed to parse custom-brand MiniMessage '{}'; using the raw text", customBrand, e);
+        return customBrand;
+      }
+    }
+
+    @Override
+    public String toString() {
+      return "Brand{"
+          + "mode=" + mode
+          + ", customBrand='" + customBrand + '\''
           + '}';
     }
   }

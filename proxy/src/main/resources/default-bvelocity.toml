@@ -92,3 +92,26 @@ dns-cache-ttl-seconds = 30
 # block for the system DNS timeout). 0 disables negative caching. Keep this small: NXDOMAIN/SERVFAIL
 # results here are not distinguished, so a transient failure should clear quickly.
 dns-negative-cache-ttl-seconds = 3
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Brand
+# ──────────────────────────────────────────────────────────────────────────────
+# Controls the server-brand text shown in the upper-right of the client F3 debug screen. The brand
+# is what players see identifying the server they're connected to. By default bVelocity appends the
+# proxy name to the backend's brand (e.g. "paper (Velocity)"), matching upstream behavior.
+
+[brand]
+
+# How the brand is presented. Two modes are supported:
+# - "default": upstream behavior — append the proxy name to the backend's brand.
+# - "custom":  replace the brand entirely with the `custom-brand` string below. The string is
+#              parsed through PaperMC MiniMessage, so colors, decorations, gradients, etc. are all
+#              supported (https://docs.papermc.io/adventure/minimessage/).
+mode = "DEFAULT"
+
+# The brand text shown when mode = "custom". Parsed through MiniMessage. Has no effect in
+# "default" mode. Must be non-empty when using "custom" mode.
+# Examples:
+#   custom-brand = "<gradient:#ff7eb3:#ff758f>My Network</gradient>"
+#   custom-brand = "<dark_red><bold>Hardcore</bold></dark_red> <gray>Survival</gray>"
+custom-brand = "<gradient:#ff7eb3:#ff758f>bVelocity</gradient>"

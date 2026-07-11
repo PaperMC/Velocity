@@ -170,21 +170,33 @@ public final class PluginMessageUtil {
   }
 
   /**
-   * Rewrites the brand message to indicate the presence of Velocity.
+   * Rewrites the brand message to indicate the presence of Velocity, or replaces it entirely with a
+   * custom brand string when one is configured.
    *
    * @param message the plugin message
    * @param version the proxy version
+   * @param protocolVersion the client/server's protocol version
+   * @param customBrand the custom brand string to use in place of the rewritten brand, or
+   *     {@code null} to keep upstream behavior ({@code "<backend> (<proxy>)"}). The string must
+   *     already be serialized to the section-symbol ({@code §}) form the client renders; bVelocity
+   *     parses MiniMessage at config-load time and hands the result in here.
    * @return the rewritten plugin message
    */
   public static PluginMessagePacket rewriteMinecraftBrand(PluginMessagePacket message,
                                                           ProxyVersion version,
-                                                          ProtocolVersion protocolVersion) {
+                                                          ProtocolVersion protocolVersion,
+                                                          String customBrand) {
     checkNotNull(message, "message");
     checkNotNull(version, "version");
     checkArgument(isMcBrand(message), "message is not a brand plugin message");
 
-    String currentBrand = readBrandMessage(message.content());
-    String rewrittenBrand = String.format("%s (%s)", currentBrand, version.getName());
+    final String rewrittenBrand;
+    if (customBrand != null) {
+      rewrittenBrand = customBrand;
+    } else {
+      String currentBrand = readBrandMessage(message.content());
+      rewrittenBrand = String.format("%s (%s)", currentBrand, version.getName());
+    }
 
     ByteBuf rewrittenBuf = Unpooled.buffer();
     if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
@@ -194,6 +206,18 @@ public final class PluginMessageUtil {
     }
 
     return new PluginMessagePacket(message.getChannel(), rewrittenBuf);
+  }
+
+  /**
+   * Rewrites the brand message to indicate the presence of Velocity.
+   *
+   * @param message the plugin message
+   * @param version the proxy version
+   * @return the rewritten plugin message
+   */
+  public static PluginMessagePacket rewriteMinecraftBrand(PluginMessagePacket message,
+                                                          ProxyVersion version) {
+    return rewriteMinecraftBrand(message, version, ProtocolVersion.MINECRAFT_1_8, null);
   }
 
   /**

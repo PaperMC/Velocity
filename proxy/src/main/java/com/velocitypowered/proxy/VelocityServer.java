@@ -114,6 +114,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import top.notcoral.velocity.command.BvCommand;
+import top.notcoral.velocity.config.BrandMode;
 import top.notcoral.velocity.config.BvConfiguration;
 
 /**
@@ -213,6 +214,20 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
    */
   public BvConfiguration getBvConfiguration() {
     return this.bvConfiguration;
+  }
+
+  /**
+   * Returns the rendered custom F3 brand string to send to clients when the brand mode is
+   * {@code custom}, or {@code null} when upstream behavior ({@code "<backend> (<proxy>)"}) should
+   * apply. This is a thin convenience over {@link BvConfiguration#getBrand()} for the brand-rewrite
+   * call sites, which pass the result straight into
+   * {@link com.velocitypowered.proxy.protocol.util.PluginMessageUtil#rewriteMinecraftBrand}.
+   *
+   * @return the rendered custom brand string, or {@code null} for upstream behavior
+   */
+  public String getBrandCustomForRewrite() {
+    final BvConfiguration.Brand brand = this.bvConfiguration.getBrand();
+    return brand.getMode() == BrandMode.CUSTOM ? brand.getRenderedCustomBrand() : null;
   }
 
   @Override
