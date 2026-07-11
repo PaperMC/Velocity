@@ -129,7 +129,11 @@ public final class ConnectionManager {
               this.endpoints.put(address, new Endpoint(channel, ListenerType.MINECRAFT));
 
               if (finalBind == 0) {
-                LOGGER.info("Listening on {} with {} endpoint{}", channel.localAddress(), binds, binds == 1 ? "" : "s");
+                if (binds == 1) {
+                  LOGGER.info("Listening on {}", channel.localAddress());
+                } else {
+                  LOGGER.info("Listening on {} with {} endpoints", channel.localAddress(), binds);
+                }
 
                 // Warn people with console access that HAProxy is in use, see PR: #1436
                 if (this.server.getConfiguration().isProxyProtocol()) {
