@@ -12,6 +12,7 @@ import com.velocitypowered.api.network.ProtocolState;
 import com.velocitypowered.api.network.ProtocolVersion;
 import java.net.InetSocketAddress;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Represents an incoming connection to the proxy.
@@ -68,4 +69,14 @@ public interface InboundConnection {
    * @return the intent of the connection
    */
   HandshakeIntent getHandshakeIntent();
+
+  /**
+   * Returns the unique, stable session UUID for this connection, generated when
+   * the client initially connects to the proxy. The session id remains consistent
+   * across all login-phase events and all proxy-to-backend connections for the
+   * same player session. This should not be confused with Mojang's server-wide play session ID introduced in Minecraft 26.2.
+   *
+   * @return the session UUID, never {@code null}
+   */
+  UUID getSessionId();
 }

@@ -42,6 +42,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -69,7 +70,7 @@ public class ServerChannelInitializer extends ChannelInitializer<Channel> {
         .addLast(MINECRAFT_DECODER, new MinecraftDecoder(ProtocolUtils.Direction.SERVERBOUND))
         .addLast(MINECRAFT_ENCODER, new MinecraftEncoder(ProtocolUtils.Direction.CLIENTBOUND));
 
-    final MinecraftConnection connection = new MinecraftConnection(ch, this.server);
+    final MinecraftConnection connection = new MinecraftConnection(ch, this.server, UUID.randomUUID());
     connection.setActiveSessionHandler(StateRegistry.HANDSHAKE,
         new HandshakeSessionHandler(connection, this.server));
     ch.pipeline().addLast(Connections.HANDLER, connection);
