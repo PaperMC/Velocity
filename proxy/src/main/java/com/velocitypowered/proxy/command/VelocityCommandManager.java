@@ -59,7 +59,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
@@ -238,28 +241,66 @@ public class VelocityCommandManager implements CommandManager {
       result = executed ? CommandResult.EXECUTED : CommandResult.FORWARDED;
       return executed;
     } catch (final CommandSyntaxException e) {
-      boolean isSyntaxError = !e.getType().equals(
-          CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand());
+      boolean isSyntaxError = !e.getType().equals(CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand())
+          && !e.getType().equals(CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownArgument());
+
       if (isSyntaxError) {
-        final Message message = e.getRawMessage();
-        if (message instanceof ComponentLike componentLike) {
-          source.sendMessage(componentLike.asComponent().applyFallbackStyle(NamedTextColor.RED));
-        } else {
-          source.sendMessage(Component.text(e.getMessage(), NamedTextColor.RED));
-        }
-        result = com.velocitypowered.api.command.CommandResult.SYNTAX_ERROR;
+        sendError(source, e);
+        result = CommandResult.SYNTAX_ERROR;
         // This is, of course, a lie, but the API will need to change...
         return true;
-      } else {
-        result = CommandResult.FORWARDED;
-        return false;
       }
+
+      boolean existsOnProxy = !parsed.getContext().getNodes().isEmpty();
+      if (existsOnProxy) {
+        String invokedAlias = parsed.getContext().getNodes().get(0).getRange().get(parsed.getReader());
+        CommandMeta meta = this.commandMetas.get(invokedAlias);
+        if (meta != null && !meta.forwardPartial()) {
+          // mark command handled and send error to source if command meta specifies partial matches should not be forwarded
+          sendError(source, e);
+          result = CommandResult.SYNTAX_ERROR;
+          return true;
+        }
+      }
+      // Command does not exist or was not handled on the proxy, let the backend server handle it
+      result = CommandResult.FORWARDED;
+      return false;
     } catch (final Throwable e) {
       // Ugly, ugly swallowing of everything Throwable, because plugins are naughty.
       throw new RuntimeException("Unable to invoke command " + parsed.getReader().getString() + " for " + source, e);
     } finally {
       eventManager.fireAndForget(new PostCommandInvocationEvent(source, parsed.getReader().getString(), result));
     }
+  }
+
+  private void sendError(CommandSource source, CommandSyntaxException e) {
+    TextComponent.Builder error = Component.text();
+    final Message message = e.getRawMessage();
+    if (message instanceof ComponentLike componentLike) {
+      error.append(componentLike.asComponent().applyFallbackStyle(NamedTextColor.RED));
+    } else {
+      error.append(Component.text(message.toString(), NamedTextColor.RED));
+    }
+
+    if (e.getInput() != null && e.getCursor() > 0) {
+      int min = Math.min(e.getInput().length(), e.getCursor());
+      TextComponent.Builder details = Component.text()
+          .color(NamedTextColor.GRAY)
+          .clickEvent(ClickEvent.suggestCommand("/" + e.getInput()));
+
+      if (min > 10) {
+        details.append(Component.text("..."));
+      }
+      details.append(Component.text(e.getInput().substring(Math.max(0, min - 10), min)));
+
+      if (e.getInput().length() > min) {
+        details.append(Component.text(e.getInput().substring(min), NamedTextColor.RED, TextDecoration.UNDERLINED));
+      }
+      details.append(Component.translatable("command.context.here", NamedTextColor.RED, TextDecoration.ITALIC));
+      error.append(Component.newline(), details);
+    }
+
+    source.sendMessage(error);
   }
 
   @Override

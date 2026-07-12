@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
@@ -231,6 +232,92 @@ public class BrigadierCommandTests extends CommandTestSuite {
         manager.executeAsync(source, "hello").join());
 
     assertSame(expected, wrapper.getCause());
+  }
+
+  @Test
+  void testForwardPartialMatch() {
+    final var node = LiteralArgumentBuilder
+        .<CommandSource>literal("hello")
+        .executes(context -> fail())
+        .then(LiteralArgumentBuilder
+            .<CommandSource>literal("world")
+            .executes(context -> fail())
+        )
+        .build();
+
+    var meta = manager.metaBuilder(new BrigadierCommand(node)).forwardPartial(true).build();
+    manager.register(meta, new BrigadierCommand(node));
+
+    assertForwarded("hello badargument");
+  }
+
+  @Test
+  void testForwardMissingRequirement() {
+    final var node = LiteralArgumentBuilder
+        .<CommandSource>literal("hello")
+        .executes(context -> fail())
+        .then(LiteralArgumentBuilder
+            .<CommandSource>literal("world")
+            .executes(context -> fail())
+            .requires(src -> false)
+        )
+        .build();
+
+    var meta = manager.metaBuilder(new BrigadierCommand(node)).forwardPartial(true).build();
+    manager.register(meta, new BrigadierCommand(node));
+
+    assertForwarded("hello world");
+  }
+
+  @Test
+  void testDontForwardHasRequirement() {
+    final var callCount = new AtomicInteger();
+
+    final var node = LiteralArgumentBuilder
+        .<CommandSource>literal("hello")
+        .executes(context -> fail())
+        .then(LiteralArgumentBuilder
+            .<CommandSource>literal("world")
+            .executes(context -> {
+              callCount.incrementAndGet();
+              return 1;
+            })
+            .requires(src -> true)
+        )
+        .build();
+
+    var meta = manager.metaBuilder(new BrigadierCommand(node)).forwardPartial(true).build();
+    manager.register(meta, new BrigadierCommand(node));
+
+    assertHandled("hello world");
+    assertEquals(1, callCount.get());
+  }
+
+  @Test
+  void testDontForwardArgumentParseException() {
+    final var callCount = new AtomicInteger();
+
+    final var node = LiteralArgumentBuilder
+        .<CommandSource>literal("number")
+        .executes(context -> fail())
+        .then(RequiredArgumentBuilder
+            .<CommandSource, Integer>argument("numberInRange", IntegerArgumentType.integer(1, 5))
+            .executes(context -> {
+              callCount.incrementAndGet();
+              return 1;
+            })
+            .requires(src -> true)
+        )
+        .build();
+
+    var meta = manager.metaBuilder(new BrigadierCommand(node)).forwardPartial(true).build();
+    manager.register(meta, new BrigadierCommand(node));
+
+    assertHandled("number 1");
+    assertHandled("number 235");
+    assertHandled("number -5");
+    assertHandled("number word"); // Is it desirable for this to be forwarded?
+    assertEquals(1, callCount.get());
   }
 
   // Suggestions

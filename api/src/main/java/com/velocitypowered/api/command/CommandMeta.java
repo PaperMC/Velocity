@@ -42,6 +42,13 @@ public interface CommandMeta {
   @Nullable Object getPlugin();
 
   /**
+   * Returns whether partial invocations of this command are forwarded to the backend.
+   *
+   * @return whether to forward partial invocations
+   */
+  boolean forwardPartial();
+
+  /**
    * Provides a fluent interface to create {@link CommandMeta}s.
    */
   interface Builder {
@@ -72,6 +79,18 @@ public interface CommandMeta {
      * @return this builder, for chaining
      */
     Builder plugin(Object plugin);
+
+    /**
+     * Specifies whether partial matches to this command are forwarded to the backend.
+     *
+     * <p>For example with the registered command "rootcommand -> subcommand" where only the subcommand is executable, this
+     * specifies whether invocations such as "/rootcommand" or "/rootcommand nonexistant" should be forwarded to the
+     * backend, or be handled on the proxy.
+     *
+     * @param fowardPartial whether to forward partial matches
+     * @return this builder, for chaining
+     */
+    Builder forwardPartial(boolean fowardPartial);
 
     /**
      * Returns a newly-created {@link CommandMeta} based on the specified parameters.
