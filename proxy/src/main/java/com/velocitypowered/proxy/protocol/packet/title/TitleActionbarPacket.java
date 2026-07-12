@@ -28,7 +28,7 @@ public class TitleActionbarPacket extends GenericTitlePacket {
   private ComponentHolder component;
 
   public TitleActionbarPacket() {
-    setAction(ActionType.SET_TITLE);
+    setAction(ActionType.SET_ACTION_BAR);
   }
 
   @Override

@@ -21,10 +21,8 @@ import com.velocitypowered.proxy.config.VelocityConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bstats.MetricsBase;
@@ -120,38 +118,28 @@ public class Metrics {
           () -> server.getVersion().getVersion()));
 
       metrics.addCustomChart(new DrilldownPie("java_version", () -> {
-        Map<String, Map<String, Integer>> map = new HashMap<>();
-        String javaVersion = System.getProperty("java.version");
-        Map<String, Integer> entry = new HashMap<>();
-        entry.put(javaVersion, 1);
+        Runtime.Version version = Runtime.version();
 
-        // http://openjdk.java.net/jeps/223
-        // Java decided to change their versioning scheme and in doing so modified the
-        // java.version system property to return $major[.$minor][.$security][-ea], as opposed to
-        // 1.$major.0_$identifier we can handle pre-9 by checking if the "major" is equal to "1",
-        // otherwise, 9+
-        String majorVersion = javaVersion.split("\\.")[0];
-        String release;
-
-        int indexOf = javaVersion.lastIndexOf('.');
-
-        if (majorVersion.equals("1")) {
-          release = "Java " + javaVersion.substring(0, indexOf);
-        } else {
-          // of course, it really wouldn't be all that simple if they didn't add a quirk, now
-          // would it valid strings for the major may potentially include values such as -ea to
-          // denote a pre release
-          Matcher versionMatcher = Pattern.compile("\\d+").matcher(majorVersion);
-          if (versionMatcher.find()) {
-            majorVersion = versionMatcher.group(0);
-          }
-          release = "Java " + majorVersion;
-        }
-        map.put(release, entry);
-
-        return map;
+        return Map.of(
+            "Java " + version.feature(),
+            Map.of(javaVersion(version), 1));
       }));
     }
   }
 
+  /**
+   * Recreates the exact {@code java.version} system property value from a {@link Runtime.Version}.
+   *
+   * <p>Per <a href="https://openjdk.org/jeps/223">JEP 223</a>, {@code java.version} is
+   * {@code $VNUM(-$PRE)?}; the build and optional segments only appear in {@code java.runtime.version}.
+   *
+   * @param v the runtime version
+   * @return the value {@code java.version} would hold on this JVM
+   */
+  private static String javaVersion(Runtime.Version v) {
+    return v.version().stream()
+        .map(Object::toString)
+        .collect(Collectors.joining("."))
+        + v.pre().map(p -> "-" + p).orElse("");
+  }
 }

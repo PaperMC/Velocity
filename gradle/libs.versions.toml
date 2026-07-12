@@ -3,11 +3,11 @@ configurate3 = "3.7.3"
 configurate4 = "4.2.0"
 flare = "2.0.1"
 log4j = "2.26.0"
-netty = "4.2.15.Final"
+netty = "4.2.16.Final"
 
 [plugins]
 fill = "io.papermc.fill.gradle:1.0.12"
-shadow = "com.gradleup.shadow:9.3.1"
+shadow = "com.gradleup.shadow:9.5.1"
 spotless = "com.diffplug.spotless:8.2.0"
 
 [libraries]
@@ -32,7 +32,7 @@ disruptor = "com.lmax:disruptor:4.0.0"
 fastutil = "it.unimi.dsi:fastutil:8.5.18"
 flare-core = { module = "space.vectrix.flare:flare", version.ref = "flare" }
 flare-fastutil = { module = "space.vectrix.flare:flare-fastutil", version.ref = "flare" }
-jline = "org.jline:jline-terminal-jansi:3.30.6"
+jline = "org.jline:jline-terminal-ffm:4.3.1"
 jopt = "net.sf.jopt-simple:jopt-simple:5.0.4"
 junit = "org.junit.jupiter:junit-jupiter:6.0.3"
 jspecify = "org.jspecify:jspecify:1.0.0"

@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -95,7 +96,7 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
             entry.setLatencyInternal(item.getLatency());
           }
         } else {
-          UUID uuid = UUID.randomUUID(); // Use a fake uuid to preserve function of custom entries
+          UUID uuid = generateInsecureRandomUuid(); // Use a fake uuid to preserve function of custom entries
           nameMapping.put(item.getName(), uuid);
           entries.put(uuid, (KeyedVelocityTabListEntry) TabListEntry.builder()
               .tabList(this)
@@ -152,5 +153,18 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
   public TabListEntry buildEntry(GameProfile profile, @Nullable Component displayName, int latency,
                                  int gameMode, @Nullable ChatSession chatSession, boolean listed, int listOrder, boolean showHat) {
     return new VelocityTabListEntryLegacy(this, profile, displayName, latency, gameMode);
+  }
+
+  /**
+   * Generates a random UUID v4 using {@link ThreadLocalRandom}. The result is a structurally valid
+   * UUID v4 but is not cryptographically secure
+   *
+   * @return a new random {@link UUID}
+   */
+  private static UUID generateInsecureRandomUuid() {
+    ThreadLocalRandom random = ThreadLocalRandom.current();
+    long msb = (random.nextLong() & 0xffffffffffff0fffL) | 0x0000000000004000L; // version 4
+    long lsb = (random.nextLong() & 0x3fffffffffffffffL) | 0x8000000000000000L; // IETF variant
+    return new UUID(msb, lsb);
   }
 }
