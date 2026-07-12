@@ -49,6 +49,7 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.RemoveResourcePackPacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TransferPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ClientboundCustomReportDetailsPacket;
 import com.velocitypowered.proxy.protocol.packet.config.ClientboundServerLinksPacket;
@@ -362,6 +363,8 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
                 ? event.getOriginalKey() : event.getResult().getKey();
 
             serverConn.getPlayer().getConnection().write(new ClientboundCookieRequestPacket(resultedKey));
+          } else if (event.getResult().shouldRespond()) {
+            serverConn.ensureConnected().write(new ServerboundCookieResponsePacket(event.getOriginalKey(), event.getResult().getData()));
           }
         }, serverConn.ensureConnected().eventLoop());
 

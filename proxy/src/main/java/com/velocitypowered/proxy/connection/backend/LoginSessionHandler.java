@@ -41,6 +41,7 @@ import com.velocitypowered.proxy.protocol.packet.LoginAcknowledgedPacket;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
 import io.netty.buffer.ByteBuf;
@@ -189,6 +190,8 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
                 ? event.getOriginalKey() : event.getResult().getKey();
 
             serverConn.getPlayer().getConnection().write(new ClientboundCookieRequestPacket(resultedKey));
+          } else if (event.getResult().shouldRespond()) {
+            serverConn.ensureConnected().write(new ServerboundCookieResponsePacket(event.getOriginalKey(), event.getResult().getData()));
           }
         }, serverConn.ensureConnected().eventLoop());
 

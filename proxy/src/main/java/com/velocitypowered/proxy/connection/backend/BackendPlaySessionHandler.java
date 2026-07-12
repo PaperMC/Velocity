@@ -63,6 +63,7 @@ import com.velocitypowered.proxy.protocol.packet.RemoveResourcePackPacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.ServerDataPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TransferPacket;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfoPacket;
@@ -446,6 +447,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
                 ? event.getOriginalKey() : event.getResult().getKey();
 
             playerConnection.write(new ClientboundCookieRequestPacket(resultedKey));
+          } else if (event.getResult().shouldRespond()) {
+            serverConn.ensureConnected().write(new ServerboundCookieResponsePacket(packet.getKey(), event.getResult().getData()));
           }
         }, playerConnection.eventLoop());
 

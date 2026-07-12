@@ -11,6 +11,7 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.Player;
+import java.util.Base64;
 import net.kyori.adventure.key.Key;
 
 /**
@@ -68,15 +69,19 @@ public final class CookieRequestEvent implements ResultedEvent<CookieRequestEven
    */
   public static final class ForwardResult implements Result {
 
-    private static final ForwardResult ALLOWED = new ForwardResult(true, null);
-    private static final ForwardResult DENIED = new ForwardResult(false, null);
+    private static final ForwardResult ALLOWED = new ForwardResult(true, null, false, null);
+    private static final ForwardResult DENIED = new ForwardResult(false, null, false, null);
 
     private final boolean status;
     private final Key key;
+    private final boolean respond;
+    private final byte[] data;
 
-    private ForwardResult(final boolean status, final Key key) {
+    private ForwardResult(final boolean status, final Key key, boolean respond, byte[] data) {
       this.status = status;
       this.key = key;
+      this.respond = respond;
+      this.data = data;
     }
 
     @Override
@@ -88,9 +93,23 @@ public final class CookieRequestEvent implements ResultedEvent<CookieRequestEven
       return key;
     }
 
+    public boolean shouldRespond() {
+      return respond;
+    }
+
+    public byte[] getData() {
+      return data;
+    }
+
     @Override
     public String toString() {
-      return status ? "forward to client" : "handled by proxy";
+      if (status) {
+        return "Forward to client";
+      }
+      if (respond) {
+        return "Respond with " + Base64.getEncoder().encodeToString(data);
+      }
+      return "Handled by proxy";
     }
 
     /**
@@ -113,6 +132,16 @@ public final class CookieRequestEvent implements ResultedEvent<CookieRequestEven
     }
 
     /**
+     * Sends this response to the request to the server.
+     *
+     * @param data the data to send, null will mean missing data
+     * @return a result with the data
+     */
+    public static ForwardResult respond(final byte [] data) {
+      return new ForwardResult(false, null, true, data);
+    }
+
+    /**
      * Allows the cookie request to be forwarded to the client, but silently replaces the
      * identifier of the cookie with another.
      *
@@ -121,7 +150,7 @@ public final class CookieRequestEvent implements ResultedEvent<CookieRequestEven
      */
     public static ForwardResult key(final Key key) {
       Preconditions.checkNotNull(key, "key");
-      return new ForwardResult(true, key);
+      return new ForwardResult(true, key, false, null);
     }
   }
 }
