@@ -439,6 +439,10 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isLogPlayerConnections();
   }
 
+  public boolean isAutoUpdate() {
+    return advanced.isAutoUpdate();
+  }
+
   public boolean isAcceptTransfers() {
     return this.advanced.isAcceptTransfers();
   }
@@ -775,6 +779,7 @@ public class VelocityConfiguration implements ProxyConfig {
     @Expose
     private boolean logPlayerConnections = true;
     @Expose
+    private boolean autoUpdate = true;
     private boolean acceptTransfers = false;
     @Expose
     private boolean enableReusePort = false;
@@ -812,6 +817,7 @@ public class VelocityConfiguration implements ProxyConfig {
         this.announceProxyCommands = config.getOrElse("announce-proxy-commands", true);
         this.logCommandExecutions = config.getOrElse("log-command-executions", false);
         this.logPlayerConnections = config.getOrElse("log-player-connections", true);
+        this.autoUpdate = config.getOrElse("auto-update", true);
         this.acceptTransfers = config.getOrElse("accepts-transfers", false);
         this.enableReusePort = config.getOrElse("enable-reuse-port", false);
         this.commandRateLimit = config.getIntOrElse("command-rate-limit", 25);
@@ -878,6 +884,10 @@ public class VelocityConfiguration implements ProxyConfig {
       return logPlayerConnections;
     }
 
+    public boolean isAutoUpdate() {
+      return autoUpdate;
+    }
+
     public boolean isAcceptTransfers() {
       return this.acceptTransfers;
     }
@@ -922,6 +932,7 @@ public class VelocityConfiguration implements ProxyConfig {
           + ", announceProxyCommands=" + announceProxyCommands
           + ", logCommandExecutions=" + logCommandExecutions
           + ", logPlayerConnections=" + logPlayerConnections
+          + ", autoUpdate=" + autoUpdate
           + ", acceptTransfers=" + acceptTransfers
           + ", enableReusePort=" + enableReusePort
           + '}';

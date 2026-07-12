@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -80,36 +81,44 @@ public class VelocityPluginManager implements PluginManager {
   }
 
   /**
-   * Loads all plugins from the specified {@code directory}.
+   * Loads all plugins from the specified {@code pluginDirectory}.
    *
-   * @param directory the directory to load from
-   * @throws IOException if we could not open the directory
+   * @param pluginDirectory the directory to load from
+   * @param updateDirectory the directory to update plugins from
+   * @param outdatedPluginDirectory the directory to store outdated plugins in
+   * @param applyUpdates whether to apply updates to plugins
+   * @throws IOException if we could not open, move or delete the needed directories
    */
   @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-      justification = "I looked carefully and there's no way SpotBugs is right.")
-  public void loadPlugins(Path directory) throws IOException {
-    checkNotNull(directory, "directory");
-    checkArgument(directory.toFile().isDirectory(), "provided path isn't a directory");
+          justification = "I looked carefully and there's no way SpotBugs is right.")
+  public void loadPlugins(
+          Path pluginDirectory,
+          Path updateDirectory,
+          Path outdatedPluginDirectory,
+          boolean applyUpdates
+  ) throws IOException {
+    checkNotNull(pluginDirectory, "pluginDirectory");
+    checkArgument(Files.isDirectory(pluginDirectory), "provided plugin path isn't a directory");
 
     Map<String, PluginDescription> foundCandidates = new LinkedHashMap<>();
-    JavaPluginLoader loader = new JavaPluginLoader(server, directory);
+    JavaPluginLoader loader = new JavaPluginLoader(server, pluginDirectory);
 
-    try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory,
-        p -> p.toFile().isFile() && p.toString().endsWith(".jar"))) {
+    try (DirectoryStream<Path> stream = Files.newDirectoryStream(pluginDirectory,
+            p -> p.toFile().isFile() && p.toString().endsWith(".jar"))) {
       for (Path path : stream) {
         try {
           PluginDescription candidate = loader.loadCandidate(path);
 
-          // If we found a duplicate candidate (with the same ID), don't load it.
+          // Avoid loading duplicate plugins
           PluginDescription maybeExistingCandidate = foundCandidates.putIfAbsent(
-              candidate.getId(), candidate);
+                  candidate.getId(), candidate);
 
           if (maybeExistingCandidate != null) {
             logger.error("Refusing to load plugin at path {} since we already "
-                    + "loaded a plugin with the same ID {} from {}",
-                candidate.getSource().map(Objects::toString).orElse("<UNKNOWN>"),
-                candidate.getId(),
-                maybeExistingCandidate.getSource().map(Objects::toString).orElse("<UNKNOWN>"));
+                            + "loaded a plugin with the same ID {} from {}",
+                    candidate.getSource().map(Objects::toString).orElse("<UNKNOWN>"),
+                    candidate.getId(),
+                    maybeExistingCandidate.getSource().map(Objects::toString).orElse("<UNKNOWN>"));
           }
         } catch (Throwable e) {
           logger.error("Unable to load plugin {}", path, e);
@@ -122,19 +131,31 @@ public class VelocityPluginManager implements PluginManager {
       return;
     }
 
+    // If updates are enabled, update plugins before loading
+    if (applyUpdates) {
+      updatePlugins(
+              pluginDirectory,
+              updateDirectory,
+              outdatedPluginDirectory,
+              foundCandidates,
+              loader
+      );
+    }
+
     List<PluginDescription> sortedPlugins = PluginDependencyUtils.sortCandidates(
-        new ArrayList<>(foundCandidates.values()));
+            new ArrayList<>(foundCandidates.values()));
 
     Map<String, PluginDescription> loadedCandidates = new HashMap<>();
     Map<PluginContainer, Module> pluginContainers = new LinkedHashMap<>();
-    // Now load the plugins
+
+    // Load the plugins
     pluginLoad:
     for (PluginDescription candidate : sortedPlugins) {
       // Verify dependencies
       for (PluginDependency dependency : candidate.getDependencies()) {
         if (!dependency.isOptional() && !loadedCandidates.containsKey(dependency.getId())) {
           logger.error("Can't load plugin {} due to missing dependency {}", candidate.getId(),
-              dependency.getId());
+                  dependency.getId());
           continue pluginLoad;
         }
       }
@@ -149,7 +170,7 @@ public class VelocityPluginManager implements PluginManager {
       }
     }
 
-    // Make a global Guice module that with common bindings for every plugin
+    // Create a global Guice module with common bindings for every plugin
     AbstractModule commonModule = new AbstractModule() {
       @Override
       protected void configure() {
@@ -159,8 +180,8 @@ public class VelocityPluginManager implements PluginManager {
         bind(CommandManager.class).toInstance(server.getCommandManager());
         for (PluginContainer container : pluginContainers.keySet()) {
           bind(PluginContainer.class)
-              .annotatedWith(Names.named(container.getDescription().getId()))
-              .toInstance(container);
+                  .annotatedWith(Names.named(container.getDescription().getId()))
+                  .toInstance(container);
         }
       }
     };
@@ -177,8 +198,97 @@ public class VelocityPluginManager implements PluginManager {
       }
 
       logger.info("Loaded plugin {} {} by {}", description.getId(), description.getVersion()
-          .orElse("<UNKNOWN>"), Joiner.on(", ").join(description.getAuthors()));
+              .orElse("<UNKNOWN>"), Joiner.on(", ").join(description.getAuthors()));
       registerPlugin(container);
+    }
+  }
+
+  /**
+   * Updates plugins from the update directory.
+   *
+   * @param pluginDirectory the directory to load from
+   * @param updateDirectory the directory to update plugins from
+   * @param outdatedPluginDirectory the directory to store outdated plugins in
+   * @param found the plugins found in the plugin directory
+   * @param loader the plugin loader
+   * @throws IOException if we could not open, move or delete the needed directories
+   */
+  private void updatePlugins(
+          Path pluginDirectory,
+          Path updateDirectory,
+          Path outdatedPluginDirectory,
+          Map<String, PluginDescription> found,
+          JavaPluginLoader loader
+  ) throws IOException {
+    checkNotNull(updateDirectory, "updateDirectory");
+    checkArgument(Files.isDirectory(updateDirectory), "provided update path isn't a directory");
+    checkNotNull(outdatedPluginDirectory, "outdatedPluginDirectory");
+    checkArgument(Files.isDirectory(outdatedPluginDirectory),
+            "provided outdated plugin path isn't a directory");
+    List<PluginDescription> updatesToApply = new ArrayList<>();
+    JavaPluginLoader updateLoader = new JavaPluginLoader(server, updateDirectory);
+    try (DirectoryStream<Path> stream = Files.newDirectoryStream(updateDirectory,
+            p -> p.toFile().isFile() && p.toString().endsWith(".jar"))) {
+      for (Path path : stream) {
+        try {
+          updatesToApply.add(updateLoader.loadCandidate(path));
+        } catch (Exception e) {
+          logger.error("Unable to load plugin candidate {}", path, e);
+        }
+      }
+    }
+
+    // match the to update plugin's id against already
+    // loaded plugins and replace them if match found
+    for (PluginDescription updatedDescription : updatesToApply) {
+      PluginDescription possibleMatch = found.get(updatedDescription.getId());
+      if (updatedDescription.getSource().isEmpty()) { //should not happen but just in case
+        logger.warn("No source found for plugin {} found", updatedDescription.getId());
+        continue;
+      }
+      Path oldPluginPath = null;
+      if (possibleMatch != null) {
+        if (possibleMatch.getSource().isEmpty()) {
+          logger.warn("No source for plugin {} found, continuing without update.",
+                  possibleMatch.getId());
+          continue;
+        }
+        //move old plugin to outdated plugin directory to rollback in case of failure
+        try {
+          oldPluginPath = possibleMatch.getSource().get();
+          Files.move(oldPluginPath, outdatedPluginDirectory.resolve(oldPluginPath.getFileName()),
+                  StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+          logger.error("Unable to move plugin {} to outdated plugins folder at {}",
+                  possibleMatch.getId(), outdatedPluginDirectory.toString(), e);
+          continue;
+        }
+        logger.info("Moved plugin {} to outdated plugins folder at {}",
+                possibleMatch.getId(), outdatedPluginDirectory.toString());
+      }
+      Path newPath = pluginDirectory.resolve(updatedDescription.getSource().get().getFileName());
+      try {
+        Files.move(updatedDescription.getSource().get(), newPath);
+        logger.info("Successfully updated plugin {} to version {}",
+                updatedDescription.getId(), updatedDescription.getVersion());
+        PluginDescription movedDescription = loader.loadCandidate(newPath);
+        found.put(movedDescription.getId(), movedDescription);
+      } catch (Exception e) {
+        logger.error("Unable to update plugin {}", updatedDescription.getId(), e);
+        //rollback to old version if the plugin was a replacement and not newly added
+        if (oldPluginPath != null) {
+          Files.delete(updatedDescription.getSource().get());
+          Files.move(outdatedPluginDirectory.resolve(oldPluginPath.getFileName()), oldPluginPath);
+          logger.info("Rolled back plugin {} to version {}",
+                  updatedDescription.getId(), updatedDescription.getVersion());
+          try {
+            PluginDescription rolledBackDescription = loader.loadCandidate(oldPluginPath);
+            found.put(rolledBackDescription.getId(), rolledBackDescription);
+          } catch (Exception ex) {
+            logger.error("Unable to load rollback plugin candidate {}", oldPluginPath, ex);
+          }
+        }
+      }
     }
   }
 

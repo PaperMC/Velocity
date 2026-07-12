@@ -159,6 +159,9 @@ log-command-executions = false
 # and disconnecting from the proxy.
 log-player-connections = true
 
+# Whether plugins should be auto updated/installed from the update folder
+auto-update = true
+
 # Allows players transferred from other hosts via the
 # Transfer packet (Minecraft 1.20.5) to be received.
 accepts-transfers = false
