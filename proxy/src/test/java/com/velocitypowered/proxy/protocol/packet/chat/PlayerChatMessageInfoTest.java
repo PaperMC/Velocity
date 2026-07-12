@@ -196,6 +196,37 @@ class PlayerChatMessageInfoTest {
 
   @Test
   void clientboundDecoratedPlayerChatKeepsOriginalBodySeparateFromDecoration() throws Exception {
+    assertClientboundDecoratedPlayerChatRoundTrips(ProtocolVersion.MINECRAFT_1_19_3);
+    assertClientboundDecoratedPlayerChatRoundTrips(ProtocolVersion.MINECRAFT_1_20_5);
+    assertClientboundDecoratedPlayerChatRoundTrips(ProtocolVersion.MINECRAFT_1_21_4);
+    assertClientboundDecoratedPlayerChatRoundTrips(ProtocolVersion.MINECRAFT_1_21_5);
+    assertClientboundDecoratedPlayerChatRoundTrips(ProtocolVersion.MINECRAFT_26_1);
+  }
+
+  @Test
+  void clientboundPlayerChatSupportStartsAtSessionChatProtocols() {
+    assertFalse(ClientboundPlayerChatPacket.supportsProtocol(ProtocolVersion.MINECRAFT_1_19_1));
+    assertTrue(ClientboundPlayerChatPacket.supportsProtocol(ProtocolVersion.MINECRAFT_1_19_3));
+  }
+
+  @Test
+  void decoratedPlayerChatEmissionRequiresCompleteSessionSignature() throws Exception {
+    PlayerChatMessage unsigned = PlayerChatMessageInfo.sessionMessage(playerWithSession(null, null),
+        sessionPacket("unsigned", false, 0L, new byte[0]));
+    PlayerChatMessage keyed = PlayerChatMessageInfo.keyedMessage(playerWithSession(key(), null),
+        keyedPacket("keyed", false, EXPIRY, new byte[256], new byte[] {0, 0, 0, 0, 0, 0, 0, 1},
+            false, new SignaturePair[0], null));
+    PlayerChatMessage shortSignature = PlayerChatMessageInfo.sessionMessage(playerWithSession(null,
+        new RemoteChatSession(SESSION_ID, key())), sessionPacket("short", true, 1L,
+        new byte[] {1}));
+
+    assertFalse(DecoratedPlayerChatForwarder.canEmitAsDecoratedPlayerChat(unsigned));
+    assertFalse(DecoratedPlayerChatForwarder.canEmitAsDecoratedPlayerChat(keyed));
+    assertFalse(DecoratedPlayerChatForwarder.canEmitAsDecoratedPlayerChat(shortSignature));
+  }
+
+  private static void assertClientboundDecoratedPlayerChatRoundTrips(ProtocolVersion version)
+      throws Exception {
     byte[] signature = new byte[256];
     signature[0] = 9;
     PlayerChatMessage message = PlayerChatMessageInfo.sessionMessage(playerWithSession(null,
@@ -203,14 +234,15 @@ class PlayerChatMessageInfoTest {
         signature));
     ClientboundPlayerChatPacket packet = new ClientboundPlayerChatPacket(message,
         Component.text("[G][server1] [Air]airgalaxie: Paper test"),
-        Component.text("airgalaxie"), ProtocolVersion.MINECRAFT_26_1);
+        Component.text("airgalaxie"), version);
     ByteBuf buf = Unpooled.buffer();
 
-    packet.encode(buf, ProtocolUtils.Direction.CLIENTBOUND, ProtocolVersion.MINECRAFT_26_1);
+    packet.encode(buf, ProtocolUtils.Direction.CLIENTBOUND, version);
     ClientboundPlayerChatPacket decoded = new ClientboundPlayerChatPacket();
-    decoded.decode(buf, ProtocolUtils.Direction.CLIENTBOUND, ProtocolVersion.MINECRAFT_26_1);
+    decoded.decode(buf, ProtocolUtils.Direction.CLIENTBOUND, version);
 
     assertEquals("Paper test", decoded.getMessage());
+    assertArrayEquals(signature, decoded.getSignature());
     assertEquals(Component.text("[G][server1] [Air]airgalaxie: Paper test"),
         decoded.getUnsignedContent());
   }

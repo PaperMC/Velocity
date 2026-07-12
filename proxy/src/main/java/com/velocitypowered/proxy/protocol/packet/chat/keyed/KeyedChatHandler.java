@@ -83,6 +83,10 @@ public class KeyedChatHandler implements
       // 1.19->1.19.2 unsigned version
       chatFuture = future.thenApply(pme -> {
         PlayerChatEvent.ChatResult chatResult = pme.getResult();
+        if (chatResult.getPlayerChatForwarding().isPresent()) {
+          logger.warn("Cannot emit decorated player chat for {}: keyed signed chat protocols "
+              + "do not have a supported signature-preserving clientbound emitter", player);
+        }
         if (!chatResult.isAllowed()) {
           return null;
         }
@@ -107,6 +111,10 @@ public class KeyedChatHandler implements
     assert playerKey != null;
     return pme -> {
       PlayerChatEvent.ChatResult chatResult = pme.getResult();
+      if (chatResult.getPlayerChatForwarding().isPresent()) {
+        logger.warn("Cannot emit decorated player chat for {}: keyed signed chat protocols "
+            + "do not have a supported signature-preserving clientbound emitter", player);
+      }
       if (!chatResult.isAllowed()) {
         if (playerKey.getKeyRevision().noLessThan(IdentifiedKey.Revision.LINKED_V2)) {
           // Bad, very bad.

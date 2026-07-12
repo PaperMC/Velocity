@@ -748,6 +748,11 @@ public enum StateRegistry {
           map(0x43, MINECRAFT_1_21_9, false),
           map(0x45, MINECRAFT_26_1, false));
       clientbound.register(ClientboundPlayerChatPacket.class, ClientboundPlayerChatPacket::new,
+          map(0x31, MINECRAFT_1_19_3, true),
+          map(0x35, MINECRAFT_1_19_4, true),
+          map(0x37, MINECRAFT_1_20_2, true),
+          map(0x39, MINECRAFT_1_20_5, true),
+          map(0x3B, MINECRAFT_1_21_2, true),
           map(0x3A, MINECRAFT_1_21_5, true),
           map(0x3F, MINECRAFT_1_21_9, true),
           map(0x41, MINECRAFT_26_1, true));

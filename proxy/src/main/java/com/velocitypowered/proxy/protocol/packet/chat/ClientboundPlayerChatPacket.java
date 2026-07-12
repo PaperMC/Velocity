@@ -18,6 +18,7 @@
 package com.velocitypowered.proxy.protocol.packet.chat;
 
 import com.velocitypowered.api.event.player.PlayerChatMessage;
+import com.velocitypowered.api.event.player.PlayerChatProtocol;
 import com.velocitypowered.api.event.player.PlayerChatSignature;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
@@ -50,6 +51,13 @@ public final class ClientboundPlayerChatPacket implements MinecraftPacket {
 
   public ClientboundPlayerChatPacket(PlayerChatMessage originalMessage, Component decoratedMessage,
       Component senderName, ProtocolVersion version) {
+    if (!supportsProtocol(version)) {
+      throw new IllegalArgumentException("Clientbound player chat is not supported for " + version);
+    }
+    if (originalMessage.getProtocol() != PlayerChatProtocol.SESSION_CHAT) {
+      throw new IllegalArgumentException("Only modern session chat can be emitted as decorated "
+          + "clientbound player chat");
+    }
     this.sender = originalMessage.getSender().getUniqueId();
     this.signature = originalMessage.getSignature()
         .map(PlayerChatSignature::getSignature)
@@ -73,9 +81,15 @@ public final class ClientboundPlayerChatPacket implements MinecraftPacket {
     return unsignedContent.getComponent();
   }
 
+  public byte[] getSignature() {
+    return signature == null ? new byte[0] : signature.clone();
+  }
+
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    this.globalIndex = ProtocolUtils.readVarInt(buf);
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_21_5)) {
+      this.globalIndex = ProtocolUtils.readVarInt(buf);
+    }
     this.sender = ProtocolUtils.readUuid(buf);
     this.index = ProtocolUtils.readVarInt(buf);
     if (buf.readBoolean()) {
@@ -98,7 +112,12 @@ public final class ClientboundPlayerChatPacket implements MinecraftPacket {
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    ProtocolUtils.writeVarInt(buf, globalIndex);
+    if (!supportsProtocol(version)) {
+      throw new IllegalArgumentException("Clientbound player chat is not supported for " + version);
+    }
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_21_5)) {
+      ProtocolUtils.writeVarInt(buf, globalIndex);
+    }
     ProtocolUtils.writeUuid(buf, sender);
     ProtocolUtils.writeVarInt(buf, index);
     buf.writeBoolean(signature != null);
@@ -124,6 +143,9 @@ public final class ClientboundPlayerChatPacket implements MinecraftPacket {
 
   private static void readPackedLastSeenMessages(ByteBuf buf) {
     int entries = ProtocolUtils.readVarInt(buf);
+    if (entries < 0 || entries > LastSeenMessages.WINDOW_SIZE) {
+      throw new IllegalArgumentException("Invalid packed last-seen message count: " + entries);
+    }
     for (int i = 0; i < entries; i++) {
       int id = ProtocolUtils.readVarInt(buf) - 1;
       if (id == -1) {
@@ -171,4 +193,7 @@ public final class ClientboundPlayerChatPacket implements MinecraftPacket {
     buf.writeBoolean(false);
   }
 
+  public static boolean supportsProtocol(ProtocolVersion version) {
+    return version.noLessThan(ProtocolVersion.MINECRAFT_1_19_3);
+  }
 }

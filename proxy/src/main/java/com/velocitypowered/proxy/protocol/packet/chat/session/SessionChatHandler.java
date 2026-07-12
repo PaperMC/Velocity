@@ -62,9 +62,12 @@ public class SessionChatHandler implements ChatHandler<SessionPlayerChatPacket> 
             .thenApply(pme -> {
               PlayerChatEvent.ChatResult chatResult = pme.getResult();
               if (chatResult.getPlayerChatForwarding().isPresent()) {
-                DecoratedPlayerChatForwarder.forward(pme.getChatMessage(),
-                    chatResult.getPlayerChatForwarding().get(), logger);
-                return null;
+                DecoratedPlayerChatForwarder.Result forwardingResult =
+                    DecoratedPlayerChatForwarder.forward(pme.getChatMessage(),
+                        chatResult.getPlayerChatForwarding().get(), logger);
+                if (forwardingResult == DecoratedPlayerChatForwarder.Result.DELIVERED) {
+                  return null;
+                }
               }
 
               if (!chatResult.isAllowed()) {
