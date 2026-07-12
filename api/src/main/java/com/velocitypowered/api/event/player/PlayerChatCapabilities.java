@@ -110,4 +110,14 @@ public final class PlayerChatCapabilities {
   public static PlayerChatCapabilities signedPassthrough() {
     return new PlayerChatCapabilities(false, false, true, false, true, true);
   }
+
+  /**
+   * Capabilities for modern session chat where Velocity can preserve the signed body and attach
+   * server-controlled decoration in a recipient-side player-chat packet.
+   *
+   * @return decoratable signed-session capabilities
+   */
+  public static PlayerChatCapabilities signedSessionDecoratable() {
+    return new PlayerChatCapabilities(false, false, true, true, true, true);
+  }
 }

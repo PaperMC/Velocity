@@ -28,7 +28,10 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_14_2;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_15;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_16;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_16_2;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_21_5;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_21_9;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_26_1;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -38,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.packet.HandshakePacket;
 import com.velocitypowered.proxy.protocol.packet.StatusPingPacket;
+import com.velocitypowered.proxy.protocol.packet.chat.ClientboundPlayerChatPacket;
 import org.junit.jupiter.api.Test;
 
 class PacketRegistryTest {
@@ -61,6 +65,21 @@ class PacketRegistryTest {
 
     assertEquals(0, registry.getProtocolRegistry(MINECRAFT_1_12).getPacketId(packet),
         "Registry did not return the correct packet ID");
+  }
+
+  @Test
+  void modernClientboundPlayerChatPacketIdsAreRegistered() {
+    ClientboundPlayerChatPacket packet = new ClientboundPlayerChatPacket();
+
+    assertEquals(0x3A, StateRegistry.PLAY
+        .getProtocolRegistry(ProtocolUtils.Direction.CLIENTBOUND, MINECRAFT_1_21_5)
+        .getPacketId(packet));
+    assertEquals(0x3F, StateRegistry.PLAY
+        .getProtocolRegistry(ProtocolUtils.Direction.CLIENTBOUND, MINECRAFT_1_21_9)
+        .getPacketId(packet));
+    assertEquals(0x41, StateRegistry.PLAY
+        .getProtocolRegistry(ProtocolUtils.Direction.CLIENTBOUND, MINECRAFT_26_1)
+        .getPacketId(packet));
   }
 
   @Test

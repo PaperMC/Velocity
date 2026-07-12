@@ -31,16 +31,20 @@ import com.velocitypowered.api.event.player.PlayerChatMessage;
 import com.velocitypowered.api.event.player.PlayerChatProtocol;
 import com.velocitypowered.api.event.player.PlayerChatSignedState;
 import com.velocitypowered.api.event.player.PlayerChatValidationFlag;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.crypto.SignedMessage;
 import com.velocitypowered.api.proxy.player.ChatSession;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.crypto.SignaturePair;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedChatHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerChatPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChatPacket;
 import com.velocitypowered.proxy.tablist.InternalTabList;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import java.lang.reflect.Field;
 import java.security.KeyPairGenerator;
 import java.security.PublicKey;
@@ -188,6 +192,27 @@ class PlayerChatMessageInfoTest {
 
     assertArrayEquals(new byte[] {9, 10, 11}, message.getSignature().orElseThrow().getSignature());
     assertTrue(message.getChainInfo().orElseThrow().getAcknowledged().orElseThrow().get(1));
+  }
+
+  @Test
+  void clientboundDecoratedPlayerChatKeepsOriginalBodySeparateFromDecoration() throws Exception {
+    byte[] signature = new byte[256];
+    signature[0] = 9;
+    PlayerChatMessage message = PlayerChatMessageInfo.sessionMessage(playerWithSession(null,
+        new RemoteChatSession(SESSION_ID, key())), sessionPacket("Paper test", true, 7L,
+        signature));
+    ClientboundPlayerChatPacket packet = new ClientboundPlayerChatPacket(message,
+        Component.text("[G][server1] [Air]airgalaxie: Paper test"),
+        Component.text("airgalaxie"), ProtocolVersion.MINECRAFT_26_1);
+    ByteBuf buf = Unpooled.buffer();
+
+    packet.encode(buf, ProtocolUtils.Direction.CLIENTBOUND, ProtocolVersion.MINECRAFT_26_1);
+    ClientboundPlayerChatPacket decoded = new ClientboundPlayerChatPacket();
+    decoded.decode(buf, ProtocolUtils.Direction.CLIENTBOUND, ProtocolVersion.MINECRAFT_26_1);
+
+    assertEquals("Paper test", decoded.getMessage());
+    assertEquals(Component.text("[G][server1] [Air]airgalaxie: Paper test"),
+        decoded.getUnsignedContent());
   }
 
   @Test

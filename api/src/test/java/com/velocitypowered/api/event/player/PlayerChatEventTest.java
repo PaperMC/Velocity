@@ -10,6 +10,7 @@ package com.velocitypowered.api.event.player;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.velocitypowered.api.proxy.Player;
@@ -18,7 +19,10 @@ import java.lang.reflect.Proxy;
 import java.security.KeyPairGenerator;
 import java.security.PublicKey;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import net.kyori.adventure.text.Component;
 import org.junit.jupiter.api.Test;
 
 class PlayerChatEventTest {
@@ -48,10 +52,47 @@ class PlayerChatEventTest {
     assertEquals("original", event.getMessageInfo().getSignedMessage().orElseThrow().getMessage());
   }
 
+  @Test
+  void decoratedPlayerChatResultKeepsImmutableRecipients() {
+    Player first = dummyPlayer();
+    Player second = dummyPlayer();
+    List<Player> recipients = new ArrayList<>();
+    recipients.add(first);
+
+    PlayerChatEvent.ChatResult result = PlayerChatEvent.ChatResult.decoratedPlayerChat(
+        Component.text("[G] player: original"), recipients);
+    recipients.add(second);
+
+    assertTrue(result.isAllowed());
+    assertEquals(Component.text("[G] player: original"),
+        result.getPlayerChatForwarding().orElseThrow().getDecoratedMessage());
+    assertEquals(List.of(first), result.getPlayerChatForwarding().orElseThrow().getRecipients());
+    assertThrows(UnsupportedOperationException.class,
+        () -> result.getPlayerChatForwarding().orElseThrow().getRecipients().add(second));
+  }
+
+  @Test
+  void decoratedPlayerChatResultDoesNotRewriteCompatibilityMessage() {
+    PlayerChatEvent event = new PlayerChatEvent(dummyPlayer(), "original");
+
+    event.setResult(PlayerChatEvent.ChatResult.decoratedPlayerChat(
+        Component.text("[G] player: original"), List.of(event.getPlayer())));
+
+    assertEquals("original", event.getMessage());
+    assertFalse(event.getResult().getMessage().isPresent());
+    assertTrue(event.getResult().getPlayerChatForwarding().isPresent());
+  }
+
   private static Player dummyPlayer() {
     return (Player) Proxy.newProxyInstance(Player.class.getClassLoader(), new Class<?>[] {Player.class},
         (proxy, method, args) -> {
           if (method.getName().equals("toString")) {
+            return "dummy";
+          }
+          if (method.getName().equals("getUniqueId")) {
+            return new UUID(0, 1);
+          }
+          if (method.getName().equals("getUsername")) {
             return "dummy";
           }
           throw new UnsupportedOperationException(method.getName());

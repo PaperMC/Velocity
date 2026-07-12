@@ -26,6 +26,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
+import com.velocitypowered.proxy.protocol.packet.chat.DecoratedPlayerChatForwarder;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatMessageInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -60,6 +61,12 @@ public class SessionChatHandler implements ChatHandler<SessionPlayerChatPacket> 
         newLastSeenMessages -> eventFuture
             .thenApply(pme -> {
               PlayerChatEvent.ChatResult chatResult = pme.getResult();
+              if (chatResult.getPlayerChatForwarding().isPresent()) {
+                DecoratedPlayerChatForwarder.forward(pme.getChatMessage(),
+                    chatResult.getPlayerChatForwarding().get(), logger);
+                return null;
+              }
+
               if (!chatResult.isAllowed()) {
                 if (packet.isSigned()) {
                   invalidCancel(logger, player);

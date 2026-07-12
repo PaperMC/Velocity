@@ -97,6 +97,7 @@ import com.velocitypowered.proxy.protocol.packet.TabCompleteResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.TransferPacket;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfoPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatAcknowledgementPacket;
+import com.velocitypowered.proxy.protocol.packet.chat.ClientboundPlayerChatPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatCompletionPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.SystemChatPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerChatPacket;
@@ -746,6 +747,10 @@ public enum StateRegistry {
           map(0x3E, MINECRAFT_1_21_5, false),
           map(0x43, MINECRAFT_1_21_9, false),
           map(0x45, MINECRAFT_26_1, false));
+      clientbound.register(ClientboundPlayerChatPacket.class, ClientboundPlayerChatPacket::new,
+          map(0x3A, MINECRAFT_1_21_5, true),
+          map(0x3F, MINECRAFT_1_21_9, true),
+          map(0x41, MINECRAFT_26_1, true));
       clientbound.register(
           UpsertPlayerInfoPacket.class,
           UpsertPlayerInfoPacket::new,

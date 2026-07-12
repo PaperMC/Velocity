@@ -14,9 +14,11 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.crypto.SignedMessage;
 import java.security.PublicKey;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.UUID;
+import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -147,19 +149,37 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
    */
   public static final class ChatResult implements ResultedEvent.Result {
 
-    private static final ChatResult ALLOWED = new ChatResult(true, null);
-    private static final ChatResult DENIED = new ChatResult(false, null);
+    private static final ChatResult ALLOWED = new ChatResult(true, null, null);
+    private static final ChatResult DENIED = new ChatResult(false, null, null);
 
     private @Nullable String message;
+    private final @Nullable PlayerChatForwarding forwarding;
     private final boolean status;
 
-    private ChatResult(boolean status, @Nullable String message) {
+    private ChatResult(boolean status, @Nullable String message,
+        @Nullable PlayerChatForwarding forwarding) {
       this.status = status;
       this.message = message;
+      this.forwarding = forwarding;
     }
 
     public Optional<String> getMessage() {
       return Optional.ofNullable(message);
+    }
+
+    /**
+     * Returns the decorated player-chat forwarding request, if this result asks Velocity to emit
+     * the original player-chat message directly to selected recipients.
+     *
+     * <p>The decorated message is not a signed body rewrite. Velocity uses it as
+     * server-controlled unsigned content around the immutable original message, where the current
+     * client protocol supports that operation.</p>
+     *
+     * @return decorated player-chat forwarding request
+     * @since 3.6.0
+     */
+    public Optional<PlayerChatForwarding> getPlayerChatForwarding() {
+      return Optional.ofNullable(forwarding);
     }
 
     @Override
@@ -198,7 +218,25 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
      */
     public static ChatResult message(@NonNull String message) {
       Preconditions.checkNotNull(message, "message");
-      return new ChatResult(true, message);
+      return new ChatResult(true, message, null);
+    }
+
+    /**
+     * Allows Velocity to emit the original player-chat message directly to selected recipients
+     * with server-controlled decoration and suppress the normal backend forwarding path.
+     *
+     * <p>The original client-submitted body remains unchanged. This result is only usable where
+     * Velocity has a protocol implementation for recipient-side player-chat emission; unsupported
+     * recipients are not silently downgraded to system chat.</p>
+     *
+     * @param decoratedMessage full decorated message to render
+     * @param recipients intended recipients
+     * @return a decorated player-chat forwarding result
+     * @since 3.6.0
+     */
+    public static ChatResult decoratedPlayerChat(@NonNull Component decoratedMessage,
+        @NonNull Collection<? extends Player> recipients) {
+      return new ChatResult(true, null, new PlayerChatForwarding(decoratedMessage, recipients));
     }
   }
 

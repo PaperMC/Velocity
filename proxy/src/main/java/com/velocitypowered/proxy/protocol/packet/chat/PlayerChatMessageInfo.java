@@ -70,7 +70,7 @@ public final class PlayerChatMessageInfo {
     if (chatSession.isEmpty() || chatSession.get().getSessionId() == null) {
       return new PlayerChatMessage(player, packet.getMessage(), PlayerChatProtocol.SESSION_CHAT,
           PlayerChatSignedState.SIGNED, signature, null, null, chainInfo, flags,
-          PlayerChatCapabilities.signedPassthrough());
+          PlayerChatCapabilities.signedSessionDecoratable());
     }
 
     ChatSession session = chatSession.get();
@@ -78,7 +78,7 @@ public final class PlayerChatMessageInfo {
     if (key == null) {
       return new PlayerChatMessage(player, packet.getMessage(), PlayerChatProtocol.SESSION_CHAT,
           PlayerChatSignedState.SIGNED, signature, null, null, chainInfo, flags,
-          PlayerChatCapabilities.signedPassthrough());
+          PlayerChatCapabilities.signedSessionDecoratable());
     }
     PlayerChatSessionInfo sessionInfo = new PlayerChatSessionInfo(session.getSessionId(),
         key.getSignedPublicKey(), key.getExpiryTemporal(), key.getSignatureHolder());
@@ -90,7 +90,7 @@ public final class PlayerChatMessageInfo {
 
     return new PlayerChatMessage(player, packet.getMessage(), PlayerChatProtocol.SESSION_CHAT,
         PlayerChatSignedState.SESSION_SIGNED, signature, null, sessionInfo, chainInfo, flags,
-        PlayerChatCapabilities.signedPassthrough());
+        PlayerChatCapabilities.signedSessionDecoratable());
   }
 
   public static PlayerChatEvent.MessageInfo fromKeyedPacket(ConnectedPlayer player,
