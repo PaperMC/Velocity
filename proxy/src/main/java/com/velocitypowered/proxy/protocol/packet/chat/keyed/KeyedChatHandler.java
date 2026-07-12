@@ -70,7 +70,7 @@ public class KeyedChatHandler implements
     ChatQueue chatQueue = this.player.getChatQueue();
     EventManager eventManager = this.server.getEventManager();
     PlayerChatEvent toSend = new PlayerChatEvent(player, packet.getMessage(),
-        PlayerChatMessageInfo.fromKeyedPacket(player, packet));
+        PlayerChatMessageInfo.keyedMessage(player, packet));
     CompletableFuture<PlayerChatEvent> future = eventManager.fire(toSend);
 
     CompletableFuture<MinecraftPacket> chatFuture;

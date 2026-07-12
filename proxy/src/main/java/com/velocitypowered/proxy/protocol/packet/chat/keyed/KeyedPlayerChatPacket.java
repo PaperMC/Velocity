@@ -81,6 +81,14 @@ public class KeyedPlayerChatPacket implements MinecraftPacket {
     return salt == null ? EncryptionUtils.EMPTY : salt.clone();
   }
 
+  public SignaturePair[] getPreviousMessages() {
+    return previousMessages.clone();
+  }
+
+  public @Nullable SignaturePair getLastMessage() {
+    return lastMessage;
+  }
+
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
       ProtocolVersion protocolVersion) {

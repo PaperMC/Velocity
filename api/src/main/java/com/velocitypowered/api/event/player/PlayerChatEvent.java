@@ -12,7 +12,11 @@ import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.annotation.AwaitingEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.crypto.SignedMessage;
+import java.security.PublicKey;
+import java.time.Instant;
+import java.util.EnumSet;
 import java.util.Optional;
+import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -26,6 +30,7 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
   private final Player player;
   private final String message;
   private final MessageInfo messageInfo;
+  private final PlayerChatMessage chatMessage;
   private ChatResult result;
 
   /**
@@ -50,6 +55,23 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
     this.player = Preconditions.checkNotNull(player, "player");
     this.message = Preconditions.checkNotNull(message, "message");
     this.messageInfo = Preconditions.checkNotNull(messageInfo, "messageInfo");
+    this.chatMessage = messageInfo.toChatMessage(player, message);
+    this.result = ChatResult.allowed();
+  }
+
+  /**
+   * Constructs a PlayerChatEvent from the complete original chat-message model.
+   *
+   * @param player the player sending the message
+   * @param message the compatibility plaintext view of the message being sent
+   * @param chatMessage information about the original client-submitted message
+   * @since 3.6.0
+   */
+  public PlayerChatEvent(Player player, String message, PlayerChatMessage chatMessage) {
+    this.player = Preconditions.checkNotNull(player, "player");
+    this.message = Preconditions.checkNotNull(message, "message");
+    this.chatMessage = Preconditions.checkNotNull(chatMessage, "chatMessage");
+    this.messageInfo = MessageInfo.fromChatMessage(chatMessage);
     this.result = ChatResult.allowed();
   }
 
@@ -77,6 +99,21 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
    */
   public MessageInfo getMessageInfo() {
     return messageInfo;
+  }
+
+  /**
+   * Returns the complete immutable representation of the original client-submitted Minecraft
+   * player-chat message.
+   *
+   * <p>The original message body and protocol metadata do not change when plugins alter the
+   * {@link ChatResult}. The returned object describes Minecraft protocol data only and does not
+   * imply a plugin-specific trust or moderation model.</p>
+   *
+   * @return the original player-chat message
+   * @since 3.6.0
+   */
+  public PlayerChatMessage getChatMessage() {
+    return chatMessage;
   }
 
   @Override
@@ -181,10 +218,17 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
 
     private final SignedState signedState;
     private final @Nullable SignedMessage signedMessage;
+    private final @Nullable PlayerChatMessage chatMessage;
 
     private MessageInfo(SignedState signedState, @Nullable SignedMessage signedMessage) {
+      this(signedState, signedMessage, null);
+    }
+
+    private MessageInfo(SignedState signedState, @Nullable SignedMessage signedMessage,
+        @Nullable PlayerChatMessage chatMessage) {
       this.signedState = Preconditions.checkNotNull(signedState, "signedState");
       this.signedMessage = signedMessage;
+      this.chatMessage = chatMessage;
     }
 
     /**
@@ -252,6 +296,79 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
     public static MessageInfo legacy() {
       return LEGACY;
     }
+
+    /**
+     * Creates a compatibility {@link MessageInfo} view from a complete chat message.
+     *
+     * @param chatMessage the complete chat message
+     * @return the compatibility view
+     * @since 3.6.0
+     */
+    public static MessageInfo fromChatMessage(PlayerChatMessage chatMessage) {
+      SignedState state;
+      switch (chatMessage.getSignedState()) {
+        case LEGACY:
+          state = SignedState.LEGACY;
+          break;
+        case UNSIGNED:
+          state = SignedState.UNSIGNED;
+          break;
+        default:
+          state = SignedState.SIGNED;
+          break;
+      }
+      return new MessageInfo(state, signedMessageView(chatMessage).orElse(null), chatMessage);
+    }
+
+    private static Optional<SignedMessage> signedMessageView(PlayerChatMessage chatMessage) {
+      Optional<PlayerChatSignature> signature = chatMessage.getSignature();
+      if (signature.isEmpty()) {
+        return Optional.empty();
+      }
+      if (chatMessage.getKeyInfo().isPresent()) {
+        PlayerChatKeyInfo keyInfo = chatMessage.getKeyInfo().get();
+        return Optional.of(new CompatSignedMessage(chatMessage.getMessage(),
+            keyInfo.getPublicKey(), chatMessage.getSender().getUniqueId(), keyInfo.getKeyExpiry(),
+            signature.get()));
+      }
+      if (chatMessage.getSessionInfo().isPresent()) {
+        PlayerChatSessionInfo sessionInfo = chatMessage.getSessionInfo().get();
+        return Optional.of(new CompatSignedMessage(chatMessage.getMessage(),
+            sessionInfo.getPublicKey(), chatMessage.getSender().getUniqueId(),
+            sessionInfo.getKeyExpiry(), signature.get()));
+      }
+      return Optional.empty();
+    }
+
+    private PlayerChatMessage toChatMessage(Player player, String message) {
+      if (chatMessage != null) {
+        return chatMessage;
+      }
+      if (signedState == SignedState.LEGACY) {
+        return PlayerChatMessage.legacy(player, message);
+      }
+      if (signedState == SignedState.UNSIGNED) {
+        return PlayerChatMessage.unsigned(player, message, PlayerChatProtocol.KEYED_CHAT, null);
+      }
+      PlayerChatSignature signature = null;
+      PlayerChatKeyInfo keyInfo = null;
+      if (signedMessage != null && signedMessage.getSignature() != null) {
+        signature = new PlayerChatSignature(signedMessage.getSignature(), null, null,
+            signedMessage.getSalt(), signedMessage.isPreviewSigned());
+        keyInfo = new PlayerChatKeyInfo(signedMessage.getSigner(),
+            signedMessage.getExpiryTemporal(), signedMessage.getSignerUuid());
+      }
+      EnumSet<PlayerChatValidationFlag> flags = EnumSet.of(
+          PlayerChatValidationFlag.SIGNATURE_PRESENT,
+          PlayerChatValidationFlag.VALIDATION_UNAVAILABLE);
+      if (keyInfo != null) {
+        flags.add(PlayerChatValidationFlag.KEY_AVAILABLE);
+        flags.add(PlayerChatValidationFlag.STRUCTURALLY_COMPLETE);
+      }
+      return new PlayerChatMessage(player, message, PlayerChatProtocol.KEYED_CHAT,
+          keyInfo == null ? PlayerChatSignedState.SIGNED : PlayerChatSignedState.KEYED_SIGNED,
+          signature, keyInfo, null, null, flags, PlayerChatCapabilities.signedPassthrough());
+    }
   }
 
   /**
@@ -272,5 +389,62 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
      * The protocol version does not provide modern signed-chat metadata.
      */
     LEGACY
+  }
+
+  private static final class CompatSignedMessage implements SignedMessage {
+
+    private final String message;
+    private final PublicKey signer;
+    private final UUID signerUuid;
+    private final Instant expiryTemporal;
+    private final byte[] signature;
+    private final @Nullable byte[] salt;
+    private final boolean previewSigned;
+
+    private CompatSignedMessage(String message, PublicKey signer, UUID signerUuid,
+        Instant expiryTemporal, PlayerChatSignature signature) {
+      this.message = message;
+      this.signer = signer;
+      this.signerUuid = signerUuid;
+      this.expiryTemporal = expiryTemporal;
+      this.signature = signature.getSignature();
+      this.salt = signature.getSaltBytes().orElse(null);
+      this.previewSigned = signature.isPreviewSigned();
+    }
+
+    @Override
+    public String getMessage() {
+      return message;
+    }
+
+    @Override
+    public UUID getSignerUuid() {
+      return signerUuid;
+    }
+
+    @Override
+    public boolean isPreviewSigned() {
+      return previewSigned;
+    }
+
+    @Override
+    public PublicKey getSigner() {
+      return signer;
+    }
+
+    @Override
+    public Instant getExpiryTemporal() {
+      return expiryTemporal;
+    }
+
+    @Override
+    public byte[] getSignature() {
+      return signature.clone();
+    }
+
+    @Override
+    public @Nullable byte[] getSalt() {
+      return salt == null ? null : salt.clone();
+    }
   }
 }

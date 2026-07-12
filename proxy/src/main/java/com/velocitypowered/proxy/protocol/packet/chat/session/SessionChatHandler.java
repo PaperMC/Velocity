@@ -54,7 +54,7 @@ public class SessionChatHandler implements ChatHandler<SessionPlayerChatPacket> 
     ChatQueue chatQueue = this.player.getChatQueue();
     EventManager eventManager = this.server.getEventManager();
     PlayerChatEvent toSend = new PlayerChatEvent(player, packet.getMessage(),
-        PlayerChatMessageInfo.fromSessionPacket(player, packet));
+        PlayerChatMessageInfo.sessionMessage(player, packet));
     CompletableFuture<PlayerChatEvent> eventFuture = eventManager.fire(toSend);
     chatQueue.queuePacket(
         newLastSeenMessages -> eventFuture

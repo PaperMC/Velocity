@@ -20,23 +20,33 @@ package com.velocitypowered.proxy.protocol.packet.chat;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.velocitypowered.api.event.player.PlayerChatEvent;
+import com.velocitypowered.api.event.player.PlayerChatMessage;
+import com.velocitypowered.api.event.player.PlayerChatProtocol;
+import com.velocitypowered.api.event.player.PlayerChatSignedState;
+import com.velocitypowered.api.event.player.PlayerChatValidationFlag;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.crypto.SignedMessage;
+import com.velocitypowered.api.proxy.player.ChatSession;
+import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
+import com.velocitypowered.proxy.crypto.SignaturePair;
 import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedChatHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerChatPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChatPacket;
+import com.velocitypowered.proxy.tablist.InternalTabList;
 import java.lang.reflect.Field;
 import java.security.KeyPairGenerator;
 import java.security.PublicKey;
 import java.time.Instant;
+import java.util.BitSet;
+import java.util.Optional;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.Logger;
@@ -45,79 +55,150 @@ import org.junit.jupiter.api.Test;
 class PlayerChatMessageInfoTest {
 
   private static final UUID PLAYER_ID = new UUID(0, 42);
+  private static final UUID SESSION_ID = new UUID(1, 99);
   private static final Instant EXPIRY = Instant.ofEpochMilli(123456789L);
 
   @Test
-  void sessionSignedChatPreservesOriginalSignedMessage() throws Exception {
-    byte[] signature = new byte[] {1, 2, 3};
-    SessionPlayerChatPacket packet = sessionPacket("signed body", true, 7L, signature);
-    PlayerChatEvent.MessageInfo info = PlayerChatMessageInfo.fromSessionPacket(player(), packet);
+  void legacyChatHasNoFabricatedSessionOrSignature() {
+    ConnectedPlayer player = playerWithSession(null, null);
+    PlayerChatMessage message = PlayerChatMessageInfo.legacyMessage(player, "legacy body");
 
-    assertEquals(PlayerChatEvent.SignedState.SIGNED, info.getSignedState());
-    SignedMessage signedMessage = info.getSignedMessage().orElseThrow();
-    assertEquals("signed body", signedMessage.getMessage());
-    assertEquals(PLAYER_ID, signedMessage.getSignerUuid());
-    assertEquals(EXPIRY, signedMessage.getExpiryTemporal());
-    assertArrayEquals(signature, signedMessage.getSignature());
-    assertArrayEquals(packet.getSaltBytes(), signedMessage.getSalt());
+    assertEquals(PlayerChatProtocol.LEGACY_UNSIGNED, message.getProtocol());
+    assertEquals(PlayerChatSignedState.LEGACY, message.getSignedState());
+    assertFalse(message.getSignature().isPresent());
+    assertFalse(message.getSessionInfo().isPresent());
   }
 
   @Test
-  void keyedSignedChatPreservesSignatureSaltAndPreviewFlag() throws Exception {
+  void modernUnsignedChatKeepsBodyWithoutSignedMessage() throws Exception {
+    SessionPlayerChatPacket packet = sessionPacket("unsigned body", false, 0L, new byte[0]);
+    PlayerChatMessage message = PlayerChatMessageInfo.sessionMessage(playerWithSession(null, null),
+        packet);
+
+    assertEquals(PlayerChatProtocol.SESSION_CHAT, message.getProtocol());
+    assertEquals(PlayerChatSignedState.UNSIGNED, message.getSignedState());
+    assertEquals("unsigned body", message.getMessage());
+    assertFalse(message.getSignature().isPresent());
+    assertFalse(message.getSessionInfo().isPresent());
+  }
+
+  @Test
+  void keyedSignedChatPreservesLegacyKeySignatureExpiryAndChain() throws Exception {
     byte[] signature = new byte[] {4, 5, 6};
     byte[] salt = new byte[] {7, 8};
-    KeyedPlayerChatPacket packet = keyedPacket("keyed body", false, EXPIRY, signature, salt, true);
-    PlayerChatEvent.MessageInfo info = PlayerChatMessageInfo.fromKeyedPacket(player(), packet);
+    SignaturePair previous = new SignaturePair(new UUID(2, 3), new byte[] {9});
+    KeyedPlayerChatPacket packet = keyedPacket("keyed body", false, EXPIRY, signature, salt,
+        true, new SignaturePair[] {previous}, null);
+    PlayerChatMessage message = PlayerChatMessageInfo.keyedMessage(playerWithSession(key(), null),
+        packet);
 
-    assertEquals(PlayerChatEvent.SignedState.SIGNED, info.getSignedState());
-    SignedMessage signedMessage = info.getSignedMessage().orElseThrow();
-    assertEquals("keyed body", signedMessage.getMessage());
-    assertArrayEquals(signature, signedMessage.getSignature());
-    assertArrayEquals(salt, signedMessage.getSalt());
-    assertTrue(signedMessage.isPreviewSigned());
+    assertEquals(PlayerChatSignedState.KEYED_SIGNED, message.getSignedState());
+    assertEquals(EXPIRY, message.getKeyInfo().orElseThrow().getKeyExpiry());
+    assertArrayEquals(signature, message.getSignature().orElseThrow().getSignature());
+    assertArrayEquals(salt, message.getSignature().orElseThrow().getSaltBytes().orElseThrow());
+    assertTrue(message.getSignature().orElseThrow().isPreviewSigned());
+    assertEquals(previous.getSigner(), message.getChainInfo().orElseThrow()
+        .getPreviousMessages().get(0).getSigner());
+    assertFalse(message.hasValidationFlag(PlayerChatValidationFlag.SIGNATURE_VALIDATED));
   }
 
   @Test
-  void unsignedModernChatDoesNotExposeSignedMessage() throws Exception {
-    SessionPlayerChatPacket packet = sessionPacket("unsigned body", false, 0L, new byte[0]);
-    PlayerChatEvent.MessageInfo info = PlayerChatMessageInfo.fromSessionPacket(player(), packet);
-
-    assertEquals(PlayerChatEvent.SignedState.UNSIGNED, info.getSignedState());
-    assertFalse(info.getSignedMessage().isPresent());
-  }
-
-  @Test
-  void signedChatWithoutKeyStillReportsSignedState() throws Exception {
-    ConnectedPlayer player = mock(ConnectedPlayer.class);
-    SessionPlayerChatPacket packet = sessionPacket("signed body", true, 7L, new byte[] {1});
-
-    PlayerChatEvent.MessageInfo info = PlayerChatMessageInfo.fromSessionPacket(player, packet);
-
-    assertEquals(PlayerChatEvent.SignedState.SIGNED, info.getSignedState());
-    assertFalse(info.getSignedMessage().isPresent());
-  }
-
-  @Test
-  void legacyChatHasNoFabricatedSignedMessage() {
-    PlayerChatEvent.MessageInfo info = PlayerChatEvent.MessageInfo.legacy();
-
-    assertEquals(PlayerChatEvent.SignedState.LEGACY, info.getSignedState());
-    assertFalse(info.getSignedMessage().isPresent());
-  }
-
-  @Test
-  void signedMessageDefensivelyCopiesMutableSignatureData() throws Exception {
-    byte[] signature = new byte[] {9, 10, 11};
+  void sessionSignedChatUsesRemoteChatSessionAndPreservesPacketFields() throws Exception {
+    byte[] signature = new byte[] {1, 2, 3};
+    BitSet acknowledged = new BitSet();
+    acknowledged.set(2);
     SessionPlayerChatPacket packet = sessionPacket("signed body", true, 7L, signature);
-    SignedMessage signedMessage = PlayerChatMessageInfo.fromSessionPacket(player(), packet)
-        .getSignedMessage()
-        .orElseThrow();
+    set(packet, "lastSeenMessages", new LastSeenMessages(4, acknowledged, (byte) 8, true));
+    IdentifiedKey key = key();
+    PlayerChatMessage message = PlayerChatMessageInfo.sessionMessage(playerWithSession(null,
+        new RemoteChatSession(SESSION_ID, key)), packet);
+
+    assertEquals(PlayerChatSignedState.SESSION_SIGNED, message.getSignedState());
+    assertEquals("signed body", message.getMessage());
+    assertEquals(SESSION_ID, message.getSessionInfo().orElseThrow().getSessionId());
+    assertSame(key.getSignedPublicKey(), message.getSessionInfo().orElseThrow().getPublicKey());
+    assertArrayEquals(signature, message.getSignature().orElseThrow().getSignature());
+    assertEquals(Instant.EPOCH, message.getSignature().orElseThrow().getTimestamp().orElseThrow());
+    assertEquals(7L, message.getSignature().orElseThrow().getSalt().orElseThrow());
+    assertEquals(4, message.getChainInfo().orElseThrow().getLastSeenOffset().orElseThrow());
+    assertTrue(message.getChainInfo().orElseThrow().getAcknowledged().orElseThrow().get(2));
+    assertEquals((byte) 8, message.getChainInfo().orElseThrow().getChecksum().orElseThrow());
+    assertTrue(message.hasValidationFlag(PlayerChatValidationFlag.KEY_AVAILABLE));
+    assertTrue(message.hasValidationFlag(PlayerChatValidationFlag.SESSION_MATCHED));
+    assertFalse(message.hasValidationFlag(PlayerChatValidationFlag.SIGNATURE_VALIDATED));
+  }
+
+  @Test
+  void signedSessionPacketWithoutSessionDoesNotFabricateCompleteMetadata() throws Exception {
+    SessionPlayerChatPacket packet = sessionPacket("signed body", true, 7L, new byte[] {1});
+    PlayerChatMessage message = PlayerChatMessageInfo.sessionMessage(playerWithSession(null, null),
+        packet);
+
+    assertEquals(PlayerChatSignedState.SIGNED, message.getSignedState());
+    assertTrue(message.getSignature().isPresent());
+    assertFalse(message.getSessionInfo().isPresent());
+    assertFalse(message.hasValidationFlag(PlayerChatValidationFlag.KEY_AVAILABLE));
+    assertTrue(message.hasValidationFlag(PlayerChatValidationFlag.VALIDATION_UNAVAILABLE));
+  }
+
+  @Test
+  void sessionReplacementUsesNewestSession() throws Exception {
+    IdentifiedKey oldKey = key();
+    IdentifiedKey newKey = key();
+    InternalTabList tabList = tabList(new RemoteChatSession(SESSION_ID, oldKey));
+    ConnectedPlayer player = playerWithTabList(null, tabList);
+
+    PlayerChatMessage first = PlayerChatMessageInfo.sessionMessage(player,
+        sessionPacket("first", true, 1L, new byte[] {1}));
+    Optional<TabListEntry> newEntry = Optional.of(entry(new RemoteChatSession(new UUID(4, 5),
+        newKey)));
+    when(tabList.getEntry(PLAYER_ID)).thenReturn(newEntry);
+    PlayerChatMessage second = PlayerChatMessageInfo.sessionMessage(player,
+        sessionPacket("second", true, 2L, new byte[] {2}));
+
+    assertSame(oldKey.getSignedPublicKey(), first.getSessionInfo().orElseThrow().getPublicKey());
+    assertSame(newKey.getSignedPublicKey(), second.getSessionInfo().orElseThrow().getPublicKey());
+    assertEquals(new UUID(4, 5), second.getSessionInfo().orElseThrow().getSessionId());
+  }
+
+  @Test
+  void serverSwitchKeepsSenderIdentityAndUsesCurrentSessionAssociation() throws Exception {
+    ConnectedPlayer player = playerWithSession(null, new RemoteChatSession(SESSION_ID, key()));
+    PlayerChatMessage message = PlayerChatMessageInfo.sessionMessage(player,
+        sessionPacket("body", true, 7L, new byte[] {1}));
+
+    assertSame(player, message.getSender());
+    assertEquals(PLAYER_ID, message.getSender().getUniqueId());
+    assertEquals(SESSION_ID, message.getSessionInfo().orElseThrow().getSessionId());
+  }
+
+  @Test
+  void mutableSignatureAndChainDataCannotBeMutatedThroughApi() throws Exception {
+    byte[] signature = new byte[] {9, 10, 11};
+    BitSet acknowledged = new BitSet();
+    acknowledged.set(1);
+    SessionPlayerChatPacket packet = sessionPacket("signed body", true, 7L, signature);
+    set(packet, "lastSeenMessages", new LastSeenMessages(0, acknowledged, (byte) 0, false));
+    PlayerChatMessage message = PlayerChatMessageInfo.sessionMessage(playerWithSession(null,
+        new RemoteChatSession(SESSION_ID, key())), packet);
 
     signature[0] = 99;
-    byte[] exposed = signedMessage.getSignature();
-    exposed[1] = 88;
+    message.getSignature().orElseThrow().getSignature()[1] = 88;
+    message.getChainInfo().orElseThrow().getAcknowledged().orElseThrow().clear(1);
 
-    assertArrayEquals(new byte[] {9, 10, 11}, signedMessage.getSignature());
+    assertArrayEquals(new byte[] {9, 10, 11}, message.getSignature().orElseThrow().getSignature());
+    assertTrue(message.getChainInfo().orElseThrow().getAcknowledged().orElseThrow().get(1));
+  }
+
+  @Test
+  void compatibilitySignedMessageViewExistsWhenMetadataIsComplete() throws Exception {
+    SessionPlayerChatPacket packet = sessionPacket("signed body", true, 7L, new byte[] {1});
+    SignedMessage signedMessage = PlayerChatMessageInfo.fromSessionPacket(playerWithSession(null,
+        new RemoteChatSession(SESSION_ID, key())), packet).getSignedMessage().orElseThrow();
+
+    assertEquals("signed body", signedMessage.getMessage());
+    assertEquals(PLAYER_ID, signedMessage.getSignerUuid());
+    assertArrayEquals(packet.getSaltBytes(), signedMessage.getSalt());
   }
 
   @Test
@@ -133,16 +214,41 @@ class PlayerChatMessageInfoTest {
         + "Contact your network administrator."));
   }
 
-  private static ConnectedPlayer player() throws Exception {
+  private static ConnectedPlayer playerWithSession(IdentifiedKey identifiedKey,
+      ChatSession chatSession) {
+    return playerWithTabList(identifiedKey, tabList(chatSession));
+  }
+
+  private static ConnectedPlayer playerWithTabList(IdentifiedKey identifiedKey,
+      InternalTabList tabList) {
     ConnectedPlayer player = mock(ConnectedPlayer.class);
+    when(player.getIdentifiedKey()).thenReturn(identifiedKey);
+    when(player.getUniqueId()).thenReturn(PLAYER_ID);
+    when(player.getTabList()).thenReturn(tabList);
+    return player;
+  }
+
+  private static InternalTabList tabList(ChatSession chatSession) {
+    InternalTabList tabList = mock(InternalTabList.class);
+    Optional<TabListEntry> entry = chatSession == null ? Optional.empty() : Optional.of(entry(chatSession));
+    when(tabList.getEntry(PLAYER_ID)).thenReturn(entry);
+    return tabList;
+  }
+
+  private static TabListEntry entry(ChatSession chatSession) {
+    TabListEntry entry = mock(TabListEntry.class);
+    when(entry.getChatSession()).thenReturn(chatSession);
+    return entry;
+  }
+
+  private static IdentifiedKey key() throws Exception {
     IdentifiedKey key = mock(IdentifiedKey.class);
     PublicKey publicKey = KeyPairGenerator.getInstance("RSA").generateKeyPair().getPublic();
 
     when(key.getSignedPublicKey()).thenReturn(publicKey);
     when(key.getExpiryTemporal()).thenReturn(EXPIRY);
-    when(player.getIdentifiedKey()).thenReturn(key);
-    when(player.getUniqueId()).thenReturn(PLAYER_ID);
-    return player;
+    when(key.getSignatureHolder()).thenReturn(PLAYER_ID);
+    return key;
   }
 
   private static SessionPlayerChatPacket sessionPacket(String message, boolean signed, long salt,
@@ -153,11 +259,13 @@ class PlayerChatMessageInfoTest {
     set(packet, "salt", salt);
     set(packet, "signature", signature);
     set(packet, "timestamp", Instant.EPOCH);
+    set(packet, "lastSeenMessages", new LastSeenMessages());
     return packet;
   }
 
   private static KeyedPlayerChatPacket keyedPacket(String message, boolean unsigned,
-      Instant expiry, byte[] signature, byte[] salt, boolean signedPreview) throws Exception {
+      Instant expiry, byte[] signature, byte[] salt, boolean signedPreview,
+      SignaturePair[] previousMessages, SignaturePair lastMessage) throws Exception {
     KeyedPlayerChatPacket packet = new KeyedPlayerChatPacket();
     set(packet, "message", message);
     set(packet, "unsigned", unsigned);
@@ -165,6 +273,8 @@ class PlayerChatMessageInfoTest {
     set(packet, "signature", signature);
     set(packet, "salt", salt);
     set(packet, "signedPreview", signedPreview);
+    set(packet, "previousMessages", previousMessages);
+    set(packet, "lastMessage", lastMessage);
     return packet;
   }
 
