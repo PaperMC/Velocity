@@ -19,6 +19,7 @@ package com.velocitypowered.proxy;
 
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.proxy.util.AddressUtil;
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
@@ -43,6 +44,7 @@ public final class ProxyOptions {
   private final @Nullable Boolean haproxy;
   private final boolean ignoreConfigServers;
   private final List<ServerInfo> servers;
+  private final List<File> extraPluginDirectories;
 
   ProxyOptions(final String[] args) {
     final OptionParser parser = new OptionParser();
@@ -64,6 +66,13 @@ public final class ProxyOptions {
     final OptionSpec<Void> ignoreConfigServers = parser.accepts("ignore-config-servers",
             "Skip registering servers from the config file. "
                     + "Useful in dynamic setups or with the --add-server flag.");
+    final OptionSpec<File> extraPluginDirectories = parser.acceptsAll(List.of("add-plugin-dir", "add-extra-plugin-dir"),
+            "Specify paths to extra plugin directories to be loaded in addition to the plugins folder. "
+                    + "This argument can be specified multiple times, once for each extra plugin dir path.")
+            .withRequiredArg()
+            .ofType(File.class)
+            .defaultsTo(new File[] {})
+            .describedAs("Plugin directory");
     final OptionSet set = parser.parse(args);
 
     this.help = set.has(help);
@@ -71,6 +80,7 @@ public final class ProxyOptions {
     this.haproxy = haproxy.value(set);
     this.servers = servers.values(set);
     this.ignoreConfigServers = set.has(ignoreConfigServers);
+    this.extraPluginDirectories = extraPluginDirectories.values(set);
 
     if (this.help) {
       try {
@@ -99,6 +109,10 @@ public final class ProxyOptions {
 
   public List<ServerInfo> getServers() {
     return this.servers;
+  }
+
+  public List<File> getExtraPluginDirectories() {
+    return this.extraPluginDirectories;
   }
 
   private static class ServerInfoConverter implements ValueConverter<ServerInfo> {
