@@ -73,6 +73,14 @@ public class KeyedPlayerChatPacket implements MinecraftPacket {
     return signedPreview;
   }
 
+  public byte[] getSignature() {
+    return signature == null ? EncryptionUtils.EMPTY : signature.clone();
+  }
+
+  public byte[] getSalt() {
+    return salt == null ? EncryptionUtils.EMPTY : salt.clone();
+  }
+
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction,
       ProtocolVersion protocolVersion) {

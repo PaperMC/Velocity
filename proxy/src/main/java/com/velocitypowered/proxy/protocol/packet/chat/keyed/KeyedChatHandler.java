@@ -24,6 +24,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
+import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatMessageInfo;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import net.kyori.adventure.text.Component;
@@ -68,7 +69,8 @@ public class KeyedChatHandler implements
   public void handlePlayerChatInternal(KeyedPlayerChatPacket packet) {
     ChatQueue chatQueue = this.player.getChatQueue();
     EventManager eventManager = this.server.getEventManager();
-    PlayerChatEvent toSend = new PlayerChatEvent(player, packet.getMessage());
+    PlayerChatEvent toSend = new PlayerChatEvent(player, packet.getMessage(),
+        PlayerChatMessageInfo.fromKeyedPacket(player, packet));
     CompletableFuture<PlayerChatEvent> future = eventManager.fire(toSend);
 
     CompletableFuture<MinecraftPacket> chatFuture;
