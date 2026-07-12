@@ -142,6 +142,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.UnmodifiableView;
 
 /**
  * Represents a player that is connected to the proxy.
@@ -181,7 +182,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private @Nullable VelocityServerConnection connectionInFlight;
   private @Nullable PlayerSettings settings;
   private @Nullable ModInfo modInfo;
-  private final Set<VelocityBossBarImplementation> bossBars = new HashSet<>();
+  private @Nullable Set<BossBar> bossBars;
   private Component playerListHeader = Component.empty();
   private Component playerListFooter = Component.empty();
   private final InternalTabList tabList;
@@ -233,8 +234,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
    * Used for cleaning up resources during a disconnection.
    */
   public void disconnected() {
-    for (final VelocityBossBarImplementation bar : this.bossBars) {
-      bar.viewerDisconnected(this);
+    if (this.bossBars != null) {
+      for (final BossBar bar : this.bossBars) {
+        VelocityBossBarImplementation.get(bar).viewerRemove(this);
+      }
     }
   }
 
@@ -570,23 +573,39 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public void hideBossBar(@NonNull BossBar bar) {
+  public void showBossBar(@NonNull BossBar bar) {
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_9)) {
       final VelocityBossBarImplementation impl = VelocityBossBarImplementation.get(bar);
-      if (impl.viewerRemove(this)) {
-        this.bossBars.remove(impl);
+      if (impl.viewerAdd(this)) {
+        if (this.bossBars == null) {
+          this.bossBars = new HashSet<>();
+        }
+        this.bossBars.add(bar);
       }
     }
   }
 
   @Override
-  public void showBossBar(@NonNull BossBar bar) {
+  public void hideBossBar(@NonNull BossBar bar) {
     if (this.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_9)) {
       final VelocityBossBarImplementation impl = VelocityBossBarImplementation.get(bar);
-      if (impl.viewerAdd(this)) {
-        this.bossBars.add(impl);
+      if (impl.viewerRemove(this)) {
+        if (this.bossBars != null) {
+          this.bossBars.remove(bar);
+          if (this.bossBars.isEmpty()) {
+            this.bossBars = null;
+          }
+        }
       }
     }
+  }
+
+  @Override
+  public @UnmodifiableView @org.jspecify.annotations.NonNull Iterable<? extends BossBar> activeBossBars() {
+    if (this.bossBars == null) {
+      return Set.of();
+    }
+    return Set.copyOf(this.bossBars);
   }
 
   @Override
