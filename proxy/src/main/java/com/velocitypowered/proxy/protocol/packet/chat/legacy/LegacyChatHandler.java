@@ -56,7 +56,7 @@ public class LegacyChatHandler implements ChatHandler<LegacyChatPacket> {
           if (chatEvent.getResult().getPlayerChatForwarding().isPresent()) {
             if (DecoratedPlayerChatForwarder.forwardLegacy(chatEvent.getChatMessage(),
                 chatEvent.getResult().getPlayerChatForwarding().get())
-                == DecoratedPlayerChatForwarder.Result.DELIVERED) {
+                .suppressesBackendForwarding()) {
               return;
             }
           }

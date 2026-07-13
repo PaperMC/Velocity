@@ -22,11 +22,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.velocitypowered.api.event.player.PlayerChatForwarding;
 import com.velocitypowered.api.event.player.PlayerChatMessage;
 import com.velocitypowered.api.event.player.PlayerChatProtocol;
 import com.velocitypowered.api.event.player.PlayerChatSignedState;
@@ -36,6 +39,7 @@ import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.crypto.SignedMessage;
 import com.velocitypowered.api.proxy.player.ChatSession;
 import com.velocitypowered.api.proxy.player.TabListEntry;
+import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.crypto.SignaturePair;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
@@ -45,15 +49,18 @@ import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChatP
 import com.velocitypowered.proxy.tablist.InternalTabList;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFuture;
 import java.lang.reflect.Field;
 import java.security.KeyPairGenerator;
 import java.security.PublicKey;
 import java.time.Instant;
 import java.util.BitSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.Logger;
+import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.Test;
 
 class PlayerChatMessageInfoTest {
@@ -225,26 +232,113 @@ class PlayerChatMessageInfoTest {
     assertFalse(DecoratedPlayerChatForwarder.canEmitAsDecoratedPlayerChat(shortSignature));
   }
 
+  @Test
+  void decoratedPlayerChatForwardsAtomicallyToAllSupportedRecipients() throws Exception {
+    ConnectedPlayer sender = playerWithSession(null, new RemoteChatSession(SESSION_ID, key()));
+    PlayerChatMessage message = PlayerChatMessageInfo.sessionMessage(sender,
+        sessionPacket("message", true, 7L, signature()));
+    ConnectedPlayer first = recipient(ProtocolVersion.MINECRAFT_1_20_5);
+    ConnectedPlayer second = recipient(ProtocolVersion.MINECRAFT_1_21_5);
+    PlayerChatForwarding forwarding = new PlayerChatForwarding(Component.text("Decorated message"),
+        List.of(first, second));
+
+    DecoratedPlayerChatForwarder.Result result = DecoratedPlayerChatForwarder.forward(message,
+        forwarding, mock(Logger.class));
+
+    assertEquals(DecoratedPlayerChatForwarder.Result.DELIVERED_TO_ALL, result);
+    assertTrue(result.suppressesBackendForwarding());
+    verify(first.getConnection()).write(any(ClientboundPlayerChatPacket.class));
+    verify(second.getConnection()).write(any(ClientboundPlayerChatPacket.class));
+  }
+
+  @Test
+  void decoratedPlayerChatDoesNotPartiallyEmitForUnsupportedRecipient() throws Exception {
+    ConnectedPlayer sender = playerWithSession(null, new RemoteChatSession(SESSION_ID, key()));
+    PlayerChatMessage message = PlayerChatMessageInfo.sessionMessage(sender,
+        sessionPacket("message", true, 7L, signature()));
+    ConnectedPlayer supported = recipient(ProtocolVersion.MINECRAFT_1_20_5);
+    ConnectedPlayer unsupported = recipient(ProtocolVersion.MINECRAFT_1_19_1);
+    PlayerChatForwarding forwarding = new PlayerChatForwarding(Component.text("Decorated message"),
+        List.of(supported, unsupported));
+
+    DecoratedPlayerChatForwarder.Result result = DecoratedPlayerChatForwarder.forward(message,
+        forwarding, mock(Logger.class));
+
+    assertEquals(DecoratedPlayerChatForwarder.Result.UNSUPPORTED_RECIPIENT, result);
+    assertFalse(result.suppressesBackendForwarding());
+    verify(supported.getConnection(), never()).write(any());
+    verify(unsupported.getConnection(), never()).write(any());
+  }
+
+  @Test
+  void emptyDecoratedPlayerChatRecipientListSuppressesBackendWithoutEmission() throws Exception {
+    ConnectedPlayer sender = playerWithSession(null, new RemoteChatSession(SESSION_ID, key()));
+    PlayerChatMessage message = PlayerChatMessageInfo.sessionMessage(sender,
+        sessionPacket("message", true, 7L, signature()));
+
+    DecoratedPlayerChatForwarder.Result result = DecoratedPlayerChatForwarder.forward(message,
+        new PlayerChatForwarding(Component.text("Decorated message"), List.of()),
+        mock(Logger.class));
+
+    assertEquals(DecoratedPlayerChatForwarder.Result.DELIVERED_TO_NONE_INTENTIONALLY, result);
+    assertTrue(result.suppressesBackendForwarding());
+  }
+
+  @Test
+  void unsupportedDecoratedPlayerChatMessageFallsBackWithoutEmission() throws Exception {
+    PlayerChatMessage unsigned = PlayerChatMessageInfo.sessionMessage(playerWithSession(null, null),
+        sessionPacket("message", false, 0L, new byte[0]));
+    ConnectedPlayer recipient = recipient(ProtocolVersion.MINECRAFT_1_20_5);
+
+    DecoratedPlayerChatForwarder.Result result = DecoratedPlayerChatForwarder.forward(unsigned,
+        new PlayerChatForwarding(Component.text("Decorated message"), List.of(recipient)),
+        mock(Logger.class));
+
+    assertEquals(DecoratedPlayerChatForwarder.Result.UNSUPPORTED_MESSAGE, result);
+    assertFalse(result.suppressesBackendForwarding());
+    verify(recipient.getConnection(), never()).write(any());
+  }
+
+  @Test
+  void decoratedPlayerChatUsesRequestedDecorationAndChatTypeParameters() throws Exception {
+    ConnectedPlayer sender = playerWithSession(null, new RemoteChatSession(SESSION_ID, key()));
+    PlayerChatMessage message = PlayerChatMessageInfo.sessionMessage(sender,
+        sessionPacket("message", true, 7L, signature()));
+    ConnectedPlayer recipient = recipient(ProtocolVersion.MINECRAFT_1_20_5);
+    PlayerChatForwarding forwarding = new PlayerChatForwarding(Component.text("Decorated message"),
+        Component.text("ExamplePlayer"), Component.text("TargetPlayer"), 3, List.of(recipient));
+
+    DecoratedPlayerChatForwarder.forward(message, forwarding, mock(Logger.class));
+
+    ArgumentCaptor<ClientboundPlayerChatPacket> packetCaptor =
+        ArgumentCaptor.forClass(ClientboundPlayerChatPacket.class);
+    verify(recipient.getConnection()).write(packetCaptor.capture());
+    ClientboundPlayerChatPacket packet = packetCaptor.getValue();
+    assertEquals(Component.text("Decorated message"), packet.getUnsignedContent());
+    assertEquals(Component.text("ExamplePlayer"), packet.getSenderName());
+    assertEquals(Component.text("TargetPlayer"), packet.getTargetName().orElseThrow());
+    assertEquals(3, packet.getChatTypeHolderId());
+  }
+
   private static void assertClientboundDecoratedPlayerChatRoundTrips(ProtocolVersion version)
       throws Exception {
     byte[] signature = new byte[256];
     signature[0] = 9;
     PlayerChatMessage message = PlayerChatMessageInfo.sessionMessage(playerWithSession(null,
-        new RemoteChatSession(SESSION_ID, key())), sessionPacket("Paper test", true, 7L,
+        new RemoteChatSession(SESSION_ID, key())), sessionPacket("message", true, 7L,
         signature));
     ClientboundPlayerChatPacket packet = new ClientboundPlayerChatPacket(message,
-        Component.text("[G][server1] [Air]airgalaxie: Paper test"),
-        Component.text("airgalaxie"), version);
+        Component.text("Decorated message"), Component.text("ExamplePlayer"), version);
     ByteBuf buf = Unpooled.buffer();
 
     packet.encode(buf, ProtocolUtils.Direction.CLIENTBOUND, version);
     ClientboundPlayerChatPacket decoded = new ClientboundPlayerChatPacket();
     decoded.decode(buf, ProtocolUtils.Direction.CLIENTBOUND, version);
 
-    assertEquals("Paper test", decoded.getMessage());
+    assertEquals("message", decoded.getMessage());
     assertArrayEquals(signature, decoded.getSignature());
-    assertEquals(Component.text("[G][server1] [Air]airgalaxie: Paper test"),
-        decoded.getUnsignedContent());
+    assertEquals(Component.text("Decorated message"), decoded.getUnsignedContent());
+    assertEquals(Component.text("ExamplePlayer"), decoded.getSenderName());
   }
 
   @Test
@@ -281,8 +375,25 @@ class PlayerChatMessageInfoTest {
     ConnectedPlayer player = mock(ConnectedPlayer.class);
     when(player.getIdentifiedKey()).thenReturn(identifiedKey);
     when(player.getUniqueId()).thenReturn(PLAYER_ID);
+    when(player.getUsername()).thenReturn("ExamplePlayer");
     when(player.getTabList()).thenReturn(tabList);
     return player;
+  }
+
+  private static ConnectedPlayer recipient(ProtocolVersion protocolVersion) {
+    ConnectedPlayer recipient = mock(ConnectedPlayer.class);
+    MinecraftConnection connection = mock(MinecraftConnection.class);
+    when(recipient.getProtocolVersion()).thenReturn(protocolVersion);
+    when(recipient.getConnection()).thenReturn(connection);
+    when(recipient.getUsername()).thenReturn("Recipient");
+    when(connection.write(any())).thenReturn(mock(ChannelFuture.class));
+    return recipient;
+  }
+
+  private static byte[] signature() {
+    byte[] signature = new byte[256];
+    signature[0] = 9;
+    return signature;
   }
 
   private static InternalTabList tabList(ChatSession chatSession) {

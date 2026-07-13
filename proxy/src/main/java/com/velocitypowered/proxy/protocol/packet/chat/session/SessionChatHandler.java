@@ -65,7 +65,7 @@ public class SessionChatHandler implements ChatHandler<SessionPlayerChatPacket> 
                 DecoratedPlayerChatForwarder.Result forwardingResult =
                     DecoratedPlayerChatForwarder.forward(pme.getChatMessage(),
                         chatResult.getPlayerChatForwarding().get(), logger);
-                if (forwardingResult == DecoratedPlayerChatForwarder.Result.DELIVERED) {
+                if (forwardingResult.suppressesBackendForwarding()) {
                   return null;
                 }
               }

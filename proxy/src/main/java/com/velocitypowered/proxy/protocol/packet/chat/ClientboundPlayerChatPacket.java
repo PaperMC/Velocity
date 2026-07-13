@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.protocol.packet.chat;
 
+import com.velocitypowered.api.event.player.PlayerChatForwarding;
 import com.velocitypowered.api.event.player.PlayerChatMessage;
 import com.velocitypowered.api.event.player.PlayerChatProtocol;
 import com.velocitypowered.api.event.player.PlayerChatSignature;
@@ -26,6 +27,8 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 
@@ -33,8 +36,6 @@ import net.kyori.adventure.text.Component;
  * Clientbound modern player-chat packet used for proxy-side decorated player-chat emission.
  */
 public final class ClientboundPlayerChatPacket implements MinecraftPacket {
-
-  private static final int CHAT_TYPE_CHAT_HOLDER_ID = 1;
 
   private int globalIndex;
   private UUID sender;
@@ -45,12 +46,20 @@ public final class ClientboundPlayerChatPacket implements MinecraftPacket {
   private long salt;
   private ComponentHolder unsignedContent;
   private ComponentHolder senderName;
+  private ComponentHolder targetName;
+  private int chatTypeHolderId;
 
   public ClientboundPlayerChatPacket() {
   }
 
   public ClientboundPlayerChatPacket(PlayerChatMessage originalMessage, Component decoratedMessage,
       Component senderName, ProtocolVersion version) {
+    this(originalMessage, new PlayerChatForwarding(decoratedMessage, senderName, null,
+        PlayerChatForwarding.DEFAULT_CHAT_TYPE_HOLDER_ID, List.of()), version);
+  }
+
+  public ClientboundPlayerChatPacket(PlayerChatMessage originalMessage,
+      PlayerChatForwarding forwarding, ProtocolVersion version) {
     if (!supportsProtocol(version)) {
       throw new IllegalArgumentException("Clientbound player chat is not supported for " + version);
     }
@@ -69,8 +78,12 @@ public final class ClientboundPlayerChatPacket implements MinecraftPacket {
     this.salt = originalMessage.getSignature()
         .flatMap(PlayerChatSignature::getSalt)
         .orElse(0L);
-    this.unsignedContent = new ComponentHolder(version, decoratedMessage);
-    this.senderName = new ComponentHolder(version, senderName);
+    this.unsignedContent = new ComponentHolder(version, forwarding.getDecoratedMessage());
+    this.senderName = new ComponentHolder(version, forwarding.getSenderName());
+    this.targetName = forwarding.getTargetName()
+        .map(target -> new ComponentHolder(version, target))
+        .orElse(null);
+    this.chatTypeHolderId = forwarding.getChatTypeHolderId();
   }
 
   public String getMessage() {
@@ -79,6 +92,18 @@ public final class ClientboundPlayerChatPacket implements MinecraftPacket {
 
   public Component getUnsignedContent() {
     return unsignedContent.getComponent();
+  }
+
+  public Component getSenderName() {
+    return senderName.getComponent();
+  }
+
+  public Optional<Component> getTargetName() {
+    return targetName == null ? Optional.empty() : Optional.of(targetName.getComponent());
+  }
+
+  public int getChatTypeHolderId() {
+    return chatTypeHolderId;
   }
 
   public byte[] getSignature() {
@@ -177,20 +202,25 @@ public final class ClientboundPlayerChatPacket implements MinecraftPacket {
   }
 
   private void readChatTypeBound(ByteBuf buf, ProtocolVersion version) {
-    int holder = ProtocolUtils.readVarInt(buf);
-    if (holder == 0) {
+    chatTypeHolderId = ProtocolUtils.readVarInt(buf);
+    if (chatTypeHolderId == 0) {
       throw new UnsupportedOperationException("Custom chat type decoding is not implemented");
     }
     this.senderName = ComponentHolder.read(buf, version);
     if (buf.readBoolean()) {
-      ComponentHolder.read(buf, version);
+      this.targetName = ComponentHolder.read(buf, version);
+    } else {
+      this.targetName = null;
     }
   }
 
   private void writeChatTypeBound(ByteBuf buf) {
-    ProtocolUtils.writeVarInt(buf, CHAT_TYPE_CHAT_HOLDER_ID);
+    ProtocolUtils.writeVarInt(buf, chatTypeHolderId);
     senderName.write(buf);
-    buf.writeBoolean(false);
+    buf.writeBoolean(targetName != null);
+    if (targetName != null) {
+      targetName.write(buf);
+    }
   }
 
   public static boolean supportsProtocol(ProtocolVersion version) {

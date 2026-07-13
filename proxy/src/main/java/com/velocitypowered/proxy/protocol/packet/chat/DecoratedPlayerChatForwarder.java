@@ -22,9 +22,12 @@ import com.velocitypowered.api.event.player.PlayerChatMessage;
 import com.velocitypowered.api.event.player.PlayerChatProtocol;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.chat.legacy.LegacyChatPacket;
+import java.util.ArrayList;
+import java.util.List;
 import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.Logger;
 
@@ -38,6 +41,9 @@ public final class DecoratedPlayerChatForwarder {
 
   public static Result forward(PlayerChatMessage originalMessage, PlayerChatForwarding forwarding,
       Logger logger) {
+    if (forwarding.getRecipients().isEmpty()) {
+      return Result.DELIVERED_TO_NONE_INTENTIONALLY;
+    }
     if (!canEmitAsDecoratedPlayerChat(originalMessage)) {
       logger.warn("Cannot emit decorated player chat for {}: original message is {} / {} and "
               + "cannot be represented as signature-preserving clientbound player chat",
@@ -46,11 +52,10 @@ public final class DecoratedPlayerChatForwarder {
       return Result.UNSUPPORTED_MESSAGE;
     }
 
-    Component senderName = Component.text(originalMessage.getSender().getUsername());
-    boolean delivered = false;
+    List<PreparedEmission> emissions = new ArrayList<>(forwarding.getRecipients().size());
     for (Player recipient : forwarding.getRecipients()) {
       if (!(recipient instanceof ConnectedPlayer connectedPlayer)) {
-        continue;
+        return Result.UNSUPPORTED_RECIPIENT;
       }
       ProtocolVersion protocolVersion = connectedPlayer.getProtocolVersion();
       if (!ClientboundPlayerChatPacket.supportsProtocol(protocolVersion)) {
@@ -58,30 +63,55 @@ public final class DecoratedPlayerChatForwarder {
                 + "supported by Velocity's clientbound player-chat emitter",
             originalMessage.getSender().getUsername(), connectedPlayer.getUsername(),
             protocolVersion);
-        continue;
+        return Result.UNSUPPORTED_RECIPIENT;
       }
-      connectedPlayer.getConnection().write(new ClientboundPlayerChatPacket(originalMessage,
-          forwarding.getDecoratedMessage(), senderName, protocolVersion));
-      delivered = true;
+      MinecraftConnection connection = connectedPlayer.getConnection();
+      if (connection == null || connection.isClosed()) {
+        return Result.UNSUPPORTED_RECIPIENT;
+      }
+      try {
+        emissions.add(new PreparedEmission(connection, new ClientboundPlayerChatPacket(
+            originalMessage, forwarding, protocolVersion)));
+      } catch (RuntimeException ex) {
+        logger.warn("Cannot emit decorated player chat for {} to {}: packet representation could "
+                + "not be created", originalMessage.getSender().getUsername(),
+            connectedPlayer.getUsername(), ex);
+        return Result.INVALID_REQUEST;
+      }
     }
-    return delivered ? Result.DELIVERED : Result.NO_SUPPORTED_RECIPIENTS;
+    return emitPrepared(emissions);
   }
 
   public static Result forwardLegacy(PlayerChatMessage originalMessage,
       PlayerChatForwarding forwarding) {
-    boolean delivered = false;
+    if (forwarding.getRecipients().isEmpty()) {
+      return Result.DELIVERED_TO_NONE_INTENTIONALLY;
+    }
+    List<PreparedEmission> emissions = new ArrayList<>(forwarding.getRecipients().size());
     for (Player recipient : forwarding.getRecipients()) {
       if (!(recipient instanceof ConnectedPlayer connectedPlayer)) {
-        continue;
+        return Result.UNSUPPORTED_RECIPIENT;
       }
       ProtocolVersion version = connectedPlayer.getProtocolVersion();
+      MinecraftConnection connection = connectedPlayer.getConnection();
+      if (connection == null || connection.isClosed()) {
+        return Result.UNSUPPORTED_RECIPIENT;
+      }
       Component translated = connectedPlayer.translateMessage(forwarding.getDecoratedMessage());
       String json = ProtocolUtils.getJsonChatSerializer(version).serialize(translated);
-      connectedPlayer.getConnection().write(new LegacyChatPacket(json, LegacyChatPacket.CHAT_TYPE,
-          originalMessage.getSender().getUniqueId()));
-      delivered = true;
+      emissions.add(new PreparedEmission(connection, new LegacyChatPacket(json,
+          LegacyChatPacket.CHAT_TYPE, originalMessage.getSender().getUniqueId())));
     }
-    return delivered ? Result.DELIVERED : Result.NO_SUPPORTED_RECIPIENTS;
+    return emitPrepared(emissions);
+  }
+
+  private static Result emitPrepared(List<PreparedEmission> emissions) {
+    for (PreparedEmission emission : emissions) {
+      if (emission.connection().write(emission.packet()) == null) {
+        return Result.EMISSION_FAILED_BEFORE_WRITE;
+      }
+    }
+    return Result.DELIVERED_TO_ALL;
   }
 
   static boolean canEmitAsDecoratedPlayerChat(PlayerChatMessage originalMessage) {
@@ -93,8 +123,24 @@ public final class DecoratedPlayerChatForwarder {
   }
 
   public enum Result {
-    DELIVERED,
-    NO_SUPPORTED_RECIPIENTS,
-    UNSUPPORTED_MESSAGE
+    DELIVERED_TO_ALL(true),
+    DELIVERED_TO_NONE_INTENTIONALLY(true),
+    UNSUPPORTED_RECIPIENT(false),
+    UNSUPPORTED_MESSAGE(false),
+    INVALID_REQUEST(false),
+    EMISSION_FAILED_BEFORE_WRITE(false);
+
+    private final boolean suppressBackendForwarding;
+
+    Result(boolean suppressBackendForwarding) {
+      this.suppressBackendForwarding = suppressBackendForwarding;
+    }
+
+    public boolean suppressesBackendForwarding() {
+      return suppressBackendForwarding;
+    }
+  }
+
+  private record PreparedEmission(MinecraftConnection connection, Object packet) {
   }
 }

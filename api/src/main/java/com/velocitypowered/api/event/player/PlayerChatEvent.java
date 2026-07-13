@@ -175,6 +175,10 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
      * server-controlled unsigned content around the immutable original message, where the current
      * client protocol supports that operation.</p>
      *
+     * <p>The final {@link ChatResult} after all event listeners have run is authoritative. Later
+     * listeners may replace earlier results; Velocity emits only the final forwarding request, whose
+     * recipient list is defensively copied.</p>
+     *
      * @return decorated player-chat forwarding request
      * @since 3.6.0
      */
@@ -229,6 +233,13 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
      * Velocity has a protocol implementation for recipient-side player-chat emission; unsupported
      * recipients are not silently downgraded to system chat.</p>
      *
+     * <p>The requested recipient list is handled atomically. If every requested recipient can be
+     * served, Velocity emits the decorated player chat to all of them and suppresses the normal
+     * backend forwarding path. If any requested recipient cannot be served, Velocity emits to none of
+     * them and leaves the backend forwarding path unchanged. An empty recipient list is valid and
+     * means the message intentionally has no recipients; Velocity suppresses backend forwarding
+     * without sending a packet.</p>
+     *
      * @param decoratedMessage full decorated message to render
      * @param recipients intended recipients
      * @return a decorated player-chat forwarding result
@@ -237,6 +248,28 @@ public final class PlayerChatEvent implements ResultedEvent<PlayerChatEvent.Chat
     public static ChatResult decoratedPlayerChat(@NonNull Component decoratedMessage,
         @NonNull Collection<? extends Player> recipients) {
       return new ChatResult(true, null, new PlayerChatForwarding(decoratedMessage, recipients));
+    }
+
+    /**
+     * Allows Velocity to emit the original player-chat message directly to selected recipients
+     * using explicit clientbound chat-type parameters.
+     *
+     * <p>This overload is for plugins that need to control the protocol chat-type binding separately
+     * from the full decorated content clients should render.</p>
+     *
+     * @param decoratedMessage full decorated message to render
+     * @param senderName sender component bound to the clientbound chat type
+     * @param targetName optional target component bound to the clientbound chat type
+     * @param chatTypeHolderId chat-type holder id to bind in the clientbound packet
+     * @param recipients intended recipients
+     * @return a decorated player-chat forwarding result
+     * @since 3.6.0
+     */
+    public static ChatResult decoratedPlayerChat(@NonNull Component decoratedMessage,
+        @NonNull Component senderName, @Nullable Component targetName, int chatTypeHolderId,
+        @NonNull Collection<? extends Player> recipients) {
+      return new ChatResult(true, null, new PlayerChatForwarding(decoratedMessage, senderName,
+          targetName, chatTypeHolderId, recipients));
     }
   }
 

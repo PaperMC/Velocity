@@ -60,11 +60,11 @@ class PlayerChatEventTest {
     recipients.add(first);
 
     PlayerChatEvent.ChatResult result = PlayerChatEvent.ChatResult.decoratedPlayerChat(
-        Component.text("[G] player: original"), recipients);
+        Component.text("Decorated message"), recipients);
     recipients.add(second);
 
     assertTrue(result.isAllowed());
-    assertEquals(Component.text("[G] player: original"),
+    assertEquals(Component.text("Decorated message"),
         result.getPlayerChatForwarding().orElseThrow().getDecoratedMessage());
     assertEquals(List.of(first), result.getPlayerChatForwarding().orElseThrow().getRecipients());
     assertThrows(UnsupportedOperationException.class,
@@ -76,11 +76,40 @@ class PlayerChatEventTest {
     PlayerChatEvent event = new PlayerChatEvent(dummyPlayer(), "original");
 
     event.setResult(PlayerChatEvent.ChatResult.decoratedPlayerChat(
-        Component.text("[G] player: original"), List.of(event.getPlayer())));
+        Component.text("Decorated message"), List.of(event.getPlayer())));
 
     assertEquals("original", event.getMessage());
     assertFalse(event.getResult().getMessage().isPresent());
     assertTrue(event.getResult().getPlayerChatForwarding().isPresent());
+  }
+
+  @Test
+  void finalChatResultReplacesEarlierForwardingResult() {
+    PlayerChatEvent event = new PlayerChatEvent(dummyPlayer(), "original");
+    Player first = dummyPlayer();
+    Player second = dummyPlayer();
+
+    event.setResult(PlayerChatEvent.ChatResult.decoratedPlayerChat(
+        Component.text("First decorated message"), List.of(first)));
+    event.setResult(PlayerChatEvent.ChatResult.decoratedPlayerChat(
+        Component.text("Final decorated message"), List.of(second)));
+
+    PlayerChatForwarding forwarding = event.getResult().getPlayerChatForwarding().orElseThrow();
+    assertEquals(Component.text("Final decorated message"), forwarding.getDecoratedMessage());
+    assertEquals(List.of(second), forwarding.getRecipients());
+  }
+
+  @Test
+  void decoratedPlayerChatResultKeepsExplicitChatTypeParameters() {
+    PlayerChatEvent.ChatResult result = PlayerChatEvent.ChatResult.decoratedPlayerChat(
+        Component.text("Decorated message"), Component.text("ExamplePlayer"),
+        Component.text("TargetPlayer"), 3, List.of(dummyPlayer()));
+    PlayerChatForwarding forwarding = result.getPlayerChatForwarding().orElseThrow();
+
+    assertEquals(Component.text("Decorated message"), forwarding.getDecoratedMessage());
+    assertEquals(Component.text("ExamplePlayer"), forwarding.getSenderName());
+    assertEquals(Component.text("TargetPlayer"), forwarding.getTargetName().orElseThrow());
+    assertEquals(3, forwarding.getChatTypeHolderId());
   }
 
   private static Player dummyPlayer() {

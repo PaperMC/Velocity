@@ -24,6 +24,7 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
+import com.velocitypowered.proxy.protocol.packet.chat.DecoratedPlayerChatForwarder;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatMessageInfo;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -84,8 +85,12 @@ public class KeyedChatHandler implements
       chatFuture = future.thenApply(pme -> {
         PlayerChatEvent.ChatResult chatResult = pme.getResult();
         if (chatResult.getPlayerChatForwarding().isPresent()) {
-          logger.warn("Cannot emit decorated player chat for {}: keyed signed chat protocols "
-              + "do not have a supported signature-preserving clientbound emitter", player);
+          DecoratedPlayerChatForwarder.Result forwardingResult =
+              DecoratedPlayerChatForwarder.forward(pme.getChatMessage(),
+                  chatResult.getPlayerChatForwarding().get(), logger);
+          if (forwardingResult.suppressesBackendForwarding()) {
+            return null;
+          }
         }
         if (!chatResult.isAllowed()) {
           return null;
@@ -112,8 +117,12 @@ public class KeyedChatHandler implements
     return pme -> {
       PlayerChatEvent.ChatResult chatResult = pme.getResult();
       if (chatResult.getPlayerChatForwarding().isPresent()) {
-        logger.warn("Cannot emit decorated player chat for {}: keyed signed chat protocols "
-            + "do not have a supported signature-preserving clientbound emitter", player);
+        DecoratedPlayerChatForwarder.Result forwardingResult =
+            DecoratedPlayerChatForwarder.forward(pme.getChatMessage(),
+                chatResult.getPlayerChatForwarding().get(), logger);
+        if (forwardingResult.suppressesBackendForwarding()) {
+          return null;
+        }
       }
       if (!chatResult.isAllowed()) {
         if (playerKey.getKeyRevision().noLessThan(IdentifiedKey.Revision.LINKED_V2)) {
