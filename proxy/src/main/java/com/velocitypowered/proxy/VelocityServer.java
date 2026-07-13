@@ -425,6 +425,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
     try {
       Path pluginPath = Path.of("plugins");
+      ArrayList<Path> additionalPlugins = new ArrayList<>();
 
       if (!pluginPath.toFile().exists()) {
         Files.createDirectory(pluginPath);
@@ -434,9 +435,24 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
               pluginPath);
           return;
         }
-
-        pluginManager.loadPlugins(pluginPath);
       }
+
+      for (String additionalPluginPath : options.getAdditionalPlugins()) {
+        Path path = Path.of(additionalPluginPath);
+        if (!Files.exists(path)) {
+          logger.warn("Unable to find plugin file by path {}",
+                  additionalPluginPath);
+          continue;
+        }
+        if (!path.toFile().isFile()) {
+          logger.warn("Plugin {} is not a file",
+                  additionalPluginPath);
+          continue;
+        }
+        additionalPlugins.add(path);
+      }
+
+      pluginManager.loadPlugins(pluginPath, additionalPlugins);
     } catch (Exception e) {
       logger.error("Couldn't load plugins", e);
     }
