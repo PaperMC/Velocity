@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.connection.client;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.velocitypowered.api.event.connection.ConnectionEstablishEvent;
 import com.velocitypowered.api.event.connection.ConnectionHandshakeEvent;
 import com.velocitypowered.api.network.HandshakeIntent;
 import com.velocitypowered.api.network.ProtocolState;
@@ -94,22 +95,35 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     } else {
       final InitialInboundConnection ic = new InitialInboundConnection(connection,
               cleanVhost(handshake.getServerAddress()), handshake);
-      if (handshake.getIntent() == HandshakeIntent.TRANSFER
-              && !server.getConfiguration().isAcceptTransfers()) {
-        ic.disconnect(Component.translatable("multiplayer.disconnect.transfers_disabled"));
-        return true;
-      }
-      connection.setProtocolVersion(handshake.getProtocolVersion());
-      connection.setAssociation(ic);
+      // Handle connection establish event.
+      connection.setAutoReading(false);
+      server.getEventManager()
+          .fire(new ConnectionEstablishEvent(ic, handshake.getIntent()))
+          .thenAcceptAsync(result -> {
+            // Clean up the disabling of auto-read.
+            connection.setAutoReading(true);
 
-      switch (nextState) {
-        case STATUS -> connection.setActiveSessionHandler(StateRegistry.STATUS,
-              new StatusSessionHandler(server, ic));
-        case LOGIN -> this.handleLogin(handshake, ic);
-        default ->
-          // If you get this, it's a bug in Velocity.
-          throw new AssertionError("getStateForProtocol provided invalid state!");
-      }
+            if (!result.getResult().isAllowed()) {
+              connection.close(true);
+            } else {
+              if (handshake.getIntent() == HandshakeIntent.TRANSFER
+                      && !server.getConfiguration().isAcceptTransfers()) {
+                ic.disconnect(Component.translatable("multiplayer.disconnect.transfers_disabled"));
+                return;
+              }
+              connection.setProtocolVersion(handshake.getProtocolVersion());
+              connection.setAssociation(ic);
+
+              switch (nextState) {
+                case STATUS -> connection.setActiveSessionHandler(StateRegistry.STATUS,
+                      new StatusSessionHandler(server, ic));
+                case LOGIN -> this.handleLogin(handshake, ic);
+                default ->
+                  // If you get this, it's a bug in Velocity.
+                  throw new AssertionError("getStateForProtocol provided invalid state!");
+              }
+            }
+          });
     }
 
     return true;
