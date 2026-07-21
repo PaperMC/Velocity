@@ -161,14 +161,17 @@ public final class VelocityCommand {
           .decoration(TextDecoration.BOLD, true)
           .color(VELOCITY_COLOR)
           .append(Component.text()
-                  .content(version.getVersion())
-                  .decoration(TextDecoration.BOLD, false))
+              .content(version.getVersion())
+              .decoration(TextDecoration.BOLD, false))
+          .hoverEvent(Component.translatable("velocity.command.version-offer-copy-version"))
+          .clickEvent(ClickEvent.copyToClipboard(version.getName() + " "
+              + version.getVersion()))
           .build();
       final Component copyright = Component
           .translatable("velocity.command.version-copyright",
               Argument.string("vendor", version.getVendor()),
-                  Argument.string("name", version.getName()),
-                  Argument.component("year", Component.text(LocalDate.now().getYear())));
+              Argument.string("name", version.getName()),
+              Argument.component("year", Component.text(LocalDate.now().getYear())));
       source.sendMessage(velocity);
       source.sendMessage(copyright);
 
