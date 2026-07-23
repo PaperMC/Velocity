@@ -237,7 +237,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // No server connection yet, probably transitioning.
       return true;
     }
-    player.getConnectedServer().ensureConnected().write(packet);
+    serverConnection.ensureConnected().write(packet);
     return true; // will forward onto the server
   }
 
