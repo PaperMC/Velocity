@@ -294,7 +294,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       return true;
     }
 
-    // Register and unregister packets are simply forwarded to the server as-is.
+    // Register and unregister packets are simply forwarded to the client as-is.
     if (PluginMessageUtil.isRegister(packet) || PluginMessageUtil.isUnregister(packet)) {
       return false;
     }
