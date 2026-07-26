@@ -75,6 +75,7 @@ public class VelocityPluginManager implements PluginManager {
    */
   public void registerPlugin(PluginContainer plugin) {
     pluginsById.put(plugin.getDescription().getId(), plugin);
+    plugin.getDescription().getProvidedIds().forEach(id -> pluginsById.put(id, plugin));
     Optional<?> instance = plugin.getInstance();
     instance.ifPresent(o -> pluginInstances.put(o, plugin));
   }
@@ -165,9 +166,21 @@ public class VelocityPluginManager implements PluginManager {
       }
     };
 
-    for (Map.Entry<PluginContainer, Module> plugin : pluginContainers.entrySet()) {
+    register: for (Map.Entry<PluginContainer, Module> plugin : pluginContainers.entrySet()) {
       PluginContainer container = plugin.getKey();
       PluginDescription description = container.getDescription();
+
+      for (String providedId : description.getProvidedIds()) {
+        if (foundCandidates.containsKey(providedId)) {
+          logger.error("Refusing to load plugin at path {} which provides ID {} "
+                          + "since we already loaded a plugin with the same ID from {}",
+                  description.getSource().map(Objects::toString).orElse("<UNKNOWN>"),
+                  providedId,
+                  foundCandidates.get(providedId).getSource().map(Objects::toString).orElse("<UNKNOWN>"));
+
+          continue register;
+        }
+      }
 
       try {
         loader.createPlugin(container, plugin.getValue(), commonModule);

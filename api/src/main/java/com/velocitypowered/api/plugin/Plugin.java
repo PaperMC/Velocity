@@ -72,4 +72,11 @@ public @interface Plugin {
    * @return the plugin dependencies
    */
   Dependency[] dependencies() default {};
+
+  /**
+   * The plugin IDs this plugin "provides" for.
+   *
+   * @return the provided IDs
+   */
+  String[] provides() default "";
 }
