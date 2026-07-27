@@ -212,8 +212,9 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ServerboundCustomClickActionPacket packet) {
-    if (player.getConnectionInFlight() != null) {
-      player.getConnectionInFlight().ensureConnected().write(packet.retain());
+    VelocityServerConnection serverConnection = player.getConnectionInFlightOrConnectedServer();
+    if (serverConnection != null) {
+      serverConnection.ensureConnected().write(packet.retain());
       return true;
     }
 
