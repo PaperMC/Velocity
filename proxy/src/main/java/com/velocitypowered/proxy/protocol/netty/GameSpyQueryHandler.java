@@ -57,6 +57,13 @@ public class GameSpyQueryHandler extends SimpleChannelInboundHandler<DatagramPac
   private static final short QUERY_MAGIC_SECOND = 0xFD;
   private static final byte QUERY_TYPE_HANDSHAKE = 0x09;
   private static final byte QUERY_TYPE_STAT = 0x00;
+  /**
+   * Minimum valid query message length: 2 magic bytes + 1 type byte + 4 session id bytes.
+   * The {@link #QUERY_TYPE_HANDSHAKE} branch is the shortest handler — it only reads this
+   * header, so any message shorter than 7 bytes is always malformed.
+   */
+  private static final int MINIMUM_MESSAGE_LENGTH = 7;
+
   private static final byte[] QUERY_RESPONSE_FULL_PADDING = new byte[]{0x73, 0x70, 0x6C, 0x69, 0x74,
       0x6E, 0x75, 0x6D, 0x00, (byte) 0x80, 0x00};
   private static final byte[] QUERY_RESPONSE_FULL_PADDING2 = new byte[]{0x01, 0x70, 0x6C, 0x61,
@@ -108,6 +115,10 @@ public class GameSpyQueryHandler extends SimpleChannelInboundHandler<DatagramPac
     ByteBuf queryMessage = msg.content();
     InetAddress senderAddress = msg.sender().getAddress();
 
+    if (queryMessage.readableBytes() < MINIMUM_MESSAGE_LENGTH) {
+      return;
+    }
+
     // Verify query packet magic
     if (queryMessage.readUnsignedByte() != QUERY_MAGIC_FIRST
         || queryMessage.readUnsignedByte() != QUERY_MAGIC_SECOND) {
@@ -135,6 +146,11 @@ public class GameSpyQueryHandler extends SimpleChannelInboundHandler<DatagramPac
       }
 
       case QUERY_TYPE_STAT -> {
+        // Need at least 4 more bytes for challenge token
+        if (queryMessage.readableBytes() < 4) {
+          return;
+        }
+
         // Check if query was done with session previously generated using a handshake packet
         int challengeToken = queryMessage.readInt();
         Integer session = sessions.getIfPresent(senderAddress);
