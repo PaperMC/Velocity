@@ -56,24 +56,45 @@ public class JavaVelocityCompressor implements VelocityCompressor {
     final int origIdx = source.readerIndex();
     inflater.setInput(source.nioBuffer());
 
+    int totalProduced = 0;
     try {
       final int readable = source.readableBytes();
       while (!inflater.finished() && inflater.getBytesRead() < readable) {
+        if (totalProduced >= uncompressedSize) {
+          throw new DataFormatException("Decompressed data exceeds the claimed uncompressed size "
+              + "of " + uncompressedSize + " bytes");
+        }
+
+        final int remaining = uncompressedSize - totalProduced;
         if (!destination.isWritable()) {
-          destination.ensureWritable(ZLIB_BUFFER_SIZE);
+          destination.ensureWritable(Math.min(ZLIB_BUFFER_SIZE, remaining));
         }
 
         ByteBuffer destNioBuf = destination.nioBuffer(destination.writerIndex(),
             destination.writableBytes());
+
+        // Never let a single inflate step write past the claimed size
+        if (destNioBuf.remaining() > remaining) {
+          destNioBuf.limit(destNioBuf.position() + remaining);
+        }
+
         int produced = inflater.inflate(destNioBuf);
+        if (produced == 0 && !inflater.finished()) {
+          // Output space was available yet the inflater made no progress: the stream is truncated
+          // or corrupt (this also covers a peer that over-reported the uncompressed size).
+          throw new DataFormatException("Received a truncated or malformed deflate stream, "
+              + "expected " + uncompressedSize + " bytes");
+        }
+        totalProduced += produced;
         destination.writerIndex(destination.writerIndex() + produced);
       }
 
       if (!inflater.finished()) {
-        throw new DataFormatException("Received a deflate stream that was too large, wanted "
-            + uncompressedSize);
+        throw new DataFormatException("Received a truncated or malformed deflate stream, expected "
+            + uncompressedSize + " bytes");
       }
-      source.readerIndex(origIdx + inflater.getTotalIn());
+
+      source.readerIndex(origIdx + (int) inflater.getBytesRead());
     } finally {
       inflater.reset();
     }
@@ -102,7 +123,7 @@ public class JavaVelocityCompressor implements VelocityCompressor {
       destination.writerIndex(destination.writerIndex() + produced);
     }
 
-    source.readerIndex(origIdx + deflater.getTotalIn());
+    source.readerIndex(origIdx + (int) deflater.getBytesRead());
     deflater.reset();
   }
 
