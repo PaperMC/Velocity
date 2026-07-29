@@ -97,6 +97,16 @@ public class PluginAnnotationProcessor extends AbstractProcessor {
         }
       }
 
+      for (String provided : plugin.provides()) {
+        if (!SerializedPluginDescription.ID_PATTERN.matcher(provided).matches()) {
+          environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                  "Invalid provided ID '" + provided + "' for plugin " + qualifiedName
+                  + ". IDs must start alphabetically, have lowercase alphanumeric characters, and "
+                  + "can contain dashes or underscores.");
+          return false;
+        }
+      }
+
       // All good, generate the velocity-plugin.json.
       SerializedPluginDescription description = SerializedPluginDescription
           .from(plugin, qualifiedName.toString());
