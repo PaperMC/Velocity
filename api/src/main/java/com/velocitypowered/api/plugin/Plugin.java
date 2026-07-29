@@ -74,9 +74,10 @@ public @interface Plugin {
   Dependency[] dependencies() default {};
 
   /**
-   * The plugin IDs this plugin "provides" for.
+   * The plugin IDs this plugin "provides" for. Each ID must match
+   * {@link SerializedPluginDescription#ID_PATTERN_STRING}.
    *
    * @return the provided IDs
    */
-  String[] provides() default "";
+  String[] provides() default {};
 }

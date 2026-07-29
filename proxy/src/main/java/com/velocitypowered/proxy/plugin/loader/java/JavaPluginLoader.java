@@ -78,6 +78,14 @@ public class JavaPluginLoader implements PluginLoader {
       }
     }
 
+    for (String providedId : pd.getProvides()) {
+      if (!SerializedPluginDescription.ID_PATTERN.matcher(providedId).matches()) {
+        throw new InvalidPluginException(
+            "Provided ID '" + providedId + "' for plugin '" + pd.getId() + "' is invalid."
+        );
+      }
+    }
+
     return createCandidateDescription(pd, source);
   }
 
@@ -181,6 +189,7 @@ public class JavaPluginLoader implements PluginLoader {
         description.getUrl(),
         description.getAuthors(),
         dependencies,
+        description.getProvides(),
         source,
         description.getMain()
     );
@@ -197,6 +206,7 @@ public class JavaPluginLoader implements PluginLoader {
         description.getUrl().orElse(null),
         description.getAuthors(),
         description.getDependencies(),
+        description.getProvidedIds(),
         description.getSource().orElse(null),
         mainClass
     );

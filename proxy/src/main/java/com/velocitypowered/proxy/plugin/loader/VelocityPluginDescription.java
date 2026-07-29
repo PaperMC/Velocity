@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.meta.PluginDependency;
@@ -43,6 +44,7 @@ public class VelocityPluginDescription implements PluginDescription {
   private final @Nullable String url;
   private final List<String> authors;
   private final Map<String, PluginDependency> dependencies;
+  private final Collection<String> providedIds;
   private final Path source;
 
   /**
@@ -55,11 +57,13 @@ public class VelocityPluginDescription implements PluginDescription {
    * @param url          the website for the plugin
    * @param authors      the authors of this plugin
    * @param dependencies the dependencies for this plugin
+   * @param providedIds  the IDs this plugin provides for
    * @param source       the original source for the plugin
    */
   public VelocityPluginDescription(String id, @Nullable String name, @Nullable String version,
       @Nullable String description, @Nullable String url,
-      @Nullable List<String> authors, Collection<PluginDependency> dependencies, Path source) {
+      @Nullable List<String> authors, Collection<PluginDependency> dependencies,
+      @Nullable Collection<String> providedIds, Path source) {
     this.id = checkNotNull(id, "id");
     this.name = Strings.emptyToNull(name);
     this.version = Strings.emptyToNull(version);
@@ -67,6 +71,8 @@ public class VelocityPluginDescription implements PluginDescription {
     this.url = Strings.emptyToNull(url);
     this.authors = authors == null ? ImmutableList.of() : ImmutableList.copyOf(authors);
     this.dependencies = Maps.uniqueIndex(dependencies, d -> d == null ? null : d.getId());
+    this.providedIds =
+        providedIds == null ? ImmutableSet.of() : ImmutableSet.copyOf(providedIds);
     this.source = source;
   }
 
@@ -111,6 +117,11 @@ public class VelocityPluginDescription implements PluginDescription {
   }
 
   @Override
+  public Collection<String> getProvidedIds() {
+    return providedIds;
+  }
+
+  @Override
   public Optional<Path> getSource() {
     return Optional.ofNullable(source);
   }
@@ -125,6 +136,7 @@ public class VelocityPluginDescription implements PluginDescription {
         + ", url='" + url + '\''
         + ", authors=" + authors
         + ", dependencies=" + dependencies
+        + ", providedIds=" + providedIds
         + ", source=" + source
         + '}';
   }

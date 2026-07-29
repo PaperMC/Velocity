@@ -221,7 +221,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     PluginDescription description = new VelocityPluginDescription(
         "velocity", version.getName(), version.getVersion(), "The Velocity proxy",
             version.getName().equals("Velocity") ? VELOCITY_URL : null,
-            ImmutableList.of(version.getVendor()), Collections.emptyList(), null);
+            ImmutableList.of(version.getVendor()), Collections.emptyList(),
+            Collections.emptyList(), null);
     VelocityPluginContainer container = new VelocityPluginContainer(description);
     container.setInstance(VelocityVirtualPlugin.INSTANCE);
     return container;
