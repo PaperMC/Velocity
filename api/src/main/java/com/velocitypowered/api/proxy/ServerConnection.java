@@ -46,7 +46,7 @@ public interface ServerConnection extends ChannelMessageSource, ChannelMessageSi
    * @return true if the client has loaded the world
    * @implNote This is purely client-dependent; see {@link com.velocitypowered.api.event.player.PlayerClientLoadedWorldEvent}.
    * @sinceMinecraft 1.21.4
-   * @since 3.5.0
+   * @since 4.1.0
    */
   boolean isClientLoaded();
 
