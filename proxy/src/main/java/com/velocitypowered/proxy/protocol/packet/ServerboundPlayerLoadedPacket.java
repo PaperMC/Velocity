@@ -27,7 +27,8 @@ public class ServerboundPlayerLoadedPacket implements MinecraftPacket {
 
   public static final ServerboundPlayerLoadedPacket INSTANCE = new ServerboundPlayerLoadedPacket();
 
-  private ServerboundPlayerLoadedPacket() {}
+  private ServerboundPlayerLoadedPacket() {
+  }
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
