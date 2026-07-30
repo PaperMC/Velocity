@@ -7,6 +7,7 @@
 
 package com.velocitypowered.api.proxy;
 
+import com.google.common.annotations.Beta;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -48,6 +49,7 @@ public interface ServerConnection extends ChannelMessageSource, ChannelMessageSi
    * @sinceMinecraft 1.21.4
    * @since 4.1.0
    */
+  @Beta
   boolean isClientLoaded();
 
   /**
