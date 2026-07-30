@@ -20,7 +20,7 @@ import com.velocitypowered.api.proxy.Player;
  *     Though plugins can implement a timeout by scheduling a task in {@link ServerPostConnectEvent}
  *     and checking {@link com.velocitypowered.api.proxy.ServerConnection#isClientLoaded()}.
  * @sinceMinecraft 1.21.4
- * @since 3.5.0
+ * @since 4.1.0
  */
 @Beta
 public final class PlayerClientLoadedWorldEvent {
