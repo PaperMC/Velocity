@@ -30,10 +30,12 @@ public class ServerboundPlayerLoadedPacket implements MinecraftPacket {
   private ServerboundPlayerLoadedPacket() {}
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {}
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {}
+  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+  }
 
   @Override
   public int decodeExpectedMaxLength(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
