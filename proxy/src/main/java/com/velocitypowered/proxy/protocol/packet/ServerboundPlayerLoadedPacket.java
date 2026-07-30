@@ -46,5 +46,4 @@ public class ServerboundPlayerLoadedPacket implements MinecraftPacket {
   public boolean handle(MinecraftSessionHandler handler) {
     return handler.handle(this);
   }
-
 }

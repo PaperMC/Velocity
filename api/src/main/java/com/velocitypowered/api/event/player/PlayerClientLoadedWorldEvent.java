@@ -41,5 +41,4 @@ public final class PlayerClientLoadedWorldEvent {
         + "player=" + player
         + '}';
   }
-
 }
