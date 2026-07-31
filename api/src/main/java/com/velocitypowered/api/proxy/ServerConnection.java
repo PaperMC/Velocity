@@ -7,6 +7,7 @@
 
 package com.velocitypowered.api.proxy;
 
+import com.google.common.annotations.Beta;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
 import com.velocitypowered.api.proxy.messages.ChannelMessageSource;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -39,6 +40,17 @@ public interface ServerConnection extends ChannelMessageSource, ChannelMessageSi
    * @return the server info for this connection
    */
   ServerInfo getServerInfo();
+
+  /**
+   * Returns whether the client notified this connection of having loaded the world.
+   *
+   * @return true if the client has loaded the world
+   * @implNote This is purely client-dependent; see {@link com.velocitypowered.api.event.player.PlayerClientLoadedWorldEvent}.
+   * @sinceMinecraft 1.21.4
+   * @since 4.1.0
+   */
+  @Beta
+  boolean isClientLoaded();
 
   /**
    * Returns the player that this connection is associated with.

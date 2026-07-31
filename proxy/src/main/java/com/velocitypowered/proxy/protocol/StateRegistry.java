@@ -88,6 +88,7 @@ import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.ServerboundCustomClickActionPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerboundPlayerLoadedPacket;
 import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusPingPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusRequestPacket;
@@ -344,6 +345,12 @@ public enum StateRegistry {
           map(0x13, MINECRAFT_1_21_2, false),
           map(0x14, MINECRAFT_1_21_6, false),
           map(0x15, MINECRAFT_26_1, false));
+      serverbound.register(
+          ServerboundPlayerLoadedPacket.class,
+          () -> ServerboundPlayerLoadedPacket.INSTANCE,
+          map(0x2A, MINECRAFT_1_21_4, false),
+          map(0x2B, MINECRAFT_1_21_6, false),
+          map(0x2C, MINECRAFT_26_1, false));
       serverbound.register(
           PluginMessagePacket.class,
           PluginMessagePacket::new,
