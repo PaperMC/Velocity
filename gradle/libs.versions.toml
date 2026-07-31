@@ -29,7 +29,7 @@ configurate4-hocon = { module = "org.spongepowered:configurate-hocon", version.r
 configurate4-yaml = { module = "org.spongepowered:configurate-yaml", version.ref = "configurate4" }
 configurate4-gson = { module = "org.spongepowered:configurate-gson", version.ref = "configurate4" }
 disruptor = "com.lmax:disruptor:4.0.0"
-fastutil = "it.unimi.dsi:fastutil:8.5.18"
+fastutil = "it.unimi.dsi:fastutil:8.5.19"
 flare-core = { module = "space.vectrix.flare:flare", version.ref = "flare" }
 flare-fastutil = { module = "space.vectrix.flare:flare-fastutil", version.ref = "flare" }
 jline = "org.jline:jline-terminal-ffm:4.3.1"
