@@ -14,9 +14,10 @@ import com.velocitypowered.api.proxy.Player;
 /**
  * Called when a player is marked as loaded by the client.
  *
- * <p>This event is fired when the player explicitly notifies the server after loading the world (closing the downloading terrain screen)
+ * <p>This event is fired once per {@link com.velocitypowered.api.proxy.ServerConnection}
+ * when the player explicitly notifies the server after loading the world (closing the downloading terrain screen)
  *
- * @implNote Unlike Paper this event will <u>not</u> fire due to a timeout.
+ * @implNote Unlike Paper this event will <u>not</u> fire due to a timeout nor respawning.
  *     Though plugins can implement a timeout by scheduling a task in {@link ServerPostConnectEvent}
  *     and checking {@link com.velocitypowered.api.proxy.ServerConnection#isClientLoaded()}.
  * @sinceMinecraft 1.21.4
