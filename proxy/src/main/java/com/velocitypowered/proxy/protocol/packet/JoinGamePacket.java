@@ -245,17 +245,7 @@ public class JoinGamePacket implements MinecraftPacket {
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_9_1)) {
       this.dimension = buf.readInt();
     } else {
-      // Vanilla 1.7.10 uses a signed byte for dimension (-1 Nether, 0 Overworld, 1 End).
-      // Modded servers hack this to an unsigned byte to allow dim IDs up to 255.
-      // We must store the canonical int here because RespawnPacket.fromJoinGame copies this
-      // value into a packet that encodes dimension as a 4-byte int (RespawnPacket.encode,
-      // pre-1.16 logic). Sign-extending a modded byte like 0xB4 to int -76 sends an
-      // illegal dimension ID to the client and crashes it.
-      //
-      // The wire byte is ambiguous: 0xFF could be vanilla Nether (-1) or modded dim 255.
-      // We resolve in Nether's favor since vanilla 1.7.10 only ever uses -1/0/1.
-      short raw = buf.readUnsignedByte();
-      this.dimension = raw == 0xFF ? -1 : raw;
+      this.dimension = buf.readByte();
     }
     if (version.noGreaterThan(ProtocolVersion.MINECRAFT_1_13_2)) {
       this.difficulty = buf.readUnsignedByte();
