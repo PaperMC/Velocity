@@ -264,6 +264,12 @@ public class JoinGamePacket implements MinecraftPacket {
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_15)) {
       this.showRespawnScreen = buf.readBoolean();
     }
+
+    // Hodgepodge
+    if (version.lessThan(ProtocolVersion.MINECRAFT_1_9_1)
+        && buf.readableBytes() >= 4) {
+      this.dimension = buf.readInt();
+    }
   }
 
   private void decode116Up(ByteBuf buf, ProtocolVersion version) {
@@ -418,6 +424,12 @@ public class JoinGamePacket implements MinecraftPacket {
     }
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_15)) {
       buf.writeBoolean(showRespawnScreen);
+    }
+
+    // Hodgepodge
+    if (version.lessThan(ProtocolVersion.MINECRAFT_1_9_1)
+        && (dimension < Byte.MIN_VALUE || dimension > Byte.MAX_VALUE)) {
+      buf.writeInt(dimension);
     }
   }
 
