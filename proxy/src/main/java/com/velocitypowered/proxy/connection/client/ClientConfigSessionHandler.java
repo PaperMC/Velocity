@@ -47,6 +47,7 @@ import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.config.KnownPacksPacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufHolder;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import java.util.concurrent.CompletableFuture;
@@ -212,8 +213,9 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(ServerboundCustomClickActionPacket packet) {
-    if (player.getConnectionInFlight() != null) {
-      player.getConnectionInFlight().ensureConnected().write(packet.retain());
+    VelocityServerConnection serverConnection = player.getConnectionInFlightOrConnectedServer();
+    if (serverConnection != null) {
+      serverConnection.ensureConnected().write(packet.retain());
       return true;
     }
 
@@ -240,8 +242,8 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
 
     MinecraftConnection smc = serverConnection.getConnection();
     if (smc != null && serverConnection.getPhase().consideredComplete()) {
-      if (packet instanceof PluginMessagePacket) {
-        ((PluginMessagePacket) packet).retain();
+      if (packet instanceof ByteBufHolder bufHolder) {
+        bufHolder.retain();
       }
       smc.write(packet);
     }
