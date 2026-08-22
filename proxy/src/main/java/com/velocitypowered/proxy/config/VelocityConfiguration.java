@@ -558,11 +558,11 @@ public class VelocityConfiguration implements ProxyConfig {
       final PlayerInfoForwarding forwardingMode = config.getEnumOrElse(
               "player-info-forwarding-mode", PlayerInfoForwarding.NONE);
       final PingPassthroughMode pingPassthrough = new PingPassthroughMode(
-              config.getOrElse("ping-passthrough-version", false),
-              config.getOrElse("ping-passthrough-players", false),
-              config.getOrElse("ping-passthrough-description", false),
-              config.getOrElse("ping-passthrough-favicon", false),
-              config.getOrElse("ping-passthrough-modinfo", false));
+              config.getOrElse("ping-passthrough.version", false),
+              config.getOrElse("ping-passthrough.players", false),
+              config.getOrElse("ping-passthrough.description", false),
+              config.getOrElse("ping-passthrough.favicon", false),
+              config.getOrElse("ping-passthrough.modinfo", false));
       final boolean samplePlayersInPing = config.getOrElse("sample-players-in-ping", false);
 
       final String bind = config.getOrElse("bind", "0.0.0.0:25565");

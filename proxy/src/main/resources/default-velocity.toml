@@ -1,5 +1,5 @@
 # Config version. Do not change this
-config-version = "2.8"
+config-version = "2.9"
 
 # What port should the proxy be bound to? By default, we'll bind to all addresses on port 25565.
 bind = "0.0.0.0:25565"
@@ -51,21 +51,6 @@ announce-forge = false
 # any existing player who is online if a duplicate connection attempt is made.
 kick-existing-players = false
 
-# Should Velocity pass the version number from the backend server when responding to server list ping requests?
-ping-passthrough-version = false
-
-# Should Velocity pass the player count from the backend server when responding to server list ping requests?
-ping-passthrough-players = false
-
-# Should Velocity pass the description from the backend server when responding to server list ping requests?
-ping-passthrough-description = false
-
-# Should Velocity pass the favicon (also known as the server icon) from the backend server when responding to server list ping requests?
-ping-passthrough-favicon = false
-
-# Should Velocity pass the mod list from the backend server when responding to server list ping requests?
-ping-passthrough-modinfo = false
-
 # If enabled (default is false), then a sample of the online players on the proxy will be visible
 # when hovering over the player count in the server list.
 # This doesn't have any effect when ping passthrough is set to either "description" or "all".
@@ -73,6 +58,18 @@ sample-players-in-ping = false
 
 # If not enabled (default is true) player IP addresses will be replaced by <ip address withheld> in logs
 enable-player-address-logging = true
+
+[ping-passthrough]
+# Should Velocity pass the version number from the backend server when responding to server list ping requests?
+version = false
+# Should Velocity pass the player count from the backend server when responding to server list ping requests?
+players = false
+# Should Velocity pass the description from the backend server when responding to server list ping requests?
+description = false
+# Should Velocity pass the favicon (also known as the server icon) from the backend server when responding to server list ping requests?
+favicon = false
+# Should Velocity pass the mod list from the backend server when responding to server list ping requests?
+modinfo = false
 
 [packet-limiter]
 # Size of the moving time window in seconds used to calculate average rates.
@@ -86,6 +83,7 @@ bytes-per-second = -1
 # Protects against compression bomb attacks where small packets expand to excessive sizes after decompression.
 # -1 disables this check.
 decompressed-bytes-per-second = 5242880
+
 
 [servers]
 # Configure your servers here. Each key represents the server's name, and the value
