@@ -27,7 +27,7 @@ import org.apache.logging.log4j.Logger;
 public final class PingPassthroughMigration implements ConfigurationMigration {
   @Override
   public boolean shouldMigrate(final CommentedFileConfig config) {
-    return configVersion(config) < 2.8;
+    return configVersion(config) < 2.9;
   }
 
   @Override
@@ -82,6 +82,6 @@ public final class PingPassthroughMigration implements ConfigurationMigration {
     );
 
     // Update config version
-    config.set("config-version", "2.8");
+    config.set("config-version", "2.9");
   }
 }

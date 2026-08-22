@@ -128,7 +128,7 @@ public class ServerListPingHandler {
           players = fallback.getPlayers().orElse(null);
         }
 
-        net.kyori.adventure.text.Component description;
+        Component description;
         if (mode.description && response.getDescriptionComponent() != null) {
           description = response.getDescriptionComponent();
         } else {
