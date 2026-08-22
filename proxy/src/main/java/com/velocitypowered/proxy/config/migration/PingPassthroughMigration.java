@@ -40,44 +40,44 @@ public final class PingPassthroughMigration implements ConfigurationMigration {
     config.remove("ping-passthrough");
 
     // Create ping passthrough entry for the version
-    config.set("ping-passthrough-version", legacyMode.equals(LegacyPingPassthroughMode.ALL));
+    config.set("ping-passthrough.version", legacyMode.equals(LegacyPingPassthroughMode.ALL));
     config.setComment(
-        "ping-passthrough-version",
+        "ping-passthrough.version",
         " Should Velocity pass the version number from the backend server when responding to server list ping requests?"
     );
 
     // Create ping passthrough entry for the players
-    config.set("ping-passthrough-players", legacyMode.equals(LegacyPingPassthroughMode.ALL));
+    config.set("ping-passthrough.players", legacyMode.equals(LegacyPingPassthroughMode.ALL));
     config.setComment(
-        "ping-passthrough-players",
+        "ping-passthrough.players",
         " Should Velocity pass the player count from the backend server when responding to server list ping requests?"
     );
 
     // Create ping passthrough entry for the description
-    config.set("ping-passthrough-description",
+    config.set("ping-passthrough.description",
         legacyMode.equals(LegacyPingPassthroughMode.ALL)
             || legacyMode.equals(LegacyPingPassthroughMode.DESCRIPTION)
     );
     config.setComment(
-        "ping-passthrough-description",
+        "ping-passthrough.description",
         " Should Velocity pass the description from the backend server when responding to server list ping requests?"
     );
 
     // Create ping passthrough entry for the favicon
-    config.set("ping-passthrough-favicon", legacyMode.equals(LegacyPingPassthroughMode.ALL));
+    config.set("ping-passthrough.favicon", legacyMode.equals(LegacyPingPassthroughMode.ALL));
     config.setComment(
-        "ping-passthrough-favicon",
+        "ping-passthrough.favicon",
         " Should Velocity pass the favicon (also known as the server icon) from the backend server when responding to server list ping requests?"
     );
 
     // Create ping passthrough entry for the mods info
-    config.set("ping-passthrough-modinfo",
+    config.set("ping-passthrough.modinfo",
         legacyMode.equals(LegacyPingPassthroughMode.ALL)
             || legacyMode.equals(LegacyPingPassthroughMode.MODS)
             || legacyMode.equals(LegacyPingPassthroughMode.DESCRIPTION)
     );
     config.setComment(
-        "ping-passthrough-modinfo",
+        "ping-passthrough.modinfo",
         " Should Velocity pass the mod list from the backend server when responding to server list ping requests?"
     );
 
