@@ -46,10 +46,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -62,6 +64,7 @@ public class VelocityPluginManager implements PluginManager {
 
   private final Map<String, PluginContainer> pluginsById = new LinkedHashMap<>();
   private final Map<Object, PluginContainer> pluginInstances = new IdentityHashMap<>();
+  private final Set<PluginContainer> plugins = new LinkedHashSet<>();
   private final VelocityServer server;
 
   public VelocityPluginManager(VelocityServer server) {
@@ -74,7 +77,9 @@ public class VelocityPluginManager implements PluginManager {
    * @param plugin the plugin to register
    */
   public void registerPlugin(PluginContainer plugin) {
+    plugins.add(plugin);
     pluginsById.put(plugin.getDescription().getId(), plugin);
+    plugin.getDescription().getProvidedIds().forEach(id -> pluginsById.put(id, plugin));
     Optional<?> instance = plugin.getInstance();
     instance.ifPresent(o -> pluginInstances.put(o, plugin));
   }
@@ -100,16 +105,34 @@ public class VelocityPluginManager implements PluginManager {
         try {
           PluginDescription candidate = loader.loadCandidate(path);
 
-          // If we found a duplicate candidate (with the same ID), don't load it.
-          PluginDescription maybeExistingCandidate = foundCandidates.putIfAbsent(
-              candidate.getId(), candidate);
+          // A plugin claims its own ID plus every ID it provides. If any of those are already
+          // claimed by another candidate, don't load this one.
+          List<String> claimedIds = new ArrayList<>(candidate.getProvidedIds().size() + 1);
+          claimedIds.add(candidate.getId());
+          claimedIds.addAll(candidate.getProvidedIds());
 
-          if (maybeExistingCandidate != null) {
-            logger.error("Refusing to load plugin at path {} since we already "
-                    + "loaded a plugin with the same ID {} from {}",
+          PluginDescription conflict = null;
+          String conflictingId = null;
+          for (String id : claimedIds) {
+            PluginDescription existing = foundCandidates.get(id);
+            if (existing != null) {
+              conflict = existing;
+              conflictingId = id;
+              break;
+            }
+          }
+
+          if (conflict != null) {
+            logger.error("Refusing to load plugin at path {} since ID {} was already "
+                    + "claimed by a plugin loaded from {}",
                 candidate.getSource().map(Objects::toString).orElse("<UNKNOWN>"),
-                candidate.getId(),
-                maybeExistingCandidate.getSource().map(Objects::toString).orElse("<UNKNOWN>"));
+                conflictingId,
+                conflict.getSource().map(Objects::toString).orElse("<UNKNOWN>"));
+            continue;
+          }
+
+          for (String id : claimedIds) {
+            foundCandidates.put(id, candidate);
           }
         } catch (Throwable e) {
           logger.error("Unable to load plugin {}", path, e);
@@ -122,8 +145,10 @@ public class VelocityPluginManager implements PluginManager {
       return;
     }
 
+    // foundCandidates indexes each candidate under its ID and any provided IDs, so dedupe before
+    // sorting to avoid loading a plugin more than once.
     List<PluginDescription> sortedPlugins = PluginDependencyUtils.sortCandidates(
-        new ArrayList<>(foundCandidates.values()));
+        new ArrayList<>(new LinkedHashSet<>(foundCandidates.values())));
 
     Map<String, PluginDescription> loadedCandidates = new HashMap<>();
     Map<PluginContainer, Module> pluginContainers = new LinkedHashMap<>();
@@ -144,6 +169,7 @@ public class VelocityPluginManager implements PluginManager {
         VelocityPluginContainer container = new VelocityPluginContainer(realPlugin);
         pluginContainers.put(container, loader.createModule(container));
         loadedCandidates.put(realPlugin.getId(), realPlugin);
+        realPlugin.getProvidedIds().forEach(id -> loadedCandidates.putIfAbsent(id, realPlugin));
       } catch (Throwable e) {
         logger.error("Can't create module for plugin {}", candidate.getId(), e);
       }
@@ -201,7 +227,7 @@ public class VelocityPluginManager implements PluginManager {
 
   @Override
   public Collection<PluginContainer> getPlugins() {
-    return Collections.unmodifiableCollection(pluginsById.values());
+    return Collections.unmodifiableCollection(plugins);
   }
 
   @Override

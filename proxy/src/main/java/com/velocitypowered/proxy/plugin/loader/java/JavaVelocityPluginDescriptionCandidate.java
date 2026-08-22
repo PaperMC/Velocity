@@ -32,9 +32,9 @@ class JavaVelocityPluginDescriptionCandidate extends VelocityPluginDescription {
 
   JavaVelocityPluginDescriptionCandidate(String id, @Nullable String name, @Nullable String version,
       @Nullable String description, @Nullable String url,
-      @Nullable List<String> authors, Collection<PluginDependency> dependencies, Path source,
-      String mainClass) {
-    super(id, name, version, description, url, authors, dependencies, source);
+      @Nullable List<String> authors, Collection<PluginDependency> dependencies,
+      @Nullable Collection<String> providedIds, Path source, String mainClass) {
+    super(id, name, version, description, url, authors, dependencies, providedIds, source);
     this.mainClass = checkNotNull(mainClass);
   }
 

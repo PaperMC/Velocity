@@ -17,7 +17,6 @@
 
 package com.velocitypowered.proxy.plugin.util;
 
-import com.google.common.collect.Maps;
 import com.google.common.graph.Graph;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
@@ -60,8 +59,19 @@ public class PluginDependencyUtils {
         .allowsSelfLoops(false)
         .expectedNodeCount(sortedCandidates.size())
         .build();
-    Map<String, PluginDescription> candidateMap = Maps.uniqueIndex(sortedCandidates,
-        PluginDescription::getId);
+
+    // Index candidates by their own ID and any IDs they provide, so a dependency can be satisfied
+    // by a plugin that provides that ID. Real IDs take precedence over provided IDs, and the first
+    // provider of a given ID wins; upstream loading rejects such conflicts before we get here.
+    Map<String, PluginDescription> candidateMap = new HashMap<>();
+    for (PluginDescription description : sortedCandidates) {
+      candidateMap.putIfAbsent(description.getId(), description);
+    }
+    for (PluginDescription description : sortedCandidates) {
+      for (String provided : description.getProvidedIds()) {
+        candidateMap.putIfAbsent(provided, description);
+      }
+    }
 
     for (PluginDescription description : sortedCandidates) {
       graph.addNode(description);
@@ -69,7 +79,8 @@ public class PluginDependencyUtils {
       for (PluginDependency dependency : description.getDependencies()) {
         PluginDescription in = candidateMap.get(dependency.getId());
 
-        if (in != null) {
+        // Guard against self-loops: a plugin may name an ID it itself provides.
+        if (in != null && !in.equals(description)) {
           graph.putEdge(description, in);
         }
       }

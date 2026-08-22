@@ -101,6 +101,16 @@ public interface PluginDescription {
   }
 
   /**
+   * Gets a {@link Collection} of the provided IDs of the {@link Plugin} within this container.
+   *
+   * @return the provided plugins IDs, can be empty
+   * @see Plugin#provides()
+   */
+  default Collection<String> getProvidedIds() {
+    return ImmutableSet.of();
+  }
+
+  /**
    * Returns the source the plugin was loaded from.
    *
    * @return the source the plugin was loaded from or {@link Optional#empty()} if unknown

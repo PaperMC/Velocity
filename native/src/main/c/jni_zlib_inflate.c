@@ -34,8 +34,7 @@ Java_com_velocitypowered_natives_compression_NativeZlibInflate_process(JNIEnv *e
     jlong sourceAddress,
     jint sourceLength,
     jlong destinationAddress,
-    jint destinationLength,
-    jlong maximumSize)
+    jint destinationLength)
 {
     struct libdeflate_decompressor *decompress = (struct libdeflate_decompressor *) ctx;
     enum libdeflate_result result = libdeflate_zlib_decompress(decompress, (void *) sourceAddress,

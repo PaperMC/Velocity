@@ -44,6 +44,15 @@ class PluginDependencyUtilsTest {
   private static final PluginDescription CIRCULAR_DEPENDENCY_2 = testDescription("oval",
       new PluginDependency("circle", "", false));
 
+  // "provider" is loaded from a real ID but provides the virtual ID "some-api"; "consumer" and
+  // "zdependent" depend on it only through that provided ID / a chain that reaches it.
+  private static final PluginDescription PROVIDES_API = providingDescription("provider",
+      ImmutableList.of("some-api"));
+  private static final PluginDescription DEPENDS_ON_PROVIDED = providingDescription("consumer",
+      ImmutableList.of(), new PluginDependency("some-api", null, false));
+  private static final PluginDescription DEPENDS_ON_CONSUMER = testDescription("zdependent",
+      new PluginDependency("consumer", null, false));
+
   @Test
   void sortCandidatesTrivial() throws Exception {
     List<PluginDescription> descriptionList = new ArrayList<>();
@@ -96,10 +105,31 @@ class PluginDependencyUtilsTest {
     assertThrows(IllegalStateException.class, () -> PluginDependencyUtils.sortCandidates(descs));
   }
 
+  @Test
+  void sortCandidatesResolvesProvidedDependency() throws Exception {
+    List<PluginDescription> plugins = ImmutableList.of(DEPENDS_ON_PROVIDED, PROVIDES_API);
+    List<PluginDescription> expected = ImmutableList.of(PROVIDES_API, DEPENDS_ON_PROVIDED);
+    assertEquals(expected, PluginDependencyUtils.sortCandidates(plugins));
+  }
+
+  @Test
+  void sortCandidatesResolvesTransitiveProvidedDependency() throws Exception {
+    List<PluginDescription> plugins = ImmutableList.of(DEPENDS_ON_CONSUMER, DEPENDS_ON_PROVIDED,
+        PROVIDES_API);
+    List<PluginDescription> expected = ImmutableList.of(PROVIDES_API, DEPENDS_ON_PROVIDED,
+        DEPENDS_ON_CONSUMER);
+    assertEquals(expected, PluginDependencyUtils.sortCandidates(plugins));
+  }
+
   private static PluginDescription testDescription(String id, PluginDependency... dependencies) {
+    return providingDescription(id, ImmutableList.of(), dependencies);
+  }
+
+  private static PluginDescription providingDescription(String id, List<String> provides,
+      PluginDependency... dependencies) {
     return new VelocityPluginDescription(
         id, "tuxed", "0.1", null, null, ImmutableList.of(),
-        ImmutableList.copyOf(dependencies), null
+        ImmutableList.copyOf(dependencies), provides, null
     );
   }
 }
