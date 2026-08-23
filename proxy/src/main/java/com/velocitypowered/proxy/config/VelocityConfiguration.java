@@ -514,8 +514,8 @@ public class VelocityConfiguration implements ProxyConfig {
           new MotdMigration(),
           new MiniMessageTranslationsMigration(),
           new TransferIntegrationMigration(),
+          new PacketLimiterMigration(),
           new PingPassthroughMigration(),
-          new PacketLimiterMigration()
       };
 
       for (final ConfigurationMigration migration : migrations) {
