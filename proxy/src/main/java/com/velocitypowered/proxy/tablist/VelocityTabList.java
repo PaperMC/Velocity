@@ -208,6 +208,7 @@ public class VelocityTabList implements InternalTabList {
     }
   }
 
+  @Override
   public void addEntries(TabListEntry... entries) {
     addEntries(Arrays.asList(entries));
   }
@@ -218,6 +219,7 @@ public class VelocityTabList implements InternalTabList {
     return Optional.ofNullable(this.entries.remove(uuid));
   }
 
+  @Override
   public Set<TabListEntry> removeEntries(Iterable<UUID> entries) {
     this.connection.write(new RemovePlayerInfoPacket(Lists.newArrayList(entries)));
     final Set<TabListEntry> removed = new HashSet<>();
@@ -230,6 +232,7 @@ public class VelocityTabList implements InternalTabList {
     return removed;
   }
 
+  @Override
   public Set<TabListEntry> removeEntries(UUID... entries) {
     return removeEntries(List.of(entries));
   }
