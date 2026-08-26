@@ -19,35 +19,22 @@ package com.velocitypowered.proxy.config;
 
 /**
  * Object to contain all the things that can be toggled for ping passthrough.
+ *
+ * @param version Whether the version should be passed through.
+ * @param players Whether the player count should be passed through.
+ * @param description Whether the description should be passed through.
+ * @param favicon Whether the favicon should be passed through.
+ * @param modinfo Whether the modinfo should be passed through.
  */
-public class PingPassthroughMode {
-  public boolean version;
-  public boolean players;
-  public boolean description;
-  public boolean favicon;
-  public boolean modinfo;
-
-  /**
-   * Passthrough mode constructor.
-   * Looking at other code, I'm not sure the constructor is supposed to need a javadoc style comment,
-   * but checkstyle was yelling at me because I didn't include one.
-   * Probably for the best.
-   *
-   * @param version Whether the version should be passed through.
-   * @param players Whether the player count should be passed through.
-   * @param description Whether the description should be passed through.
-   * @param favicon Whether the favicon should be passed through.
-   * @param modinfo Whether the modinfo should be passed through.
-   */
-  public PingPassthroughMode(boolean version, boolean players, boolean description, boolean favicon, boolean modinfo) {
-    this.version = version;
-    this.players = players;
-    this.description = description;
-    this.favicon = favicon;
-    this.modinfo = modinfo;
-  }
+public record PingPassthroughMode(boolean version, boolean players,
+    boolean description, boolean favicon, boolean modinfo) {
 
   public boolean enabled() {
-    return this.version || this.players || this.description || this.favicon || this.modinfo;
+    return this.version || this.players || this.description || this.favicon
+      || this.modinfo;
   }
+
+  // Not used, just here to state what the defaults are.
+  public static final PingPassthroughMode DEFAULT = new PingPassthroughMode(
+      false, false, false, false, false);
 }

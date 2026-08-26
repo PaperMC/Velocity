@@ -115,35 +115,37 @@ public class ServerListPingHandler {
         }
 
         ServerPing.Version version;
-        if (mode.version) {
+        if (mode.version()) {
           version = response.getVersion();
         } else {
           version = fallback.getVersion();
         }
 
         ServerPing.Players players;
-        if (mode.players) {
+        if (mode.players()) {
           players = response.getPlayers().orElse(null);
         } else {
           players = fallback.getPlayers().orElse(null);
         }
 
+        // Why the special handling of the description?
+        // Why not just response.getDescriptionComponent.orElse(null)?
         Component description;
-        if (mode.description && response.getDescriptionComponent() != null) {
+        if (mode.description() && response.getDescriptionComponent() != null) {
           description = response.getDescriptionComponent();
         } else {
           description = fallback.getDescriptionComponent();
         }
 
         Favicon favicon;
-        if (mode.favicon) {
+        if (mode.favicon()) {
           favicon = response.getFavicon().orElse(null);
         } else {
           favicon = fallback.getFavicon().orElse(null);
         }
 
         ModInfo modinfo;
-        if (mode.modinfo) {
+        if (mode.modinfo()) {
           modinfo = response.getModinfo().orElse(null);
         } else {
           modinfo = fallback.getModinfo().orElse(null);
