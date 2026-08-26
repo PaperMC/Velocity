@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Velocity Contributors
+ * Copyright (C) 2024-2026 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,42 +65,36 @@ public final class PingPassthroughMigration implements ConfigurationMigration {
     config.removeComment("ping-passthrough");
     config.remove("ping-passthrough");
 
-    // Create ping passthrough entry for the version
     config.set("ping-passthrough.version", version);
     config.setComment(
         "ping-passthrough.version",
         " Should Velocity pass the version number from the backend server when responding to server list ping requests?"
     );
 
-    // Create ping passthrough entry for the players
     config.set("ping-passthrough.players", players);
     config.setComment(
         "ping-passthrough.players",
         " Should Velocity pass the player count from the backend server when responding to server list ping requests?"
     );
 
-    // Create ping passthrough entry for the description
     config.set("ping-passthrough.description", description);
     config.setComment(
         "ping-passthrough.description",
         " Should Velocity pass the description from the backend server when responding to server list ping requests?"
     );
 
-    // Create ping passthrough entry for the favicon
     config.set("ping-passthrough.favicon", favicon);
     config.setComment(
         "ping-passthrough.favicon",
         " Should Velocity pass the favicon (also known as the server icon) from the backend server when responding to server list ping requests?"
     );
 
-    // Create ping passthrough entry for the mods info
     config.set("ping-passthrough.modinfo", modinfo);
     config.setComment(
         "ping-passthrough.modinfo",
         " Should Velocity pass the mod list from the backend server when responding to server list ping requests?"
     );
 
-    // Update config version
     config.set("config-version", "2.9");
   }
 }

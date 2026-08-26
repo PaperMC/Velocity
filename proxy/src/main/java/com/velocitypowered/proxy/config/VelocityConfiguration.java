@@ -80,7 +80,7 @@ public class VelocityConfiguration implements ProxyConfig {
   @Expose
   private boolean onlineModeKickExistingPlayers = false;
   @Expose
-  private PingPassthroughMode pingPassthrough = new PingPassthroughMode(false, false, false, false, false);
+  private PingPassthroughMode pingPassthrough = PingPassthroughMode.DEFAULT;
   @Expose
   private boolean samplePlayersInPing = false;
   private final Servers servers;
@@ -557,12 +557,7 @@ public class VelocityConfiguration implements ProxyConfig {
       final CommentedConfig metricsConfig = config.get("metrics");
       final PlayerInfoForwarding forwardingMode = config.getEnumOrElse(
               "player-info-forwarding-mode", PlayerInfoForwarding.NONE);
-      final PingPassthroughMode pingPassthrough = new PingPassthroughMode(
-              config.getOrElse("ping-passthrough.version", false),
-              config.getOrElse("ping-passthrough.players", false),
-              config.getOrElse("ping-passthrough.description", false),
-              config.getOrElse("ping-passthrough.favicon", false),
-              config.getOrElse("ping-passthrough.modinfo", false));
+      final PingPassthroughMode pingPassthrough = PingPassthroughMode.fromConfig(config.get("ping-passthrough"));
       final boolean samplePlayersInPing = config.getOrElse("sample-players-in-ping", false);
 
       final String bind = config.getOrElse("bind", "0.0.0.0:25565");

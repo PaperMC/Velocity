@@ -128,11 +128,13 @@ public class ServerListPingHandler {
           players = fallback.getPlayers().orElse(null);
         }
 
-        // Why the special handling of the description?
-        // Why not just response.getDescriptionComponent.orElse(null)?
         Component description;
-        if (mode.description() && response.getDescriptionComponent() != null) {
-          description = response.getDescriptionComponent();
+        if (mode.description()) {
+          if (response.getDescriptionComponent() != null) {
+            description = response.getDescriptionComponent();
+          } else {
+            description = Component.empty();
+          }
         } else {
           description = fallback.getDescriptionComponent();
         }
