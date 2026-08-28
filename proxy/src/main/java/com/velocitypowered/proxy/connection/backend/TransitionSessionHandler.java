@@ -33,11 +33,16 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.util.ConnectionMessages;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults;
 import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
+import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.JoinGamePacket;
 import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
 import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
+import io.netty.buffer.ByteBuf;
+import io.netty.util.ReferenceCountUtil;
+import java.util.ArrayDeque;
+import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -53,6 +58,9 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   private final VelocityServerConnection serverConn;
   private final CompletableFuture<Impl> resultFuture;
   private final BungeeCordMessageResponder bungeecordMessageResponder;
+  // Packets the backend sent us while the switch was still in flight. Only ever touched from the
+  // backend connection's event loop.
+  private final Queue<Object> queuedPackets = new ArrayDeque<>();
 
   /**
    * Creates the new transition handler.
@@ -117,6 +125,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           // Make sure we can still transition (player might have disconnected here).
           if (!serverConn.isActive()) {
             // Connection is obsolete.
+            releaseQueuedPackets();
             serverConn.disconnect();
             return;
           }
@@ -132,6 +141,10 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           }
           assert playHandler != null;
           playHandler.handleBackendJoinGame(packet, serverConn);
+
+          // Send anything the backend sent us before we were able to complete the switch. The
+          // client can only make sense of these once it has the JoinGame packet in hand.
+          drainQueuedPackets();
 
           // Set the new play session handler for the server. We will have nothing more to do
           // with this connection once this task finishes up.
@@ -157,6 +170,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
               previousServer));
           resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
         }, smc.eventLoop()).exceptionally(exc -> {
+          releaseQueuedPackets();
           logger.error("Unable to switch to new server {} for {}",
               serverConn.getServerInfo().getName(),
               player.getUsername(), exc);
@@ -214,7 +228,41 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
+  public void handleGeneric(MinecraftPacket packet) {
+    // We can't forward this yet: the client has not seen the JoinGame packet for this server, so
+    // it has no context to apply anything we send it. Hold on to it until the switch completes -
+    // dropping it on the floor loses one-shot state such as the world clock.
+    this.queuedPackets.add(ReferenceCountUtil.retain(packet));
+  }
+
+  @Override
+  public void handleUnknown(ByteBuf buf) {
+    this.queuedPackets.add(buf.retain());
+  }
+
+  private void drainQueuedPackets() {
+    if (this.queuedPackets.isEmpty()) {
+      return;
+    }
+
+    final MinecraftConnection playerConnection = serverConn.getPlayer().getConnection();
+    Object queued;
+    while ((queued = this.queuedPackets.poll()) != null) {
+      playerConnection.delayedWrite(queued);
+    }
+    playerConnection.flush();
+  }
+
+  private void releaseQueuedPackets() {
+    Object queued;
+    while ((queued = this.queuedPackets.poll()) != null) {
+      ReferenceCountUtil.release(queued);
+    }
+  }
+
+  @Override
   public void disconnected() {
+    releaseQueuedPackets();
     resultFuture.complete(ConnectionRequestResults.forDisconnect(
         ConnectionMessages.INTERNAL_SERVER_CONNECTION_ERROR, serverConn.getServer()));
   }
