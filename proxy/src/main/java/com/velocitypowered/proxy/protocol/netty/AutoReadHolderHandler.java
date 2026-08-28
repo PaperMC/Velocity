@@ -42,13 +42,21 @@ public class AutoReadHolderHandler extends ChannelDuplexHandler {
   }
 
   private void drainQueuedMessages(ChannelHandlerContext ctx) {
-    if (!this.queuedMessages.isEmpty()) {
-      Object queued;
-      while ((queued = this.queuedMessages.poll()) != null) {
-        ctx.fireChannelRead(queued);
-      }
-      ctx.fireChannelReadComplete();
+    // A read request is always worth one message, otherwise a connection that is not auto-reading
+    // could never make progress. Past the first, keep going only while auto-reading is still on:
+    // a handler is allowed to suspend the connection from inside its own channelRead, and if we
+    // ignored that the messages behind it would be delivered to a handler that just said it was
+    // not ready for them.
+    Object queued = this.queuedMessages.poll();
+    if (queued == null) {
+      return;
     }
+
+    ctx.fireChannelRead(queued);
+    while (ctx.channel().config().isAutoRead() && (queued = this.queuedMessages.poll()) != null) {
+      ctx.fireChannelRead(queued);
+    }
+    ctx.fireChannelReadComplete();
   }
 
   @Override
