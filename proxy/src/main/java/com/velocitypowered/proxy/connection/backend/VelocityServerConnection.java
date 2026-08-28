@@ -69,6 +69,7 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
   private @Nullable MinecraftConnection connection;
   private boolean hasCompletedJoin = false;
   private boolean clientLoaded = false; // 1.21.4+
+  private MinecraftConnection.@Nullable ReadSuspension configSwitchSuspension;
   private boolean gracefulDisconnect = false;
   private BackendConnectionPhase connectionPhase = BackendConnectionPhases.UNKNOWN;
   private final Map<Long, Long> pendingPings = new HashMap<>();
@@ -315,6 +316,28 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
           connection.setType(ConnectionTypes.VANILLA);
         }
       }
+    }
+  }
+
+  /**
+   * Suspends reading from the backend while the player is moved through the configuration state,
+   * for a reconfiguration the backend asked for. The suspension is held here rather than in a
+   * session handler because the handler that takes it is not the one that gives it back.
+   */
+  public void suspendForConfigSwitch() {
+    if (this.configSwitchSuspension == null) {
+      this.configSwitchSuspension = ensureConnected().suspendReading();
+    }
+  }
+
+  /**
+   * Resumes reading from the backend once the player has acknowledged the configuration state.
+   */
+  public void resumeAfterConfigSwitch() {
+    final MinecraftConnection.ReadSuspension suspension = this.configSwitchSuspension;
+    if (suspension != null) {
+      this.configSwitchSuspension = null;
+      suspension.resume();
     }
   }
 

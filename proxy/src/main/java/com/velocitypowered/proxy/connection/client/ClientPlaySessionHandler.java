@@ -472,7 +472,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       CompletableFuture.runAsync(() -> {
         smc.write(packet);
         smc.setActiveSessionHandler(StateRegistry.CONFIG);
-        smc.setAutoReading(true);
+        serverConnection.resumeAfterConfigSwitch();
       }, smc.eventLoop()).exceptionally((ex) -> {
         logger.error("Error forwarding config state acknowledgement to server:", ex);
         return null;
@@ -596,7 +596,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     if (serverConn != null) {
       MinecraftConnection smc = serverConn.getConnection();
       if (smc != null) {
-        smc.setAutoReading(writable);
+        smc.setBackpressureSuspended(!writable);
       }
     }
   }

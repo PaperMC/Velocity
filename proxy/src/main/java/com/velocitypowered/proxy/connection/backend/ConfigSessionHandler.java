@@ -287,7 +287,8 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
       // Handling this stuff async means that we should probably pause
       // the connection while we toss this off into another pool
       byte[] bytes = ByteBufUtil.getBytes(packet.content());
-      this.serverConn.getConnection().setAutoReading(false);
+      final MinecraftConnection.ReadSuspension suspension =
+          this.serverConn.ensureConnected().suspendReading();
       this.server.getEventManager()
           .fire(new PluginMessageEvent(serverConn, serverConn.getPlayer(), id, bytes))
           .thenAcceptAsync(pme -> {
@@ -295,9 +296,10 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
               serverConn.getPlayer().getConnection().write(new PluginMessagePacket(
                   pme.getIdentifier().getId(), Unpooled.wrappedBuffer(bytes)));
             }
-            this.serverConn.getConnection().setAutoReading(true);
+            suspension.resume();
           },  serverConn.ensureConnected().eventLoop()).exceptionally((ex) -> {
             logger.error("Exception while handling plugin message {}", packet, ex);
+            serverConn.ensureConnected().eventLoop().execute(suspension::resume);
             return null;
           });
     }
@@ -398,7 +400,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
       }
     }
 
-    serverConn.getPlayer().getConnection().setAutoReading(writable);
+    serverConn.getPlayer().getConnection().setBackpressureSuspended(!writable);
   }
 
   private void switchFailure(Throwable cause) {

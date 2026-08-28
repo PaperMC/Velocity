@@ -118,7 +118,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     packet.setOnlineMode(player.isOnlineMode());
 
     // The goods are in hand! We got JoinGame. Let's transition completely to the new state.
-    smc.setAutoReading(false);
+    final MinecraftConnection.ReadSuspension suspension = smc.suspendReading();
     server.getEventManager()
         .fire(new ServerConnectedEvent(player, serverConn.getServer(), previousServer))
         .thenRunAsync(() -> {
@@ -126,6 +126,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           if (!serverConn.isActive()) {
             // Connection is obsolete.
             releaseQueuedPackets();
+            suspension.resume();
             serverConn.disconnect();
             return;
           }
@@ -154,10 +155,10 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           // Now set the connected server.
           serverConn.getPlayer().setConnectedServer(serverConn);
 
-          // Clean up disabling auto-read while the connected event was being processed.
+          // Clean up the suspension we took while the connected event was being processed.
           // Do this after setting the connection, so no incoming packets are processed before
           // the API knows which server the player is connected to.
-          smc.setAutoReading(true);
+          suspension.resume();
 
           // Send client settings. In 1.20.2+ this is done in the config state.
           if (smc.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_1_20_2)
@@ -171,6 +172,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
           resultFuture.complete(ConnectionRequestResults.successful(serverConn.getServer()));
         }, smc.eventLoop()).exceptionally(exc -> {
           releaseQueuedPackets();
+          smc.eventLoop().execute(suspension::resume);
           logger.error("Unable to switch to new server {} for {}",
               serverConn.getServerInfo().getName(),
               player.getUsername(), exc);

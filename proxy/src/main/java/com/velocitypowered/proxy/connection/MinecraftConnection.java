@@ -277,8 +277,9 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
       if (is17 && this.getState() != StateRegistry.STATUS) {
         channel.eventLoop().execute(() -> {
           // 1.7.x versions have a race condition with switching protocol states, so just explicitly
-          // close the connection after a short while.
-          this.setAutoReading(false);
+          // close the connection after a short while. Nothing resumes this suspension: the
+          // connection is closing.
+          this.suspendReading();
           channel.eventLoop().schedule(() -> {
             knownDisconnect = true;
             channel.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);
@@ -342,14 +343,74 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     return knownDisconnect;
   }
 
+  // Reading is suspended while any of these are outstanding. Only touched from the event loop.
+  private int readSuspensions;
+  private @Nullable ReadSuspension backpressureSuspension;
+
   /**
-   * Determines whether or not the channel should continue reading data automatically.
-   *
-   * @param autoReading whether or not we should read data automatically
+   * A handle on one reason this connection has stopped reading. Reading only resumes once every
+   * outstanding suspension has been resumed, so a component finishing its own work can no longer
+   * cancel a suspension it does not own.
    */
-  public void setAutoReading(boolean autoReading) {
+  public final class ReadSuspension {
+
+    private boolean held = true;
+
+    private ReadSuspension() {
+    }
+
+    /**
+     * Releases this suspension. Resuming more than once does nothing.
+     */
+    public void resume() {
+      ensureInEventLoop();
+
+      if (!this.held) {
+        return;
+      }
+      this.held = false;
+      if (--readSuspensions == 0) {
+        setAutoReadingInternal(true);
+      }
+    }
+  }
+
+  /**
+   * Stops reading from this connection until the returned suspension is resumed.
+   *
+   * @return a handle that resumes this suspension, and only this one
+   */
+  public ReadSuspension suspendReading() {
     ensureInEventLoop();
 
+    if (readSuspensions++ == 0) {
+      setAutoReadingInternal(false);
+    }
+    return new ReadSuspension();
+  }
+
+  /**
+   * Suspends or resumes reading because the connection we forward to is or is no longer writable.
+   * There is a single backpressure holder per connection, so this is safe to call repeatedly and
+   * from whichever session handler happens to be active at the time.
+   *
+   * @param suspended whether reading should be suspended for backpressure
+   */
+  public void setBackpressureSuspended(boolean suspended) {
+    ensureInEventLoop();
+
+    if (suspended) {
+      if (this.backpressureSuspension == null) {
+        this.backpressureSuspension = suspendReading();
+      }
+    } else if (this.backpressureSuspension != null) {
+      final ReadSuspension suspension = this.backpressureSuspension;
+      this.backpressureSuspension = null;
+      suspension.resume();
+    }
+  }
+
+  private void setAutoReadingInternal(boolean autoReading) {
     channel.config().setAutoRead(autoReading);
     if (autoReading) {
       // For some reason, the channel may not completely read its queued contents once autoread
