@@ -36,8 +36,7 @@ public class LegacyTitlePacket extends GenericTitlePacket {
   private int fadeOut;
 
   public LegacyTitlePacket() {
-    // This constructor only exists to keep StateRegistry happy (all mappings are encode-only, the constructor isn't stored or used).
-    throw new AssertionError("A bare LegacyTitlePacket should never be instantiated");
+    throw new UnsupportedOperationException("Decode is not implemented");
   }
 
   public LegacyTitlePacket(ActionType action) {

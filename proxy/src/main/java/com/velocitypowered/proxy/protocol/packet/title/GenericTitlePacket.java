@@ -82,9 +82,8 @@ public abstract class GenericTitlePacket implements MinecraftPacket {
   }
 
   @Override
-  public final void decode(ByteBuf buf, ProtocolUtils.Direction direction,
-      ProtocolVersion version) {
-    throw new UnsupportedOperationException(); // encode only
+  public final void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+    throw new UnsupportedOperationException("Decode is not implemented");
   }
 
   /**
