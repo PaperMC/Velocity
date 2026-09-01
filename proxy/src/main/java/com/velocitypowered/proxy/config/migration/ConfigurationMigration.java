@@ -30,7 +30,8 @@ public sealed interface ConfigurationMigration
                 MotdMigration,
                 MiniMessageTranslationsMigration,
                 TransferIntegrationMigration,
-                PacketLimiterMigration {
+                PacketLimiterMigration,
+                PingPassthroughMigration {
   boolean shouldMigrate(CommentedFileConfig config);
 
   void migrate(CommentedFileConfig config, Logger logger) throws IOException;

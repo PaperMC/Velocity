@@ -16,13 +16,49 @@
  */
 
 package com.velocitypowered.proxy.config;
+import com.electronwill.nightconfig.core.Config;
 
 /**
- * Supported passthrough modes for ping passthrough.
+ * Object to contain all the things that can be toggled for ping passthrough.
+ *
+ * @param version     Whether the version should be passed through.
+ * @param players     Whether the player count should be passed through.
+ * @param description Whether the description should be passed through.
+ * @param favicon     Whether the favicon should be passed through.
+ * @param modinfo     Whether the modinfo should be passed through.
  */
-public enum PingPassthroughMode {
-  DISABLED,
-  MODS,
-  DESCRIPTION,
-  ALL
+public record PingPassthroughMode(boolean version, boolean players,
+    boolean description, boolean favicon, boolean modinfo) {
+  public static final PingPassthroughMode DEFAULT = new PingPassthroughMode();
+  
+  /**
+   * Creates a default PingPassthroughMode.
+   */
+  private PingPassthroughMode() {
+    this(false, false, false, false, false);
+  }
+
+  /**
+   * Returns a PingPassthroughMode from a config section, or the default if the section is null.
+   * Based on the code for PacketLimiterConfig.
+   *
+   * @param config The configuration object to parse.
+   * @return The PingPassthroughMode, or the default if {@code config} is null.
+   */
+  public static PingPassthroughMode fromConfig(Config config) {
+    if (config == null) {
+      return DEFAULT;
+    }
+    return new PingPassthroughMode(
+        config.getOrElse("version", DEFAULT.version()),
+        config.getOrElse("players", DEFAULT.players()),
+        config.getOrElse("description", DEFAULT.description()),
+        config.getOrElse("favicon", DEFAULT.favicon()),
+        config.getOrElse("modinfo", DEFAULT.modinfo()));
+  }
+
+  public boolean enabled() {
+    return this.version || this.players || this.description || this.favicon
+      || this.modinfo;
+  }
 }

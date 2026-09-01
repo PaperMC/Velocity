@@ -23,6 +23,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.server.PingOptions;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
+import com.velocitypowered.api.util.Favicon;
 import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.config.PingPassthroughMode;
@@ -100,60 +101,68 @@ public class ServerListPingHandler {
 
     CompletableFuture<List<ServerPing>> pingResponses = CompletableFutures.successfulAsList(pings,
         (ex) -> fallback);
-    return switch (mode) {
-      case ALL -> pingResponses.thenApply(responses -> {
-        // Find the first non-fallback
-        for (ServerPing response : responses) {
-          if (response == fallback) {
-            continue;
-          }
 
-          if (response.getDescriptionComponent() == null) {
-            return response.asBuilder()
-                .description(Component.empty())
-                .build();
-          }
+    // Return early if ping passthrough is not enabled
+    if (!mode.enabled()) {
+      return CompletableFuture.completedFuture(fallback);
+    }
 
-          return response;
+    return pingResponses.thenApply(responses -> {
+      // Find the first non-fallback
+      for (ServerPing response : responses) {
+        if (response == fallback) {
+          continue;
         }
-        return fallback;
-      });
-      case MODS -> pingResponses.thenApply(responses -> {
-        // Find the first non-fallback that contains a mod list
-        for (ServerPing response : responses) {
-          if (response == fallback) {
-            continue;
-          }
-          Optional<ModInfo> modInfo = response.getModinfo();
-          if (modInfo.isPresent()) {
-            return fallback.asBuilder().mods(modInfo.get()).build();
-          }
-        }
-        return fallback;
-      });
-      case DESCRIPTION -> pingResponses.thenApply(responses -> {
-        // Find the first non-fallback. If it includes a modlist, add it too.
-        for (ServerPing response : responses) {
-          if (response == fallback) {
-            continue;
-          }
-          if (response.getDescriptionComponent() == null) {
-            continue;
-          }
 
-          return new ServerPing(
-              fallback.getVersion(),
-              fallback.getPlayers().orElse(null),
-              response.getDescriptionComponent(),
-              fallback.getFavicon().orElse(null),
-              response.getModinfo().orElse(null)
-          );
+        ServerPing.Version version;
+        if (mode.version()) {
+          version = response.getVersion();
+        } else {
+          version = fallback.getVersion();
         }
-        return fallback;
-      });
-      // Not possible, but covered for completeness.
-      default -> CompletableFuture.completedFuture(fallback);
-    };
+
+        ServerPing.Players players;
+        if (mode.players()) {
+          players = response.getPlayers().orElse(null);
+        } else {
+          players = fallback.getPlayers().orElse(null);
+        }
+
+        Component description;
+        if (mode.description()) {
+          if (response.getDescriptionComponent() != null) {
+            description = response.getDescriptionComponent();
+          } else {
+            description = Component.empty();
+          }
+        } else {
+          description = fallback.getDescriptionComponent();
+        }
+
+        Favicon favicon;
+        if (mode.favicon()) {
+          favicon = response.getFavicon().orElse(null);
+        } else {
+          favicon = fallback.getFavicon().orElse(null);
+        }
+
+        ModInfo modinfo;
+        if (mode.modinfo()) {
+          modinfo = response.getModinfo().orElse(null);
+        } else {
+          modinfo = fallback.getModinfo().orElse(null);
+        }
+
+        return new ServerPing(
+            version,
+            players,
+            description,
+            favicon,
+            modinfo
+        );
+      }
+      return fallback;
+    });
   }
 
   /**
@@ -168,7 +177,7 @@ public class ServerListPingHandler {
         ? connection.getProtocolVersion() : ProtocolVersion.MAXIMUM_VERSION;
     PingPassthroughMode passthroughMode = configuration.getPingPassthrough();
 
-    if (passthroughMode == PingPassthroughMode.DISABLED) {
+    if (!passthroughMode.enabled()) {
       return CompletableFuture.completedFuture(constructLocalPing(shownVersion));
     } else {
       String virtualHostStr = connection.getVirtualHost().map(InetSocketAddress::getHostString)

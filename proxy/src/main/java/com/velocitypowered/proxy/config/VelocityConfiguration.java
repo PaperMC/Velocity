@@ -32,6 +32,7 @@ import com.velocitypowered.proxy.config.migration.KeyAuthenticationMigration;
 import com.velocitypowered.proxy.config.migration.MiniMessageTranslationsMigration;
 import com.velocitypowered.proxy.config.migration.MotdMigration;
 import com.velocitypowered.proxy.config.migration.PacketLimiterMigration;
+import com.velocitypowered.proxy.config.migration.PingPassthroughMigration;
 import com.velocitypowered.proxy.config.migration.TransferIntegrationMigration;
 import com.velocitypowered.proxy.util.AddressUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -79,7 +80,7 @@ public class VelocityConfiguration implements ProxyConfig {
   @Expose
   private boolean onlineModeKickExistingPlayers = false;
   @Expose
-  private PingPassthroughMode pingPassthrough = PingPassthroughMode.DISABLED;
+  private PingPassthroughMode pingPassthrough = PingPassthroughMode.DEFAULT;
   @Expose
   private boolean samplePlayersInPing = false;
   private final Servers servers;
@@ -513,7 +514,8 @@ public class VelocityConfiguration implements ProxyConfig {
           new MotdMigration(),
           new MiniMessageTranslationsMigration(),
           new TransferIntegrationMigration(),
-          new PacketLimiterMigration()
+          new PacketLimiterMigration(),
+          new PingPassthroughMigration(),
       };
 
       for (final ConfigurationMigration migration : migrations) {
@@ -555,9 +557,7 @@ public class VelocityConfiguration implements ProxyConfig {
       final CommentedConfig metricsConfig = config.get("metrics");
       final PlayerInfoForwarding forwardingMode = config.getEnumOrElse(
               "player-info-forwarding-mode", PlayerInfoForwarding.NONE);
-      final PingPassthroughMode pingPassthroughMode = config.getEnumOrElse("ping-passthrough",
-              PingPassthroughMode.DISABLED);
-
+      final PingPassthroughMode pingPassthrough = PingPassthroughMode.fromConfig(config.get("ping-passthrough"));
       final boolean samplePlayersInPing = config.getOrElse("sample-players-in-ping", false);
 
       final String bind = config.getOrElse("bind", "0.0.0.0:25565");
@@ -590,7 +590,7 @@ public class VelocityConfiguration implements ProxyConfig {
               forwardingMode,
               forwardingSecret,
               kickExisting,
-              pingPassthroughMode,
+              pingPassthrough,
               samplePlayersInPing,
               enablePlayerAddressLogging,
               new Servers(serversConfig),
