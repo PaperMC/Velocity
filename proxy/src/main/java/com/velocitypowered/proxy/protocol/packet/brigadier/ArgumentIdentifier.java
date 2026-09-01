@@ -59,6 +59,22 @@ public class ArgumentIdentifier {
   }
 
   @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof ArgumentIdentifier that)) {
+      return false;
+    }
+    return identifier.equals(that.identifier);
+  }
+
+  @Override
+  public int hashCode() {
+    return identifier.hashCode();
+  }
+
+  @Override
   public String toString() {
     return "ArgumentIdentifier{" +
         "identifier='" + identifier + '\'' +
