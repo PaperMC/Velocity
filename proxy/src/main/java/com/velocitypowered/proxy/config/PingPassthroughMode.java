@@ -21,11 +21,11 @@ import com.electronwill.nightconfig.core.CommentedConfig;
 /**
  * Object to contain all the things that can be toggled for ping passthrough.
  *
- * @param version Whether the version should be passed through.
- * @param players Whether the player count should be passed through.
+ * @param version     Whether the version should be passed through.
+ * @param players     Whether the player count should be passed through.
  * @param description Whether the description should be passed through.
- * @param favicon Whether the favicon should be passed through.
- * @param modinfo Whether the modinfo should be passed through.
+ * @param favicon     Whether the favicon should be passed through.
+ * @param modinfo     Whether the modinfo should be passed through.
  */
 public record PingPassthroughMode(boolean version, boolean players,
     boolean description, boolean favicon, boolean modinfo) {
