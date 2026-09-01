@@ -22,13 +22,15 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
+import org.jetbrains.annotations.NotNull;
 
 public class TitleTextPacket extends GenericTitlePacket {
 
   private ComponentHolder component;
 
-  public TitleTextPacket() {
-    setAction(ActionType.SET_TITLE);
+  @Override
+  public @NotNull ActionType getAction() {
+    return ActionType.SET_TITLE;
   }
 
   @Override

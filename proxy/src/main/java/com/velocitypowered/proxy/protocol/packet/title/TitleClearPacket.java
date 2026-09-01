@@ -21,30 +21,37 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import org.jetbrains.annotations.NotNull;
 
 public class TitleClearPacket extends GenericTitlePacket {
 
+  private final ActionType action;
+
   public TitleClearPacket() {
-    setAction(ActionType.HIDE);
+    this(ActionType.HIDE);
+  }
+
+  public TitleClearPacket(ActionType action) {
+    if (action != ActionType.HIDE && action != ActionType.RESET) {
+      throw new IllegalArgumentException("TitleClearPacket only accepts the HIDE and RESET actions.");
+    }
+    this.action = action;
   }
 
   @Override
-  public void setAction(ActionType action) {
-    if (action != ActionType.HIDE && action != ActionType.RESET) {
-      throw new IllegalArgumentException("TitleClearPacket only accepts CLEAR and RESET actions");
-    }
-    super.setAction(action);
+  public @NotNull ActionType getAction() {
+    return action;
   }
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    buf.writeBoolean(getAction() == ActionType.RESET);
+    buf.writeBoolean(this.action == ActionType.RESET);
   }
 
   @Override
   public String toString() {
     return "TitleClearPacket{"
-        + ", resetTimes=" + (getAction() == ActionType.RESET)
+        + ", resetTimes=" + (this.action == ActionType.RESET)
         + '}';
   }
 
