@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.config;
 import com.electronwill.nightconfig.core.Config;
+import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 /**
  * Object to contain all the things that can be toggled for ping passthrough.
@@ -27,6 +28,7 @@ import com.electronwill.nightconfig.core.Config;
  * @param favicon     Whether the favicon should be passed through.
  * @param modinfo     Whether the modinfo should be passed through.
  */
+@ConfigSerializable
 public record PingPassthroughMode(boolean version, boolean players,
     boolean description, boolean favicon, boolean modinfo) {
   public static final PingPassthroughMode DEFAULT = new PingPassthroughMode();
