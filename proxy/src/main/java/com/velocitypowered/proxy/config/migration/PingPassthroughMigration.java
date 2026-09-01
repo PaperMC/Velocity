@@ -18,7 +18,7 @@
 package com.velocitypowered.proxy.config.migration;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
-import com.velocitypowered.proxy.config.LegacyPingPassthroughMode;
+import java.util.Locale;
 import org.apache.logging.log4j.Logger;
 
 /**
@@ -33,8 +33,8 @@ public final class PingPassthroughMigration implements ConfigurationMigration {
   @Override
   public void migrate(final CommentedFileConfig config, final Logger logger) {
     // Get legacy ping passthrough value
-    final LegacyPingPassthroughMode legacyMode = config.getEnumOrElse("ping-passthrough",
-        LegacyPingPassthroughMode.DISABLED);
+    final String legacyMode = config.getOrElse("ping-passthrough", "DISABLED")
+        .toUpperCase(Locale.ROOT);
     boolean version = false;
     boolean players = false;
     boolean description = false;
@@ -42,28 +42,33 @@ public final class PingPassthroughMigration implements ConfigurationMigration {
     boolean modinfo = false;
 
     switch (legacyMode) {
-      case ALL:
+      case "ALL":
         version = true;
         players = true;
         description = true;
         favicon = true;
         modinfo = true;
         break;
-      case DESCRIPTION:
+      case "DESCRIPTION":
         description = true;
         modinfo = true;
         break;
-      case MODS:
+      case "MODS":
         modinfo = true;
         break;
-      case DISABLED:
-        break;
-      default:
+      default: // DISABLED
         break;
     }
 
     config.removeComment("ping-passthrough");
     config.remove("ping-passthrough");
+
+    config.setComment("announce-forge",
+        " Announce whether or not your server supports Forge. If you run a modded server, we\n"
+            + " suggest turning this on.\n"
+            + "\n"
+            + " If your network runs one modpack consistently, consider using ping-passthrough.modinfo = true\n"
+            + " instead for a nicer display in the server list.");
 
     config.set("ping-passthrough.version", version);
     config.setComment(

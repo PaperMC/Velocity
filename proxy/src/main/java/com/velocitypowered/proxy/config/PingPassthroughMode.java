@@ -16,7 +16,7 @@
  */
 
 package com.velocitypowered.proxy.config;
-import com.electronwill.nightconfig.core.CommentedConfig;
+import com.electronwill.nightconfig.core.Config;
 
 /**
  * Object to contain all the things that can be toggled for ping passthrough.
@@ -45,7 +45,7 @@ public record PingPassthroughMode(boolean version, boolean players,
    * @param config The configuration object to parse.
    * @return The PingPassthroughMode, or the default if {@code config} is null.
    */
-  public static PingPassthroughMode fromConfig(CommentedConfig config) {
+  public static PingPassthroughMode fromConfig(Config config) {
     if (config == null) {
       return DEFAULT;
     }
