@@ -28,12 +28,12 @@ public class TitleClearPacket extends GenericTitlePacket {
   private final ActionType action;
 
   public TitleClearPacket() {
-    this.action = ActionType.HIDE;
+    this(ActionType.HIDE);
   }
 
   public TitleClearPacket(ActionType action) {
     if (action != ActionType.HIDE && action != ActionType.RESET) {
-      throw new IllegalArgumentException("TitleClearPacket only accepts the CLEAR and RESET actions.");
+      throw new IllegalArgumentException("TitleClearPacket only accepts the HIDE and RESET actions.");
     }
     this.action = action;
   }
