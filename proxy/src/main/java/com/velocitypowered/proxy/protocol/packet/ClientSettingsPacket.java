@@ -213,7 +213,34 @@ public class ClientSettingsPacket implements MinecraftPacket {
 
   @Override
   public int decodeExpectedMinLength(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    return 1 + 0 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1;
+    int minLength = 1 // locale
+            + 1       // viewDistance
+            + 1       // chatVisibility
+            + 1;      // chatColors
+
+    if (version.noGreaterThan(ProtocolVersion.MINECRAFT_1_7_6)) {
+      minLength += 1; // difficulty
+    }
+
+    minLength += 1; // skinParts
+
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_9)) {
+      minLength += 1; // mainHand
+
+      if (version.noLessThan(ProtocolVersion.MINECRAFT_1_17)) {
+        minLength += 1; // textFilteringEnabled
+
+        if (version.noLessThan(ProtocolVersion.MINECRAFT_1_18)) {
+          minLength += 1; // clientListingAllowed
+
+          if (version.noLessThan(ProtocolVersion.MINECRAFT_1_21_2)) {
+            minLength += 1; // particleStatus
+          }
+        }
+      }
+    }
+
+    return minLength;
   }
 
   @Override
