@@ -17,14 +17,14 @@
 
 package com.velocitypowered.proxy.protocol.packet.title;
 
+import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBuf;
-import java.util.Objects;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class LegacyTitlePacket extends GenericTitlePacket {
 
@@ -40,7 +40,7 @@ public class LegacyTitlePacket extends GenericTitlePacket {
   }
 
   public LegacyTitlePacket(ActionType action) {
-    this.action = Objects.requireNonNull(action, "action");
+    this.action = Preconditions.checkNotNull(action, "action");
   }
 
   @Override
