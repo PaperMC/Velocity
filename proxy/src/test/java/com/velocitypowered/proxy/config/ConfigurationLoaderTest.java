@@ -82,7 +82,12 @@ class ConfigurationLoaderTest {
         online-mode: false
         kick-existing-players: true
         player-info-forwarding-mode: "MODERN"
-        ping-passthrough: "ALL"
+        ping-passthrough:
+          version: true
+          players: true
+          description: true
+          favicon: true
+          modinfo: true
         sample-players-in-ping: true
         enable-player-address-logging: false
         force-key-authentication: false
@@ -145,6 +150,7 @@ class ConfigurationLoaderTest {
         show-max-players = 321
         online-mode = false
         player-info-forwarding-mode = "MODERN"
+        ping-passthrough = "DESCRIPTION"
         forwarding-secret-file = "%s"
 
         [servers]
@@ -166,6 +172,8 @@ class ConfigurationLoaderTest {
     assertEquals(321, config.getShowMaxPlayers());
     assertFalse(config.isOnlineMode());
     assertEquals(PlayerInfoForwarding.MODERN, config.getPlayerInfoForwardingMode());
+    assertEquals(new PingPassthroughMode(false, false, true, false, true),
+        config.getPingPassthrough());
     assertEquals(ImmutableMap.of("hub", "10.0.0.1:25565"), config.getServers());
     assertEquals(ImmutableList.of("hub"), config.getAttemptConnectionOrder());
     assertTrue(config.isProxyProtocol());
@@ -204,7 +212,8 @@ class ConfigurationLoaderTest {
     assertFalse(config.isOnlineMode());
     assertTrue(config.isOnlineModeKickExistingPlayers());
     assertEquals(PlayerInfoForwarding.MODERN, config.getPlayerInfoForwardingMode());
-    assertEquals(PingPassthroughMode.ALL, config.getPingPassthrough());
+    assertEquals(new PingPassthroughMode(true, true, true, true, true),
+        config.getPingPassthrough());
     assertTrue(config.getSamplePlayersInPing());
     assertFalse(config.isPlayerAddressLoggingEnabled());
     assertFalse(config.isForceKeyAuthentication());
