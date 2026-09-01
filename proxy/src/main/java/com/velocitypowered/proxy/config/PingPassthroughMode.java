@@ -34,7 +34,7 @@ public record PingPassthroughMode(boolean version, boolean players,
   /**
    * Creates a default PingPassthroughMode.
    */
-  PingPassthroughMode() {
+  private PingPassthroughMode() {
     this(false, false, false, false, false);
   }
 
