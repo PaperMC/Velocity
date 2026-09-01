@@ -274,7 +274,7 @@ public class ArgumentPropertyRegistry {
     empty(id("minecraft:heightmap", mapSet(MINECRAFT_1_21_6, 51), mapSet(MINECRAFT_1_21_5, 50), mapSet(MINECRAFT_1_20_3, 49),
         mapSet(MINECRAFT_1_19_4, 47))); // 1.19.4
 
-    empty(id("minecraft:uuid", mapSet(MINECRAFT_26_3, 60), mapSet(MINECRAFT_1_21_6, 56), mapSet(MINECRAFT_1_21_5, 54), mapSet(MINECRAFT_1_20_5, 53),
+    empty(id("minecraft:uuid", mapSet(MINECRAFT_26_3, 61), mapSet(MINECRAFT_1_21_6, 56), mapSet(MINECRAFT_1_21_5, 54), mapSet(MINECRAFT_1_20_5, 53),
         mapSet(MINECRAFT_1_20_3, 48), mapSet(MINECRAFT_1_19_4, 48), mapSet(MINECRAFT_1_19, 47))); // added in 1.16
 
     empty(id("minecraft:loot_table", mapSet(MINECRAFT_1_21_6, 52), mapSet(MINECRAFT_1_21_5, 51), mapSet(MINECRAFT_1_20_5, 50)));
@@ -282,12 +282,13 @@ public class ArgumentPropertyRegistry {
     empty(id("minecraft:loot_modifier", mapSet(MINECRAFT_1_21_6, 54), mapSet(MINECRAFT_1_21_5, 53), mapSet(MINECRAFT_1_20_5, 52)));
 
     empty(id("minecraft:hex_color", mapSet(MINECRAFT_1_21_6, 17))); // added in 1.21.6
-    empty(id("minecraft:dialog", mapSet(MINECRAFT_26_3, 57), mapSet(MINECRAFT_1_21_6, 55))); // added in 1.21.6
+    empty(id("minecraft:dialog", mapSet(MINECRAFT_26_3, 58), mapSet(MINECRAFT_1_21_6, 55))); // added in 1.21.6
     empty(id("minecraft:team_color", mapSet(MINECRAFT_26_2, 16))); // renamed from color in 26.2
-    empty(id("minecraft:number_provider", mapSet(MINECRAFT_26_3, 55))); // added in 26.3
-    empty(id("minecraft:slot_source", mapSet(MINECRAFT_26_3, 56))); // added in 26.3
-    empty(id("minecraft:feature", mapSet(MINECRAFT_26_3, 58))); // added in 26.3
-    empty(id("minecraft:swing_animation", mapSet(MINECRAFT_26_3, 59))); // added in 26.3
+    empty(id("minecraft:context_float_provider", mapSet(MINECRAFT_26_3, 55))); // added in 26.3
+    empty(id("minecraft:context_int_provider", mapSet(MINECRAFT_26_3, 56))); // added in 26.3
+    empty(id("minecraft:slot_source", mapSet(MINECRAFT_26_3, 57))); // added in 26.3
+    empty(id("minecraft:feature", mapSet(MINECRAFT_26_3, 59))); // added in 26.3
+    empty(id("minecraft:swing_animation", mapSet(MINECRAFT_26_3, 60))); // added in 26.3
 
     // Crossstitch support
     register(id("crossstitch:mod_argument", mapSet(MINECRAFT_1_19, -256)), ModArgumentProperty.class, MOD);
