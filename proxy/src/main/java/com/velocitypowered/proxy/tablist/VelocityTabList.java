@@ -18,6 +18,7 @@
 package com.velocitypowered.proxy.tablist;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
@@ -32,12 +33,16 @@ import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfoPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import com.velocitypowered.proxy.protocol.packet.chat.RemoteChatSession;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
@@ -83,118 +88,153 @@ public class VelocityTabList implements InternalTabList {
   }
 
   @Override
-  public void addEntry(TabListEntry entry1) {
-    VelocityTabListEntry entry;
-    if (entry1 instanceof VelocityTabListEntry) {
-      entry = (VelocityTabListEntry) entry1;
-    } else {
-      entry = new VelocityTabListEntry(this, entry1.getProfile(),
-          entry1.getDisplayNameComponent().orElse(null),
-          entry1.getLatency(), entry1.getGameMode(), entry1.getChatSession(), entry1.isListed(), entry1.getListOrder(), entry1.isShowHat());
-    }
+  public void addEntry(TabListEntry entry) {
+    addEntries(entry);
+  }
 
-    EnumSet<UpsertPlayerInfoPacket.Action> actions = EnumSet
-            .noneOf(UpsertPlayerInfoPacket.Action.class);
-    UpsertPlayerInfoPacket.Entry playerInfoEntry = new UpsertPlayerInfoPacket
-            .Entry(entry.getProfile().getId());
+  @Override
+  public void addEntries(Iterable<TabListEntry> entries) {
+    Map<EnumSet<UpsertPlayerInfoPacket.Action>, List<UpsertPlayerInfoPacket.Entry>> batches = new HashMap<>();
+    for (TabListEntry e : entries) {
+      VelocityTabListEntry entry;
+      if (e instanceof VelocityTabListEntry) {
+        entry = (VelocityTabListEntry) e;
+      } else {
+        entry = new VelocityTabListEntry(this, e.getProfile(),
+                e.getDisplayNameComponent().orElse(null),
+                e.getLatency(), e.getGameMode(), e.getChatSession(), e.isListed(), e.getListOrder(), e.isShowHat());
+      }
 
-    Preconditions.checkNotNull(entry.getProfile(), "Profile cannot be null");
-    Preconditions.checkNotNull(entry.getProfile().getId(), "Profile ID cannot be null");
+      EnumSet<UpsertPlayerInfoPacket.Action> actions = EnumSet
+              .noneOf(UpsertPlayerInfoPacket.Action.class);
+      UpsertPlayerInfoPacket.Entry playerInfoEntry = new UpsertPlayerInfoPacket
+              .Entry(entry.getProfile().getId());
 
-    this.entries.compute(entry.getProfile().getId(), (uuid, previousEntry) -> {
-      if (previousEntry != null) {
-        // we should merge entries here
-        if (previousEntry.equals(entry)) {
-          return previousEntry; // nothing else to do, this entry is perfect
-        }
-        if (!Objects.equals(previousEntry.getDisplayNameComponent().orElse(null),
-                entry.getDisplayNameComponent().orElse(null))) {
-          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_DISPLAY_NAME);
-          playerInfoEntry.setDisplayName(entry.getDisplayNameComponent().isEmpty()
-                  ?
-                  null :
-                  new ComponentHolder(player.getProtocolVersion(),
-                          entry.getDisplayNameComponent().get())
-          );
-        }
-        if (!Objects.equals(previousEntry.getLatency(), entry.getLatency())) {
-          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LATENCY);
-          playerInfoEntry.setLatency(entry.getLatency());
-        }
-        if (!Objects.equals(previousEntry.getGameMode(), entry.getGameMode())) {
-          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_GAME_MODE);
-          playerInfoEntry.setGameMode(entry.getGameMode());
-        }
-        if (!Objects.equals(previousEntry.isListed(), entry.isListed())) {
-          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LISTED);
-          playerInfoEntry.setListed(entry.isListed());
-        }
-        if (!Objects.equals(previousEntry.getListOrder(), entry.getListOrder())
-            && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_2)) {
-          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LIST_ORDER);
-          playerInfoEntry.setListOrder(entry.getListOrder());
-        }
-        if (!Objects.equals(previousEntry.isShowHat(), entry.isShowHat())
-                && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_4)) {
-          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_HAT);
-          playerInfoEntry.setShowHat(entry.isShowHat());
-        }
-        if (!Objects.equals(previousEntry.getChatSession(), entry.getChatSession())) {
-          ChatSession from = entry.getChatSession();
-          if (from != null) {
+      Preconditions.checkNotNull(entry.getProfile(), "Profile cannot be null");
+      Preconditions.checkNotNull(entry.getProfile().getId(), "Profile ID cannot be null");
+
+      this.entries.compute(entry.getProfile().getId(), (uuid, previousEntry) -> {
+        if (previousEntry != null) {
+          // we should merge entries here
+          if (previousEntry.equals(entry)) {
+            return previousEntry; // nothing else to do, this entry is perfect
+          }
+          if (!Objects.equals(previousEntry.getDisplayNameComponent().orElse(null),
+                  entry.getDisplayNameComponent().orElse(null))) {
+            actions.add(UpsertPlayerInfoPacket.Action.UPDATE_DISPLAY_NAME);
+            playerInfoEntry.setDisplayName(entry.getDisplayNameComponent().isEmpty()
+                    ?
+                    null :
+                    new ComponentHolder(player.getProtocolVersion(),
+                            entry.getDisplayNameComponent().get())
+            );
+          }
+          if (!Objects.equals(previousEntry.getLatency(), entry.getLatency())) {
+            actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LATENCY);
+            playerInfoEntry.setLatency(entry.getLatency());
+          }
+          if (!Objects.equals(previousEntry.getGameMode(), entry.getGameMode())) {
+            actions.add(UpsertPlayerInfoPacket.Action.UPDATE_GAME_MODE);
+            playerInfoEntry.setGameMode(entry.getGameMode());
+          }
+          if (!Objects.equals(previousEntry.isListed(), entry.isListed())) {
+            actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LISTED);
+            playerInfoEntry.setListed(entry.isListed());
+          }
+          if (!Objects.equals(previousEntry.getListOrder(), entry.getListOrder())
+                  && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_2)) {
+            actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LIST_ORDER);
+            playerInfoEntry.setListOrder(entry.getListOrder());
+          }
+          if (!Objects.equals(previousEntry.isShowHat(), entry.isShowHat())
+                  && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_4)) {
+            actions.add(UpsertPlayerInfoPacket.Action.UPDATE_HAT);
+            playerInfoEntry.setShowHat(entry.isShowHat());
+          }
+          if (!Objects.equals(previousEntry.getChatSession(), entry.getChatSession())) {
+            ChatSession from = entry.getChatSession();
+            if (from != null) {
+              actions.add(UpsertPlayerInfoPacket.Action.INITIALIZE_CHAT);
+              playerInfoEntry.setChatSession(
+                      new RemoteChatSession(from.getSessionId(), from.getIdentifiedKey()));
+            }
+          }
+        } else {
+          actions.addAll(EnumSet.of(UpsertPlayerInfoPacket.Action.ADD_PLAYER,
+                  UpsertPlayerInfoPacket.Action.UPDATE_LATENCY,
+                  UpsertPlayerInfoPacket.Action.UPDATE_LISTED));
+          playerInfoEntry.setProfile(entry.getProfile());
+          if (entry.getDisplayNameComponent().isPresent()) {
+            actions.add(UpsertPlayerInfoPacket.Action.UPDATE_DISPLAY_NAME);
+            playerInfoEntry.setDisplayName(entry.getDisplayNameComponent().isEmpty()
+                    ?
+                    null :
+                    new ComponentHolder(player.getProtocolVersion(),
+                            entry.getDisplayNameComponent().get())
+            );
+          }
+          if (entry.getChatSession() != null) {
             actions.add(UpsertPlayerInfoPacket.Action.INITIALIZE_CHAT);
+            ChatSession from = entry.getChatSession();
             playerInfoEntry.setChatSession(
                     new RemoteChatSession(from.getSessionId(), from.getIdentifiedKey()));
           }
+          if (entry.getGameMode() != -1 && entry.getGameMode() != 256) {
+            actions.add(UpsertPlayerInfoPacket.Action.UPDATE_GAME_MODE);
+            playerInfoEntry.setGameMode(entry.getGameMode());
+          }
+          playerInfoEntry.setLatency(entry.getLatency());
+          playerInfoEntry.setListed(entry.isListed());
+          if (entry.getListOrder() != 0
+                  && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_2)) {
+            actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LIST_ORDER);
+            playerInfoEntry.setListOrder(entry.getListOrder());
+          }
+          if (!entry.isShowHat() && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_4)) {
+            actions.add(UpsertPlayerInfoPacket.Action.UPDATE_HAT);
+            playerInfoEntry.setShowHat(entry.isShowHat());
+          }
         }
-      } else {
-        actions.addAll(EnumSet.of(UpsertPlayerInfoPacket.Action.ADD_PLAYER,
-                UpsertPlayerInfoPacket.Action.UPDATE_LATENCY,
-                UpsertPlayerInfoPacket.Action.UPDATE_LISTED));
-        playerInfoEntry.setProfile(entry.getProfile());
-        if (entry.getDisplayNameComponent().isPresent()) {
-          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_DISPLAY_NAME);
-          playerInfoEntry.setDisplayName(entry.getDisplayNameComponent().isEmpty()
-                  ?
-                  null :
-                  new ComponentHolder(player.getProtocolVersion(),
-                          entry.getDisplayNameComponent().get())
-          );
-        }
-        if (entry.getChatSession() != null) {
-          actions.add(UpsertPlayerInfoPacket.Action.INITIALIZE_CHAT);
-          ChatSession from = entry.getChatSession();
-          playerInfoEntry.setChatSession(
-                  new RemoteChatSession(from.getSessionId(), from.getIdentifiedKey()));
-        }
-        if (entry.getGameMode() != -1 && entry.getGameMode() != 256) {
-          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_GAME_MODE);
-          playerInfoEntry.setGameMode(entry.getGameMode());
-        }
-        playerInfoEntry.setLatency(entry.getLatency());
-        playerInfoEntry.setListed(entry.isListed());
-        if (entry.getListOrder() != 0
-            && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_2)) {
-          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_LIST_ORDER);
-          playerInfoEntry.setListOrder(entry.getListOrder());
-        }
-        if (!entry.isShowHat() && player.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_21_4)) {
-          actions.add(UpsertPlayerInfoPacket.Action.UPDATE_HAT);
-          playerInfoEntry.setShowHat(entry.isShowHat());
-        }
-      }
-      return entry;
-    });
+        return entry;
+      });
 
-    if (!actions.isEmpty()) {
-      this.connection.write(new UpsertPlayerInfoPacket(actions, List.of(playerInfoEntry)));
+      if (!actions.isEmpty()) {
+        batches.computeIfAbsent(actions, a -> new ArrayList<>()).add(playerInfoEntry);
+      }
     }
+
+    for (Map.Entry<EnumSet<UpsertPlayerInfoPacket.Action>, List<UpsertPlayerInfoPacket.Entry>> batch : batches.entrySet()) {
+      this.connection.write(new UpsertPlayerInfoPacket(batch.getKey(), batch.getValue()));
+    }
+  }
+
+  @Override
+  public void addEntries(TabListEntry... entries) {
+    addEntries(Arrays.asList(entries));
   }
 
   @Override
   public Optional<TabListEntry> removeEntry(UUID uuid) {
     this.connection.write(new RemovePlayerInfoPacket(List.of(uuid)));
     return Optional.ofNullable(this.entries.remove(uuid));
+  }
+
+  @Override
+  public Set<TabListEntry> removeEntries(Iterable<UUID> entries) {
+    this.connection.write(new RemovePlayerInfoPacket(Lists.newArrayList(entries)));
+    final Set<TabListEntry> removed = new HashSet<>();
+    for (UUID entry : entries) {
+      final TabListEntry removedEntry = this.entries.remove(entry);
+      if (removedEntry != null) {
+        removed.add(removedEntry);
+      }
+    }
+    return removed;
+  }
+
+  @Override
+  public Set<TabListEntry> removeEntries(UUID... entries) {
+    return removeEntries(List.of(entries));
   }
 
   @Override
