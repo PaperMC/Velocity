@@ -26,6 +26,8 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
+import com.velocitypowered.proxy.protocol.packet.chat.DecoratedPlayerChatForwarder;
+import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatMessageInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -52,12 +54,22 @@ public class SessionChatHandler implements ChatHandler<SessionPlayerChatPacket> 
   public void handlePlayerChatInternal(SessionPlayerChatPacket packet) {
     ChatQueue chatQueue = this.player.getChatQueue();
     EventManager eventManager = this.server.getEventManager();
-    PlayerChatEvent toSend = new PlayerChatEvent(player, packet.getMessage());
+    PlayerChatEvent toSend = new PlayerChatEvent(player, packet.getMessage(),
+        PlayerChatMessageInfo.sessionMessage(player, packet));
     CompletableFuture<PlayerChatEvent> eventFuture = eventManager.fire(toSend);
     chatQueue.queuePacket(
         newLastSeenMessages -> eventFuture
             .thenApply(pme -> {
               PlayerChatEvent.ChatResult chatResult = pme.getResult();
+              if (chatResult.getPlayerChatForwarding().isPresent()) {
+                DecoratedPlayerChatForwarder.Result forwardingResult =
+                    DecoratedPlayerChatForwarder.forward(pme.getChatMessage(),
+                        chatResult.getPlayerChatForwarding().get(), logger);
+                if (forwardingResult.suppressesBackendForwarding()) {
+                  return null;
+                }
+              }
+
               if (!chatResult.isAllowed()) {
                 if (packet.isSigned()) {
                   invalidCancel(logger, player);
