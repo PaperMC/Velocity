@@ -676,8 +676,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     this.cm.closeEndpoints(false);
   }
 
-  public HttpClient createHttpClient() {
-    return cm.createHttpClient();
+  public HttpClient getHttpClient() {
+    return cm.getHttpClient();
   }
 
   public @MonotonicNonNull Ratelimiter<InetAddress> getIpAttemptLimiter() {
