@@ -19,7 +19,6 @@ package com.velocitypowered.proxy.config;
 
 import java.util.List;
 import java.util.Set;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Reads typed values from a set of keys. A section of a configuration is itself a configuration,
@@ -43,8 +42,6 @@ public interface Configuration {
   Set<String> leafPaths();
 
   boolean contains(String key);
-
-  @Nullable Object get(String key);
 
   String getString(String key);
 

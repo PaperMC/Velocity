@@ -30,12 +30,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class YamlDocumentTest {
+
+  private enum Mode {
+    NONE,
+    BUNGEE_GUARD
+  }
 
   private static final String SAMPLE = """
       # Config version. Do not change this
@@ -70,26 +74,44 @@ class YamlDocumentTest {
   }
 
   @Test
-  void readsScalarsWithTheirYamlTypes() throws IOException {
+  void readsScalarsAsTheTypeTheyAreAskedFor() throws IOException {
     final YamlDocument document = sample();
-    assertEquals(3, document.get("config-version"));
-    assertEquals("0.0.0.0:25565", document.get("bind"));
-    assertEquals(256, document.get("advanced.compression-threshold"));
-    assertEquals(-1, document.get("advanced.compression-level"));
-    assertEquals(List.of("lobby"), document.get("servers.try"));
-    assertEquals(Map.of("lobby", "127.0.0.1:30066", "try", List.of("lobby")),
-        document.get("servers"));
+    assertEquals(3, document.getInt("config-version"));
+    assertEquals("0.0.0.0:25565", document.getString("bind"));
+    assertEquals(256, document.getInt("advanced.compression-threshold"));
+    assertEquals(-1, document.getInt("advanced.compression-level"));
+    assertEquals("127.0.0.1:30066", document.getString("servers.lobby"));
+    assertEquals(List.of("lobby"), document.getStringList("servers.try"));
   }
 
   @Test
-  void returnsNullForUnknownPaths() throws IOException {
+  void readsOneValueAsListOfOne() throws IOException {
+    assertEquals(List.of("127.0.0.1:30066"), sample().getStringList("servers.lobby"));
+  }
+
+  @Test
+  void readsEnumsHoweverTheirNameIsWritten() throws IOException {
+    final YamlDocument document = YamlDocument.read(new StringReader("""
+        written-plainly: BUNGEE_GUARD
+        written-loosely: bungee_guard
+        written-wrongly: nowhere
+        """));
+
+    assertEquals(Mode.BUNGEE_GUARD, document.getEnum("written-plainly", Mode.class));
+    assertEquals(Mode.BUNGEE_GUARD, document.getEnum("written-loosely", Mode.class));
+    assertThrows(IllegalArgumentException.class,
+        () -> document.getEnum("written-wrongly", Mode.class));
+  }
+
+  @Test
+  void containsNoUnknownPaths() throws IOException {
     final YamlDocument document = sample();
-    assertNull(document.get("nope"));
-    assertNull(document.get("advanced.nope"));
-    assertNull(document.get("nope.nope"));
-    assertNull(document.get("bind.nope"));
+    assertFalse(document.contains("nope"));
     assertFalse(document.contains("advanced.nope"));
+    assertFalse(document.contains("nope.nope"));
+    assertFalse(document.contains("bind.nope"));
     assertTrue(document.contains("advanced.compression-level"));
+    assertThrows(IllegalStateException.class, () -> document.getString("advanced.nope"));
   }
 
   @Test
@@ -116,7 +138,7 @@ class YamlDocumentTest {
     document.set("advanced.brand-new", true);
     document.setComment("advanced.brand-new", "A brand new option\non two lines");
 
-    assertEquals(true, document.get("advanced.brand-new"));
+    assertTrue(document.getBoolean("advanced.brand-new"));
     assertEquals("A brand new option\non two lines", document.getComment("advanced.brand-new"));
     assertTrue(emit(document).contains("\n  # A brand new option\n  # on two lines\n"
         + "  brand-new: true"), emit(document));
@@ -126,8 +148,8 @@ class YamlDocumentTest {
   void createsMissingSectionsWhenWriting() throws IOException {
     final YamlDocument document = sample();
     document.set("brand.new.section", "value");
-    assertEquals("value", document.get("brand.new.section"));
-    assertEquals(Map.of("section", "value"), document.get("brand.new"));
+    assertEquals("value", document.getString("brand.new.section"));
+    assertEquals(Set.of("section"), document.getSection("brand.new").keys());
   }
 
   @Test
@@ -135,7 +157,7 @@ class YamlDocumentTest {
     final YamlDocument document = sample();
     document.remove("advanced.compression-threshold");
 
-    assertNull(document.get("advanced.compression-threshold"));
+    assertFalse(document.contains("advanced.compression-threshold"));
     final String emitted = emit(document);
     assertFalse(emitted.contains("compression-threshold"), emitted);
     assertFalse(emitted.contains("How large a packet"), emitted);
@@ -145,7 +167,7 @@ class YamlDocumentTest {
   void quotesStringsThatWouldOtherwiseChangeType() throws IOException {
     final YamlDocument document = sample();
     document.set("bind", "yes");
-    assertEquals("yes", YamlDocument.read(new StringReader(emit(document))).get("bind"));
+    assertEquals("yes", YamlDocument.read(new StringReader(emit(document))).getString("bind"));
   }
 
   @Test
@@ -191,10 +213,11 @@ class YamlDocumentTest {
     assertNull(target.getComment("servers.alpha"));
 
     final YamlDocument reloaded = YamlDocument.read(new StringReader(emit(target)));
-    assertEquals("1.2.3.4:25577", reloaded.get("bind"));
-    assertEquals(512, reloaded.get("advanced.compression-threshold"));
-    assertEquals(Map.of("alpha", "1.2.3.4:30066", "try", List.of("alpha")),
-        reloaded.get("servers"));
+    assertEquals("1.2.3.4:25577", reloaded.getString("bind"));
+    assertEquals(512, reloaded.getInt("advanced.compression-threshold"));
+    assertEquals(Set.of("alpha", "try"), reloaded.getSection("servers").keys());
+    assertEquals("1.2.3.4:30066", reloaded.getString("servers.alpha"));
+    assertEquals(List.of("alpha"), reloaded.getStringList("servers.try"));
   }
 
   @Test
@@ -236,6 +259,8 @@ class YamlDocumentTest {
     final YamlDocument document = sample();
     assertThrows(IllegalArgumentException.class, () -> document.getString("advanced"));
     assertThrows(IllegalArgumentException.class, () -> document.getInt("bind"));
+    assertThrows(IllegalArgumentException.class, () -> document.getBoolean("bind"));
+    assertThrows(IllegalArgumentException.class, () -> document.getStringList("advanced"));
     assertThrows(IllegalStateException.class, () -> document.getSection("nope"));
     assertThrows(IllegalArgumentException.class, () -> document.getSection("bind"));
   }
@@ -245,6 +270,6 @@ class YamlDocumentTest {
     final Path path = directory.resolve("config.yml");
     sample().save(path);
     assertEquals(SAMPLE, Files.readString(path, StandardCharsets.UTF_8));
-    assertEquals(3, YamlDocument.load(path).get("config-version"));
+    assertEquals(3, YamlDocument.load(path).getInt("config-version"));
   }
 }

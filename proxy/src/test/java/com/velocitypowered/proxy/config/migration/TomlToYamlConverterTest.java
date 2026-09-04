@@ -136,8 +136,8 @@ class TomlToYamlConverterTest {
     assertFalse(configuration.isAcceptTransfers());
 
     final ConfigurationDocument converted = YamlDocument.load(directory.resolve("velocity.yml"));
-    assertTrue(String.valueOf(converted.get("motd")).endsWith("A Legacy Server"),
-        String.valueOf(converted.get("motd")));
+    assertTrue(converted.getString("motd").endsWith("A Legacy Server"),
+        converted.getString("motd"));
   }
 
   @Test
@@ -145,7 +145,7 @@ class TomlToYamlConverterTest {
     convert(directory);
 
     assertEquals(3,
-        YamlDocument.load(directory.resolve("velocity.yml")).get("config-version"));
+        YamlDocument.load(directory.resolve("velocity.yml")).getInt("config-version"));
   }
 
   @Test
@@ -167,8 +167,8 @@ class TomlToYamlConverterTest {
   @Test
   void renamesTheHaproxyProtocolOption(@TempDir Path directory) throws IOException {
     assertTrue(convert(directory).isProxyProtocol());
-    assertEquals(true,
-        YamlDocument.load(directory.resolve("velocity.yml")).get("advanced.haproxy-protocol"));
+    assertTrue(YamlDocument.load(directory.resolve("velocity.yml"))
+        .getBoolean("advanced.haproxy-protocol"));
   }
 
   @Test
@@ -223,7 +223,7 @@ class TomlToYamlConverterTest {
     VelocityConfiguration.read(directory.resolve("velocity.yml"));
 
     final ConfigurationDocument converted = YamlDocument.load(directory.resolve("velocity.yml"));
-    assertEquals(true, converted.get("advanced.legacy-leftover"));
+    assertTrue(converted.getBoolean("advanced.legacy-leftover"));
     assertNull(converted.getComment("advanced.legacy-leftover"));
     assertNotNull(converted.getComment("advanced.command-rate-limit"));
   }

@@ -25,14 +25,19 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.configurate.CommentedConfigurationNode;
+import org.spongepowered.configurate.serialize.SerializationException;
+import org.spongepowered.configurate.serialize.TypeSerializer;
 import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
@@ -96,64 +101,33 @@ public final class YamlDocument implements ConfigurationDocument {
   }
 
   @Override
-  public @Nullable Object get(final String path) {
-    final CommentedConfigurationNode node = resolve(path);
-    return node == null ? null : node.raw();
-  }
-
-  @Override
   public boolean contains(final String path) {
     return resolve(path) != null;
   }
 
   @Override
   public String getString(final String path) {
-    final Object value = require(path);
-    if (value instanceof List || value instanceof Map) {
-      throw new IllegalArgumentException("Configuration option '" + path
-          + "' must be a single value, but is '" + value + "'.");
-    }
-    return String.valueOf(value);
+    return require(path, node -> node.require(String.class), "a single value");
   }
 
   @Override
   public int getInt(final String path) {
-    final Object value = require(path);
-    if (value instanceof Number number) {
-      return number.intValue();
-    }
-    throw new IllegalArgumentException(
-        "Configuration option '" + path + "' must be a number, but is '" + value + "'.");
+    return require(path, node -> node.require(Integer.class), "a whole number");
   }
 
   @Override
   public boolean getBoolean(final String path) {
-    final Object value = require(path);
-    if (value instanceof Boolean bool) {
-      return bool;
-    }
-    throw new IllegalArgumentException(
-        "Configuration option '" + path + "' must be true or false, but is '" + value + "'.");
+    return require(path, node -> node.require(Boolean.class), "true or false");
   }
 
   @Override
   public List<String> getStringList(final String path) {
-    final Object value = require(path);
-    if (!(value instanceof List<?> list)) {
-      return List.of(getString(path));
-    }
-    return list.stream().map(String::valueOf).toList();
+    return require(path, node -> node.getList(String.class), "a list of single values");
   }
 
   @Override
   public <T extends Enum<T>> T getEnum(final String path, final Class<T> type) {
-    final String value = getString(path);
-    try {
-      return Enum.valueOf(type, value.toUpperCase(Locale.ROOT));
-    } catch (final IllegalArgumentException e) {
-      throw new IllegalArgumentException("Configuration option '" + path + "' has unknown value '"
-          + value + "'.", e);
-    }
+    return require(path, node -> node.require(type), "one of " + constantsOf(type));
   }
 
   @Override
@@ -178,12 +152,32 @@ public final class YamlDocument implements ConfigurationDocument {
     return keys;
   }
 
-  private Object require(final String path) {
-    final Object value = get(path);
+  /**
+   * Reads {@code path} through a Configurate {@link TypeSerializer}, naming {@code expectation}
+   * as the type when it does not fit.
+   */
+  private <T> T require(final String path, final NodeReader<T> reader, final String expectation) {
+    final CommentedConfigurationNode node = resolve(path);
+    if (node == null) {
+      throw new IllegalStateException("No configuration option '" + path + "'.");
+    }
+    final T value;
+    try {
+      value = reader.read(node);
+    } catch (final SerializationException | NoSuchElementException e) {
+      throw new IllegalArgumentException("Configuration option '" + path + "' must be "
+          + expectation + ", but is '" + node.raw() + "'.", e);
+    }
     if (value == null) {
       throw new IllegalStateException("No configuration option '" + path + "'.");
     }
     return value;
+  }
+
+  private static String constantsOf(final Class<? extends Enum<?>> type) {
+    return Arrays.stream(type.getEnumConstants())
+        .map(constant -> constant.name().toLowerCase(Locale.ROOT))
+        .collect(Collectors.joining(", "));
   }
 
   @Override
@@ -272,5 +266,14 @@ public final class YamlDocument implements ConfigurationDocument {
         .nodeStyle(NodeStyle.BLOCK)
         .commentsEnabled(true)
         .lineLength(MAXIMUM_LINE_WIDTH);
+  }
+
+  /**
+   * Deserializes one node, deferring to Configurate for the conversion the type asks for.
+   */
+  @FunctionalInterface
+  private interface NodeReader<T> {
+
+    @Nullable T read(CommentedConfigurationNode node) throws SerializationException;
   }
 }

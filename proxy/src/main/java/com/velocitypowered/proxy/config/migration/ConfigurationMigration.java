@@ -35,14 +35,15 @@ public interface ConfigurationMigration {
    * Gets the configuration version, which every configuration must declare.
    */
   static int versionOf(final ConfigurationDocument config) {
-    final Object version = config.get("config-version");
-    if (version instanceof Number number) {
-      return number.intValue();
+    if (!config.contains("config-version")) {
+      throw new IllegalStateException("Your configuration does not declare a config-version.");
     }
-    throw new IllegalStateException(version == null
-        ? "Your configuration does not declare a config-version."
-        : "Your configuration declares a config-version of '" + version
-            + "', which is not a whole number.");
+    try {
+      return config.getInt("config-version");
+    } catch (final IllegalArgumentException e) {
+      throw new IllegalStateException("Your configuration declares a config-version that is not "
+          + "a whole number.", e);
+    }
   }
 
   default int configVersion(final ConfigurationDocument config) {

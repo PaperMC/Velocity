@@ -60,12 +60,6 @@ public final class LayeredConfiguration implements Configuration {
   }
 
   @Override
-  public @Nullable Object get(final String path) {
-    final Configuration layer = layerContaining(path);
-    return layer == null ? null : layer.get(path);
-  }
-
-  @Override
   public String getString(final String path) {
     return layerDefining(path).getString(path);
   }

@@ -34,7 +34,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -227,11 +226,6 @@ class VelocityConfigurationTest {
     public boolean contains(String path) {
       read.add(path);
       return delegate.contains(path);
-    }
-
-    @Override
-    public @Nullable Object get(String path) {
-      return delegate.get(path);
     }
 
     @Override

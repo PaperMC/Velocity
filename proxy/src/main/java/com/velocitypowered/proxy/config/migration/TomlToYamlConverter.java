@@ -114,13 +114,13 @@ public final class TomlToYamlConverter {
   }
 
   private static void renameProxyProtocol(final ConfigurationDocument document) {
-    final Object proxyProtocol = document.get("advanced.proxy-protocol");
-    if (proxyProtocol != null) {
-      if (document.get("advanced.haproxy-protocol") == null) {
-        document.set("advanced.haproxy-protocol", proxyProtocol);
-      }
-      document.remove("advanced.proxy-protocol");
+    if (!document.contains("advanced.proxy-protocol")) {
+      return;
     }
+    if (!document.contains("advanced.haproxy-protocol")) {
+      document.set("advanced.haproxy-protocol", document.getBoolean("advanced.proxy-protocol"));
+    }
+    document.remove("advanced.proxy-protocol");
   }
 
   /**
