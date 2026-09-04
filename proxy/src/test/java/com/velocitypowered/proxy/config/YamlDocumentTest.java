@@ -1,0 +1,239 @@
+/*
+ * Copyright (C) 2026 Velocity Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package com.velocitypowered.proxy.config;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+class YamlDocumentTest {
+
+  private static final String SAMPLE = """
+      # Config version. Do not change this
+      config-version: 3
+
+      # What port should the proxy be bound to?
+      bind: "0.0.0.0:25565"
+
+      servers:
+        lobby: "127.0.0.1:30066"
+
+        # In what order we should try servers.
+        try:
+          - lobby
+
+      advanced:
+        # How large a packet has to be before we compress it.
+        compression-threshold: 256
+        compression-level: -1
+      """;
+
+  private static YamlDocument sample() {
+    return YamlDocument.read(new StringReader(SAMPLE));
+  }
+
+  private static String emit(YamlDocument document) throws IOException {
+    final StringWriter writer = new StringWriter();
+    document.write(writer);
+    return writer.toString();
+  }
+
+  @Test
+  void readsScalarsWithTheirYamlTypes() {
+    final YamlDocument document = sample();
+    assertEquals(3, document.get("config-version"));
+    assertEquals("0.0.0.0:25565", document.get("bind"));
+    assertEquals(256, document.get("advanced.compression-threshold"));
+    assertEquals(-1, document.get("advanced.compression-level"));
+    assertEquals(List.of("lobby"), document.get("servers.try"));
+    assertEquals(Map.of("lobby", "127.0.0.1:30066", "try", List.of("lobby")),
+        document.get("servers"));
+  }
+
+  @Test
+  void returnsNullForUnknownPaths() {
+    final YamlDocument document = sample();
+    assertNull(document.get("nope"));
+    assertNull(document.get("advanced.nope"));
+    assertNull(document.get("nope.nope"));
+    assertNull(document.get("bind.nope"));
+    assertFalse(document.contains("advanced.nope"));
+    assertTrue(document.contains("advanced.compression-level"));
+  }
+
+  @Test
+  void preservesCommentsAndBlankLinesAcrossAnUntouchedRoundTrip() throws IOException {
+    assertEquals(SAMPLE, emit(sample()));
+  }
+
+  @Test
+  void preservesCommentsOfKeysItRewrites() throws IOException {
+    final YamlDocument document = sample();
+    document.set("advanced.compression-threshold", 512);
+    document.set("config-version", 4);
+
+    final String emitted = emit(document);
+    assertTrue(emitted.contains("# How large a packet has to be before we compress it.\n"
+        + "  compression-threshold: 512"), emitted);
+    assertTrue(emitted.contains("# Config version. Do not change this\nconfig-version: 4"),
+        emitted);
+  }
+
+  @Test
+  void writesNewValuesWithComments() throws IOException {
+    final YamlDocument document = sample();
+    document.set("advanced.brand-new", true);
+    document.setComment("advanced.brand-new", List.of("", " A brand new option", " on two lines"));
+
+    assertEquals(true, document.get("advanced.brand-new"));
+    assertEquals(List.of("", " A brand new option", " on two lines"),
+        document.getComment("advanced.brand-new"));
+    assertTrue(emit(document).contains("\n  # A brand new option\n  # on two lines\n"
+        + "  brand-new: true"), emit(document));
+  }
+
+  @Test
+  void createsMissingSectionsWhenWriting() {
+    final YamlDocument document = sample();
+    document.set("brand.new.section", "value");
+    assertEquals("value", document.get("brand.new.section"));
+    assertEquals(Map.of("section", "value"), document.get("brand.new"));
+  }
+
+  @Test
+  void removesValuesAndTheirComments() throws IOException {
+    final YamlDocument document = sample();
+    document.remove("advanced.compression-threshold");
+
+    assertNull(document.get("advanced.compression-threshold"));
+    final String emitted = emit(document);
+    assertFalse(emitted.contains("compression-threshold"), emitted);
+    assertFalse(emitted.contains("How large a packet"), emitted);
+  }
+
+  @Test
+  void quotesStringsThatWouldOtherwiseChangeType() throws IOException {
+    final YamlDocument document = sample();
+    document.set("bind", "yes");
+    assertEquals("yes", YamlDocument.read(new StringReader(emit(document))).get("bind"));
+  }
+
+  @Test
+  void listsEveryLeafPath() {
+    assertEquals(List.of("config-version", "bind", "servers.lobby", "servers.try",
+            "advanced.compression-threshold", "advanced.compression-level"),
+        List.copyOf(sample().leafPaths()));
+  }
+
+  @Test
+  void copiesCommentsOntoSharedKeysOnly() throws IOException {
+    final YamlDocument target = YamlDocument.read(new StringReader("""
+        config-version: 3
+        bind: "1.2.3.4:25577"
+        unknown-option: true
+        servers:
+          alpha: "1.2.3.4:30066"
+          try:
+            - alpha
+        advanced:
+          compression-threshold: 512
+        """));
+    target.copyCommentsFrom(sample());
+
+    assertEquals(List.of("", " What port should the proxy be bound to?"),
+        target.getComment("bind"));
+    assertEquals(List.of("", " In what order we should try servers."),
+        target.getComment("servers.try"));
+    assertEquals(List.of(" How large a packet has to be before we compress it."),
+        target.getComment("advanced.compression-threshold"));
+    assertNull(target.getComment("unknown-option"));
+    assertNull(target.getComment("servers.alpha"));
+
+    final YamlDocument reloaded = YamlDocument.read(new StringReader(emit(target)));
+    assertEquals("1.2.3.4:25577", reloaded.get("bind"));
+    assertEquals(512, reloaded.get("advanced.compression-threshold"));
+    assertEquals(Map.of("alpha", "1.2.3.4:30066", "try", List.of("alpha")),
+        reloaded.get("servers"));
+  }
+
+  @Test
+  void copiesNoCommentsWhenTheKeyIsAbsentFromTheSource() {
+    final YamlDocument target = sample();
+    target.copyCommentsFrom(YamlDocument.read(new StringReader("unrelated: true\n")));
+    assertEquals(List.of(" Config version. Do not change this"),
+        target.getComment("config-version"));
+  }
+
+  @Test
+  void readsSectionEntriesWhoseKeysContainDots() {
+    final ConfigurationSection hosts = YamlDocument.read(new StringReader("""
+        forced-hosts:
+          "lobby.example.com":
+            - lobby
+            - lobby-two
+          "shop.example.com": shop
+        """)).getSection("forced-hosts");
+
+    assertEquals(Set.of("lobby.example.com", "shop.example.com"), hosts.keys());
+    assertTrue(hosts.contains("lobby.example.com"));
+    assertEquals(List.of("lobby", "lobby-two"), hosts.getStringList("lobby.example.com"));
+    assertEquals(List.of("shop"), hosts.getStringList("shop.example.com"));
+    assertEquals("shop", hosts.getString("shop.example.com"));
+  }
+
+  @Test
+  void readsNestedSectionsByPathFromTheRoot() {
+    final YamlDocument document = sample();
+    assertEquals(Set.of("config-version", "bind", "servers", "advanced"), document.keys());
+    assertEquals(Set.of("compression-threshold", "compression-level"),
+        document.getSection("advanced").keys());
+    assertEquals(256, document.getSection("advanced").getInt("compression-threshold"));
+    assertEquals(256, document.getInt("advanced.compression-threshold"));
+  }
+
+  @Test
+  void rejectsValuesOfTheWrongShape() {
+    final YamlDocument document = sample();
+    assertThrows(IllegalArgumentException.class, () -> document.getString("advanced"));
+    assertThrows(IllegalArgumentException.class, () -> document.getInt("bind"));
+    assertThrows(IllegalStateException.class, () -> document.getSection("nope"));
+    assertThrows(IllegalArgumentException.class, () -> document.getSection("bind"));
+  }
+
+  @Test
+  void savesAndLoadsFromDisk(@TempDir Path directory) throws IOException {
+    final Path path = directory.resolve("config.yml");
+    sample().save(path);
+    assertEquals(SAMPLE, Files.readString(path, StandardCharsets.UTF_8));
+    assertEquals(3, YamlDocument.load(path).get("config-version"));
+  }
+}

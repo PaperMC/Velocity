@@ -51,10 +51,10 @@ public class ResourceUtils {
       String firstPathComponent, String... remainingPathComponents)
       throws IOException {
     final URL knownResource = ResourceUtils.class.getClassLoader()
-        .getResource("default-velocity.toml");
+        .getResource("default-velocity.yml");
     if (knownResource == null) {
       throw new IllegalStateException(
-          "default-velocity.toml does not exist, don't know where we are");
+          "default-velocity.yml does not exist, don't know where we are");
     }
     if (knownResource.getProtocol().equals("jar")) {
       // Running from a JAR

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Velocity Contributors
+ * Copyright (C) 2026 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,37 +17,35 @@
 
 package com.velocitypowered.proxy.config.migration;
 
-import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import com.velocitypowered.proxy.config.YamlDocument;
 import java.io.IOException;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Configuration Migration interface.
+ * Migration applied to a YAML configuration. Versions are whole numbers starting at 3, the
+ * version the TOML format was converted into.
  */
-public sealed interface ConfigurationMigration
-        permits ForwardingMigration,
-                KeyAuthenticationMigration,
-                MotdMigration,
-                MiniMessageTranslationsMigration,
-                TransferIntegrationMigration,
-                PacketLimiterMigration,
-                PingPassthroughMigration {
-  boolean shouldMigrate(CommentedFileConfig config);
+public interface ConfigurationMigration {
 
-  void migrate(CommentedFileConfig config, Logger logger) throws IOException;
+  boolean shouldMigrate(YamlDocument config);
+
+  void migrate(YamlDocument config, Logger logger) throws IOException;
 
   /**
-   * Gets the configuration version.
-   *
-   * @param config the configuration.
-   * @return configuration version
+   * Gets the configuration version, which every configuration must declare.
    */
-  default double configVersion(CommentedFileConfig config) {
-    final String stringVersion = config.getOrElse("config-version", "1.0");
-    try {
-      return Double.parseDouble(stringVersion);
-    } catch (Exception e) {
-      return 1.0;
+  static int versionOf(final YamlDocument config) {
+    final Object version = config.get("config-version");
+    if (version instanceof Number number) {
+      return number.intValue();
     }
+    throw new IllegalStateException(version == null
+        ? "Your configuration does not declare a config-version."
+        : "Your configuration declares a config-version of '" + version
+            + "', which is not a whole number.");
+  }
+
+  default int configVersion(final YamlDocument config) {
+    return versionOf(config);
   }
 }
