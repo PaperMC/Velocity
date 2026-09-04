@@ -34,6 +34,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -196,7 +197,7 @@ class VelocityConfigurationTest {
 
   @Test
   void shipsDefaultsForEveryOptionThatIsRead(@TempDir Path directory) throws IOException {
-    final YamlDocument defaults = VelocityConfiguration.defaultConfiguration();
+    final ConfigurationDocument defaults = VelocityConfiguration.defaultConfiguration();
     final Set<String> read = new LinkedHashSet<>();
 
     // Loading against the defaults alone throws if an option has no default.
@@ -229,6 +230,11 @@ class VelocityConfigurationTest {
     }
 
     @Override
+    public @Nullable Object get(String path) {
+      return delegate.get(path);
+    }
+
+    @Override
     public String getString(String path) {
       return delegate.getString(path);
     }
@@ -254,7 +260,7 @@ class VelocityConfigurationTest {
     }
 
     @Override
-    public ConfigurationSection getSection(String path) {
+    public Configuration getSection(String path) {
       return delegate.getSection(path);
     }
 
@@ -262,9 +268,19 @@ class VelocityConfigurationTest {
     public Set<String> keys() {
       return delegate.keys();
     }
+
+    @Override
+    public Set<String> paths() {
+      return delegate.paths();
+    }
+
+    @Override
+    public Set<String> leafPaths() {
+      return delegate.leafPaths();
+    }
   }
 
-  private static Set<String> allowedPaths(YamlDocument defaults) {
+  private static Set<String> allowedPaths(ConfigurationDocument defaults) {
     final Set<String> allowed = new HashSet<>(defaults.leafPaths());
     allowed.addAll(DYNAMIC_SECTIONS);
     return allowed;

@@ -475,7 +475,7 @@ public class VelocityConfiguration implements ProxyConfig {
       Files.writeString(defaultForwardingSecretPath, generateRandomString(12));
     }
 
-    final YamlDocument defaults = defaultConfiguration();
+    final ConfigurationDocument defaults = defaultConfiguration();
 
     boolean changed = false;
     if (Files.notExists(path)) {
@@ -489,7 +489,7 @@ public class VelocityConfiguration implements ProxyConfig {
       }
     }
 
-    final YamlDocument document = YamlDocument.load(path);
+    final ConfigurationDocument document = YamlDocument.load(path);
     final int version = ConfigurationMigration.versionOf(document);
     final int currentVersion = ConfigurationMigration.versionOf(defaults);
     if (version > currentVersion) {
@@ -517,7 +517,7 @@ public class VelocityConfiguration implements ProxyConfig {
   /**
    * Reads the shipped configuration, which defines every option and so backs every read.
    */
-  public static YamlDocument defaultConfiguration() throws IOException {
+  public static ConfigurationDocument defaultConfiguration() throws IOException {
     try (Reader reader = new InputStreamReader(defaultConfigurationStream(),
         StandardCharsets.UTF_8)) {
       return YamlDocument.read(reader);
@@ -612,7 +612,7 @@ public class VelocityConfiguration implements ProxyConfig {
     private final List<String> attemptConnectionOrder;
 
     private Servers(Configuration config) {
-      final ConfigurationSection section = config.getSection("servers");
+      final Configuration section = config.getSection("servers");
       Map<String, String> servers = new HashMap<>();
       for (String name : section.keys()) {
         if (!name.equalsIgnoreCase("try")) {
@@ -645,7 +645,7 @@ public class VelocityConfiguration implements ProxyConfig {
     private final Map<String, List<String>> forcedHosts;
 
     private ForcedHosts(Configuration config) {
-      final ConfigurationSection section = config.getSection("forced-hosts");
+      final Configuration section = config.getSection("forced-hosts");
       Map<String, List<String>> forcedHosts = new HashMap<>();
       for (String host : section.keys()) {
         forcedHosts.put(host.toLowerCase(Locale.ROOT),

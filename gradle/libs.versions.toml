@@ -1,6 +1,6 @@
 [versions]
 configurate3 = "3.7.3"
-configurate4 = "4.2.0"
+configurate4 = "4.2.0-GeyserMC-SNAPSHOT"
 flare = "2.0.1"
 log4j = "2.26.1"
 netty = "4.2.16.Final"

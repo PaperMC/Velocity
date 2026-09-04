@@ -44,6 +44,7 @@ class YamlDocumentTest {
       # What port should the proxy be bound to?
       bind: "0.0.0.0:25565"
 
+      # Configure your servers here.
       servers:
         lobby: "127.0.0.1:30066"
 
@@ -51,13 +52,14 @@ class YamlDocumentTest {
         try:
           - lobby
 
+      # Advanced options.
       advanced:
         # How large a packet has to be before we compress it.
         compression-threshold: 256
         compression-level: -1
       """;
 
-  private static YamlDocument sample() {
+  private static YamlDocument sample() throws IOException {
     return YamlDocument.read(new StringReader(SAMPLE));
   }
 
@@ -68,7 +70,7 @@ class YamlDocumentTest {
   }
 
   @Test
-  void readsScalarsWithTheirYamlTypes() {
+  void readsScalarsWithTheirYamlTypes() throws IOException {
     final YamlDocument document = sample();
     assertEquals(3, document.get("config-version"));
     assertEquals("0.0.0.0:25565", document.get("bind"));
@@ -80,7 +82,7 @@ class YamlDocumentTest {
   }
 
   @Test
-  void returnsNullForUnknownPaths() {
+  void returnsNullForUnknownPaths() throws IOException {
     final YamlDocument document = sample();
     assertNull(document.get("nope"));
     assertNull(document.get("advanced.nope"));
@@ -112,17 +114,16 @@ class YamlDocumentTest {
   void writesNewValuesWithComments() throws IOException {
     final YamlDocument document = sample();
     document.set("advanced.brand-new", true);
-    document.setComment("advanced.brand-new", List.of("", " A brand new option", " on two lines"));
+    document.setComment("advanced.brand-new", "A brand new option\non two lines");
 
     assertEquals(true, document.get("advanced.brand-new"));
-    assertEquals(List.of("", " A brand new option", " on two lines"),
-        document.getComment("advanced.brand-new"));
+    assertEquals("A brand new option\non two lines", document.getComment("advanced.brand-new"));
     assertTrue(emit(document).contains("\n  # A brand new option\n  # on two lines\n"
         + "  brand-new: true"), emit(document));
   }
 
   @Test
-  void createsMissingSectionsWhenWriting() {
+  void createsMissingSectionsWhenWriting() throws IOException {
     final YamlDocument document = sample();
     document.set("brand.new.section", "value");
     assertEquals("value", document.get("brand.new.section"));
@@ -148,7 +149,20 @@ class YamlDocumentTest {
   }
 
   @Test
-  void listsEveryLeafPath() {
+  void writesTheSameDocumentEveryTimeItIsRewritten() throws IOException {
+    final String once = emit(sample());
+    assertEquals(once, emit(YamlDocument.read(new StringReader(once))));
+  }
+
+  @Test
+  void listsEveryPathAndEverySection() throws IOException {
+    assertEquals(List.of("config-version", "bind", "servers", "servers.lobby", "servers.try",
+            "advanced", "advanced.compression-threshold", "advanced.compression-level"),
+        List.copyOf(sample().paths()));
+  }
+
+  @Test
+  void listsEveryLeafPath() throws IOException {
     assertEquals(List.of("config-version", "bind", "servers.lobby", "servers.try",
             "advanced.compression-threshold", "advanced.compression-level"),
         List.copyOf(sample().leafPaths()));
@@ -169,11 +183,9 @@ class YamlDocumentTest {
         """));
     target.copyCommentsFrom(sample());
 
-    assertEquals(List.of("", " What port should the proxy be bound to?"),
-        target.getComment("bind"));
-    assertEquals(List.of("", " In what order we should try servers."),
-        target.getComment("servers.try"));
-    assertEquals(List.of(" How large a packet has to be before we compress it."),
+    assertEquals("What port should the proxy be bound to?", target.getComment("bind"));
+    assertEquals("In what order we should try servers.", target.getComment("servers.try"));
+    assertEquals("How large a packet has to be before we compress it.",
         target.getComment("advanced.compression-threshold"));
     assertNull(target.getComment("unknown-option"));
     assertNull(target.getComment("servers.alpha"));
@@ -186,16 +198,15 @@ class YamlDocumentTest {
   }
 
   @Test
-  void copiesNoCommentsWhenTheKeyIsAbsentFromTheSource() {
+  void copiesNoCommentsWhenTheKeyIsAbsentFromTheSource() throws IOException {
     final YamlDocument target = sample();
     target.copyCommentsFrom(YamlDocument.read(new StringReader("unrelated: true\n")));
-    assertEquals(List.of(" Config version. Do not change this"),
-        target.getComment("config-version"));
+    assertEquals("Config version. Do not change this", target.getComment("config-version"));
   }
 
   @Test
-  void readsSectionEntriesWhoseKeysContainDots() {
-    final ConfigurationSection hosts = YamlDocument.read(new StringReader("""
+  void readsSectionEntriesWhoseKeysContainDots() throws IOException {
+    final Configuration hosts = YamlDocument.read(new StringReader("""
         forced-hosts:
           "lobby.example.com":
             - lobby
@@ -211,7 +222,7 @@ class YamlDocumentTest {
   }
 
   @Test
-  void readsNestedSectionsByPathFromTheRoot() {
+  void readsNestedSectionsByPathFromTheRoot() throws IOException {
     final YamlDocument document = sample();
     assertEquals(Set.of("config-version", "bind", "servers", "advanced"), document.keys());
     assertEquals(Set.of("compression-threshold", "compression-level"),
@@ -221,7 +232,7 @@ class YamlDocumentTest {
   }
 
   @Test
-  void rejectsValuesOfTheWrongShape() {
+  void rejectsValuesOfTheWrongShape() throws IOException {
     final YamlDocument document = sample();
     assertThrows(IllegalArgumentException.class, () -> document.getString("advanced"));
     assertThrows(IllegalArgumentException.class, () -> document.getInt("bind"));

@@ -17,9 +17,44 @@
 
 package com.velocitypowered.proxy.config;
 
+import java.util.List;
+import java.util.Set;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
- * A whole configuration, read from its root. Options nested in a section are reached by the
- * dotted path to them, such as {@code advanced.compression-threshold}.
+ * Reads typed values from a set of keys. A section of a configuration is itself a configuration,
+ * so a nested section is read the same way a whole file is. Each implementation converts its own
+ * storage, so a source that keeps everything as text parses it here rather than at the call site.
+ * A getter throws when the key is undefined, which {@link #contains(String)} tests for.
+ *
+ * <p>A key naming an entry of this configuration is matched as it is written, so a section of
+ * user-chosen keys such as {@code forced-hosts} can be read even though its keys contain dots.
+ * A key matching no entry is then tried as a dotted path into nested sections.</p>
+ *
+ * <p>{@link #keys()} names the entries of this configuration alone, while {@link #paths()} names
+ * every path below it and {@link #leafPaths()} only those that are not themselves sections.</p>
  */
-public interface Configuration extends ConfigurationSection {
+public interface Configuration {
+
+  Set<String> keys();
+
+  Set<String> paths();
+
+  Set<String> leafPaths();
+
+  boolean contains(String key);
+
+  @Nullable Object get(String key);
+
+  String getString(String key);
+
+  int getInt(String key);
+
+  boolean getBoolean(String key);
+
+  List<String> getStringList(String key);
+
+  <T extends Enum<T>> T getEnum(String key, Class<T> type);
+
+  Configuration getSection(String key);
 }

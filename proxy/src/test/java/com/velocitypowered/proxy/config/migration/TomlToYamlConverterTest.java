@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.velocitypowered.proxy.config.ConfigurationDocument;
 import com.velocitypowered.proxy.config.PingPassthroughMode;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
@@ -134,7 +135,7 @@ class TomlToYamlConverterTest {
         configuration.getPacketLimiterConfig());
     assertFalse(configuration.isAcceptTransfers());
 
-    final YamlDocument converted = YamlDocument.load(directory.resolve("velocity.yml"));
+    final ConfigurationDocument converted = YamlDocument.load(directory.resolve("velocity.yml"));
     assertTrue(String.valueOf(converted.get("motd")).endsWith("A Legacy Server"),
         String.valueOf(converted.get("motd")));
   }
@@ -151,7 +152,7 @@ class TomlToYamlConverterTest {
   void portsOnlyWhatTheLegacyConfigurationContained(@TempDir Path directory) throws IOException {
     convert(directory);
 
-    final YamlDocument converted = YamlDocument.load(directory.resolve("velocity.yml"));
+    final ConfigurationDocument converted = YamlDocument.load(directory.resolve("velocity.yml"));
     final Set<String> ported = converted.leafPaths();
 
     // A port of the legacy file, not of whatever the proxy currently ships.
@@ -202,7 +203,7 @@ class TomlToYamlConverterTest {
 
     final String converted =
         Files.readString(directory.resolve("velocity.yml"), StandardCharsets.UTF_8);
-    assertTrue(converted.contains("# Config version. Do not change this\nconfig-version: 3"),
+    assertTrue(converted.contains("# Config version. Do not change this.\nconfig-version: 3"),
         converted);
     assertTrue(converted.contains(
         "# How large a Minecraft packet has to be before we compress it."), converted);
@@ -221,7 +222,7 @@ class TomlToYamlConverterTest {
         StandardCharsets.UTF_8);
     VelocityConfiguration.read(directory.resolve("velocity.yml"));
 
-    final YamlDocument converted = YamlDocument.load(directory.resolve("velocity.yml"));
+    final ConfigurationDocument converted = YamlDocument.load(directory.resolve("velocity.yml"));
     assertEquals(true, converted.get("advanced.legacy-leftover"));
     assertNull(converted.getComment("advanced.legacy-leftover"));
     assertNotNull(converted.getComment("advanced.command-rate-limit"));

@@ -19,6 +19,7 @@ package com.velocitypowered.proxy.config.migration;
 
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import com.velocitypowered.proxy.config.ConfigurationDocument;
 import com.velocitypowered.proxy.config.YamlDocument;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -37,8 +38,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public final class TomlToYamlConverter {
 
   /**
-   * TOML 2.9 became YAML 3. This is a historical fact, not the current version: tying it to
-   * the version the proxy currently ships would skip every migration in between.
+   * TOML 2.9 became YAML 3.
    */
   private static final int TARGET_VERSION = 3;
   private static final String BACKUP_SUFFIX = ".bak";
@@ -54,7 +54,7 @@ public final class TomlToYamlConverter {
       throws IOException {
     logger.info("Converting {} to {}.", legacyPath, targetPath);
 
-    final YamlDocument document;
+    final ConfigurationDocument document;
     try (CommentedFileConfig legacy = CommentedFileConfig.builder(legacyPath)
         .preserveInsertionOrder()
         .sync()
@@ -113,7 +113,7 @@ public final class TomlToYamlConverter {
     return value;
   }
 
-  private static void renameProxyProtocol(final YamlDocument document) {
+  private static void renameProxyProtocol(final ConfigurationDocument document) {
     final Object proxyProtocol = document.get("advanced.proxy-protocol");
     if (proxyProtocol != null) {
       if (document.get("advanced.haproxy-protocol") == null) {

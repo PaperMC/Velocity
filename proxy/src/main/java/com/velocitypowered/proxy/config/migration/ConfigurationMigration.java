@@ -17,7 +17,7 @@
 
 package com.velocitypowered.proxy.config.migration;
 
-import com.velocitypowered.proxy.config.YamlDocument;
+import com.velocitypowered.proxy.config.ConfigurationDocument;
 import java.io.IOException;
 import org.apache.logging.log4j.Logger;
 
@@ -27,14 +27,14 @@ import org.apache.logging.log4j.Logger;
  */
 public interface ConfigurationMigration {
 
-  boolean shouldMigrate(YamlDocument config);
+  boolean shouldMigrate(ConfigurationDocument config);
 
-  void migrate(YamlDocument config, Logger logger) throws IOException;
+  void migrate(ConfigurationDocument config, Logger logger) throws IOException;
 
   /**
    * Gets the configuration version, which every configuration must declare.
    */
-  static int versionOf(final YamlDocument config) {
+  static int versionOf(final ConfigurationDocument config) {
     final Object version = config.get("config-version");
     if (version instanceof Number number) {
       return number.intValue();
@@ -45,7 +45,7 @@ public interface ConfigurationMigration {
             + "', which is not a whole number.");
   }
 
-  default int configVersion(final YamlDocument config) {
+  default int configVersion(final ConfigurationDocument config) {
     return versionOf(config);
   }
 }

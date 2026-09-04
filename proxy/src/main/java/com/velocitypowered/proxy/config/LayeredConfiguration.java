@@ -20,6 +20,8 @@ package com.velocitypowered.proxy.config;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Reads from an ordered list of layers, the last being the shipped {@code default-velocity.yml}
@@ -39,21 +41,28 @@ public final class LayeredConfiguration implements Configuration {
 
   @Override
   public Set<String> keys() {
-    final Set<String> keys = new LinkedHashSet<>();
-    for (final Configuration layer : layers) {
-      keys.addAll(layer.keys());
-    }
-    return keys;
+    return union(Configuration::keys);
+  }
+
+  @Override
+  public Set<String> paths() {
+    return union(Configuration::paths);
+  }
+
+  @Override
+  public Set<String> leafPaths() {
+    return union(Configuration::leafPaths);
   }
 
   @Override
   public boolean contains(final String path) {
-    for (final Configuration layer : layers) {
-      if (layer.contains(path)) {
-        return true;
-      }
-    }
-    return false;
+    return layerContaining(path) != null;
+  }
+
+  @Override
+  public @Nullable Object get(final String path) {
+    final Configuration layer = layerContaining(path);
+    return layer == null ? null : layer.get(path);
   }
 
   @Override
@@ -82,17 +91,33 @@ public final class LayeredConfiguration implements Configuration {
   }
 
   @Override
-  public ConfigurationSection getSection(final String path) {
+  public Configuration getSection(final String path) {
     return layerDefining(path).getSection(path);
   }
 
   private Configuration layerDefining(final String path) {
+    final Configuration layer = layerContaining(path);
+    if (layer == null) {
+      throw new IllegalStateException("No configuration option '" + path
+          + "'. Every option must have a default in default-velocity.yml.");
+    }
+    return layer;
+  }
+
+  private @Nullable Configuration layerContaining(final String path) {
     for (final Configuration layer : layers) {
       if (layer.contains(path)) {
         return layer;
       }
     }
-    throw new IllegalStateException("No configuration option '" + path
-        + "'. Every option must have a default in default-velocity.yml.");
+    return null;
+  }
+
+  private Set<String> union(final Function<Configuration, Set<String>> of) {
+    final Set<String> union = new LinkedHashSet<>();
+    for (final Configuration layer : layers) {
+      union.addAll(of.apply(layer));
+    }
+    return union;
   }
 }
