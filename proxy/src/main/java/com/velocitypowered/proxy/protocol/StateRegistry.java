@@ -61,6 +61,7 @@ import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
 import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundPostEffectsPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundSoundEntityPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundStopSoundPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
@@ -235,6 +236,9 @@ public enum StateRegistry {
           map(0x06, MINECRAFT_1_20_2, false),
           map(0x07, MINECRAFT_1_20_3, false),
           map(0x09, MINECRAFT_1_20_5, false));
+      clientbound.register(
+          ClientboundPostEffectsPacket.class, ClientboundPostEffectsPacket::new,
+          map(0xA, MINECRAFT_26_3, false));
       clientbound.register(
           ClientboundStoreCookiePacket.class, ClientboundStoreCookiePacket::new,
           map(0x0A, MINECRAFT_1_20_5, false),
@@ -481,6 +485,9 @@ public enum StateRegistry {
           ClientboundCookieRequestPacket.class, ClientboundCookieRequestPacket::new,
           map(0x16, MINECRAFT_1_20_5, false),
           map(0x15, MINECRAFT_1_21_5, false));
+      clientbound.register(
+          ClientboundPostEffectsPacket.class, ClientboundPostEffectsPacket::new,
+          map(0x52, MINECRAFT_26_3, false));
       clientbound.register(
           ClientboundSoundEntityPacket.class, ClientboundSoundEntityPacket::new,
           map(0x5D, MINECRAFT_1_19_3, true),
