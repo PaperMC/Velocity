@@ -160,6 +160,14 @@ log-player-connections = true
 # Transfer packet (Minecraft 1.20.5) to be received.
 accepts-transfers = false
 
+# Since Minecraft 26.2 the client is told whether it plays on an online-mode server and bases its
+# identity handling on that (chat signing keys, tab list heads, Mojang lookups). By default Velocity
+# reports the connection's real online-mode state. Enable this to report "offline" instead whenever
+# the UUID the backend sees no longer matches the Mojang session the client authenticated with,
+# i.e. a plugin rewrote the profile UUID (premium auto-login keeping offline UUIDs) or player info
+# forwarding is disabled. Players who logged in offline are not affected.
+client-online-mode-requires-matching-uuid = false
+
 # Enables support for SO_REUSEPORT. This may help the proxy scale better on multicore systems
 # with a lot of incoming connections, and provide better CPU utilization than the existing
 # strategy of having a single thread accepting connections and distributing them to worker
