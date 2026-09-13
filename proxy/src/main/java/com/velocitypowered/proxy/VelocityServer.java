@@ -488,9 +488,29 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       return false;
     }
 
-    // Re-register servers. If a server is being replaced, make sure to note what players need to
-    // move back to a fallback server.
+    // Re-register servers. If a server is being replaced or removed, make sure to note what
+    // players need to move back to a fallback server.
     Collection<ConnectedPlayer> evacuate = new ArrayList<>();
+    for (Map.Entry<String, String> entry : configuration.getServers().entrySet()) {
+      if (isServerConfigured(newConfiguration.getServers(), entry.getKey())) {
+        continue;
+      }
+
+      Optional<RegisteredServer> rs = servers.getServer(entry.getKey());
+      if (rs.isEmpty()) {
+        continue;
+      }
+
+      for (Player player : rs.get().getPlayersConnected()) {
+        if (!(player instanceof ConnectedPlayer)) {
+          throw new IllegalStateException("ConnectedPlayer not found for player " + player
+              + " in server " + rs.get().getServerInfo().getName());
+        }
+        evacuate.add((ConnectedPlayer) player);
+      }
+      servers.unregister(rs.get().getServerInfo());
+    }
+
     for (Map.Entry<String, String> entry : newConfiguration.getServers().entrySet()) {
       ServerInfo newInfo = new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue()));
       Optional<RegisteredServer> rs = servers.getServer(entry.getKey());
@@ -560,6 +580,15 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     this.configuration = newConfiguration;
     eventManager.fireAndForget(new ProxyReloadEvent());
     return true;
+  }
+
+  private static boolean isServerConfigured(Map<String, String> configServers, String name) {
+    for (String configName : configServers.keySet()) {
+      if (configName.equalsIgnoreCase(name)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
