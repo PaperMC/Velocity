@@ -46,9 +46,17 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
+import io.netty.handler.codec.CorruptedFrameException;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ArgumentPropertyRegistry {
@@ -58,11 +66,17 @@ public class ArgumentPropertyRegistry {
   }
 
   private static final Map<ArgumentIdentifier, ArgumentPropertySerializer<?>> byIdentifier =
-      new HashMap<>();
+      new LinkedHashMap<>();
   private static final Map<Class<? extends ArgumentType>,
       ArgumentPropertySerializer<?>> byClass = new HashMap<>();
   private static final Map<Class<? extends ArgumentType>, ArgumentIdentifier> classToId =
       new HashMap<>();
+
+  // Per-version numeric id -> identifier lookup. Built once at class init so resolution never
+  // depends on map iteration order again. Collisions are resolved deterministically and reported
+  // in indexCollisions (see buildIndex).
+  private static final Map<ProtocolVersion, Int2ObjectMap<ArgumentIdentifier>> byId;
+  static final List<String> indexCollisions = new ArrayList<>();
 
   private static <T extends ArgumentType<?>> void register(ArgumentIdentifier identifier,
       Class<T> klazz, ArgumentPropertySerializer<T> serializer) {
@@ -159,13 +173,12 @@ public class ArgumentPropertyRegistry {
   public static @NotNull ArgumentIdentifier readIdentifier(ByteBuf buf, ProtocolVersion protocolVersion) {
     if (protocolVersion.noLessThan(MINECRAFT_1_19)) {
       int id = ProtocolUtils.readVarInt(buf);
-      for (ArgumentIdentifier i : byIdentifier.keySet()) {
-        Integer v = i.getIdByProtocolVersion(protocolVersion);
-        if (v != null && v == id) {
-          return i;
-        }
+      Int2ObjectMap<ArgumentIdentifier> versionIndex = byId.get(protocolVersion);
+      ArgumentIdentifier identifier = versionIndex != null ? versionIndex.get(id) : null;
+      if (identifier == null) {
+        throw new CorruptedFrameException("Argument type identifier " + id + " unknown.");
       }
-      throw new IllegalArgumentException("Argument type identifier " + id + " unknown.");
+      return identifier;
     } else {
       String identifier = ProtocolUtils.readString(buf);
       for (ArgumentIdentifier i : byIdentifier.keySet()) {
@@ -173,8 +186,88 @@ public class ArgumentPropertyRegistry {
           return i;
         }
       }
-      throw new IllegalArgumentException("Argument type identifier " + identifier + " unknown.");
+      throw new CorruptedFrameException("Argument type identifier " + identifier + " unknown.");
     }
+  }
+
+  /**
+   * Returns the registered argument identifiers.
+   *
+   * @return the registered argument identifiers
+   */
+  static Collection<ArgumentIdentifier> identifiers() {
+    return byIdentifier.keySet();
+  }
+
+  /**
+   * Builds a per-version index of numeric argument ids to their identifiers. When more than one
+   * identifier claims the same id for a protocol version, the collision is resolved
+   * deterministically: vanilla ({@code minecraft:}/{@code brigadier:}) namespaces win over mod
+   * namespaces, with a lexicographic tie-break for equal priorities. Resolved collisions are
+   * recorded in {@code collisions} so they can be logged and caught by tests.
+   *
+   * @param identifiers the registered identifiers to index
+   * @param collisions  receives a human-readable line per resolved collision
+   * @return the version -> (id -> identifier) index
+   */
+  static Map<ProtocolVersion, Int2ObjectMap<ArgumentIdentifier>> buildIndex(
+      Collection<ArgumentIdentifier> identifiers, List<String> collisions) {
+    Map<ProtocolVersion, Int2ObjectMap<ArgumentIdentifier>> index =
+        new EnumMap<>(ProtocolVersion.class);
+    for (ProtocolVersion version : ProtocolVersion.values()) {
+      if (!version.noLessThan(MINECRAFT_1_19)) {
+        // Pre-1.19 argument types are identified by string, not by numeric id, so there is no
+        // numeric index to build for these versions.
+        continue;
+      }
+      Int2ObjectMap<ArgumentIdentifier> versionIndex = new Int2ObjectOpenHashMap<>();
+      for (ArgumentIdentifier identifier : identifiers) {
+        Integer id = identifier.getIdByProtocolVersion(version);
+        if (id == null) {
+          continue;
+        }
+        ArgumentIdentifier existing = versionIndex.get(id);
+        if (existing == null) {
+          versionIndex.put(id, identifier);
+        } else if (!existing.equals(identifier)) {
+          ArgumentIdentifier winner = prefer(existing, identifier);
+          versionIndex.put(id, winner);
+          // Negative ids are sentinels ("removed in this version" / mod args) that never appear on
+          // the wire, and are expected to overlap. Only positive-id collisions are real regressions
+          // worth flagging.
+          if (id >= 0) {
+            collisions.add(existing + " and " + identifier + " share id " + id
+                + " for " + version + ", resolved to " + winner);
+          }
+        }
+      }
+      index.put(version, versionIndex);
+    }
+    return index;
+  }
+
+  /**
+   * Picks the winner between two identifiers claiming the same id: vanilla namespaces beat mod
+   * namespaces, equal priorities are broken deterministically by identifier string.
+   *
+   * @param a the first identifier
+   * @param b the second identifier
+   * @return the identifier that should win the collision
+   */
+  static ArgumentIdentifier prefer(ArgumentIdentifier a, ArgumentIdentifier b) {
+    int comparison = Integer.compare(namespacePriority(a), namespacePriority(b));
+    if (comparison != 0) {
+      return comparison < 0 ? a : b;
+    }
+    return a.getIdentifier().compareTo(b.getIdentifier()) <= 0 ? a : b;
+  }
+
+  private static int namespacePriority(ArgumentIdentifier identifier) {
+    String name = identifier.getIdentifier();
+    if (name.startsWith("minecraft:") || name.startsWith("brigadier:")) {
+      return 0;
+    }
+    return 1;
   }
 
   static {
@@ -273,7 +366,7 @@ public class ArgumentPropertyRegistry {
     empty(id("minecraft:heightmap", mapSet(MINECRAFT_1_21_6, 51), mapSet(MINECRAFT_1_21_5, 50), mapSet(MINECRAFT_1_20_3, 49),
         mapSet(MINECRAFT_1_19_4, 47))); // 1.19.4
 
-    empty(id("minecraft:uuid", mapSet(MINECRAFT_1_21_6, 56), mapSet(MINECRAFT_1_21_5, 54),mapSet(MINECRAFT_1_20_5, 53), mapSet(MINECRAFT_1_20_3, 48),
+    empty(id("minecraft:uuid", mapSet(MINECRAFT_1_21_6, 56), mapSet(MINECRAFT_1_21_5, 54), mapSet(MINECRAFT_1_20_5, 53), mapSet(MINECRAFT_1_20_3, 48),
         mapSet(MINECRAFT_1_19_4, 48), mapSet(MINECRAFT_1_19, 47))); // added in 1.16
 
     empty(id("minecraft:loot_table", mapSet(MINECRAFT_1_21_6, 52), mapSet(MINECRAFT_1_21_5, 51), mapSet(MINECRAFT_1_20_5, 50)));
@@ -288,5 +381,13 @@ public class ArgumentPropertyRegistry {
     register(id("crossstitch:mod_argument", mapSet(MINECRAFT_1_19, -256)), ModArgumentProperty.class, MOD);
 
     empty(id("minecraft:nbt")); // No longer in 1.19+
+
+    byId = buildIndex(byIdentifier.keySet(), indexCollisions);
+    // Assertions are stripped when running without -ea, so a real (positive-id) collision must fail
+    // fast here rather than silently resolving to a winner in production.
+    if (!indexCollisions.isEmpty()) {
+      throw new IllegalStateException("Colliding argument type identifiers in registry: "
+          + indexCollisions);
+    }
   }
 }

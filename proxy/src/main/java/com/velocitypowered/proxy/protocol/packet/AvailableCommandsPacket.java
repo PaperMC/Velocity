@@ -41,6 +41,7 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentPropertyRegistry;
 import com.velocitypowered.proxy.util.collect.IdentityHashStrategy;
 import io.netty.buffer.ByteBuf;
+import io.netty.handler.codec.CorruptedFrameException;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import java.util.ArrayDeque;
@@ -87,6 +88,10 @@ public class AvailableCommandsPacket implements MinecraftPacket {
     int commands = ProtocolUtils.readVarInt(buf);
     List<WireNode> wireNodes = ProtocolUtils.newList(commands);
     for (int i = 0; i < commands; i++) {
+      if (!buf.isReadable()) {
+        throw new CorruptedFrameException("Ran out of bytes while reading command node " + i
+            + " (declared " + commands + " nodes)");
+      }
       wireNodes.add(deserializeNode(buf, i, protocolVersion));
     }
 
@@ -111,6 +116,10 @@ public class AvailableCommandsPacket implements MinecraftPacket {
     }
 
     int rootIdx = ProtocolUtils.readVarInt(buf);
+    if (rootIdx < 0 || rootIdx >= wireNodes.size()) {
+      throw new CorruptedFrameException("Root node index " + rootIdx
+          + " is out of bounds (declared " + commands + " nodes)");
+    }
     rootNode = (RootCommandNode<CommandSource>) wireNodes.get(rootIdx).built;
   }
 
@@ -221,7 +230,8 @@ public class AvailableCommandsPacket implements MinecraftPacket {
         }
         return new WireNode(idx, flags, children, redirectTo, argumentBuilder);
       default:
-        throw new IllegalArgumentException("Unknown node type " + (flags & FLAG_NODE_TYPE));
+        throw new IllegalArgumentException("Unknown node type " + (flags & FLAG_NODE_TYPE)
+            + " for node " + idx);
     }
   }
 
