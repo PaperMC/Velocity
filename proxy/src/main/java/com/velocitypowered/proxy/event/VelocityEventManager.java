@@ -545,6 +545,36 @@ public class VelocityEventManager implements EventManager {
     }
   }
 
+  private <E> void fire(final @Nullable CompletableFuture<E> future, final E event,
+      final int offset, final boolean currentlyAsync, final HandlerRegistration[] registrations) {
+    for (int i = offset; i < registrations.length; i++) {
+      final HandlerRegistration registration = registrations[i];
+      try {
+        final EventTask eventTask = registration.handler.executeAsync(event);
+        if (eventTask == null) {
+          continue;
+        }
+        final ContinuationTask<E> continuationTask = new ContinuationTask<>(eventTask,
+            registrations, future, event, i, currentlyAsync);
+        if (currentlyAsync || !eventTask.requiresAsync()) {
+          if (continuationTask.execute()) {
+            continue;
+          }
+        } else {
+          registration.plugin.getExecutorService().execute(continuationTask);
+        }
+        // fire will continue in another thread once the async task is
+        // executed and the continuation is resumed
+        return;
+      } catch (final Throwable t) {
+        logHandlerException(registration, t);
+      }
+    }
+    if (future != null) {
+      future.complete(event);
+    }
+  }
+
   private static final int TASK_STATE_DEFAULT = 0;
   private static final int TASK_STATE_EXECUTING = 1;
   private static final int TASK_STATE_CONTINUE_IMMEDIATELY = 2;
@@ -666,36 +696,6 @@ public class VelocityEventManager implements EventManager {
     @Override
     public void resumeWithException(final Throwable exception) {
       resume(requireNonNull(exception, "exception"), true);
-    }
-  }
-
-  private <E> void fire(final @Nullable CompletableFuture<E> future, final E event,
-      final int offset, final boolean currentlyAsync, final HandlerRegistration[] registrations) {
-    for (int i = offset; i < registrations.length; i++) {
-      final HandlerRegistration registration = registrations[i];
-      try {
-        final EventTask eventTask = registration.handler.executeAsync(event);
-        if (eventTask == null) {
-          continue;
-        }
-        final ContinuationTask<E> continuationTask = new ContinuationTask<>(eventTask,
-            registrations, future, event, i, currentlyAsync);
-        if (currentlyAsync || !eventTask.requiresAsync()) {
-          if (continuationTask.execute()) {
-            continue;
-          }
-        } else {
-          registration.plugin.getExecutorService().execute(continuationTask);
-        }
-        // fire will continue in another thread once the async task is
-        // executed and the continuation is resumed
-        return;
-      } catch (final Throwable t) {
-        logHandlerException(registration, t);
-      }
-    }
-    if (future != null) {
-      future.complete(event);
     }
   }
 
