@@ -24,6 +24,8 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
+import com.velocitypowered.proxy.protocol.packet.chat.DecoratedPlayerChatForwarder;
+import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatMessageInfo;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import net.kyori.adventure.text.Component;
@@ -68,7 +70,8 @@ public class KeyedChatHandler implements
   public void handlePlayerChatInternal(KeyedPlayerChatPacket packet) {
     ChatQueue chatQueue = this.player.getChatQueue();
     EventManager eventManager = this.server.getEventManager();
-    PlayerChatEvent toSend = new PlayerChatEvent(player, packet.getMessage());
+    PlayerChatEvent toSend = new PlayerChatEvent(player, packet.getMessage(),
+        PlayerChatMessageInfo.keyedMessage(player, packet));
     CompletableFuture<PlayerChatEvent> future = eventManager.fire(toSend);
 
     CompletableFuture<MinecraftPacket> chatFuture;
@@ -81,6 +84,14 @@ public class KeyedChatHandler implements
       // 1.19->1.19.2 unsigned version
       chatFuture = future.thenApply(pme -> {
         PlayerChatEvent.ChatResult chatResult = pme.getResult();
+        if (chatResult.getPlayerChatForwarding().isPresent()) {
+          DecoratedPlayerChatForwarder.Result forwardingResult =
+              DecoratedPlayerChatForwarder.forward(pme.getChatMessage(),
+                  chatResult.getPlayerChatForwarding().get(), logger);
+          if (forwardingResult.suppressesBackendForwarding()) {
+            return null;
+          }
+        }
         if (!chatResult.isAllowed()) {
           return null;
         }
@@ -105,6 +116,14 @@ public class KeyedChatHandler implements
     assert playerKey != null;
     return pme -> {
       PlayerChatEvent.ChatResult chatResult = pme.getResult();
+      if (chatResult.getPlayerChatForwarding().isPresent()) {
+        DecoratedPlayerChatForwarder.Result forwardingResult =
+            DecoratedPlayerChatForwarder.forward(pme.getChatMessage(),
+                chatResult.getPlayerChatForwarding().get(), logger);
+        if (forwardingResult.suppressesBackendForwarding()) {
+          return null;
+        }
+      }
       if (!chatResult.isAllowed()) {
         if (playerKey.getKeyRevision().noLessThan(IdentifiedKey.Revision.LINKED_V2)) {
           // Bad, very bad.

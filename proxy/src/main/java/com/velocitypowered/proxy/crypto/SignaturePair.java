@@ -34,7 +34,7 @@ public class SignaturePair {
   }
 
   public byte[] getSignature() {
-    return signature;
+    return signature.clone();
   }
 
   public UUID getSigner() {

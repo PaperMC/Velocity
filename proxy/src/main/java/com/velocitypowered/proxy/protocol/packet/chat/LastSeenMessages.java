@@ -30,15 +30,21 @@ public class LastSeenMessages {
   private final int offset;
   private final BitSet acknowledged;
   private byte checksum;
+  private final boolean checksumPresent;
 
   public LastSeenMessages() {
-    this(0, new BitSet(), (byte) 0);
+    this(0, new BitSet(), (byte) 0, false);
   }
 
   public LastSeenMessages(int offset, BitSet acknowledged, byte checksum) {
+    this(offset, acknowledged, checksum, true);
+  }
+
+  public LastSeenMessages(int offset, BitSet acknowledged, byte checksum, boolean checksumPresent) {
     this.offset = offset;
     this.acknowledged = acknowledged;
     this.checksum = checksum;
+    this.checksumPresent = checksumPresent;
   }
 
   public LastSeenMessages(ByteBuf buf, ProtocolVersion protocolVersion) {
@@ -50,6 +56,9 @@ public class LastSeenMessages {
 
     if (protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_1_21_5)) {
       this.checksum = buf.readByte();
+      this.checksumPresent = true;
+    } else {
+      this.checksumPresent = false;
     }
   }
 
@@ -66,11 +75,19 @@ public class LastSeenMessages {
   }
 
   public BitSet getAcknowledged() {
-    return acknowledged;
+    return (BitSet) acknowledged.clone();
+  }
+
+  public byte getChecksum() {
+    return checksum;
+  }
+
+  public boolean hasChecksum() {
+    return checksumPresent;
   }
 
   public LastSeenMessages offset(final int offset) {
-    return new LastSeenMessages(this.offset + offset, acknowledged, checksum);
+    return new LastSeenMessages(this.offset + offset, acknowledged, checksum, checksumPresent);
   }
 
   @Override

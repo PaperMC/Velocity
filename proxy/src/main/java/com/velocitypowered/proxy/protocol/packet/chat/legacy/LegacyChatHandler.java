@@ -22,6 +22,8 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatHandler;
+import com.velocitypowered.proxy.protocol.packet.chat.DecoratedPlayerChatForwarder;
+import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatMessageInfo;
 
 public class LegacyChatHandler implements ChatHandler<LegacyChatPacket> {
 
@@ -44,10 +46,19 @@ public class LegacyChatHandler implements ChatHandler<LegacyChatPacket> {
     if (serverConnection == null) {
       return;
     }
-    this.server.getEventManager().fire(new PlayerChatEvent(this.player, packet.getMessage()))
+    this.server.getEventManager().fire(new PlayerChatEvent(this.player, packet.getMessage(),
+        PlayerChatMessageInfo.legacyMessage(this.player, packet.getMessage())))
         .whenComplete((chatEvent, throwable) -> {
           if (!chatEvent.getResult().isAllowed()) {
             return;
+          }
+
+          if (chatEvent.getResult().getPlayerChatForwarding().isPresent()) {
+            if (DecoratedPlayerChatForwarder.forwardLegacy(chatEvent.getChatMessage(),
+                chatEvent.getResult().getPlayerChatForwarding().get())
+                .suppressesBackendForwarding()) {
+              return;
+            }
           }
 
           serverConnection.write(this.player.getChatBuilderFactory().builder()

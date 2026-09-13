@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.protocol.packet.chat.session;
 
+import com.google.common.primitives.Longs;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
@@ -54,7 +55,11 @@ public class SessionPlayerChatPacket implements MinecraftPacket {
   }
 
   public byte[] getSignature() {
-    return signature;
+    return signature.clone();
+  }
+
+  public byte[] getSaltBytes() {
+    return Longs.toByteArray(salt);
   }
 
   public LastSeenMessages getLastSeenMessages() {
