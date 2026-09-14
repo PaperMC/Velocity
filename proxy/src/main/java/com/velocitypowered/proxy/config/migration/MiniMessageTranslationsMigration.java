@@ -32,7 +32,7 @@ import org.apache.logging.log4j.Logger;
  * Migration from old to modern language argument format with MiniMessage.
  * Also migrates possible use of legacy colors to MiniMessage format.
  */
-public final class MiniMessageTranslationsMigration implements ConfigurationMigration {
+public final class MiniMessageTranslationsMigration implements LegacyConfigurationMigration {
   @Override
   public boolean shouldMigrate(final CommentedFileConfig config) {
     // Checking whether translations should be migrated would be just as costly as attempting to migrate them directly.

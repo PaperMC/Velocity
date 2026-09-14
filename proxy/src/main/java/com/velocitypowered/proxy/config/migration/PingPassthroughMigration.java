@@ -24,7 +24,7 @@ import org.apache.logging.log4j.Logger;
 /**
  * Migrate the old ping passthrough entry to separate config entries.
  */
-public final class PingPassthroughMigration implements ConfigurationMigration {
+public final class PingPassthroughMigration implements LegacyConfigurationMigration {
   @Override
   public boolean shouldMigrate(final CommentedFileConfig config) {
     return configVersion(config) < 2.9;
