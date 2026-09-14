@@ -504,7 +504,9 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
       for (Player player : rs.getPlayersConnected()) {
         if (!(player instanceof ConnectedPlayer)) {
-          throw new IllegalStateException("Expected ConnectedPlayer");
+          throw new IllegalStateException("Expected ConnectedPlayer for player " + player
+              + " on server " + rs.getServerInfo().getName() + ", got "
+              + player.getClass().getName());
         }
         evacuate.add((ConnectedPlayer) player);
       }
@@ -519,7 +521,9 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       } else if (!rs.getServerInfo().equals(newInfo)) {
         for (Player player : rs.getPlayersConnected()) {
           if (!(player instanceof ConnectedPlayer)) {
-            throw new IllegalStateException("Expected ConnectedPlayer");
+            throw new IllegalStateException("Expected ConnectedPlayer for player " + player
+                + " on server " + rs.getServerInfo().getName() + ", got "
+                + player.getClass().getName());
           }
           evacuate.add((ConnectedPlayer) player);
         }
