@@ -44,7 +44,6 @@ import com.velocitypowered.proxy.util.VelocityProperties;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.security.GeneralSecurityException;
@@ -220,8 +219,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
               .uri(URI.create(url))
               .build();
       //noinspection resource
-      final HttpClient httpClient = server.createHttpClient();
-      httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
+      server.getHttpClient().sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
           .whenCompleteAsync((response, throwable) -> {
             if (mcConnection.isClosed()) {
               // The player disconnected after we authenticated them.
@@ -260,10 +258,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
                   response.statusCode(), login.getUsername(), playerIp);
               inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
             }
-          }, mcConnection.eventLoop())
-          .whenComplete((ignored, throwable) -> {
-            httpClient.close();
-          });
+          }, mcConnection.eventLoop());
     } catch (GeneralSecurityException e) {
       logger.error("Unable to enable encryption", e);
       mcConnection.close(true);
