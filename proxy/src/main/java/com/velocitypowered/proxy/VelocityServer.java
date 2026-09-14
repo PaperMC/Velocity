@@ -488,23 +488,46 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       return false;
     }
 
-    // Re-register servers. If a server is being replaced, make sure to note what players need to
-    // move back to a fallback server.
+    // Re-register servers. If a server is being replaced or removed, make sure to note what
+    // players need to move back to a fallback server.
     Collection<ConnectedPlayer> evacuate = new ArrayList<>();
+    for (Map.Entry<String, String> entry : configuration.getServers().entrySet()) {
+      if (newConfiguration.getServers().keySet().stream()
+          .anyMatch(name -> name.equalsIgnoreCase(entry.getKey()))) {
+        continue;
+      }
+
+      RegisteredServer rs = servers.getServer(entry.getKey()).orElse(null);
+      if (rs == null) {
+        continue;
+      }
+
+      for (Player player : rs.getPlayersConnected()) {
+        if (!(player instanceof ConnectedPlayer)) {
+          throw new IllegalStateException("Expected ConnectedPlayer for player " + player
+              + " on server " + rs.getServerInfo().getName() + ", got "
+              + player.getClass().getName());
+        }
+        evacuate.add((ConnectedPlayer) player);
+      }
+      servers.unregister(rs.getServerInfo());
+    }
+
     for (Map.Entry<String, String> entry : newConfiguration.getServers().entrySet()) {
       ServerInfo newInfo = new ServerInfo(entry.getKey(), AddressUtil.parseAddress(entry.getValue()));
-      Optional<RegisteredServer> rs = servers.getServer(entry.getKey());
-      if (rs.isEmpty()) {
+      RegisteredServer rs = servers.getServer(entry.getKey()).orElse(null);
+      if (rs == null) {
         servers.register(newInfo);
-      } else if (!rs.get().getServerInfo().equals(newInfo)) {
-        for (Player player : rs.get().getPlayersConnected()) {
+      } else if (!rs.getServerInfo().equals(newInfo)) {
+        for (Player player : rs.getPlayersConnected()) {
           if (!(player instanceof ConnectedPlayer)) {
-            throw new IllegalStateException("ConnectedPlayer not found for player " + player
-                + " in server " + rs.get().getServerInfo().getName());
+            throw new IllegalStateException("Expected ConnectedPlayer for player " + player
+                + " on server " + rs.getServerInfo().getName() + ", got "
+                + player.getClass().getName());
           }
           evacuate.add((ConnectedPlayer) player);
         }
-        servers.unregister(rs.get().getServerInfo());
+        servers.unregister(rs.getServerInfo());
         servers.register(newInfo);
       }
     }
