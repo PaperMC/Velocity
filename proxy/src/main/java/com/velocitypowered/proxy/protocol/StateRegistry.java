@@ -238,7 +238,7 @@ public enum StateRegistry {
           map(0x09, MINECRAFT_1_20_5, false));
       clientbound.register(
           ClientboundPostEffectsPacket.class, ClientboundPostEffectsPacket::new,
-          map(0xA, MINECRAFT_26_3, false));
+          map(0x0A, MINECRAFT_26_3, false));
       clientbound.register(
           ClientboundStoreCookiePacket.class, ClientboundStoreCookiePacket::new,
           map(0x0A, MINECRAFT_1_20_5, false),
