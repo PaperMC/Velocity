@@ -65,6 +65,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.EventLoop;
 import io.netty.handler.codec.haproxy.HAProxyMessage;
 import io.netty.handler.timeout.ReadTimeoutException;
+import io.netty.handler.timeout.WriteTimeoutException;
 import io.netty.util.ReferenceCountUtil;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -192,6 +193,8 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
       if (association != null) {
         if (cause instanceof ReadTimeoutException) {
           logger.error("{}: read timed out", association);
+        } else if (cause instanceof WriteTimeoutException) {
+          logger.error("{}: write timed out", association);
         } else {
           boolean frontlineHandler = activeSessionHandler instanceof InitialLoginSessionHandler
               || activeSessionHandler instanceof HandshakeSessionHandler

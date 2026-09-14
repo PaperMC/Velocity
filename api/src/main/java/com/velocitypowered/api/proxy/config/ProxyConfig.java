@@ -150,6 +150,13 @@ public interface ProxyConfig {
   int getReadTimeout();
 
   /**
+   * Get how long this proxy will wait until performing a write timeout.
+   *
+   * @return write timeout (in milliseconds)
+   */
+  int getWriteTimeout();
+
+  /**
    * Get the rate limit for how fast a player can execute commands.
    *
    * @return the command rate limit (in milliseconds)
