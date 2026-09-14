@@ -23,36 +23,27 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
-import java.util.ArrayList;
-import java.util.List;
 import net.kyori.adventure.key.Key;
 
 public final class ClientboundPostEffectsPacket implements MinecraftPacket {
 
-  private List<Key> postEffects;
+  private Key[] postEffects;
 
   public ClientboundPostEffectsPacket() {
   }
 
-  public ClientboundPostEffectsPacket(List<Key> postEffects) {
+  public ClientboundPostEffectsPacket(Key[] postEffects) {
     this.postEffects = postEffects;
   }
 
   @Override
   public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    int size = ProtocolUtils.readVarInt(buf);
-    this.postEffects = new ArrayList<>(size);
-    for (int i = 0; i < size; i++) {
-      this.postEffects.add(ProtocolUtils.readKey(buf));
-    }
+    this.postEffects = ProtocolUtils.readKeyArray(buf);
   }
 
   @Override
   public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
-    ProtocolUtils.writeVarInt(buf, this.postEffects.size());
-    for (Key key : this.postEffects) {
-      ProtocolUtils.writeKey(buf, key);
-    }
+    ProtocolUtils.writeKeyArray(buf, this.postEffects);
   }
 
   @Override

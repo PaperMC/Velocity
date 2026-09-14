@@ -143,6 +143,7 @@ public enum ProtocolUtils {
           .build();
 
   public static final int DEFAULT_MAX_STRING_SIZE = 65536; // 64KiB
+  private static final int DEFAULT_MAX_KEY_ARRAY_SIZE = 1024;
   private static final int MAXIMUM_VARINT_SIZE = 5;
   private static final BinaryTagType<? extends BinaryTag>[] BINARY_TAG_TYPES = new BinaryTagType[] {
       BinaryTagTypes.END, BinaryTagTypes.BYTE, BinaryTagTypes.SHORT, BinaryTagTypes.INT,
@@ -349,15 +350,20 @@ public enum ProtocolUtils {
     writeString(buf, key.asMinimalString());
   }
 
+  public static Key[] readKeyArray(ByteBuf buf) {
+    return readKeyArray(buf, DEFAULT_MAX_KEY_ARRAY_SIZE);
+  }
+
   /**
    * Reads a standard Mojang Text namespaced:key array from the buffer.
    *
    * @param buf the buffer to read from
    * @return the decoded key array
    */
-  public static Key[] readKeyArray(ByteBuf buf) {
+  public static Key[] readKeyArray(ByteBuf buf, int cap) {
     int length = readVarInt(buf);
     checkFrame(length >= 0, "Got a negative-length array (%s)", length);
+    checkFrame(length <= cap, "Bad key array size (got %s, maximum is %s)", length, cap);
     checkFrame(buf.isReadable(length),
         "Trying to read an array that is too long (wanted %s, only have %s)", length,
         buf.readableBytes());
