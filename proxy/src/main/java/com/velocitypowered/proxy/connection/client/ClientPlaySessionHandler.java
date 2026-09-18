@@ -41,6 +41,7 @@ import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.forge.legacy.LegacyForgeConstants;
 import com.velocitypowered.proxy.connection.player.resourcepack.ResourcePackResponseBundle;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
 import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
@@ -661,6 +662,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       } else {
         this.doFastClientServerSwitch(joinGame);
       }
+      this.resetLegacyAbsorption(joinGame.getEntityId());
     }
 
     destination.setEntityId(joinGame.getEntityId()); // used for sound api
@@ -709,6 +711,21 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
     player.getConnection().flush();
     serverMc.flush();
     destination.completeJoin();
+  }
+
+  private void resetLegacyAbsorption(int entityId) {
+    if (player.getProtocolVersion() != ProtocolVersion.MINECRAFT_1_8) {
+      return;
+    }
+
+    // 1.8 copies metadata on respawn. Clear the old absorption before forwarding destination data.
+    ByteBuf metadata = Unpooled.buffer(12);
+    ProtocolUtils.writeVarInt(metadata, 0x1c);
+    ProtocolUtils.writeVarInt(metadata, entityId);
+    metadata.writeByte((3 << 5) | 17); // Float metadata at the 1.8 player absorption index.
+    metadata.writeFloat(0.0F);
+    metadata.writeByte(0x7f);
+    player.getConnection().delayedWrite(metadata);
   }
 
   private void doFastClientServerSwitch(JoinGamePacket joinGame) {
