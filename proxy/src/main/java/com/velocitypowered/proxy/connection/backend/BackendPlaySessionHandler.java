@@ -55,6 +55,7 @@ import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
+import com.velocitypowered.proxy.protocol.packet.JoinGamePacket;
 import com.velocitypowered.proxy.protocol.packet.KeepAlivePacket;
 import com.velocitypowered.proxy.protocol.packet.LegacyPlayerListItemPacket;
 import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
@@ -162,6 +163,13 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
   public boolean handle(KeepAlivePacket packet) {
     serverConn.getPendingPings().put(packet.getRandomId(), System.nanoTime());
     return false; // forwards on
+  }
+
+  @Override
+  public boolean handle(JoinGamePacket packet) {
+    // We receive this if the connection is reconfigured
+    packet.setOnlineMode(serverConn.getPlayer().isOnlineMode());
+    return false; // forward
   }
 
   @Override
