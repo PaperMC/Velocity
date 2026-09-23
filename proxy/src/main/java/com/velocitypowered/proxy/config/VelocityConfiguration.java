@@ -364,6 +364,11 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   @Override
+  public int getWriteTimeout() {
+    return advanced.getWriteTimeout();
+  }
+
+  @Override
   public int getCommandRatelimit() {
     return advanced.getCommandRateLimit();
   }
@@ -759,6 +764,8 @@ public class VelocityConfiguration implements ProxyConfig {
     @Expose
     private int readTimeout = 30000;
     @Expose
+    private int writeTimeout = 30000;
+    @Expose
     private boolean proxyProtocol = false;
     @Expose
     private boolean tcpFastOpen = false;
@@ -799,6 +806,7 @@ public class VelocityConfiguration implements ProxyConfig {
         this.loginRatelimit = config.getIntOrElse("login-ratelimit", 3000);
         this.connectionTimeout = config.getIntOrElse("connection-timeout", 5000);
         this.readTimeout = config.getIntOrElse("read-timeout", 30000);
+        this.writeTimeout = config.getIntOrElse("write-timeout", 30000);
         if (config.contains("haproxy-protocol")) {
           this.proxyProtocol = config.getOrElse("haproxy-protocol", false);
         } else {
@@ -840,6 +848,10 @@ public class VelocityConfiguration implements ProxyConfig {
 
     public int getReadTimeout() {
       return readTimeout;
+    }
+
+    public int getWriteTimeout() {
+      return writeTimeout;
     }
 
     public boolean isProxyProtocol() {
@@ -914,6 +926,7 @@ public class VelocityConfiguration implements ProxyConfig {
           + ", loginRatelimit=" + loginRatelimit
           + ", connectionTimeout=" + connectionTimeout
           + ", readTimeout=" + readTimeout
+          + ", writeTimeout=" + writeTimeout
           + ", proxyProtocol=" + proxyProtocol
           + ", tcpFastOpen=" + tcpFastOpen
           + ", bungeePluginMessageChannel=" + bungeePluginMessageChannel

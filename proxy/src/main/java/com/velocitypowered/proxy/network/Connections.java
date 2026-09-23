@@ -35,6 +35,7 @@ public class Connections {
   public static final String MINECRAFT_DECODER = "minecraft-decoder";
   public static final String MINECRAFT_ENCODER = "minecraft-encoder";
   public static final String READ_TIMEOUT = "read-timeout";
+  public static final String WRITE_TIMEOUT = "write-timeout";
   public static final String PLAY_PACKET_QUEUE_OUTBOUND = "play-packet-queue-outbound";
   public static final String PLAY_PACKET_QUEUE_INBOUND = "play-packet-queue-inbound";
 
