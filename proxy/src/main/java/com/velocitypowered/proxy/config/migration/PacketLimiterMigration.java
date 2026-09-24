@@ -28,7 +28,7 @@ import org.apache.logging.log4j.Logger;
  * and `bytes-per-second` attributes. Config version 2.8 enforces these exist, adds the new
  * `decompressed-bytes-per-second` attribute, adjusts the new default, and adds comments.
  */
-public final class PacketLimiterMigration implements ConfigurationMigration {
+public final class PacketLimiterMigration implements LegacyConfigurationMigration {
 
   @Override
   public boolean shouldMigrate(CommentedFileConfig config) {

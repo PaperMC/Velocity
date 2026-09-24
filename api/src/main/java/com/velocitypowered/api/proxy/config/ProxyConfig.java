@@ -78,7 +78,7 @@ public interface ProxyConfig {
   boolean shouldPreventClientProxyConnections();
 
   /**
-   * Get a Map of all servers registered in <code>velocity.toml</code>. This method does
+   * Get a Map of all servers registered in <code>velocity.yml</code>. This method does
    * <strong>not</strong> return all the servers currently in memory, although in most cases it
    * does. For a view of all registered servers, see {@link ProxyServer#getAllServers()}.
    *

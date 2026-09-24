@@ -115,6 +115,7 @@ dependencies {
     implementation(libs.adventure.text.serializer.json.legacy.impl)
     implementation(libs.completablefutures)
     implementation(libs.nightconfig)
+    implementation(libs.configurate4.yaml)
     implementation(libs.bstats)
     implementation(libs.lmbda)
     implementation(libs.asm)

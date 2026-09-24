@@ -23,7 +23,7 @@ import org.apache.logging.log4j.Logger;
 /**
  * Creation of the configuration option "accepts-transfers".
  */
-public final class TransferIntegrationMigration implements ConfigurationMigration {
+public final class TransferIntegrationMigration implements LegacyConfigurationMigration {
   @Override
   public boolean shouldMigrate(final CommentedFileConfig config) {
     return configVersion(config) < 2.7;
