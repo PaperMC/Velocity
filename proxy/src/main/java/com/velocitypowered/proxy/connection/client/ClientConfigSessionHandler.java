@@ -216,8 +216,19 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   public boolean handle(ServerboundCustomClickActionPacket packet) {
     VelocityServerConnection serverConnection = player.getConnectionInFlightOrConnectedServer();
     if (serverConnection != null) {
-      serverConnection.ensureConnected().write(packet);
-      server.getEventManager().fireAndForget(new PlayerCustomClickEvent(player, packet.getId(), packet.getPayload()));
+      serverConnection.getPlayer().getConnection().setAutoReading(false);
+      this.server.getEventManager()
+          .fire(new PlayerCustomClickEvent(player, packet.id(), packet.payload()))
+          .thenAcceptAsync(event -> {
+            if (event.getResult().isAllowed() && serverConnection.getConnection() != null) {
+              serverConnection.ensureConnected().write(new ServerboundCustomClickActionPacket(
+                  event.id(), event.payload()));
+            }
+            serverConnection.getPlayer().getConnection().setAutoReading(true);
+          }, player.getConnection().eventLoop()).exceptionally((ex) -> {
+            logger.error("Exception while handling custom click action packet for {}", player, ex);
+            return null;
+          });
       return true;
     }
 

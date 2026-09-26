@@ -17,8 +17,10 @@
 
 package com.velocitypowered.proxy.connection.client;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -29,16 +31,20 @@ import com.velocitypowered.proxy.connection.backend.BackendConnectionPhase;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.event.VelocityEventManager;
 import com.velocitypowered.proxy.protocol.packet.ServerboundCustomClickActionPacket;
+import io.netty.channel.EventLoop;
+import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.key.Key;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 class ClientConfigSessionHandlerTest {
 
   private VelocityServer server;
   private VelocityEventManager eventManager;
   private ConnectedPlayer player;
+  private MinecraftConnection playerConnection;
   private ClientConfigSessionHandler handler;
 
   @BeforeEach
@@ -46,7 +52,16 @@ class ClientConfigSessionHandlerTest {
     server = mock(VelocityServer.class);
     eventManager = mock(VelocityEventManager.class);
     when(server.getEventManager()).thenReturn(eventManager);
+    when(eventManager.fire(any())).thenAnswer(inv ->
+        CompletableFuture.completedFuture(inv.getArgument(0)));
     player = mock(ConnectedPlayer.class);
+    playerConnection = mock(MinecraftConnection.class);
+    when(player.getConnection()).thenReturn(playerConnection);
+    EventLoop mockEventLoop = mock(EventLoop.class, invocation -> {
+      invocation.getArgument(0, Runnable.class).run();
+      return null;
+    });
+    when(playerConnection.eventLoop()).thenReturn(mockEventLoop);
     handler = new ClientConfigSessionHandler(server, player);
   }
 
@@ -64,11 +79,18 @@ class ClientConfigSessionHandlerTest {
     VelocityServerConnection inFlight = mock(VelocityServerConnection.class);
     MinecraftConnection backend = mock(MinecraftConnection.class);
     when(player.getConnectionInFlightOrConnectedServer()).thenReturn(inFlight);
+    when(inFlight.getPlayer()).thenReturn(player);
+    when(inFlight.getConnection()).thenReturn(backend);
     when(inFlight.ensureConnected()).thenReturn(backend);
 
     ServerboundCustomClickActionPacket pkt = makePacket();
     assertTrue(handler.handle(pkt));
-    verify(backend).write(pkt);
+    ArgumentCaptor<ServerboundCustomClickActionPacket> captor = ArgumentCaptor
+        .forClass(ServerboundCustomClickActionPacket.class);
+    verify(backend).write(captor.capture());
+    ServerboundCustomClickActionPacket sent = captor.getValue();
+    assertEquals(pkt.id(), sent.id());
+    assertEquals(pkt.payload(), sent.payload());
   }
 
   @Test
@@ -76,11 +98,18 @@ class ClientConfigSessionHandlerTest {
     VelocityServerConnection connected = mock(VelocityServerConnection.class);
     MinecraftConnection backend = mock(MinecraftConnection.class);
     when(player.getConnectionInFlightOrConnectedServer()).thenReturn(connected);
+    when(connected.getPlayer()).thenReturn(player);
+    when(connected.getConnection()).thenReturn(backend);
     when(connected.ensureConnected()).thenReturn(backend);
 
     ServerboundCustomClickActionPacket pkt = makePacket();
     assertTrue(handler.handle(pkt));
-    verify(backend).write(pkt);
+    ArgumentCaptor<ServerboundCustomClickActionPacket> captor = ArgumentCaptor
+        .forClass(ServerboundCustomClickActionPacket.class);
+    verify(backend).write(captor.capture());
+    ServerboundCustomClickActionPacket sent = captor.getValue();
+    assertEquals(pkt.id(), sent.id());
+    assertEquals(pkt.payload(), sent.payload());
   }
 
   @Test

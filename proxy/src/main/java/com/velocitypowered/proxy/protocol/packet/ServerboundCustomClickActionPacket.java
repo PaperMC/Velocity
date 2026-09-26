@@ -89,11 +89,11 @@ public class ServerboundCustomClickActionPacket implements MinecraftPacket {
     return handler.handle(this);
   }
 
-  public Key getId() {
+  public Key id() {
     return id;
   }
 
-  public BinaryTag getPayload() {
+  public BinaryTag payload() {
     return payload;
   }
 

@@ -522,8 +522,17 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
       // No server connection yet, probably transitioning.
       return true;
     }
-    serverConnection.ensureConnected().write(packet);
-    server.getEventManager().fireAndForget(new PlayerCustomClickEvent(player, packet.getId(), packet.getPayload()));
+    this.server.getEventManager()
+        .fire(new PlayerCustomClickEvent(player, packet.id(), packet.payload()))
+        .thenAcceptAsync(playerCustomClickEvent -> {
+          if (playerCustomClickEvent.getResult().isAllowed() && serverConnection.getConnection() != null) {
+            serverConnection.ensureConnected().write(new ServerboundCustomClickActionPacket(
+                playerCustomClickEvent.id(), playerCustomClickEvent.payload()));
+          }
+        }, player.getConnection().eventLoop()).exceptionally((ex) -> {
+          logger.error("Exception while handling custom click action packet for {}", player, ex);
+          return null;
+        });
     return true;
   }
 
