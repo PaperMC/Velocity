@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2023 Velocity Contributors
+ * Copyright (C) 2018-2026 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -434,6 +434,9 @@ public enum StateRegistry {
           map(0x0E, MINECRAFT_1_21_2, false),
           map(0x0F, MINECRAFT_1_21_6, false),
           map(0x10, MINECRAFT_26_1, false));
+      serverbound.register(ServerboundCustomClickActionPacket.class, ServerboundCustomClickActionPacket::new,
+          map(0x41, MINECRAFT_1_21_6, false),
+          map(0x44, MINECRAFT_26_1, false));
 
       clientbound.register(
           BossBarPacket.class,

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2023 Velocity Contributors
+ * Copyright (C) 2018-2026 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.connection.client;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.CookieReceiveEvent;
 import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
+import com.velocitypowered.api.event.player.PlayerCustomClickEvent;
 import com.velocitypowered.api.event.player.configuration.PlayerConfigurationEvent;
 import com.velocitypowered.api.event.player.configuration.PlayerFinishConfigurationEvent;
 import com.velocitypowered.api.event.player.configuration.PlayerFinishedConfigurationEvent;
@@ -215,7 +216,8 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   public boolean handle(ServerboundCustomClickActionPacket packet) {
     VelocityServerConnection serverConnection = player.getConnectionInFlightOrConnectedServer();
     if (serverConnection != null) {
-      serverConnection.ensureConnected().write(packet.retain());
+      serverConnection.ensureConnected().write(packet);
+      server.getEventManager().fireAndForget(new PlayerCustomClickEvent(player, packet.getId(), packet.getPayload()));
       return true;
     }
 

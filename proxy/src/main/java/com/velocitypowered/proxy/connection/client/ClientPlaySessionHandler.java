@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2023 Velocity Contributors
+ * Copyright (C) 2018-2026 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import com.velocitypowered.api.event.player.PlayerChannelRegisterEvent;
 import com.velocitypowered.api.event.player.PlayerChannelUnregisterEvent;
 import com.velocitypowered.api.event.player.PlayerClientBrandEvent;
 import com.velocitypowered.api.event.player.PlayerClientLoadedWorldEvent;
+import com.velocitypowered.api.event.player.PlayerCustomClickEvent;
 import com.velocitypowered.api.event.player.TabCompleteEvent;
 import com.velocitypowered.api.event.player.configuration.PlayerEnteredConfigurationEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
@@ -51,6 +52,7 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.RespawnPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket;
+import com.velocitypowered.proxy.protocol.packet.ServerboundCustomClickActionPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerboundPlayerLoadedPacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.TabCompleteResponsePacket;
@@ -514,6 +516,18 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
   }
 
   @Override
+  public boolean handle(ServerboundCustomClickActionPacket packet) {
+    final VelocityServerConnection serverConnection = player.getConnectedServer();
+    if (serverConnection == null) {
+      // No server connection yet, probably transitioning.
+      return true;
+    }
+    serverConnection.ensureConnected().write(packet);
+    server.getEventManager().fireAndForget(new PlayerCustomClickEvent(player, packet.getId(), packet.getPayload()));
+    return true;
+  }
+
+  @Override
   public boolean handle(JoinGamePacket packet) {
     // Forward the packet as normal, but discard any chat state we have queued - the client will do this too
     player.discardChatQueue();
@@ -911,7 +925,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
         }, player.getConnection().eventLoop()).exceptionally((ex) -> {
           logger.error(
               "Exception while finishing regular tab completion,"
-                  + " with request {} and response{}",
+                  + " with request {} and response {}",
               request, response, ex);
           return null;
         });

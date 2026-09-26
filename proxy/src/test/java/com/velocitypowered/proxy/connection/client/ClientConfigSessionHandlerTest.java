@@ -17,7 +17,6 @@
 
 package com.velocitypowered.proxy.connection.client;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -28,10 +27,9 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhase;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
+import com.velocitypowered.proxy.event.VelocityEventManager;
 import com.velocitypowered.proxy.protocol.packet.ServerboundCustomClickActionPacket;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import io.netty.util.ReferenceCountUtil;
+import net.kyori.adventure.key.Key;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,12 +37,15 @@ import org.junit.jupiter.api.Test;
 class ClientConfigSessionHandlerTest {
 
   private VelocityServer server;
+  private VelocityEventManager eventManager;
   private ConnectedPlayer player;
   private ClientConfigSessionHandler handler;
 
   @BeforeEach
   void setUp() {
     server = mock(VelocityServer.class);
+    eventManager = mock(VelocityEventManager.class);
+    when(server.getEventManager()).thenReturn(eventManager);
     player = mock(ConnectedPlayer.class);
     handler = new ClientConfigSessionHandler(server, player);
   }
@@ -55,10 +56,7 @@ class ClientConfigSessionHandlerTest {
   }
 
   private ServerboundCustomClickActionPacket makePacket() {
-    ByteBuf frame = Unpooled.buffer().writeByte(0);
-    ServerboundCustomClickActionPacket pkt = new ServerboundCustomClickActionPacket();
-    pkt.replace(frame.readRetainedSlice(frame.readableBytes()));
-    return pkt;
+    return new ServerboundCustomClickActionPacket(Key.key("velocity", "test"));
   }
 
   @Test
@@ -71,7 +69,6 @@ class ClientConfigSessionHandlerTest {
     ServerboundCustomClickActionPacket pkt = makePacket();
     assertTrue(handler.handle(pkt));
     verify(backend).write(pkt);
-    ReferenceCountUtil.release(pkt);
   }
 
   @Test
@@ -84,7 +81,6 @@ class ClientConfigSessionHandlerTest {
     ServerboundCustomClickActionPacket pkt = makePacket();
     assertTrue(handler.handle(pkt));
     verify(backend).write(pkt);
-    ReferenceCountUtil.release(pkt);
   }
 
   @Test
@@ -93,11 +89,10 @@ class ClientConfigSessionHandlerTest {
 
     ServerboundCustomClickActionPacket pkt = makePacket();
     assertFalse(handler.handle(pkt));
-    ReferenceCountUtil.release(pkt);
   }
 
   @Test
-  void handleGenericRetainsAndForwards() {
+  void handleGenericForwards() {
     VelocityServerConnection connected = mock(VelocityServerConnection.class);
     MinecraftConnection backend = mock(MinecraftConnection.class);
     BackendConnectionPhase phase = mock(BackendConnectionPhase.class);
@@ -107,13 +102,9 @@ class ClientConfigSessionHandlerTest {
     when(phase.consideredComplete()).thenReturn(true);
 
     ServerboundCustomClickActionPacket pkt = makePacket();
-    int refBefore = pkt.refCnt();
 
     handler.handleGeneric(pkt);
 
-    // retain() was called (+1) before write
-    assertEquals(refBefore + 1, pkt.refCnt());
     verify(backend).write(pkt);
-    ReferenceCountUtil.release(pkt);
   }
 }
