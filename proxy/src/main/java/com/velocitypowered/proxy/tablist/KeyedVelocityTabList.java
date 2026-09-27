@@ -152,7 +152,7 @@ public class KeyedVelocityTabList implements InternalTabList {
 
   @Override
   public TabListEntry buildEntry(GameProfile profile,
-      net.kyori.adventure.text.@Nullable Component displayName,
+      @Nullable Component displayName,
       int latency, int gameMode, @Nullable IdentifiedKey key) {
     return new KeyedVelocityTabListEntry(this, profile, displayName, latency, gameMode, key);
   }

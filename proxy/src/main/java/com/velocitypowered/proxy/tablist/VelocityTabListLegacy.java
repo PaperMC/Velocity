@@ -138,7 +138,7 @@ public class VelocityTabListLegacy extends KeyedVelocityTabList {
 
   @Override
   public TabListEntry buildEntry(GameProfile profile,
-                                 net.kyori.adventure.text.@Nullable Component displayName,
+                                 @Nullable Component displayName,
                                  int latency, int gameMode, @Nullable IdentifiedKey key) {
     return new VelocityTabListEntryLegacy(this, profile, displayName, latency, gameMode);
   }
