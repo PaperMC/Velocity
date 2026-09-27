@@ -74,9 +74,16 @@ public interface InboundConnection {
    * Returns the unique, stable session UUID for this connection, generated when
    * the client initially connects to the proxy. The session id remains consistent
    * across all login-phase events and all proxy-to-backend connections for the
-   * same player session. This should not be confused with Mojang's server-wide play session ID introduced in Minecraft 26.2.
+   * same player session.
+   *
+   * <p>A session is bound to a single client connection: if the player disconnects and
+   * reconnects (or is transferred back to the proxy), a new session id is generated.</p>
+   *
+   * <p>This should not be confused with Mojang's server-wide play session ID introduced
+   * in Minecraft 26.2.</p>
    *
    * @return the session UUID, never {@code null}
+   * @since 4.2.1
    */
   UUID getSessionId();
 }

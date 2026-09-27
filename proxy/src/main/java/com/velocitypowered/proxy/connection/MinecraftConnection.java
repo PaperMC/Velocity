@@ -104,8 +104,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   /**
    * Initializes a new {@link MinecraftConnection} instance.
    *
-   * @param channel the channel on the connection
-   * @param server  the Velocity instance
+   * @param channel   the channel on the connection
+   * @param server    the Velocity instance
+   * @param sessionId the proxy session id of the player this connection belongs to, or
+   *                  {@code null} if it does not belong to a player session
    */
   public MinecraftConnection(Channel channel, VelocityServer server, @Nullable UUID sessionId) {
     this.channel = channel;
@@ -324,7 +326,6 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   public Channel getChannel() {
     return channel;
   }
-
 
   public @Nullable UUID getSessionId() {
     return sessionId;
