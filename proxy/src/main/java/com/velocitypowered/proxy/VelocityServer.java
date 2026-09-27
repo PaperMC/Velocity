@@ -46,6 +46,7 @@ import com.velocitypowered.proxy.command.builtin.SendCommand;
 import com.velocitypowered.proxy.command.builtin.ServerCommand;
 import com.velocitypowered.proxy.command.builtin.ShutdownCommand;
 import com.velocitypowered.proxy.command.builtin.VelocityCommand;
+import com.velocitypowered.proxy.config.ConfigurationLoader;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.player.resourcepack.VelocityResourcePackInfo;
@@ -403,8 +404,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   @SuppressFBWarnings("DM_EXIT")
   private void doStartupConfigLoad() {
     try {
-      Path configPath = Path.of("velocity.toml");
-      configuration = VelocityConfiguration.read(configPath);
+      configuration = ConfigurationLoader.loadConfiguration();
 
       if (!configuration.validate()) {
         logger.error("Your configuration is invalid. Velocity will not start up until the errors "
@@ -415,7 +415,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
       commandManager.setAnnounceProxyCommands(configuration.isAnnounceProxyCommands());
     } catch (Exception e) {
-      logger.error("Unable to read/load/save your velocity.toml. The server will shut down.", e);
+      logger.error("Unable to read/load/save your velocity.yaml. The server will shut down.", e);
       LogManager.shutdown();
       System.exit(1);
     }
@@ -478,11 +478,10 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
    * Reloads the proxy's configuration.
    *
    * @return {@code true} if successful, {@code false} if we can't read the configuration
-   * @throws IOException if we can't read {@code velocity.toml}
+   * @throws IOException if we can't read {@code velocity.yaml}
    */
   public boolean reloadConfiguration() throws IOException {
-    Path configPath = Path.of("velocity.toml");
-    VelocityConfiguration newConfiguration = VelocityConfiguration.read(configPath);
+    VelocityConfiguration newConfiguration = ConfigurationLoader.loadConfiguration();
 
     if (!newConfiguration.validate()) {
       return false;
