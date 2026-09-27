@@ -66,6 +66,15 @@ public class JavaPluginLoader implements PluginLoader {
     }
 
     SerializedPluginDescription pd = serialized.get();
+    //noinspection ConstantValue
+    if (pd.getId() == null) {
+      throw new InvalidPluginException("No plugin ID provided.");
+    }
+    //noinspection ConstantValue
+    if (pd.getMain() == null) {
+      throw new InvalidPluginException("No plugin main class provided.");
+    }
+
     if (!SerializedPluginDescription.ID_PATTERN.matcher(pd.getId()).matches()) {
       throw new InvalidPluginException("Plugin ID '" + pd.getId() + "' is invalid.");
     }
