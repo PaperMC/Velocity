@@ -66,22 +66,22 @@ public class JavaPluginLoader implements PluginLoader {
     }
 
     SerializedPluginDescription pd = serialized.get();
-    if (!SerializedPluginDescription.ID_PATTERN.matcher(pd.getId()).matches()) {
-      throw new InvalidPluginException("Plugin ID '" + pd.getId() + "' is invalid.");
+    if (!SerializedPluginDescription.ID_PATTERN.matcher(pd.id()).matches()) {
+      throw new InvalidPluginException("Plugin ID '" + pd.id() + "' is invalid.");
     }
 
-    for (SerializedPluginDescription.Dependency dependency : pd.getDependencies()) {
-      if (!SerializedPluginDescription.ID_PATTERN.matcher(dependency.getId()).matches()) {
+    for (SerializedPluginDescription.Dependency dependency : pd.dependencies()) {
+      if (!SerializedPluginDescription.ID_PATTERN.matcher(dependency.id()).matches()) {
         throw new InvalidPluginException(
-            "Dependency ID '" + dependency.getId() + "' for plugin '" + pd.getId() + "' is invalid."
+            "Dependency ID '" + dependency.id() + "' for plugin '" + pd.id() + "' is invalid."
         );
       }
     }
 
-    for (String providedId : pd.getProvides()) {
+    for (String providedId : pd.provides()) {
       if (!SerializedPluginDescription.ID_PATTERN.matcher(providedId).matches()) {
         throw new InvalidPluginException(
-            "Provided ID '" + providedId + "' for plugin '" + pd.getId() + "' is invalid."
+            "Provided ID '" + providedId + "' for plugin '" + pd.id() + "' is invalid."
         );
       }
     }
@@ -153,7 +153,7 @@ public class JavaPluginLoader implements PluginLoader {
           case "velocity-plugin.json" -> {
             try (Reader pluginInfoReader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
               return Optional.of(VelocityServer.GENERAL_GSON.fromJson(pluginInfoReader,
-                  SerializedPluginDescription.class));
+                  SerializedPluginDescription.class)); // bypasses constructor
             }
           }
           case "paper-plugin.yml", "plugin.yml", "bungee.yml" -> foundBungeeBukkitPluginFile = true;
@@ -177,21 +177,21 @@ public class JavaPluginLoader implements PluginLoader {
       Path source) {
     Set<PluginDependency> dependencies = new HashSet<>();
 
-    for (SerializedPluginDescription.Dependency dependency : description.getDependencies()) {
+    for (SerializedPluginDescription.Dependency dependency : description.dependencies()) {
       dependencies.add(toDependencyMeta(dependency));
     }
 
     return new JavaVelocityPluginDescriptionCandidate(
-        description.getId(),
-        description.getName(),
-        description.getVersion(),
-        description.getDescription(),
-        description.getUrl(),
-        description.getAuthors(),
+        description.id(),
+        description.name(),
+        description.version(),
+        description.description(),
+        description.url(),
+        description.authors(),
         dependencies,
-        description.getProvides(),
+        description.provides(),
         source,
-        description.getMain()
+        description.main()
     );
   }
 
@@ -215,9 +215,9 @@ public class JavaPluginLoader implements PluginLoader {
   private static PluginDependency toDependencyMeta(
       SerializedPluginDescription.Dependency dependency) {
     return new PluginDependency(
-        dependency.getId(),
+        dependency.id(),
         null, // TODO Implement version matching in dependency annotation
-        dependency.isOptional()
+        dependency.optional()
     );
   }
 }
