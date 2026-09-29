@@ -102,6 +102,16 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   private boolean knownDisconnect = false;
 
   /**
+   * Initializes a new {@link MinecraftConnection} instance with no session ID.
+   *
+   * @param channel the channel on the connection
+   * @param server  the Velocity instance
+   */
+  public MinecraftConnection(Channel channel, VelocityServer server) {
+    this(channel, server, null);
+  }
+
+  /**
    * Initializes a new {@link MinecraftConnection} instance.
    *
    * @param channel   the channel on the connection
