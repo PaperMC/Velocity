@@ -212,7 +212,7 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
     return true;
   }
 
-  private void completeLoginProtocolPhaseAndInitialize(ConnectedPlayer player) {
+  private void completeLoginProtoc  olPhaseAndInitialize(ConnectedPlayer player) {
     mcConnection.setAssociation(player);
 
     server.getEventManager().fire(new LoginEvent(player, serverIdHash)).thenAcceptAsync(event -> {
