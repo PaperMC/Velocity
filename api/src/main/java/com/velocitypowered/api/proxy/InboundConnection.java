@@ -57,6 +57,16 @@ public interface InboundConnection {
   ProtocolVersion getProtocolVersion();
 
   /**
+   * Returns the raw protocol version number sent by the client during the initial handshake.
+   *
+   * <p>If it is a legacy client or the raw protocol number is not available,
+   * this will return {@code -1}.</p>
+   *
+   * @return the raw protocol version number or {@code -1} if it is not available
+   */
+  int getRawProtocolVersion();
+
+  /**
    * Returns the current protocol state of this connection.
    *
    * @return the protocol state of the connection

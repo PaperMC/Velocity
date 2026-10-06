@@ -402,6 +402,11 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     return connection.getProtocolVersion();
   }
 
+  @Override
+  public int getRawProtocolVersion() {
+    return connection.getRawProtocolVersion();
+  }
+
   /**
    * Translates the message in the user's locale, falling back to the default locale if not set.
    *

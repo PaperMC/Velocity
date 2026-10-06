@@ -96,6 +96,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   private Map<StateRegistry, MinecraftSessionHandler> sessionHandlers;
   private @Nullable MinecraftSessionHandler activeSessionHandler;
   private ProtocolVersion protocolVersion;
+  private int rawProtocolVersion = -1;
   private @Nullable MinecraftConnectionAssociation association;
   public final VelocityServer server;
   private ConnectionType connectionType = ConnectionTypes.UNDETERMINED;
@@ -479,6 +480,19 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     if (changed) {
       channel.pipeline().fireUserEventTriggered(VelocityConnectionEvent.PROTOCOL_VERSION_CHANGED);
     }
+  }
+
+  public int getRawProtocolVersion() {
+    return this.rawProtocolVersion;
+  }
+
+  /**
+   * Sets the raw protocol version sent by the client during the initial handshake.
+   *
+   * @param rawProtocolVersion the raw protocol version
+   */
+  public void setRawProtocolVersion(int rawProtocolVersion) {
+    this.rawProtocolVersion = rawProtocolVersion;
   }
 
   public @Nullable MinecraftSessionHandler getActiveSessionHandler() {
