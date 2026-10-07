@@ -487,9 +487,9 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   }
 
   /**
-   * Sets the raw protocol version sent by the client during the initial handshake.
+   * Sets the protocol version number declared by the client during the initial handshake.
    *
-   * @param rawProtocolVersion the raw protocol version
+   * @param rawProtocolVersion the protocol version number
    */
   public void setRawProtocolVersion(int rawProtocolVersion) {
     this.rawProtocolVersion = rawProtocolVersion;
