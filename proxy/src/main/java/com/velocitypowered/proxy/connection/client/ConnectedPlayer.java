@@ -57,8 +57,11 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.ModInfo;
 import com.velocitypowered.api.util.ServerLink;
+import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.adventure.VelocityBossBarImplementation;
+import com.velocitypowered.proxy.config.PlayerInfoForwarding;
+import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftConnectionAssociation;
 import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
@@ -178,6 +181,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private int tryIndex = 0;
   private long ping = -1;
   private final boolean onlineMode;
+  private final @Nullable UUID authenticatedId;
   private @Nullable VelocityServerConnection connectedServer;
   private @Nullable VelocityServerConnection connectionInFlight;
   private @Nullable PlayerSettings settings;
@@ -204,6 +208,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   ConnectedPlayer(VelocityServer server, GameProfile profile, MinecraftConnection connection,
                   @Nullable InetSocketAddress virtualHost, @Nullable String rawVirtualHost, boolean onlineMode,
+                  @Nullable UUID authenticatedId,
                   HandshakeIntent handshakeIntent, @Nullable IdentifiedKey playerKey) {
     this.server = server;
     this.profile = profile;
@@ -214,6 +219,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     this.permissionFunction = PermissionFunction.ALWAYS_UNDEFINED;
     this.connectionPhase = connection.getType().getInitialClientPhase();
     this.onlineMode = onlineMode;
+    this.authenticatedId = authenticatedId;
     this.clientsideChannels = CappedSet.create(MAX_CLIENTSIDE_PLUGIN_CHANNELS);
 
     if (connection.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
@@ -329,6 +335,31 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   @Override
   public boolean isOnlineMode() {
     return onlineMode;
+  }
+
+  /**
+   * Returns whether the client is told that it plays on an online-mode server. This equals
+   * {@link #isOnlineMode()} unless {@code client-online-mode-requires-matching-uuid} is enabled and
+   * the UUID the backend sees no longer matches the Mojang session the client authenticated with,
+   * because a plugin rewrote the profile or because player info forwarding is disabled.
+   *
+   * @return whether the client should treat this connection as online-mode
+   */
+  public boolean isClientOnlineMode() {
+    VelocityConfiguration configuration = server.getConfiguration();
+    return isClientOnlineMode(onlineMode, configuration.isClientOnlineModeRequiresMatchingUuid(),
+        configuration.getPlayerInfoForwardingMode(), getUsername(), getUniqueId(), authenticatedId);
+  }
+
+  static boolean isClientOnlineMode(boolean onlineMode, boolean requireMatchingUuid,
+      PlayerInfoForwarding forwardingMode, String username, UUID uniqueId,
+      @Nullable UUID authenticatedId) {
+    if (!onlineMode || !requireMatchingUuid) {
+      return onlineMode;
+    }
+    UUID effectiveId = forwardingMode == PlayerInfoForwarding.NONE
+        ? UuidUtils.generateOfflinePlayerUuid(username) : uniqueId;
+    return effectiveId.equals(authenticatedId);
   }
 
   @Override
