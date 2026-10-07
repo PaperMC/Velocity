@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2025 Velocity Contributors
+ * Copyright (C) 2018-2026 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,25 +22,56 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
-import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import io.netty.buffer.ByteBuf;
+import io.netty.handler.codec.DecoderException;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.nbt.BinaryTag;
+import net.kyori.adventure.nbt.BinaryTagIO;
+import net.kyori.adventure.nbt.EndBinaryTag;
 
-public class ServerboundCustomClickActionPacket extends DeferredByteBufHolder implements MinecraftPacket {
+public class ServerboundCustomClickActionPacket implements MinecraftPacket {
 
   private static final int MAX_TAG_SIZE = 65536;
+  private static final long MAX_TAG_BYTES = 32768L;
+
+  private Key id;
+  private BinaryTag payload;
 
   public ServerboundCustomClickActionPacket() {
-    super(null);
+  }
+
+  public ServerboundCustomClickActionPacket(Key id) {
+    this(id, EndBinaryTag.endBinaryTag());
+  }
+
+  public ServerboundCustomClickActionPacket(Key id, BinaryTag payload) {
+    this.id = id;
+    this.payload = payload;
   }
 
   @Override
-  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    replace(buf.readRetainedSlice(buf.readableBytes()));
+  public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
+    this.id = ProtocolUtils.readKey(buf);
+    int size = ProtocolUtils.readVarInt(buf);
+    if (size > MAX_TAG_SIZE) {
+      throw new DecoderException(
+          "Buffer size " + size + " is larger than allowed limit of " + MAX_TAG_SIZE);
+    }
+    ByteBuf slice = buf.readSlice(size);
+    this.payload = ProtocolUtils.readBinaryTag(slice, protocolVersion, BinaryTagIO.reader(MAX_TAG_BYTES));
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    buf.writeBytes(content());
+  public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
+    ProtocolUtils.writeKey(buf, this.id);
+    ByteBuf tempBuf = buf.alloc().buffer();
+    try {
+      ProtocolUtils.writeBinaryTag(tempBuf, protocolVersion, this.payload);
+      ProtocolUtils.writeVarInt(buf, tempBuf.readableBytes());
+      buf.writeBytes(tempBuf);
+    } finally {
+      tempBuf.release();
+    }
   }
 
   @Override
@@ -58,8 +89,19 @@ public class ServerboundCustomClickActionPacket extends DeferredByteBufHolder im
     return handler.handle(this);
   }
 
+  public Key id() {
+    return id;
+  }
+
+  public BinaryTag payload() {
+    return payload;
+  }
+
   @Override
-  public int encodeSizeHint(Direction direction, ProtocolVersion version) {
-    return content().readableBytes();
+  public String toString() {
+    return "ServerboundCustomClickActionPacket{"
+      + "id=" + id
+      + ", payload=" + payload
+      + "}";
   }
 }
