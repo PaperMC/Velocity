@@ -894,10 +894,21 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
         continue;
       }
 
-      tryIndex = i;
-      return server.getServer(toTryName);
+      Optional<RegisteredServer> toTry = server.getServer(toTryName);
+      if (toTry.isPresent()) {
+        tryIndex = i;
+        return toTry;
+      }
     }
     return Optional.empty();
+  }
+
+  /**
+   * Clears the cached server try list so the next fallback lookup uses the current configuration.
+   */
+  public void resetServersToTry() {
+    serversToTry = null;
+    tryIndex = 0;
   }
 
   private static boolean hasSameName(RegisteredServer server, String name) {
