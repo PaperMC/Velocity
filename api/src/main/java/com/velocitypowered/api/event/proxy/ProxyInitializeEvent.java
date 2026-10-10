@@ -17,12 +17,6 @@ import com.velocitypowered.api.event.annotation.AwaitingEvent;
 @AwaitingEvent
 public final class ProxyInitializeEvent {
 
-  /**
-   * Creates a new {@code ProxyInitializeEvent}.
-   */
-  public ProxyInitializeEvent() {
-  }
-
   @Override
   public String toString() {
     return "ProxyInitializeEvent";

@@ -23,11 +23,6 @@ import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
-/**
- * Represents a KeepAlive packet in Minecraft. This packet is used to ensure that the connection
- * between the client and the server shall still be active by sending a randomly generated ID that
- * the client must respond to.
- */
 public class KeepAlivePacket implements MinecraftPacket {
 
   private long randomId;
@@ -66,6 +61,28 @@ public class KeepAlivePacket implements MinecraftPacket {
       ProtocolUtils.writeVarInt(buf, (int) randomId);
     } else {
       buf.writeInt((int) randomId);
+    }
+  }
+
+  @Override
+  public int decodeExpectedMaxLength(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_12_2)) {
+      return Long.BYTES;
+    } else if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
+      return 5;
+    } else {
+      return Integer.BYTES;
+    }
+  }
+
+  @Override
+  public int decodeExpectedMinLength(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_12_2)) {
+      return Long.BYTES;
+    } else if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
+      return 1;
+    } else {
+      return Integer.BYTES;
     }
   }
 

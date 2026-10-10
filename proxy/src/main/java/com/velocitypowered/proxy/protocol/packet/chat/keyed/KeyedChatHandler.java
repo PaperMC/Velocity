@@ -30,13 +30,6 @@ import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-/**
- * A handler for processing chat components based on specific keys.
- *
- * <p>The {@code KeyedChatHandler} class is responsible for managing chat interactions or
- * messages that keys identify. It implements the required interface or class
- * to handle key-based chat processing.</p>
- */
 public class KeyedChatHandler implements
     com.velocitypowered.proxy.protocol.packet.chat.ChatHandler<KeyedPlayerChatPacket> {
 
@@ -55,15 +48,6 @@ public class KeyedChatHandler implements
     return KeyedPlayerChatPacket.class;
   }
 
-  /**
-   * Logs an error and disconnects the player when a plugin attempts to cancel a signed chat message.
-   *
-   * <p>This method handles the invalid behavior of canceling signed chat messages, which is no longer allowed
-   * starting from Minecraft version 1.19.1.</p>
-   *
-   * @param logger the logger used to log the error
-   * @param player the player to disconnect due to the illegal action
-   */
   public static void invalidCancel(Logger logger, ConnectedPlayer player) {
     logger.fatal("A plugin tried to cancel a signed chat message."
         + " This is no longer possible in 1.19.1 and newer. "
@@ -72,15 +56,6 @@ public class KeyedChatHandler implements
         + "Contact your network administrator."));
   }
 
-  /**
-   * Logs an error and disconnects the player when a plugin attempts to modify a signed chat message.
-   *
-   * <p>This method handles the invalid behavior of modifying signed chat messages, which is no longer allowed
-   * starting from Minecraft version 1.19.1.</p>
-   *
-   * @param logger the logger used to log the error
-   * @param player the player to disconnect due to the illegal action
-   */
   public static void invalidChange(Logger logger, ConnectedPlayer player) {
     logger.fatal("A plugin tried to change a signed chat message. "
         + "This is no longer possible in 1.19.1 and newer. "

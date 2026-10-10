@@ -21,19 +21,13 @@ import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.connection.registry.DimensionInfo;
-import com.velocitypowered.proxy.protocol.MinecraftPacket;
-import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.*;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.Pair;
 import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-/**
- * Represents a packet sent to the client when they successfully join a game in Minecraft.
- * This packet contains all the necessary information to initialize the client state,
- * including the player's entity ID, game mode, dimension, world settings, and more.
- */
 public class JoinGamePacket implements MinecraftPacket {
 
   private static final BinaryTagIO.Reader JOINGAME_READER = BinaryTagIO.reader(4 * 1024 * 1024);
@@ -58,6 +52,7 @@ public class JoinGamePacket implements MinecraftPacket {
   private @Nullable Pair<String, Long> lastDeathPosition; // 1.19+
   private int portalCooldown; // 1.20+
   private int seaLevel; // 1.21.2+
+  private boolean onlineMode; // 26.2+
   private boolean enforcesSecureChat; // 1.20.5+
 
   public int getEntityId() {
@@ -196,6 +191,10 @@ public class JoinGamePacket implements MinecraftPacket {
     this.seaLevel = seaLevel;
   }
 
+  public void setOnlineMode(boolean onlineMode) {
+    this.onlineMode = onlineMode;
+  }
+
   public boolean getEnforcesSecureChat() {
     return this.enforcesSecureChat;
   }
@@ -210,17 +209,17 @@ public class JoinGamePacket implements MinecraftPacket {
 
   @Override
   public String toString() {
-    return "JoinGame{" + "entityId=" + entityId + ", gamemode=" + gamemode + ", dimension="
-        + dimension + ", partialHashedSeed=" + partialHashedSeed + ", difficulty=" + difficulty
-        + ", isHardcore=" + isHardcore + ", maxPlayers=" + maxPlayers + ", levelType='" + levelType
-        + '\'' + ", viewDistance=" + viewDistance + ", reducedDebugInfo=" + reducedDebugInfo
-        + ", showRespawnScreen=" + showRespawnScreen + ", doLimitedCrafting=" + doLimitedCrafting
-        + ", levelNames=" + levelNames + ", registry='" + registry + '\'' + ", dimensionInfo='"
-        + dimensionInfo + '\'' + ", currentDimensionData='" + currentDimensionData + '\''
-        + ", previousGamemode=" + previousGamemode + ", simulationDistance=" + simulationDistance
-        + ", lastDeathPosition='" + lastDeathPosition + '\'' + ", portalCooldown=" + portalCooldown
-        + ", seaLevel=" + seaLevel
-        + '}';
+    return "JoinGame{" + "entityId=" + entityId + ", gamemode=" + gamemode + ", dimension=" +
+        dimension + ", partialHashedSeed=" + partialHashedSeed + ", difficulty=" + difficulty +
+        ", isHardcore=" + isHardcore + ", maxPlayers=" + maxPlayers + ", levelType='" + levelType +
+        '\'' + ", viewDistance=" + viewDistance + ", reducedDebugInfo=" + reducedDebugInfo +
+        ", showRespawnScreen=" + showRespawnScreen + ", doLimitedCrafting=" + doLimitedCrafting +
+        ", levelNames=" + levelNames + ", registry='" + registry + '\'' + ", dimensionInfo='" +
+        dimensionInfo + '\'' + ", currentDimensionData='" + currentDimensionData + '\'' +
+        ", previousGamemode=" + previousGamemode + ", simulationDistance=" + simulationDistance +
+        ", lastDeathPosition='" + lastDeathPosition + '\'' + ", portalCooldown=" + portalCooldown +
+        ", seaLevel=" + seaLevel + ", onlineMode=" + this.onlineMode +
+        '}';
   }
 
   @Override
@@ -362,6 +361,10 @@ public class JoinGamePacket implements MinecraftPacket {
 
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_21_2)) {
       this.seaLevel = ProtocolUtils.readVarInt(buf);
+    }
+
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_26_2)) {
+      this.onlineMode = buf.readBoolean();
     }
 
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {
@@ -514,6 +517,10 @@ public class JoinGamePacket implements MinecraftPacket {
 
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_21_2)) {
       ProtocolUtils.writeVarInt(buf, seaLevel);
+    }
+
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_26_2)) {
+      buf.writeBoolean(this.onlineMode);
     }
 
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_20_5)) {

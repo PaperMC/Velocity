@@ -57,7 +57,11 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
     if (msg instanceof ByteBuf buf) {
-      tryDecode(ctx, buf);
+      try {
+        tryDecode(ctx, buf);
+      } finally {
+        buf.release();
+      }
     } else {
       ctx.fireChannelRead(msg);
     }
@@ -65,7 +69,6 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
 
   private void tryDecode(ChannelHandlerContext ctx, ByteBuf buf) throws Exception {
     if (!ctx.channel().isActive() || !buf.isReadable()) {
-      buf.release();
       return;
     }
 
@@ -74,24 +77,23 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
     MinecraftPacket packet = this.registry.createPacket(packetId);
     if (packet == null) {
       buf.readerIndex(originalReaderIndex);
-      ctx.fireChannelRead(buf);
-    } else {
-      try {
-        doLengthSanityChecks(buf, packet);
-
-        try {
-          packet.decode(buf, direction, registry.version);
-        } catch (Exception e) {
-          throw handleDecodeFailure(e, packet, packetId);
-        }
-
-        if (buf.isReadable()) {
-          throw handleOverflow(packet, buf.readerIndex(), buf.writerIndex());
-        }
-        ctx.fireChannelRead(packet);
-      } finally {
-        buf.release();
+      if (this.direction == ProtocolUtils.Direction.SERVERBOUND && this.state != StateRegistry.PLAY) {
+        throw this.handleInvalidPacketId(packetId);
       }
+      ctx.fireChannelRead(buf.retain());
+    } else {
+      doLengthSanityChecks(buf, packet);
+
+      try {
+        packet.decode(buf, direction, registry.version);
+      } catch (Exception e) {
+        throw handleDecodeFailure(e, packet, packetId);
+      }
+
+      if (buf.isReadable()) {
+        throw handleOverflow(packet, buf.readerIndex(), buf.writerIndex());
+      }
+      ctx.fireChannelRead(packet);
     }
   }
 
@@ -102,7 +104,7 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
       throw handleOverflow(packet, expectedMaxLen, buf.readableBytes());
     }
     if (buf.readableBytes() < expectedMinLen) {
-      throw handleUnderflow(packet, expectedMaxLen, buf.readableBytes());
+      throw handleUnderflow(packet, expectedMinLen, buf.readableBytes());
     }
   }
 
@@ -128,6 +130,14 @@ public class MinecraftDecoder extends ChannelInboundHandlerAdapter {
     if (DEBUG) {
       return new CorruptedFrameException(
           "Error decoding " + packet.getClass() + " " + getExtraConnectionDetail(packetId), cause);
+    } else {
+      return DECODE_FAILED;
+    }
+  }
+
+  private Exception handleInvalidPacketId(int packetId) {
+    if (DEBUG) {
+      return new CorruptedFrameException("Invalid packet " + getExtraConnectionDetail(packetId));
     } else {
       return DECODE_FAILED;
     }

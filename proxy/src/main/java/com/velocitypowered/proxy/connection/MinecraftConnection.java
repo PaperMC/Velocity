@@ -33,11 +33,14 @@ import com.velocitypowered.natives.encryption.VelocityCipher;
 import com.velocitypowered.natives.encryption.VelocityCipherFactory;
 import com.velocitypowered.natives.util.Natives;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.connection.client.InitialLoginSessionHandler;
 import com.velocitypowered.proxy.connection.client.StatusSessionHandler;
 import com.velocitypowered.proxy.network.Connections;
+import com.velocitypowered.proxy.network.limiter.SimpleBytesPerSecondLimiter;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
+import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.VelocityConnectionEvent;
 import com.velocitypowered.proxy.protocol.netty.MinecraftCipherDecoder;
@@ -66,7 +69,7 @@ import io.netty.util.ReferenceCountUtil;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.security.GeneralSecurityException;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -108,7 +111,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     this.server = server;
     this.state = StateRegistry.HANDSHAKE;
 
-    this.sessionHandlers = new HashMap<>();
+    this.sessionHandlers = new EnumMap<>(StateRegistry.class);
   }
 
   @Override
@@ -368,6 +371,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   public void setState(StateRegistry state) {
     ensureInEventLoop();
 
+    final StateRegistry previousState = this.state;
     this.state = state;
     final MinecraftVarintFrameDecoder frameDecoder = this.channel.pipeline()
         .get(MinecraftVarintFrameDecoder.class);
@@ -388,7 +392,13 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
     if (state == StateRegistry.CONFIG) {
       // Activate the play packet queue
-      addPlayPacketQueueHandler();
+      if (previousState == StateRegistry.PLAY
+          && this.pendingConfigurationSwitch
+          && this.association instanceof ConnectedPlayer) {
+        addPlayPacketQueueOutboundHandler();
+      } else {
+        addPlayPacketQueueHandler();
+      }
     } else {
       // Remove the queue
       if (this.channel.pipeline().get(Connections.PLAY_PACKET_QUEUE_OUTBOUND) != null) {
@@ -404,13 +414,23 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
    * Adds the play packet queue handler.
    */
   public void addPlayPacketQueueHandler() {
-    if (this.channel.pipeline().get(Connections.PLAY_PACKET_QUEUE_OUTBOUND) == null) {
-      this.channel.pipeline().addAfter(Connections.MINECRAFT_ENCODER, Connections.PLAY_PACKET_QUEUE_OUTBOUND,
-           new PlayPacketQueueOutboundHandler(this.protocolVersion, channel.pipeline().get(MinecraftEncoder.class).getDirection()));
-    }
+    addPlayPacketQueueOutboundHandler();
+
     if (this.channel.pipeline().get(Connections.PLAY_PACKET_QUEUE_INBOUND) == null) {
       this.channel.pipeline().addAfter(Connections.MINECRAFT_DECODER, Connections.PLAY_PACKET_QUEUE_INBOUND,
-           new PlayPacketQueueInboundHandler(this.protocolVersion, channel.pipeline().get(MinecraftDecoder.class).getDirection()));
+           new PlayPacketQueueInboundHandler(this.protocolVersion,
+               channel.pipeline().get(MinecraftDecoder.class).getDirection()));
+    }
+  }
+
+  /**
+   * Adds only the outbound play packet queue handler.
+   */
+  public void addPlayPacketQueueOutboundHandler() {
+    if (this.channel.pipeline().get(Connections.PLAY_PACKET_QUEUE_OUTBOUND) == null) {
+      this.channel.pipeline().addAfter(Connections.MINECRAFT_ENCODER, Connections.PLAY_PACKET_QUEUE_OUTBOUND,
+           new PlayPacketQueueOutboundHandler(this.protocolVersion,
+               channel.pipeline().get(MinecraftEncoder.class).getDirection()));
     }
   }
 
@@ -544,13 +564,22 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
       } else {
         int level = server.getConfiguration().getCompressionLevel();
         VelocityCompressor compressor = Natives.compress.get().create(level);
+        final MinecraftDecoder minecraftDecoder = (MinecraftDecoder) channel.pipeline().get(MINECRAFT_DECODER);
 
         encoder = new MinecraftCompressorAndLengthEncoder(threshold, compressor);
-        decoder = new MinecraftCompressDecoder(threshold, compressor);
+        decoder = new MinecraftCompressDecoder(threshold, compressor, minecraftDecoder.getDirection());
 
         channel.pipeline().remove(FRAME_ENCODER);
         channel.pipeline().addBefore(MINECRAFT_DECODER, COMPRESSION_DECODER, decoder);
         channel.pipeline().addBefore(MINECRAFT_ENCODER, COMPRESSION_ENCODER, encoder);
+
+        var packetLimiterConfig = server.getConfiguration().getPacketLimiterConfig();
+        if (minecraftDecoder.getDirection() == ProtocolUtils.Direction.SERVERBOUND
+            && packetLimiterConfig.interval() > 0
+            && packetLimiterConfig.bytesAfterDecompression() > 0) {
+          decoder.setPacketLimiter(new SimpleBytesPerSecondLimiter(
+              -1, packetLimiterConfig.bytesAfterDecompression(), packetLimiterConfig.interval()));
+        }
 
         channel.pipeline().fireUserEventTriggered(VelocityConnectionEvent.COMPRESSION_ENABLED);
       }

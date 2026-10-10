@@ -26,11 +26,6 @@ import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-/**
- * Represents a server-bound packet sent by the client containing a key and an optional payload.
- * This packet is typically used for exchanging metadata or other information between the client
- * and server.
- */
 public class ServerboundCookieResponsePacket implements MinecraftPacket {
 
   private Key key;
@@ -68,6 +63,16 @@ public class ServerboundCookieResponsePacket implements MinecraftPacket {
     if (hasPayload) {
       ProtocolUtils.writeByteArray(buf, payload);
     }
+  }
+
+  @Override
+  public int decodeExpectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
+    return ProtocolUtils.DEFAULT_MAX_STRING_BYTES + 1 + 2 + 5120;
+  }
+
+  @Override
+  public int decodeExpectedMinLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
+    return 1 + 0 + 0;
   }
 
   @Override

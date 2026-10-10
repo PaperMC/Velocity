@@ -16,12 +16,6 @@ import com.velocitypowered.api.event.annotation.AwaitingEvent;
 @AwaitingEvent
 public final class ProxyShutdownEvent {
 
-  /**
-   * Creates a new {@code ProxyShutdownEvent}.
-   */
-  public ProxyShutdownEvent() {
-  }
-
   @Override
   public String toString() {
     return "ProxyShutdownEvent";

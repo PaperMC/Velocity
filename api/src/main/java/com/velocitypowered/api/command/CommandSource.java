@@ -25,7 +25,7 @@ public interface CommandSource extends Audience, PermissionSubject {
    * @param message MiniMessage content
    * @see <a href="https://docs.papermc.io/adventure/minimessage/format/">MiniMessage docs</a>
    *      for more information on the format.
-   */
+   **/
   default void sendRichMessage(final @NotNull String message) {
     this.sendMessage(MiniMessage.miniMessage().deserialize(message, this));
   }
@@ -47,13 +47,13 @@ public interface CommandSource extends Audience, PermissionSubject {
   }
 
   /**
-   * Sends a plain message to this source.
-   *
-   * @param message plain message
-   * @apiNote This method will not apply any form of parse to the text provided,
-   *      however, it is recommended not to use legacy color codes as this is a deprecated format
+  * Sends a plain message to this source.
+  *
+  * @param message plain message
+  * @apiNote This method will not apply any form of parse to the text provided,
+  *      however, it is recommended not to use legacy color codes as this is a deprecated format
    *     and not recommended.
-   */
+  */
   default void sendPlainMessage(final @NotNull String message) {
     this.sendMessage(Component.text(message));
   }

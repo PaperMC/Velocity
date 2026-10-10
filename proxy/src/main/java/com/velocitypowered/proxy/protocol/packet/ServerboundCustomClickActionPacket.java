@@ -25,13 +25,9 @@ import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import io.netty.buffer.ByteBuf;
 
-/**
- * Represents a serverbound packet carrying an opaque custom click action payload.
- *
- * <p>The payload is retained as-is and forwarded to the session handler without
- * interpretation by the proxy.</p>
- */
 public class ServerboundCustomClickActionPacket extends DeferredByteBufHolder implements MinecraftPacket {
+
+  private static final int MAX_TAG_SIZE = 65536;
 
   public ServerboundCustomClickActionPacket() {
     super(null);
@@ -45,6 +41,16 @@ public class ServerboundCustomClickActionPacket extends DeferredByteBufHolder im
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
     buf.writeBytes(content());
+  }
+
+  @Override
+  public int decodeExpectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
+    return ProtocolUtils.DEFAULT_MAX_STRING_BYTES + ProtocolUtils.varIntBytes(MAX_TAG_SIZE) + MAX_TAG_SIZE;
+  }
+
+  @Override
+  public int decodeExpectedMinLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
+    return 1 + 0 + 1 + 0;
   }
 
   @Override

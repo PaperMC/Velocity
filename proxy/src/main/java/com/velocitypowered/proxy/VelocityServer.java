@@ -165,6 +165,8 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
   private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
   private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
+  private final Object sessionIdLock = new Object();
+  private volatile @Nullable UUID sessionId;
   private final VelocityConsole console;
   private @MonotonicNonNull Ratelimiter<InetAddress> ipAttemptLimiter;
   private @MonotonicNonNull Ratelimiter<UUID> commandRateLimiter;
@@ -650,7 +652,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   }
 
   /**
-   * Calls {@link #shutdown(boolean, Component)} with the default reason "Proxy shutting down.".
+   * Calls {@link #shutdown(boolean, Component)} with the default reason "Proxy shutting down."
    *
    * @param explicitExit whether the user explicitly shut down the proxy
    */
@@ -743,6 +745,36 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     connectionsByName.remove(connection.getUsername().toLowerCase(Locale.US), connection);
     connectionsByUuid.remove(connection.getUniqueId(), connection);
     connection.disconnected();
+
+    if (this.sessionId != null && connectionsByUuid.isEmpty()) {
+      synchronized (this.sessionIdLock) {
+        if (connectionsByUuid.isEmpty()) {
+          this.sessionId = null;
+        }
+      }
+    }
+  }
+
+  /**
+   * Returns the metrics session ID for this proxy, generating one if none is currently active. The
+   * ID is shared by every player connected during a populated period and is regenerated once the
+   * proxy empties.
+   *
+   * @return the current session ID
+   */
+  public UUID getSessionId() {
+    UUID uuid = this.sessionId;
+    if (uuid != null) {
+      return uuid;
+    }
+    synchronized (this.sessionIdLock) {
+      uuid = this.sessionId;
+      if (uuid == null) {
+        uuid = UUID.randomUUID();
+        this.sessionId = uuid;
+      }
+      return uuid;
+    }
   }
 
   @Override

@@ -26,6 +26,11 @@ public final class LoginEvent implements ResultedEvent<ResultedEvent.ComponentRe
   private final String serverIdHash;
   private ComponentResult result;
 
+  @Deprecated(forRemoval = true)
+  public LoginEvent(Player player) {
+    this(player, null);
+  }
+
   /**
    * Constructs a new {@link LoginEvent}.
    *
@@ -39,22 +44,6 @@ public final class LoginEvent implements ResultedEvent<ResultedEvent.ComponentRe
     this.result = ComponentResult.allowed();
   }
 
-  /**
-   * Constructs a new {@link LoginEvent}.
-   *
-   * @param player the player who has completed authentication
-   * @deprecated Use {@link #LoginEvent(Player, String)}.
-   */
-  @Deprecated(forRemoval = true)
-  public LoginEvent(Player player) {
-    this(player, null);
-  }
-
-  /**
-   * Returns the player who has completed authentication.
-   *
-   * @return the authenticated player
-   */
   public Player getPlayer() {
     return player;
   }

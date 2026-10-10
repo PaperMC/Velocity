@@ -11,13 +11,7 @@ package com.velocitypowered.api.network;
  * Represents each listener type.
  */
 public enum ListenerType {
-  /**
-   * A standard Minecraft listener for player connections.
-   */
   MINECRAFT("Minecraft"),
-  /**
-   * A listener for the legacy server list ping protocol (Query).
-   */
   QUERY("Query");
 
   final String name;

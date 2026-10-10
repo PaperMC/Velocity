@@ -33,29 +33,14 @@ public final class ProxyVersion {
     this.version = Preconditions.checkNotNull(version, "version");
   }
 
-  /**
-   * Gets the name of the proxy implementation.
-   *
-   * @return the name of the proxy
-   */
   public String getName() {
     return name;
   }
 
-  /**
-   * Gets the vendor of the proxy implementation.
-   *
-   * @return the vendor of the proxy
-   */
   public String getVendor() {
     return vendor;
   }
 
-  /**
-   * Gets the version of the proxy implementation.
-   *
-   * @return the version of the proxy
-   */
   public String getVersion() {
     return version;
   }

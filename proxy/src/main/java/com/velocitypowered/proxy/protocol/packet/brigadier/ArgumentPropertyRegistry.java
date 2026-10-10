@@ -24,6 +24,7 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_20_3;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_20_5;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_21_5;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_21_6;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_26_2;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentIdentifier.id;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.ArgumentIdentifier.mapSet;
 import static com.velocitypowered.proxy.protocol.packet.brigadier.DoubleArgumentPropertySerializer.DOUBLE;
@@ -45,18 +46,11 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
-import java.util.HashMap;
-import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * The {@code ArgumentPropertyRegistry} is responsible for managing the registration and
- * retrieval of argument properties used in command parsing and execution.
- *
- * <p>This class functions as a registry, allowing different argument properties to be registered
- * and later retrieved or used when processing commands within the system. The properties
- * might be tied to argument types, validation rules, or transformations.</p>
- */
+import java.util.HashMap;
+import java.util.Map;
+
 public class ArgumentPropertyRegistry {
 
   private ArgumentPropertyRegistry() {
@@ -152,6 +146,7 @@ public class ArgumentPropertyRegistry {
     } else {
       ProtocolUtils.writeString(buf, identifier.getIdentifier());
     }
+
   }
 
   /**
@@ -213,7 +208,7 @@ public class ArgumentPropertyRegistry {
     empty(id("minecraft:block_predicate", mapSet(MINECRAFT_1_19, 13)));
     empty(id("minecraft:item_stack", mapSet(MINECRAFT_1_19, 14)));
     empty(id("minecraft:item_predicate", mapSet(MINECRAFT_1_19, 15)));
-    empty(id("minecraft:color", mapSet(MINECRAFT_1_19, 16)));
+    empty(id("minecraft:color", mapSet(MINECRAFT_26_2, -1), mapSet(MINECRAFT_1_19, 16))); // renamed to team_color in 26.2
     empty(id("minecraft:component", mapSet(MINECRAFT_1_21_6, 18), mapSet(MINECRAFT_1_19, 17)));
     empty(id("minecraft:style", mapSet(MINECRAFT_1_21_6, 19), mapSet(MINECRAFT_1_20_3, 18))); // added 1.20.3
     empty(id("minecraft:message", mapSet(MINECRAFT_1_21_6, 20), mapSet(MINECRAFT_1_20_3, 19), mapSet(MINECRAFT_1_19, 18)));
@@ -278,7 +273,7 @@ public class ArgumentPropertyRegistry {
     empty(id("minecraft:heightmap", mapSet(MINECRAFT_1_21_6, 51), mapSet(MINECRAFT_1_21_5, 50), mapSet(MINECRAFT_1_20_3, 49),
         mapSet(MINECRAFT_1_19_4, 47))); // 1.19.4
 
-    empty(id("minecraft:uuid", mapSet(MINECRAFT_1_21_6, 56), mapSet(MINECRAFT_1_21_5, 54), mapSet(MINECRAFT_1_20_5, 53), mapSet(MINECRAFT_1_20_3, 48),
+    empty(id("minecraft:uuid", mapSet(MINECRAFT_1_21_6, 56), mapSet(MINECRAFT_1_21_5, 54),mapSet(MINECRAFT_1_20_5, 53), mapSet(MINECRAFT_1_20_3, 48),
         mapSet(MINECRAFT_1_19_4, 48), mapSet(MINECRAFT_1_19, 47))); // added in 1.16
 
     empty(id("minecraft:loot_table", mapSet(MINECRAFT_1_21_6, 52), mapSet(MINECRAFT_1_21_5, 51), mapSet(MINECRAFT_1_20_5, 50)));
@@ -287,6 +282,7 @@ public class ArgumentPropertyRegistry {
 
     empty(id("minecraft:hex_color", mapSet(MINECRAFT_1_21_6, 17))); // added in 1.21.6
     empty(id("minecraft:dialog", mapSet(MINECRAFT_1_21_6, 55))); // added in 1.21.6
+    empty(id("minecraft:team_color", mapSet(MINECRAFT_26_2, 16))); // renamed from color in 26.2
 
     // Crossstitch support
     register(id("crossstitch:mod_argument", mapSet(MINECRAFT_1_19, -256)), ModArgumentProperty.class, MOD);

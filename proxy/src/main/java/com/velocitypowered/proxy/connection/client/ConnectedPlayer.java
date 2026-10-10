@@ -84,7 +84,6 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.RemoveResourcePackPacket;
 import com.velocitypowered.proxy.protocol.packet.TransferPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
-import com.velocitypowered.proxy.protocol.packet.chat.ChatType;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatCompletionPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderFactory;
@@ -111,6 +110,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -125,8 +125,6 @@ import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.permission.PermissionChecker;
-import net.kyori.adventure.platform.facet.FacetPointers;
-import net.kyori.adventure.platform.facet.FacetPointers.Type;
 import net.kyori.adventure.pointer.Pointers;
 import net.kyori.adventure.pointer.PointersSupplier;
 import net.kyori.adventure.resource.ResourcePackInfoLike;
@@ -168,7 +166,6 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
                   .resolving(Identity.DISPLAY_NAME, player -> Component.text(player.getUsername()))
                   .resolving(Identity.LOCALE, Player::getEffectiveLocale)
                   .resolving(PermissionChecker.POINTER, Player::getPermissionChecker)
-                  .resolving(FacetPointers.TYPE, player -> Type.PLAYER)
                   .build();
 
   /**
@@ -426,29 +423,16 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public void sendMessage(@NonNull Identity identity, @NonNull Component message) {
+  public void sendMessage(final @NonNull Component message) {
+    Preconditions.checkNotNull(message, "message");
     final Component translated = translateMessage(message);
 
     connection.write(getChatBuilderFactory().builder()
-        .component(translated).forIdentity(identity).toClient());
+        .component(translated).toClient());
   }
 
   @Override
-  public void sendMessage(@NonNull Identity identity, @NonNull Component message,
-                          @NonNull MessageType type) {
-    Preconditions.checkNotNull(message, "message");
-    Preconditions.checkNotNull(type, "type");
-
-    Component translated = translateMessage(message);
-
-    connection.write(getChatBuilderFactory().builder()
-        .component(translated).forIdentity(identity)
-        .setType(type == MessageType.CHAT ? ChatType.CHAT : ChatType.SYSTEM)
-        .toClient());
-  }
-
-  @Override
-  public void sendActionBar(net.kyori.adventure.text.@NonNull Component message) {
+  public void sendActionBar(@NonNull Component message) {
     Component translated = translateMessage(message);
 
     ProtocolVersion playerVersion = getProtocolVersion();
@@ -647,7 +631,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   }
 
   @Override
-  public void disconnect(Component reason) {
+  public void disconnect(@NotNull Component reason) {
+    Objects.requireNonNull(reason, "reason");
     if (connection.eventLoop().inEventLoop()) {
       disconnect0(reason, false);
     } else {
@@ -1347,11 +1332,17 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
       final Long sentTime = serverConnection.getPendingPings().remove(packet.getRandomId());
       if (sentTime != null) {
         final MinecraftConnection smc = serverConnection.getConnection();
-        if (smc != null) {
+        final StateRegistry clientState = connection.getState();
+        final boolean stateAllowsForward = smc != null
+            && !smc.isClosed()
+            && clientState == smc.getState()
+            && (clientState == StateRegistry.CONFIG || clientState == StateRegistry.PLAY);
+        if (stateAllowsForward) {
           setPing(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - sentTime));
           smc.write(packet);
-          return true;
         }
+        // We removed this, and so this is ours
+        return true;
       }
     }
     return false;
@@ -1361,7 +1352,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
    * Switches the connection to the client into config state.
    */
   public void switchToConfigState() {
-    server.getEventManager().fire(new PlayerEnterConfigurationEvent(this, getConnectionInFlightOrConnectedServer()))
+    final VelocityServerConnection targetServer = getConnectionInFlightOrConnectedServer();
+    server.getEventManager().fire(new PlayerEnterConfigurationEvent(this, targetServer))
         .completeOnTimeout(null, 5, TimeUnit.SECONDS).thenRunAsync(() -> {
           // if the connection was closed earlier, there is a risk that the player is no longer connected
           if (!connection.getChannel().isActive()) {
@@ -1376,7 +1368,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
           connection.pendingConfigurationSwitch = true;
           connection.getChannel().pipeline().get(MinecraftEncoder.class).setState(StateRegistry.CONFIG);
           // Make sure we don't send any play packets to the player after update start
-          connection.addPlayPacketQueueHandler();
+          connection.addPlayPacketQueueOutboundHandler();
         }, connection.eventLoop()).exceptionally((ex) -> {
           logger.error("Error switching player connection to config state", ex);
           return null;
