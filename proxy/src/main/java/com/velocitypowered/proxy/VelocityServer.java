@@ -166,6 +166,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
   private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
   private final Object sessionIdLock = new Object();
+  private final Object playerLimitLock = new Object();
   private volatile @Nullable UUID sessionId;
   private final VelocityConsole console;
   private @MonotonicNonNull Ratelimiter<InetAddress> ipAttemptLimiter;
@@ -736,8 +737,18 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
    * @param connection the connection to register
    * @return {@code true} if we registered the connection, {@code false} if not
    */
-  public boolean registerConnection(ConnectedPlayer connection) {
+public boolean registerConnection(ConnectedPlayer connection) {
+  synchronized (playerLimitLock) {
     String lowerName = connection.getUsername().toLowerCase(Locale.US);
+
+    boolean existingPlayer =
+        connectionsByUuid.containsKey(connection.getUniqueId());
+
+    int limit = configuration.getPlayerLimit();
+
+    if (!existingPlayer && limit > 0 && connectionsByUuid.size() >= limit) {
+      return false;
+    }
 
     if (!this.configuration.isOnlineModeKickExistingPlayers()) {
       if (connectionsByName.putIfAbsent(lowerName, connection) != null) {
@@ -747,18 +758,20 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
         connectionsByName.remove(lowerName, connection);
         return false;
       }
-    } else {
+       } else {
       ConnectedPlayer existing = connectionsByUuid.get(connection.getUniqueId());
       if (existing != null) {
-        existing.disconnect(Component.translatable("multiplayer.disconnect.duplicate_login"));
+        existing.disconnect(
+            Component.translatable("multiplayer.disconnect.duplicate_login"));
       }
 
-      // We can now replace the entries as needed.
       connectionsByName.put(lowerName, connection);
       connectionsByUuid.put(connection.getUniqueId(), connection);
     }
+
     return true;
   }
+}
 
   /**
    * Unregisters the given player from the proxy.

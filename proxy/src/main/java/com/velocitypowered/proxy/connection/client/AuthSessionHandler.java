@@ -228,7 +228,8 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
         player.disconnect0(reason.get(), true);
       } else {
         if (!server.registerConnection(player)) {
-          player.disconnect0(Component.translatable("velocity.error.already-connected-proxy"), true);
+          player.disconnect0(
+              Component.translatable("velocity.error.server-full", NamedTextColor.RED), true);
           return;
         }
 
