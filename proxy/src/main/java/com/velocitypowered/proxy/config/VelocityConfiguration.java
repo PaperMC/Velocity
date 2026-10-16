@@ -68,7 +68,7 @@ public class VelocityConfiguration implements ProxyConfig {
   @Expose
   private String motd = "<aqua>A Velocity Server";
   @Expose
-  private int showMaxPlayers = 500;
+  private int PlayerLimit = 500;
   @Expose
   private boolean onlineMode = true;
   @Expose
@@ -109,7 +109,7 @@ public class VelocityConfiguration implements ProxyConfig {
     this.metrics = metrics;
   }
 
-  private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
+  private VelocityConfiguration(String bind, String motd, int PlayerLimit, boolean onlineMode,
       boolean preventClientProxyConnections, boolean announceForge,
       PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
       boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough,
@@ -118,7 +118,7 @@ public class VelocityConfiguration implements ProxyConfig {
       boolean forceKeyAuthentication, PacketLimiterConfig packetLimiterConfig) {
     this.bind = bind;
     this.motd = motd;
-    this.showMaxPlayers = showMaxPlayers;
+    this.PlayerLimit = PlayerLimit;
     this.onlineMode = onlineMode;
     this.preventClientProxyConnections = preventClientProxyConnections;
     this.announceForge = announceForge;
@@ -292,8 +292,8 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   @Override
-  public int getShowMaxPlayers() {
-    return showMaxPlayers;
+  public int getPlayerLimit() {
+    return PlayerLimit;
   }
 
   @Override
@@ -462,7 +462,7 @@ public class VelocityConfiguration implements ProxyConfig {
     return MoreObjects.toStringHelper(this)
         .add("bind", bind)
         .add("motd", motd)
-        .add("showMaxPlayers", showMaxPlayers)
+        .add("PlayerLimit", PlayerLimit)
         .add("onlineMode", onlineMode)
         .add("playerInfoForwardingMode", playerInfoForwardingMode)
         .add("forwardingSecret", forwardingSecret)
