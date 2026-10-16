@@ -1,5 +1,5 @@
 # Config version. Do not change this
-config-version = "2.9"
+config-version = "2.10"
 
 # What port should the proxy be bound to? By default, we'll bind to all addresses on port 25565.
 bind = "0.0.0.0:25565"
@@ -8,9 +8,8 @@ bind = "0.0.0.0:25565"
 # their server list. Only MiniMessage format is accepted.
 motd = "<#09add3>A Velocity Server"
 
-# What should we display for the maximum number of players? (Velocity does not support a cap
-# on the number of players online.)
-show-max-players = 500
+# Maximum of players that can be conected at the same time.
+player-limit = 500
 
 # Should we authenticate players with Mojang? By default, this is on.
 online-mode = true
