@@ -737,41 +737,41 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
    * @param connection the connection to register
    * @return {@code true} if we registered the connection, {@code false} if not
    */
-public boolean registerConnection(ConnectedPlayer connection) {
-  synchronized (playerLimitLock) {
-    String lowerName = connection.getUsername().toLowerCase(Locale.US);
+  public boolean registerConnection(ConnectedPlayer connection) {
+    synchronized (playerLimitLock) {
+      String lowerName = connection.getUsername().toLowerCase(Locale.US);
 
-    boolean existingPlayer =
-        connectionsByUuid.containsKey(connection.getUniqueId());
+      boolean existingPlayer =
+          connectionsByUuid.containsKey(connection.getUniqueId());
 
-    int limit = configuration.getPlayerLimit();
+      int limit = configuration.getPlayerLimit();
 
-    if (!existingPlayer && limit > 0 && connectionsByUuid.size() >= limit) {
-      return false;
-    }
-
-    if (!this.configuration.isOnlineModeKickExistingPlayers()) {
-      if (connectionsByName.putIfAbsent(lowerName, connection) != null) {
+      if (!existingPlayer && limit > 0 && connectionsByUuid.size() >= limit) {
         return false;
       }
-      if (connectionsByUuid.putIfAbsent(connection.getUniqueId(), connection) != null) {
-        connectionsByName.remove(lowerName, connection);
-        return false;
-      }
-       } else {
-      ConnectedPlayer existing = connectionsByUuid.get(connection.getUniqueId());
-      if (existing != null) {
-        existing.disconnect(
-            Component.translatable("multiplayer.disconnect.duplicate_login"));
+
+      if (!this.configuration.isOnlineModeKickExistingPlayers()) {
+        if (connectionsByName.putIfAbsent(lowerName, connection) != null) {
+          return false;
+        }
+        if (connectionsByUuid.putIfAbsent(connection.getUniqueId(), connection) != null) {
+          connectionsByName.remove(lowerName, connection);
+          return false;
+        }
+      } else {
+        ConnectedPlayer existing = connectionsByUuid.get(connection.getUniqueId());
+        if (existing != null) {
+          existing.disconnect(
+              Component.translatable("multiplayer.disconnect.duplicate_login"));
+        }
+
+        connectionsByName.put(lowerName, connection);
+        connectionsByUuid.put(connection.getUniqueId(), connection);
       }
 
-      connectionsByName.put(lowerName, connection);
-      connectionsByUuid.put(connection.getUniqueId(), connection);
+      return true;
     }
-
-    return true;
   }
-}
 
   /**
    * Unregisters the given player from the proxy.
