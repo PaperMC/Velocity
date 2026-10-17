@@ -47,6 +47,7 @@ import com.velocitypowered.proxy.command.builtin.ServerCommand;
 import com.velocitypowered.proxy.command.builtin.ShutdownCommand;
 import com.velocitypowered.proxy.command.builtin.VelocityCommand;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
+import com.velocitypowered.proxy.config.migration.ConfigurationMigrationHaltException;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.player.resourcepack.VelocityResourcePackInfo;
 import com.velocitypowered.proxy.connection.util.ServerListPingHandler;
@@ -414,6 +415,10 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       }
 
       commandManager.setAnnounceProxyCommands(configuration.isAnnounceProxyCommands());
+    } catch (ConfigurationMigrationHaltException e) {
+      logger.error(e.getMessage());
+      LogManager.shutdown();
+      System.exit(1);
     } catch (Exception e) {
       logger.error("Unable to read/load/save your velocity.toml. The server will shut down.", e);
       LogManager.shutdown();

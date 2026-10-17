@@ -509,11 +509,13 @@ public class VelocityConfiguration implements ProxyConfig {
     ) {
       config.load();
 
+      final MiniMessageTranslationsMigration translationsMigration =
+          new MiniMessageTranslationsMigration();
       final ConfigurationMigration[] migrations = {
           new ForwardingMigration(),
           new KeyAuthenticationMigration(),
           new MotdMigration(),
-          new MiniMessageTranslationsMigration(),
+          translationsMigration,
           new TransferIntegrationMigration(),
           new PacketLimiterMigration(),
           new PingPassthroughMigration(),
@@ -524,6 +526,8 @@ public class VelocityConfiguration implements ProxyConfig {
           migration.migrate(config, logger);
         }
       }
+      // Only halt once every migration has run and the config has been saved
+      translationsMigration.haltIfFilesSkipped();
 
       String forwardingSecretString = System.getenv().getOrDefault(
               "VELOCITY_FORWARDING_SECRET", "");
