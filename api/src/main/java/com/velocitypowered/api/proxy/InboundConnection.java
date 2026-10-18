@@ -83,7 +83,7 @@ public interface InboundConnection {
    * in Minecraft 26.2.</p>
    *
    * @return the session UUID, never {@code null}
-   * @since 4.2.1
+   * @since 4.3.0
    */
   UUID getSessionId();
 }
