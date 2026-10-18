@@ -62,6 +62,17 @@ public interface ProxyConfig {
   int getPlayerLimit();
 
   /**
+   * Gets the legacy maximum player count for compatibility with older plugins.
+   *
+   * @return the maximum player count
+   * @deprecated use {@link #getPlayerLimit()} instead
+   */
+  @Deprecated
+  default int getShowMaxPlayers() {
+    return getPlayerLimit();
+  }
+
+  /**
    * Get whether the proxy is online mode. This determines if players are authenticated with Mojang.
    * servers.
    *

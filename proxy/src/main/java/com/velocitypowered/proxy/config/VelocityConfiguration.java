@@ -33,6 +33,7 @@ import com.velocitypowered.proxy.config.migration.MiniMessageTranslationsMigrati
 import com.velocitypowered.proxy.config.migration.MotdMigration;
 import com.velocitypowered.proxy.config.migration.PacketLimiterMigration;
 import com.velocitypowered.proxy.config.migration.PingPassthroughMigration;
+import com.velocitypowered.proxy.config.migration.PlayerLimitMigration;
 import com.velocitypowered.proxy.config.migration.TransferIntegrationMigration;
 import com.velocitypowered.proxy.util.AddressUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -296,6 +297,11 @@ public class VelocityConfiguration implements ProxyConfig {
     return playerLimit;
   }
 
+  @Deprecated
+  public int getShowMaxPlayers() {
+    return getPlayerLimit();
+  }
+
   @Override
   public boolean isOnlineMode() {
     return onlineMode;
@@ -517,6 +523,7 @@ public class VelocityConfiguration implements ProxyConfig {
           new TransferIntegrationMigration(),
           new PacketLimiterMigration(),
           new PingPassthroughMigration(),
+          new PlayerLimitMigration(),
       };
 
       for (final ConfigurationMigration migration : migrations) {

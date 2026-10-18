@@ -27,8 +27,14 @@ public final class PlayerLimitMigration implements ConfigurationMigration {
 
   @Override
   public boolean shouldMigrate(final CommentedFileConfig config) {
-    return configVersion(config) < 2.10
-        && config.contains("show-max-players");
+    final String version = config.getOrElse("config-version", "0");
+    final String[] parts = version.split("\\.");
+
+    final int major = Integer.parseInt(parts[0]);
+    final int minor = parts.length > 1
+        ? Integer.parseInt(parts[1]) : 0;
+
+    return major < 2 || (major == 2 && minor < 10);
   }
 
   @Override
@@ -37,10 +43,12 @@ public final class PlayerLimitMigration implements ConfigurationMigration {
       final int oldLimit = config.getIntOrElse("show-max-players", 500);
       config.set("player-limit", oldLimit);
 
-      logger.info("Migrated 'show-max-players' to 'player-limit' ({}).", oldLimit);
+      if (config.contains("show-max-players")) {
+        logger.info("Migrated 'show-max-players' to 'player-limit' ({}).", oldLimit);
+      }
     }
 
     config.remove("show-max-players");
-    config.set("config-version", "2.10");
+    config.set("config-version", "3.0");
   }
 }
