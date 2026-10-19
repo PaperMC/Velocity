@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2021 Velocity Contributors
+ * Copyright (C) 2018-2026 Velocity Contributors
  *
  * The Velocity API is licensed under the terms of the MIT License. For more details,
  * reference the LICENSE file in the api top-level directory.
@@ -59,7 +59,18 @@ public interface ProxyConfig {
    *
    * @return max players
    */
-  int getShowMaxPlayers();
+  int getPlayerLimit();
+
+  /**
+   * Gets the legacy maximum player count for compatibility with older plugins.
+   *
+   * @return the maximum player count
+   * @deprecated use {@link #getPlayerLimit()} instead
+   */
+  @Deprecated
+  default int getShowMaxPlayers() {
+    return getPlayerLimit();
+  }
 
   /**
    * Get whether the proxy is online mode. This determines if players are authenticated with Mojang.

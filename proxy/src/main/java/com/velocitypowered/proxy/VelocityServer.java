@@ -166,6 +166,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
   private final Map<UUID, ConnectedPlayer> connectionsByUuid = new ConcurrentHashMap<>();
   private final Map<String, ConnectedPlayer> connectionsByName = new ConcurrentHashMap<>();
   private final Object sessionIdLock = new Object();
+  private final Object playerLimitLock = new Object();
   private volatile @Nullable UUID sessionId;
   private final VelocityConsole console;
   private @MonotonicNonNull Ratelimiter<InetAddress> ipAttemptLimiter;
@@ -603,7 +604,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     Runnable shutdownProcess = () -> {
       logger.info("Shutting down the proxy...");
 
-      // Stop accepting new connections, but keep DNS available to pre-shutdown handlers.
+     // Stop accepting new connections, but keep DNS available to pre-shutdown handlers.
       cm.closeEndpoints(true);
 
       try {
@@ -621,7 +622,7 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       }
 
       cm.shutdown();
-
+      
       ImmutableList<ConnectedPlayer> players = ImmutableList.copyOf(connectionsByUuid.values());
       for (ConnectedPlayer player : players) {
         player.disconnect(reason);
@@ -738,27 +739,39 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
    * @return {@code true} if we registered the connection, {@code false} if not
    */
   public boolean registerConnection(ConnectedPlayer connection) {
-    String lowerName = connection.getUsername().toLowerCase(Locale.US);
+    synchronized (playerLimitLock) {
+      String lowerName = connection.getUsername().toLowerCase(Locale.US);
 
-    if (!this.configuration.isOnlineModeKickExistingPlayers()) {
-      if (connectionsByName.putIfAbsent(lowerName, connection) != null) {
+      boolean existingPlayer =
+          connectionsByUuid.containsKey(connection.getUniqueId());
+
+      int limit = configuration.getPlayerLimit();
+
+      if (!existingPlayer && limit > 0 && connectionsByUuid.size() >= limit) {
         return false;
       }
-      if (connectionsByUuid.putIfAbsent(connection.getUniqueId(), connection) != null) {
-        connectionsByName.remove(lowerName, connection);
-        return false;
-      }
-    } else {
-      ConnectedPlayer existing = connectionsByUuid.get(connection.getUniqueId());
-      if (existing != null) {
-        existing.disconnect(Component.translatable("multiplayer.disconnect.duplicate_login"));
+
+      if (!this.configuration.isOnlineModeKickExistingPlayers()) {
+        if (connectionsByName.putIfAbsent(lowerName, connection) != null) {
+          return false;
+        }
+        if (connectionsByUuid.putIfAbsent(connection.getUniqueId(), connection) != null) {
+          connectionsByName.remove(lowerName, connection);
+          return false;
+        }
+      } else {
+        ConnectedPlayer existing = connectionsByUuid.get(connection.getUniqueId());
+        if (existing != null) {
+          existing.disconnect(
+              Component.translatable("multiplayer.disconnect.duplicate_login"));
+        }
+
+        connectionsByName.put(lowerName, connection);
+        connectionsByUuid.put(connection.getUniqueId(), connection);
       }
 
-      // We can now replace the entries as needed.
-      connectionsByName.put(lowerName, connection);
-      connectionsByUuid.put(connection.getUniqueId(), connection);
+      return true;
     }
-    return true;
   }
 
   /**

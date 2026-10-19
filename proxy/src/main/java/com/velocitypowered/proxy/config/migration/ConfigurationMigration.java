@@ -28,6 +28,7 @@ public sealed interface ConfigurationMigration
         permits ForwardingMigration,
                 KeyAuthenticationMigration,
                 MotdMigration,
+                PlayerLimitMigration,
                 MiniMessageTranslationsMigration,
                 TransferIntegrationMigration,
                 PacketLimiterMigration,
