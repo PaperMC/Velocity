@@ -33,6 +33,7 @@ public class HandshakePacket implements MinecraftPacket {
   // While DNS technically allows any character to be used, in practice ASCII is used.
   private static final int MAXIMUM_HOSTNAME_LENGTH = 255 + HANDSHAKE_HOSTNAME_TOKEN.length() + 1;
   private ProtocolVersion protocolVersion;
+  private int rawProtocolVersion;
   private String serverAddress = "";
   private int port;
   private HandshakeIntent intent;
@@ -44,6 +45,10 @@ public class HandshakePacket implements MinecraftPacket {
 
   public void setProtocolVersion(ProtocolVersion protocolVersion) {
     this.protocolVersion = protocolVersion;
+  }
+
+  public int getRawProtocolVersion() {
+    return rawProtocolVersion;
   }
 
   public String getServerAddress() {
@@ -87,8 +92,8 @@ public class HandshakePacket implements MinecraftPacket {
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion ignored) {
-    int realProtocolVersion = ProtocolUtils.readVarInt(buf);
-    this.protocolVersion = ProtocolVersion.getProtocolVersion(realProtocolVersion);
+    this.rawProtocolVersion = ProtocolUtils.readVarInt(buf);
+    this.protocolVersion = ProtocolVersion.getProtocolVersion(this.rawProtocolVersion);
     this.serverAddress = ProtocolUtils.readString(buf, MAXIMUM_HOSTNAME_LENGTH);
     this.port = buf.readUnsignedShort();
     this.nextStatus = ProtocolUtils.readVarInt(buf);

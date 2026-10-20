@@ -104,6 +104,7 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
         return true;
       }
       connection.setProtocolVersion(handshake.getProtocolVersion());
+      connection.setRawProtocolVersion(handshake.getRawProtocolVersion());
       connection.setAssociation(ic);
 
       switch (nextState) {
@@ -273,6 +274,11 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
     @Override
     public ProtocolVersion getProtocolVersion() {
       return ProtocolVersion.LEGACY;
+    }
+
+    @Override
+    public int getRawProtocolVersion() {
+      return -1;
     }
 
     @Override
