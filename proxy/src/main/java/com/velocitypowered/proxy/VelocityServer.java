@@ -373,8 +373,10 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
           }
 
+          // Sorted so that the language fallback chosen by ClosestLocaleMatcher is stable:
+          // messages.properties (en_US) sorts ahead of any other English variant.
           try (final Stream<Path> files = Files.walk(langPath)) {
-            files.filter(Files::isRegularFile).forEach(file -> {
+            files.filter(Files::isRegularFile).sorted().forEach(file -> {
               final String filename = com.google.common.io.Files
                       .getNameWithoutExtension(file.getFileName().toString());
               final String localeName = filename.replace("messages_", "")

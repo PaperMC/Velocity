@@ -21,6 +21,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -30,29 +31,35 @@ public class ClosestLocaleMatcher {
 
   public static final ClosestLocaleMatcher INSTANCE = new ClosestLocaleMatcher();
 
+  private final Set<Locale> known;
   private final Map<String, Locale> byLanguage;
   private final LoadingCache<Locale, Locale> closest;
 
-  private ClosestLocaleMatcher() {
+  ClosestLocaleMatcher() {
+    this.known = ConcurrentHashMap.newKeySet();
     this.byLanguage = new ConcurrentHashMap<>();
     this.closest = Caffeine.newBuilder()
         .build(sublocale -> {
+          if (known.contains(sublocale)) {
+            return sublocale;
+          }
           final String tag = sublocale.getLanguage();
           return byLanguage.getOrDefault(tag, sublocale);
         });
   }
 
   /**
-   * Registers a known locale.
+   * Registers a known locale. A locale that is registered is always matched to itself; other
+   * locales of the same language fall back to the first locale registered for that language.
    *
    * @param locale locale to register
    */
   public void registerKnown(final Locale locale) {
-    if (locale.getLanguage().equals(new Locale("zh").getLanguage())) {
-      return;
+    this.known.add(locale);
+    if (!locale.getLanguage().equals(new Locale("zh").getLanguage())) {
+      this.byLanguage.putIfAbsent(locale.getLanguage(), locale);
     }
-
-    this.byLanguage.put(locale.getLanguage(), locale);
+    this.closest.invalidateAll();
   }
 
   public Locale lookupClosest(final Locale locale) {
