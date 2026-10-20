@@ -13,6 +13,7 @@ import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import java.util.UUID;
+import net.kyori.adventure.resource.ResourcePackStatus;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -144,35 +145,50 @@ public class PlayerResourcePackStatusEvent {
     /**
      * The resource pack was applied successfully.
      */
-    SUCCESSFUL,
+    SUCCESSFUL(ResourcePackStatus.SUCCESSFULLY_LOADED),
     /**
      * The player declined to download the resource pack.
      */
-    DECLINED,
+    DECLINED(ResourcePackStatus.DECLINED),
     /**
      * The player could not download the resource pack.
      */
-    FAILED_DOWNLOAD,
+    FAILED_DOWNLOAD(ResourcePackStatus.FAILED_DOWNLOAD),
     /**
      * The player has accepted the resource pack and is now downloading it.
      */
-    ACCEPTED,
+    ACCEPTED(ResourcePackStatus.ACCEPTED),
     /**
      * The player has downloaded the resource pack.
      */
-    DOWNLOADED,
+    DOWNLOADED(ResourcePackStatus.DOWNLOADED),
     /**
      * The URL of the resource pack failed to load.
      */
-    INVALID_URL,
+    INVALID_URL(ResourcePackStatus.INVALID_URL),
     /**
      * The player failed to reload the resource pack.
      */
-    FAILED_RELOAD,
+    FAILED_RELOAD(ResourcePackStatus.FAILED_RELOAD),
     /**
      * The resource pack was discarded.
      */
-    DISCARDED;
+    DISCARDED(ResourcePackStatus.DISCARDED);
+
+    private final ResourcePackStatus adventureStatus;
+
+    Status(ResourcePackStatus adventureStatus) {
+      this.adventureStatus = adventureStatus;
+    }
+
+    /**
+     * Returns the Adventure {@link ResourcePackStatus} corresponding to this Velocity status.
+     *
+     * @return the matching Adventure status
+     */
+    public ResourcePackStatus adventureStatus() {
+      return adventureStatus;
+    }
 
     /**
      * Returns true if the resource pack status is intermediate, indicating that the player has
