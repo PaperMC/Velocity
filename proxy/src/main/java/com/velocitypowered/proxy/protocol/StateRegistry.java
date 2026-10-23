@@ -48,6 +48,7 @@ import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_9_4;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_26_1;
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_26_3;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_26_4;
 import static com.velocitypowered.api.network.ProtocolVersion.MINIMUM_VERSION;
 import static com.velocitypowered.api.network.ProtocolVersion.SUPPORTED_VERSIONS;
 import static com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
@@ -60,6 +61,7 @@ import com.velocitypowered.proxy.protocol.packet.AvailableCommandsPacket;
 import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
 import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundApplyOptionsPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundPostEffectsPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundSoundEntityPacket;
@@ -90,6 +92,7 @@ import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.ServerboundCustomClickActionPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerboundOptionsAppliedPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerboundPlayerLoadedPacket;
 import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusPingPacket;
@@ -902,6 +905,9 @@ public enum StateRegistry {
       serverbound.register(
           ServerboundCookieResponsePacket.class, ServerboundCookieResponsePacket::new,
           map(0x04, MINECRAFT_1_20_5, false));
+      serverbound.register(
+          ServerboundOptionsAppliedPacket.class, () -> ServerboundOptionsAppliedPacket.INSTANCE,
+          map(0x05, MINECRAFT_26_4, false));
 
       clientbound.register(
           DisconnectPacket.class, () -> new DisconnectPacket(this),
@@ -922,6 +928,9 @@ public enum StateRegistry {
       clientbound.register(
           ClientboundCookieRequestPacket.class, ClientboundCookieRequestPacket::new,
           map(0x05, MINECRAFT_1_20_5, false));
+      clientbound.register(
+          ClientboundApplyOptionsPacket.class, ClientboundApplyOptionsPacket::new,
+          map(0x06, MINECRAFT_26_4, false));
     }
   };
 

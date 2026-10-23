@@ -31,7 +31,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class RespawnPacket implements MinecraftPacket {
 
   private int dimension;
-  private long partialHashedSeed;
+  private long partialHashedSeed; // 1.15-26.3
   private short difficulty;
   private int gamemode;
   private String levelType = "";
@@ -194,7 +194,8 @@ public class RespawnPacket implements MinecraftPacket {
     if (version.noGreaterThan(ProtocolVersion.MINECRAFT_1_13_2)) {
       this.difficulty = buf.readUnsignedByte();
     }
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_15)) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_15)
+        && version.lessThan(ProtocolVersion.MINECRAFT_26_4)) {
       this.partialHashedSeed = buf.readLong();
     }
     if (version.noLessThan(ProtocolVersion.MINECRAFT_26_3)) {
@@ -254,7 +255,8 @@ public class RespawnPacket implements MinecraftPacket {
     if (version.noGreaterThan(ProtocolVersion.MINECRAFT_1_13_2)) {
       buf.writeByte(difficulty);
     }
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_15)) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_15)
+        && version.lessThan(ProtocolVersion.MINECRAFT_26_4)) {
       buf.writeLong(partialHashedSeed);
     }
     if (version.noLessThan(ProtocolVersion.MINECRAFT_26_3)) {

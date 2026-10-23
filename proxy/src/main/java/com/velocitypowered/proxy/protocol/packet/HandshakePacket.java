@@ -32,6 +32,8 @@ public class HandshakePacket implements MinecraftPacket {
   // This size was chosen to ensure Forge clients can still connect even with very long hostnames.
   // While DNS technically allows any character to be used, in practice ASCII is used.
   private static final int MAXIMUM_HOSTNAME_LENGTH = 255 + HANDSHAKE_HOSTNAME_TOKEN.length() + 1;
+  // 26.4 raised the limit to 1024 (the client can append query properties to the host).
+  private static final int MAXIMUM_HOSTNAME_LENGTH_26_4 = 1024 + HANDSHAKE_HOSTNAME_TOKEN.length() + 1;
   private ProtocolVersion protocolVersion;
   private String serverAddress = "";
   private int port;
@@ -89,7 +91,9 @@ public class HandshakePacket implements MinecraftPacket {
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion ignored) {
     int realProtocolVersion = ProtocolUtils.readVarInt(buf);
     this.protocolVersion = ProtocolVersion.getProtocolVersion(realProtocolVersion);
-    this.serverAddress = ProtocolUtils.readString(buf, MAXIMUM_HOSTNAME_LENGTH);
+    this.serverAddress = ProtocolUtils.readString(buf,
+        this.protocolVersion.noLessThan(ProtocolVersion.MINECRAFT_26_4)
+            ? MAXIMUM_HOSTNAME_LENGTH_26_4 : MAXIMUM_HOSTNAME_LENGTH);
     this.port = buf.readUnsignedShort();
     this.nextStatus = ProtocolUtils.readVarInt(buf);
     this.intent = HandshakeIntent.getById(nextStatus);
@@ -117,7 +121,7 @@ public class HandshakePacket implements MinecraftPacket {
   @Override
   public int decodeExpectedMaxLength(ByteBuf buf, ProtocolUtils.Direction direction,
                                ProtocolVersion version) {
-    return 9 + (MAXIMUM_HOSTNAME_LENGTH * 3);
+    return 9 + (MAXIMUM_HOSTNAME_LENGTH_26_4 * 3);
   }
 
   @Override
