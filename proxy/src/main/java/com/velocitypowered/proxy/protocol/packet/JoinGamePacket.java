@@ -34,7 +34,7 @@ public class JoinGamePacket implements MinecraftPacket {
   private int entityId;
   private int gamemode;
   private int dimension;
-  private long partialHashedSeed; // 1.15-26.3
+  private long partialHashedSeed; // 1.15+
   private short difficulty;
   private boolean isHardcore;
   private int maxPlayers;
@@ -343,9 +343,7 @@ public class JoinGamePacket implements MinecraftPacket {
       dimensionKey = ProtocolUtils.readString(buf);
     }
     String levelName = ProtocolUtils.readString(buf);
-    if (version.lessThan(ProtocolVersion.MINECRAFT_26_4)) {
-      this.partialHashedSeed = buf.readLong();
-    }
+    this.partialHashedSeed = buf.readLong();
 
     if (version.noLessThan(ProtocolVersion.MINECRAFT_26_3)) {
       this.gamemode = ProtocolUtils.readVarInt(buf);
@@ -503,9 +501,7 @@ public class JoinGamePacket implements MinecraftPacket {
       ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
     }
     ProtocolUtils.writeString(buf, dimensionInfo.getLevelName());
-    if (version.lessThan(ProtocolVersion.MINECRAFT_26_4)) {
-      buf.writeLong(partialHashedSeed);
-    }
+    buf.writeLong(partialHashedSeed);
 
     if (version.noLessThan(ProtocolVersion.MINECRAFT_26_3)) {
       ProtocolUtils.writeVarInt(buf, this.gamemode);

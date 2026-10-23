@@ -36,7 +36,6 @@ public class ServerLoginSuccessPacket implements MinecraftPacket {
   private @Nullable String username;
   private @Nullable List<GameProfile.Property> properties;
   private @Nullable UUID sessionId;
-  private byte options = ConnectionOptions.NONE; // 26.4+
   private static final boolean strictErrorHandling = VelocityProperties
           .readBoolean("velocity.strictErrorHandling", true);
 
@@ -74,26 +73,12 @@ public class ServerLoginSuccessPacket implements MinecraftPacket {
     this.sessionId = sessionId;
   }
 
-  /**
-   * Returns the connection options to switch on once the login is acknowledged (26.4+).
-   *
-   * @return the {@link ConnectionOptions} flags
-   */
-  public byte getOptions() {
-    return options;
-  }
-
-  public void setOptions(byte options) {
-    this.options = options;
-  }
-
   @Override
   public String toString() {
     return "ServerLoginSuccess{"
         + "uuid=" + uuid
         + ", username='" + username + '\''
         + ", properties='" + properties + '\''
-        + ", options=" + options
         + '}';
   }
 
@@ -119,10 +104,6 @@ public class ServerLoginSuccessPacket implements MinecraftPacket {
 
     if (version.noLessThan(ProtocolVersion.MINECRAFT_26_2)) {
       this.sessionId = ProtocolUtils.readUuid(buf);
-    }
-
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_26_4)) {
-      this.options = buf.readByte();
     }
   }
 
@@ -158,10 +139,6 @@ public class ServerLoginSuccessPacket implements MinecraftPacket {
 
     if (version.noLessThan(ProtocolVersion.MINECRAFT_26_2)) {
       ProtocolUtils.writeUuid(buf, this.sessionId);
-    }
-
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_26_4)) {
-      buf.writeByte(this.options);
     }
   }
 

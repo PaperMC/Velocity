@@ -328,8 +328,7 @@ public class ConfigSessionHandler implements MinecraftSessionHandler {
                   resultedAddress = originalAddress;
                 }
                 serverConn.getPlayer().getConnection().write(new TransferPacket(
-                    resultedAddress.getHostName(), resultedAddress.getPort(),
-                    packet.properties()));
+                        resultedAddress.getHostName(), resultedAddress.getPort()));
               }
             }, serverConn.ensureConnected().eventLoop());
     return true;
