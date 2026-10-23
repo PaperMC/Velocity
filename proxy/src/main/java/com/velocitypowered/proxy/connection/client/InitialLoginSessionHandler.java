@@ -36,10 +36,13 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
+import com.velocitypowered.proxy.protocol.packet.ClientboundApplyOptionsPacket;
+import com.velocitypowered.proxy.protocol.packet.ConnectionOptions;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerboundOptionsAppliedPacket;
 import com.velocitypowered.proxy.util.VelocityProperties;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
@@ -58,6 +61,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Handles authenticating the player to Mojang's servers.
@@ -77,6 +81,9 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
   private @MonotonicNonNull ServerLoginPacket login;
   private byte[] verify = EMPTY_BYTE_ARRAY;
   private LoginState currentState = LoginState.LOGIN_PACKET_EXPECTED;
+  // 26.4+: encryption waits until the client confirms ApplyOptions.
+  private byte @Nullable [] pendingSharedSecret;
+  private @Nullable AuthSessionHandler pendingAuthSessionHandler;
   private final boolean forceKeyAuthentication;
 
   InitialLoginSessionHandler(VelocityServer server, MinecraftConnection mcConnection,
@@ -201,9 +208,14 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
 
       byte[] decryptedSharedSecret = decryptRsa(serverKeyPair, packet.getSharedSecret());
 
-      // Go ahead and enable encryption. Once the client sends EncryptionResponse, encryption
-      // is enabled.
-      mcConnection.enableEncryption(decryptedSharedSecret);
+      if (mcConnection.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_26_4)) {
+        // 26.4+ clients keep talking in plaintext until we send ApplyOptions after authenticating.
+        pendingSharedSecret = decryptedSharedSecret;
+      } else {
+        // Go ahead and enable encryption. Once the client sends EncryptionResponse, encryption
+        // is enabled.
+        mcConnection.enableEncryption(decryptedSharedSecret);
+      }
 
       String serverId = generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
       String playerIp = ((InetSocketAddress) mcConnection.getRemoteAddress()).getHostString();
@@ -247,8 +259,16 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
                 }
               }
               // All went well, initialize the session.
-              mcConnection.setActiveSessionHandler(StateRegistry.LOGIN,
-                  new AuthSessionHandler(server, inbound, profile, true, serverId));
+              final AuthSessionHandler authSessionHandler =
+                  new AuthSessionHandler(server, inbound, profile, true, serverId);
+              if (pendingSharedSecret != null) {
+                // 26.4+: ask the client to switch encryption on and wait for its confirmation.
+                pendingAuthSessionHandler = authSessionHandler;
+                currentState = LoginState.APPLY_OPTIONS_SENT;
+                mcConnection.write(new ClientboundApplyOptionsPacket(ConnectionOptions.ENCRYPTION));
+              } else {
+                mcConnection.setActiveSessionHandler(StateRegistry.LOGIN, authSessionHandler);
+              }
             } else if (response.statusCode() == 204) {
               // Apparently an offline-mode user logged onto this online-mode proxy.
               inbound.disconnect(
@@ -268,6 +288,31 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
       logger.error("Unable to enable encryption", e);
       mcConnection.close(true);
     }
+    return true;
+  }
+
+  @Override
+  public boolean handle(ServerboundOptionsAppliedPacket packet) {
+    assertState(LoginState.APPLY_OPTIONS_SENT);
+    byte[] sharedSecret = pendingSharedSecret;
+    AuthSessionHandler authSessionHandler = pendingAuthSessionHandler;
+    if (mcConnection.isClosed() || sharedSecret == null || authSessionHandler == null) {
+      return true;
+    }
+    this.currentState = LoginState.OPTIONS_APPLIED;
+    this.pendingSharedSecret = null;
+    this.pendingAuthSessionHandler = null;
+
+    try {
+      // OptionsApplied was the client's last plaintext packet. The client sends nothing else
+      // until we answer, so no encrypted bytes can be buffered behind it yet.
+      mcConnection.enableEncryption(sharedSecret);
+    } catch (GeneralSecurityException e) {
+      logger.error("Unable to enable encryption", e);
+      mcConnection.close(true);
+      return true;
+    }
+    mcConnection.setActiveSessionHandler(StateRegistry.LOGIN, authSessionHandler);
     return true;
   }
 
@@ -306,6 +351,8 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
     LOGIN_PACKET_EXPECTED,
     LOGIN_PACKET_RECEIVED,
     ENCRYPTION_REQUEST_SENT,
-    ENCRYPTION_RESPONSE_RECEIVED
+    ENCRYPTION_RESPONSE_RECEIVED,
+    APPLY_OPTIONS_SENT, // 26.4+
+    OPTIONS_APPLIED // 26.4+
   }
 }

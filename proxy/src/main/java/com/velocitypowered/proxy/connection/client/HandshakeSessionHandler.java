@@ -215,6 +215,13 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
       cleaned = hostname.substring(0, zeroIdx);
     }
 
+    // Minecraft 26.4+ can append query properties to the host ("host?_o=original:port&_id=...").
+    // A '?' can never be part of a hostname, so strip them before the forced host lookup.
+    int queryIdx = cleaned.indexOf('?');
+    if (queryIdx > -1) {
+      cleaned = cleaned.substring(0, queryIdx);
+    }
+
     // If we connect through an SRV record, there will be a period at the end (DNS usually elides
     // this ending octet).
     if (!cleaned.isEmpty() && cleaned.charAt(cleaned.length() - 1) == '.') {
