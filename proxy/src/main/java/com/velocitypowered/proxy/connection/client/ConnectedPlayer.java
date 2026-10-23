@@ -195,6 +195,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private final BundleDelimiterHandler bundleHandler = new BundleDelimiterHandler(this);
 
   private @Nullable String clientBrand;
+  private byte @Nullable [] clientModList; // 26.4+, minecraft:mod_list payload
   private @Nullable Locale effectiveLocale;
   private final @Nullable IdentifiedKey playerKey;
   private @Nullable ClientSettingsPacket clientSettingsPacket;
@@ -1026,6 +1027,20 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   void setClientBrand(final @Nullable String clientBrand) {
     this.clientBrand = clientBrand;
+  }
+
+  /**
+   * Returns the raw {@code minecraft:mod_list} payload the client sent after login (26.4+).
+   * The client only sends it once; its is replayed to every backend we connect to.
+   *
+   * @return the payload, or {@code null} if the client didn't send one
+   */
+  byte @Nullable [] getClientModList() {
+    return clientModList;
+  }
+
+  void setClientModList(final byte @Nullable [] clientModList) {
+    this.clientModList = clientModList;
   }
 
   @Override
