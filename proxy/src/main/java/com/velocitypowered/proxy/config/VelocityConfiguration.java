@@ -20,6 +20,7 @@ package com.velocitypowered.proxy.config;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import com.electronwill.nightconfig.toml.TomlParser;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -508,6 +509,7 @@ public class VelocityConfiguration implements ProxyConfig {
             .build()
     ) {
       config.load();
+      checkConfigVersion(config, defaultConfigLocation);
 
       final ConfigurationMigration[] migrations = {
           new ForwardingMigration(),
@@ -602,6 +604,27 @@ public class VelocityConfiguration implements ProxyConfig {
               forceKeyAuthentication,
               packetLimiterConfig
       );
+    }
+  }
+
+  private static void checkConfigVersion(UnmodifiableConfig config, URL defaultConfigLocation)
+      throws IOException {
+    final String supportedVersion = new TomlParser().parse(defaultConfigLocation)
+        .get("config-version");
+    final String configVersion = config.getOrElse("config-version", "1.0");
+    final double version;
+    try {
+      version = Double.parseDouble(configVersion);
+    } catch (NumberFormatException e) {
+      throw new IOException("Invalid config-version '" + configVersion + "'.", e);
+    }
+    if (!Double.isFinite(version)) {
+      throw new IOException("Invalid config-version '" + configVersion + "'.");
+    }
+    if (version > Double.parseDouble(supportedVersion)) {
+      throw new IOException("This configuration uses config-version '" + configVersion
+          + "', but this version of Velocity supports up to config-version '" + supportedVersion
+          + "'. Use a compatible Velocity version or restore a compatible configuration.");
     }
   }
 
