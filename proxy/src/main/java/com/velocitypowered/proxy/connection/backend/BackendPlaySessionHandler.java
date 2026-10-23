@@ -421,7 +421,8 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
               resultedAddress = originalAddress;
             }
             this.playerConnection.write(new TransferPacket(
-                    resultedAddress.getHostName(), resultedAddress.getPort()));
+                    resultedAddress.getHostName(), resultedAddress.getPort(),
+                    packet.properties()));
           }
         }, playerConnection.eventLoop());
     return true;

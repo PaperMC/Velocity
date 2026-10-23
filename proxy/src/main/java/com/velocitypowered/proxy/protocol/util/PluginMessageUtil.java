@@ -45,6 +45,7 @@ import java.util.regex.Pattern;
  */
 public final class PluginMessageUtil {
 
+  public static final String MOD_LIST_CHANNEL = "minecraft:mod_list";
   private static final String BRAND_CHANNEL_LEGACY = "MC|Brand";
   private static final String BRAND_CHANNEL = "minecraft:brand";
   private static final String REGISTER_CHANNEL_LEGACY = "REGISTER";
@@ -54,6 +55,17 @@ public final class PluginMessageUtil {
 
   private PluginMessageUtil() {
     throw new AssertionError();
+  }
+
+  /**
+   * Determines whether this plugin message is the client's mod list (Minecraft 26.4+).
+   *
+   * @param message the plugin message
+   * @return whether this is a {@code minecraft:mod_list} message
+   */
+  public static boolean isModList(PluginMessagePacket message) {
+    checkNotNull(message, "message");
+    return message.getChannel().equals(MOD_LIST_CHANNEL);
   }
 
   /**
