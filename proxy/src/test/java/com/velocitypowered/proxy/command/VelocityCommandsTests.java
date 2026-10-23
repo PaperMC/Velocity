@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2023 Velocity Contributors
+ * Copyright (C) 2026 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 public class VelocityCommandsTests {
 
   @Test
-  void testLiteralKeepRedirectModifierWithFork() {
+  void testLiteralKeepsRedirectModifierWithFork() {
     final var target = LiteralArgumentBuilder.<CommandSource>literal("target").build();
     final RedirectModifier<CommandSource> modifier = context -> List.of(context.getSource());
     final var original = LiteralArgumentBuilder.<CommandSource>literal("origin")
@@ -55,7 +55,7 @@ public class VelocityCommandsTests {
   }
 
   @Test
-  void testArgumentKeepRedirectModifierWithoutFork() {
+  void testArgumentKeepsRedirectModifierWithoutFork() {
     final var target = LiteralArgumentBuilder.<CommandSource>literal("target").build();
     final RedirectModifier<CommandSource> modifier = context -> List.of(context.getSource());
     final var original = RequiredArgumentBuilder.<CommandSource, String>argument("value", word())
@@ -85,7 +85,7 @@ public class VelocityCommandsTests {
         .build();
     final RedirectModifier<CommandSource> modifier = context -> {
       modifierCalls.incrementAndGet();
-      return List.of();
+      return List.of(context.getSource(), context.getSource());
     };
     final var original = LiteralArgumentBuilder
         .<CommandSource>literal("origin")
@@ -94,9 +94,9 @@ public class VelocityCommandsTests {
     final var dispatcher = new CommandDispatcher<CommandSource>();
     dispatcher.getRoot().addChild(VelocityCommands.wrap(original, new Object()));
 
-    assertEquals(0, dispatcher.execute("origin run", MockCommandSource.INSTANCE));
+    assertEquals(2, dispatcher.execute("origin run", MockCommandSource.INSTANCE));
     assertEquals(1, modifierCalls.get());
-    assertEquals(0, commandCalls.get());
+    assertEquals(2, commandCalls.get());
   }
 
   @Test
@@ -114,7 +114,7 @@ public class VelocityCommandsTests {
         .build();
     final RedirectModifier<CommandSource> modifier = context -> {
       modifierCalls.incrementAndGet();
-      return List.of();
+      return List.of(context.getSource(), context.getSource());
     };
     final var original = LiteralArgumentBuilder
         .<CommandSource>literal("origin")
@@ -125,8 +125,8 @@ public class VelocityCommandsTests {
     final var dispatcher = new CommandDispatcher<CommandSource>();
     dispatcher.getRoot().addChild(VelocityCommands.wrap(original, new Object()));
 
-    assertEquals(0, dispatcher.execute("origin value run", MockCommandSource.INSTANCE));
+    assertEquals(2, dispatcher.execute("origin value run", MockCommandSource.INSTANCE));
     assertEquals(1, modifierCalls.get());
-    assertEquals(0, commandCalls.get());
+    assertEquals(2, commandCalls.get());
   }
 }
