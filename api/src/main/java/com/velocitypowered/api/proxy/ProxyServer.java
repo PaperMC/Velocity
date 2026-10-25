@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.Component;
 
 /**
  * Provides an interface to a Minecraft server proxy.
@@ -34,7 +35,7 @@ public interface ProxyServer extends Audience {
    *
    * @param reason message to kick online players with
    */
-  void shutdown(net.kyori.adventure.text.Component reason);
+  void shutdown(Component reason);
 
   /**
    * Shuts down the proxy, kicking players with the default reason.

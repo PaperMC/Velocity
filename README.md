@@ -40,3 +40,5 @@ page.
 Translations are handled using [Crowdin](https://papermc-io.crowdin.com/velocity).
 If you want to translate a language not available on Crowdin,
 you might want to ask in the [Discord](https://discord.gg/papermc) about it.
+
+[![CI powered by namespace badge](https://papermc.io/assets/misc/namespace-oss-badge.svg?project=velocity)](https://namespace.so/github-actions/?utm_source=oss&utm_campaign=papermc)

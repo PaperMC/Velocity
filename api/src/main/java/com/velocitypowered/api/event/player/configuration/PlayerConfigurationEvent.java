@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * This event is executed when a player entered the configuration state and can be configured by Velocity.
+ *
  * <p>Velocity will wait for this event before continuing/ending the configuration state.</p>
  *
  * @param player The player who can be configured.

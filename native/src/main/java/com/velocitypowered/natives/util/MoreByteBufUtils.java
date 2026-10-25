@@ -54,8 +54,8 @@ public class MoreByteBufUtils {
     BufferPreference preferred = nativeStuff.preferredBufferType();
     return switch (preferred) {
       case DIRECT_PREFERRED, HEAP_PREFERRED ->
-        // The native prefers this type, but doesn't strictly require we provide it.
-        true;
+          // The native prefers this type, but doesn't strictly require we provide it.
+          true;
       case DIRECT_REQUIRED -> buf.hasMemoryAddress();
       case HEAP_REQUIRED -> buf.hasArray();
     };

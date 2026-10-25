@@ -25,8 +25,10 @@ import java.util.PriorityQueue;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Delayed;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * A deterministic {@link SchedulerBackend} for tests.
@@ -106,7 +108,7 @@ class DeterministicSchedulerBackend implements SchedulerBackend {
   private ScheduledFuture<?> enqueue(Runnable task, long delayNanos, long periodNanos) {
     synchronized (lock) {
       if (shutdown) {
-        throw new java.util.concurrent.RejectedExecutionException("backend is shut down");
+        throw new RejectedExecutionException("backend is shut down");
       }
       Entry entry = new Entry(task, nowNanos + Math.max(0, delayNanos), periodNanos, seq++);
       entry.future = new FutureImpl(entry);
@@ -204,9 +206,9 @@ class DeterministicSchedulerBackend implements SchedulerBackend {
     }
 
     @Override
-    public Object get(long timeout, TimeUnit unit) throws InterruptedException, java.util.concurrent.TimeoutException {
+    public Object get(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
       if (!completion.await(timeout, unit)) {
-        throw new java.util.concurrent.TimeoutException();
+        throw new TimeoutException();
       }
       if (cancelled) {
         throw new CancellationException();

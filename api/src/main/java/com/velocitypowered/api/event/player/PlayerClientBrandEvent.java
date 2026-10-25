@@ -40,9 +40,9 @@ public final class PlayerClientBrandEvent {
   @Override
   public String toString() {
     return "PlayerClientBrandEvent{"
-      + "player=" + player
-      + ", brand='" + brand + '\''
-      + '}';
+        + "player=" + player
+        + ", brand='" + brand + '\''
+        + '}';
   }
 }
 

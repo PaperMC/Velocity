@@ -35,7 +35,7 @@ public final class ServerPing {
   private final @Nullable ModInfo modinfo;
 
   public ServerPing(Version version, @Nullable Players players,
-      net.kyori.adventure.text.Component description, @Nullable Favicon favicon) {
+      Component description, @Nullable Favicon favicon) {
     this(version, players, description, favicon, ModInfo.DEFAULT);
   }
 

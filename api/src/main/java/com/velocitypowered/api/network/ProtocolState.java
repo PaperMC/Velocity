@@ -16,6 +16,7 @@ package com.velocitypowered.api.network;
 public enum ProtocolState {
   /**
    * Initial connection State.
+   *
    * <p>This status can be caused by a {@link HandshakeIntent#STATUS},
    * {@link HandshakeIntent#LOGIN} or {@link HandshakeIntent#TRANSFER} intent.</p>
    * If the intent is LOGIN or TRANSFER, the next state will be {@link #LOGIN},
@@ -24,6 +25,7 @@ public enum ProtocolState {
   HANDSHAKE,
   /**
    * Ping State of a connection.
+   *
    * <p>Connections with the {@link HandshakeIntent#STATUS} intent will pass through this state
    * and be disconnected after it requests the ping from the server
    * and the server responds with the respective ping.</p>
@@ -31,11 +33,13 @@ public enum ProtocolState {
   STATUS,
   /**
    * Authentication State of a connection.
+   *
    * <p>At this moment the player is authenticating with the authentication servers.</p>
    */
   LOGIN,
   /**
    * Configuration State of a connection.
+   *
    * <p>At this point the player allows the server to send information
    * such as resource packs and plugin messages, at the same time the player
    * will send his client brand and the respective plugin messages
@@ -46,6 +50,7 @@ public enum ProtocolState {
   CONFIGURATION,
   /**
    * Game State of a connection.
+   *
    * <p>In this state is where the whole game runs, the server is able to change
    * the player's state to {@link #CONFIGURATION} as needed in versions 1.20.2 and higher.</p>
    */

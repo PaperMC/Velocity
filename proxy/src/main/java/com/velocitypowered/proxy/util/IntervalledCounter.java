@@ -30,40 +30,51 @@ package com.velocitypowered.proxy.util;
  * <p>This class is not thread-safe. If multiple threads access an instance concurrently,
  * external synchronization is required.</p>
  */
-@SuppressWarnings("checkstyle:WhitespaceAfter") // Not our class
 public final class IntervalledCounter {
 
   private static final int INITIAL_SIZE = 8;
 
   /**
+   * Data points within this many nanoseconds of the newest one are merged into it, bounding the
+   * number of stored data points to roughly {@code interval / COALESCE_INTERVAL}.
+   */
+  private static final long COALESCE_INTERVAL = 1_000_000L; // 1ms
+
+  /**
    * Ring buffer holding the timestamp (in nanoseconds) for each data point.
    */
-  protected long[] times;
+  private long[] times;
+
   /**
    * Ring buffer holding the count associated with each timestamp.
    */
-  protected long[] counts;
+  private long[] counts;
+
   /**
    * The sliding window size in nanoseconds. Only entries with time >= (currentTime - interval)
    * are considered part of the window.
    */
-  protected final long interval;
+  private final long interval;
+
   /**
    * Cached lower bound of the window (in nanoseconds) after the last update.
    */
-  protected long minTime;
+  private long minTime;
+
   /**
    * Running sum of all counts currently within the window.
    */
-  protected long sum;
+  private long sum;
+
   /**
    * Head index (inclusive) of the ring buffer.
    */
-  protected int head; // inclusive
+  private int head; // inclusive
+
   /**
    * Tail index (exclusive) of the ring buffer.
    */
-  protected int tail; // exclusive
+  private int tail; // exclusive
 
   /**
    * Creates a new counter with the specified interval.
@@ -131,6 +142,8 @@ public final class IntervalledCounter {
   /**
    * Adds {@code count} units at the specified timestamp, assuming the timestamp is within the
    * current window. If the timestamp is older than {@code minTime}, the value is ignored.
+   * If the timestamp is within {@link #COALESCE_INTERVAL} of the newest stored data point, the
+   * count is merged into that data point instead of creating a new one.
    * This method does not automatically advance the window; callers should invoke
    * {@link #updateCurrentTime()} or {@link #updateCurrentTime(long)} beforehand.
    *
@@ -141,6 +154,15 @@ public final class IntervalledCounter {
     // guard against overflow by using subtraction
     if (currTime - this.minTime < 0) {
       return;
+    }
+    if (this.head != this.tail) {
+      final int last = this.tail == 0 ? this.times.length - 1 : this.tail - 1;
+      // guard against overflow by using subtraction
+      if (currTime - this.times[last] < COALESCE_INTERVAL) {
+        this.counts[last] += count;
+        this.sum += count;
+        return;
+      }
     }
     int nextTail = (this.tail + 1) % this.times.length;
     if (nextTail == this.head) {
@@ -219,7 +241,7 @@ public final class IntervalledCounter {
    * @return the rate in units per second for the current window
    */
   public double getRate() {
-    return (double)this.sum / ((double)this.interval * 1.0E-9);
+    return (double) this.sum / ((double) this.interval * 1.0E-9);
   }
 
   /**

@@ -54,8 +54,9 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
       new QuietDecoderException("Unknown packet");
 
   private final ProtocolUtils.Direction direction;
-  private final StateRegistry.PacketRegistry.ProtocolRegistry registry;
   private StateRegistry state;
+  private ProtocolVersion protocolVersion;
+  private boolean compressionEnabled;
   @Nullable
   private PacketLimiter packetLimiter;
 
@@ -66,9 +67,8 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
    */
   public MinecraftVarintFrameDecoder(ProtocolUtils.Direction direction) {
     this.direction = direction;
-    this.registry = StateRegistry.HANDSHAKE.getProtocolRegistry(
-        direction, ProtocolVersion.MINIMUM_VERSION);
     this.state = StateRegistry.HANDSHAKE;
+    this.protocolVersion = ProtocolVersion.MINIMUM_VERSION;
   }
 
   @Override
@@ -103,12 +103,10 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
         throw BAD_PACKET_LENGTH;
       }
 
-      if (length > 0) {
-        if (state == StateRegistry.HANDSHAKE && direction == ProtocolUtils.Direction.SERVERBOUND) {
-          if (validateServerboundHandshakePacket(in, length)) {
-            in.readerIndex(packetStart);
-            return;
-          }
+      if (length > 0 && shouldValidateFrame()) {
+        if (validateServerboundPacket(in, length)) {
+          in.readerIndex(packetStart);
+          return;
         }
       }
 
@@ -135,17 +133,42 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
     }
   }
 
-  private boolean validateServerboundHandshakePacket(ByteBuf in, int length) throws Exception {
+  /**
+   * Every packet a client may send before login completes is small and bounded, so in those
+   * states we check the frame against the bounds of the packet it contains as soon as we have its
+   * header, rather than letting an unauthenticated connection make us buffer up to 2MiB.
+   */
+  private boolean shouldValidateFrame() {
+    return direction == ProtocolUtils.Direction.SERVERBOUND
+        && (state == StateRegistry.HANDSHAKE
+            || state == StateRegistry.STATUS
+            || state == StateRegistry.LOGIN);
+  }
+
+  private boolean validateServerboundPacket(ByteBuf in, int length) throws Exception {
     StateRegistry.PacketRegistry.ProtocolRegistry registry =
-        state.getProtocolRegistry(direction, ProtocolVersion.MINIMUM_VERSION);
+        state.getProtocolRegistry(direction, protocolVersion);
 
     final int index = in.readerIndex();
+    if (compressionEnabled) {
+      final int dataLength = readRawVarInt21(in);
+      if (index == in.readerIndex()) {
+        return true;
+      }
+      if (dataLength != 0) {
+        // We can't see the packet id of a compressed frame; the compression decoder enforces its
+        // own limit on the uncompressed size. Compression is only enabled at the end of login.
+        in.readerIndex(index);
+        return false;
+      }
+    }
+    final int idIndex = in.readerIndex();
     final int packetId = readRawVarInt21(in);
     // Index hasn't changed, we've read nothing
-    if (index == in.readerIndex()) {
+    if (idIndex == in.readerIndex()) {
       return true;
     }
-    final int payloadLength = length - ProtocolUtils.varIntBytes(packetId);
+    final int payloadLength = length - (in.readerIndex() - index);
 
     MinecraftPacket packet = registry.createPacket(packetId);
 
@@ -269,6 +292,14 @@ public class MinecraftVarintFrameDecoder extends ByteToMessageDecoder {
 
   public void setState(StateRegistry stateRegistry) {
     this.state = stateRegistry;
+  }
+
+  public void setProtocolVersion(ProtocolVersion protocolVersion) {
+    this.protocolVersion = protocolVersion;
+  }
+
+  public void setCompressionEnabled(boolean compressionEnabled) {
+    this.compressionEnabled = compressionEnabled;
   }
 
   public void setPacketLimiter(@Nullable PacketLimiter packetLimiter) {

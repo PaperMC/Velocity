@@ -26,6 +26,7 @@ import com.google.inject.Module;
 import com.google.inject.name.Names;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.EventManager;
+import com.velocitypowered.api.plugin.InvalidPluginException;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.PluginManager;
@@ -134,6 +135,8 @@ public class VelocityPluginManager implements PluginManager {
           for (String id : claimedIds) {
             foundCandidates.put(id, candidate);
           }
+        } catch (InvalidPluginException ex) {
+          logger.error("Unable to load plugin {}: {}", path, ex.getMessage());
         } catch (Throwable e) {
           logger.error("Unable to load plugin {}", path, e);
         }

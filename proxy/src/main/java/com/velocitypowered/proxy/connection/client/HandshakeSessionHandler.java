@@ -40,9 +40,11 @@ import com.velocitypowered.proxy.protocol.packet.LegacyDisconnect;
 import com.velocitypowered.proxy.protocol.packet.LegacyHandshakePacket;
 import com.velocitypowered.proxy.protocol.packet.LegacyPingPacket;
 import io.netty.buffer.ByteBuf;
+import io.netty.util.concurrent.ScheduledFuture;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
@@ -57,6 +59,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class HandshakeSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger LOGGER = LogManager.getLogger(HandshakeSessionHandler.class);
+  private static final long LOGIN_TIMEOUT_MILLIS =
+      Long.getLong("velocity.login-timeout", 30_000);
 
   private final MinecraftConnection connection;
   private final VelocityServer server;
@@ -160,6 +164,19 @@ public class HandshakeSessionHandler implements MinecraftSessionHandler {
             new ConnectionHandshakeEvent(lic, handshake.getIntent()));
     connection.setActiveSessionHandler(StateRegistry.LOGIN,
         new InitialLoginSessionHandler(server, connection, lic));
+    scheduleLoginTimeout(ic);
+  }
+
+  private void scheduleLoginTimeout(InitialInboundConnection ic) {
+    if (LOGIN_TIMEOUT_MILLIS <= 0) {
+      return;
+    }
+    final ScheduledFuture<?> timeout = connection.eventLoop().schedule(() -> {
+      if (!connection.isClosed() && connection.getState() == StateRegistry.LOGIN) {
+        ic.disconnectQuietly(Component.translatable("multiplayer.disconnect.slow_login"));
+      }
+    }, LOGIN_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+    connection.getChannel().closeFuture().addListener(future -> timeout.cancel(false));
   }
 
   private ConnectionType getHandshakeConnectionType(HandshakePacket handshake) {
