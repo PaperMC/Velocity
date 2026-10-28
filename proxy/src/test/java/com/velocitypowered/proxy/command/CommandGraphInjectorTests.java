@@ -22,6 +22,8 @@ import static com.mojang.brigadier.builder.LiteralArgumentBuilder.literal;
 import static com.mojang.brigadier.builder.RequiredArgumentBuilder.argument;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -32,12 +34,13 @@ import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.command.SimpleCommand;
+import com.velocitypowered.proxy.testutil.FakePluginManager;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for injecting Velocity commnads into a server Brigadier command tree.
+ * Tests for injecting Velocity commands into a server Brigadier command tree.
  */
 public class CommandGraphInjectorTests extends CommandTestSuite {
 
@@ -174,7 +177,9 @@ public class CommandGraphInjectorTests extends CommandTestSuite {
             .<CommandSource>literal("target")
             .build())
         .build();
-    manager.register(new BrigadierCommand(registered));
+    manager.register(manager.metaBuilder("origin")
+        .plugin(FakePluginManager.PLUGIN_A)
+        .build(), new BrigadierCommand(registered));
     manager.getInjector().inject(dest, source);
 
     final var expected = LiteralArgumentBuilder
@@ -183,7 +188,11 @@ public class CommandGraphInjectorTests extends CommandTestSuite {
             .<CommandSource>literal("target")
             .build())
         .build();
-    assertEquals(expected, dest.getChild("origin"));
+    final var actual = dest.getChild("origin");
+    assertEquals(expected, actual);
+    assertNotNull(actual);
+    assertNotNull(actual.getRedirect());
+    assertEquals("target", actual.getRedirect().getName());
   }
 
   @Test
@@ -211,7 +220,11 @@ public class CommandGraphInjectorTests extends CommandTestSuite {
         .<CommandSource>literal("hello")
         .then(literal("origin"))
         .build();
-    assertEquals(expected, dest.getChild("hello"));
+    final var actual = dest.getChild("hello");
+    assertEquals(expected, actual);
+    assertNotNull(actual);
+    assertNotNull(actual.getChild("origin"));
+    assertNull(actual.getChild("origin").getRedirect());
     assertEquals(1, callCount.get());
   }
 

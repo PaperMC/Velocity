@@ -31,6 +31,8 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.proxy.testutil.FakePluginManager;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -360,5 +362,32 @@ public class BrigadierCommandTests extends CommandTestSuite {
     assertDoesNotThrow(
             () -> BrigadierCommand.requiredArgumentBuilder(
                     "someRequiredArgument", StringArgumentType.word()));
+  }
+
+  @Test
+  void testForkRedirectWrappingWithCommandMeta() {
+    final var executions = new AtomicInteger();
+
+    final var target = LiteralArgumentBuilder
+        .<CommandSource>literal("target")
+        .then(LiteralArgumentBuilder
+            .<CommandSource>literal("run")
+            .executes(context -> {
+              executions.incrementAndGet();
+              return 1;
+            }))
+        .build();
+
+    final var origin = LiteralArgumentBuilder
+        .<CommandSource>literal("origin")
+        .fork(target, context -> List.of(context.getSource(), context.getSource()))
+        .build();
+
+    manager.register(manager.metaBuilder("origin")
+        .plugin(FakePluginManager.PLUGIN_A)
+        .build(), new BrigadierCommand(origin));
+
+    assertHandled("origin run");
+    assertEquals(2, executions.get());
   }
 }
