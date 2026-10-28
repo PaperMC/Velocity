@@ -18,6 +18,7 @@
 package com.velocitypowered.proxy.connection.client;
 
 import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_1_8;
+import static com.velocitypowered.api.network.ProtocolVersion.MINECRAFT_26_4;
 
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
@@ -40,6 +41,7 @@ import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
 import com.velocitypowered.proxy.protocol.StateRegistry;
+import com.velocitypowered.proxy.protocol.packet.ConnectionOptions;
 import com.velocitypowered.proxy.protocol.packet.LoginAcknowledgedPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket;
@@ -70,6 +72,9 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
   private final boolean onlineMode;
   private State loginState = State.START; // 1.20.2+
   private final String serverIdHash;
+  // 26.4+: SetCompression only announces the threshold; the client switches compression on
+  // once LoginSuccess (with the compression option) is acknowledged.
+  private int pendingCompressionThreshold = -1;
 
   AuthSessionHandler(VelocityServer server, LoginInboundConnection inbound,
       GameProfile profile, boolean onlineMode, String serverIdHash) {
@@ -139,7 +144,11 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
     int threshold = server.getConfiguration().getCompressionThreshold();
     if (threshold >= 0 && mcConnection.getProtocolVersion().noLessThan(MINECRAFT_1_8)) {
       mcConnection.write(new SetCompressionPacket(threshold));
-      mcConnection.setCompressionThreshold(threshold);
+      if (mcConnection.getProtocolVersion().noLessThan(MINECRAFT_26_4)) {
+        pendingCompressionThreshold = threshold;
+      } else {
+        mcConnection.setCompressionThreshold(threshold);
+      }
     }
     VelocityConfiguration configuration = server.getConfiguration();
     UUID playerUniqueId = player.getUniqueId();
@@ -182,6 +191,12 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
       inbound.disconnect(Component.translatable("multiplayer.disconnect.invalid_player_data"));
     } else {
       loginState = State.ACKNOWLEDGED;
+      if (pendingCompressionThreshold >= 0) {
+        // LoginAcknowledged was the last uncompressed packet in both directions. We are still
+        // inside the frame decoder's read loop, so the next frame already goes through the
+        // decompressor.
+        mcConnection.setCompressionThreshold(pendingCompressionThreshold);
+      }
       mcConnection.setActiveSessionHandler(StateRegistry.CONFIG, new ClientConfigSessionHandler(server, connectedPlayer));
 
       server.getEventManager().fire(new PostLoginEvent(connectedPlayer)).thenCompose(ignored -> {
@@ -238,6 +253,9 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
         success.setUuid(player.getUniqueId());
         if (inbound.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_26_2)) {
           success.setSessionId(server.getSessionId());
+        }
+        if (pendingCompressionThreshold >= 0) {
+          success.setOptions(ConnectionOptions.COMPRESSION);
         }
         mcConnection.write(success);
 

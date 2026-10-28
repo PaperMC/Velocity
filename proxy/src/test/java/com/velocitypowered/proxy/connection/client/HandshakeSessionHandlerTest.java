@@ -50,6 +50,13 @@ class HandshakeSessionHandlerTest {
   }
 
   @Test
+  void cleanVhostHandlesQueryProperties() {
+    assertEquals("mc.example.com", cleanVhost("mc.example.com?_o=play.example.com%3A25565"));
+    assertEquals("mc.example.com", cleanVhost("mc.example.com.?_o=play.example.com%3A25565&_id=a"));
+    assertEquals("mc.example.com", cleanVhost("mc.example.com?k=v" + HANDSHAKE_HOSTNAME_TOKEN));
+  }
+
+  @Test
   void cleanVhostHandlesEmptyHostnames() {
     assertEquals("", cleanVhost(""));
     assertEquals("", cleanVhost(HANDSHAKE_HOSTNAME_TOKEN));
