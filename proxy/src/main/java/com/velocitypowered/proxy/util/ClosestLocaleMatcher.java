@@ -17,10 +17,9 @@
 
 package com.velocitypowered.proxy.util;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -31,15 +30,11 @@ public class ClosestLocaleMatcher {
   public static final ClosestLocaleMatcher INSTANCE = new ClosestLocaleMatcher();
 
   private final Map<String, Locale> byLanguage;
-  private final LoadingCache<Locale, Locale> closest;
+  private final Set<Locale> knownLocales;
 
-  private ClosestLocaleMatcher() {
+  ClosestLocaleMatcher() {
     this.byLanguage = new ConcurrentHashMap<>();
-    this.closest = Caffeine.newBuilder()
-        .build(sublocale -> {
-          final String tag = sublocale.getLanguage();
-          return byLanguage.getOrDefault(tag, sublocale);
-        });
+    this.knownLocales = ConcurrentHashMap.newKeySet();
   }
 
   /**
@@ -52,10 +47,20 @@ public class ClosestLocaleMatcher {
       return;
     }
 
+    this.knownLocales.add(locale);
     this.byLanguage.put(locale.getLanguage(), locale);
   }
 
+  /**
+   * Returns an exact known locale before trying a locale with the same language.
+   *
+   * @param locale the requested locale
+   * @return the matched locale, or the requested locale if no match is known
+   */
   public Locale lookupClosest(final Locale locale) {
-    return closest.get(locale);
+    if (knownLocales.contains(locale)) {
+      return locale;
+    }
+    return byLanguage.getOrDefault(locale.getLanguage(), locale);
   }
 }
