@@ -45,6 +45,7 @@ import com.velocitypowered.proxy.protocol.netty.MinecraftEncoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintFrameDecoder;
 import com.velocitypowered.proxy.protocol.netty.MinecraftVarintLengthEncoder;
 import com.velocitypowered.proxy.protocol.util.ByteBufDataOutput;
+import com.velocitypowered.proxy.util.AddressUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -52,6 +53,7 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoop;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import java.net.SocketAddress;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
@@ -111,7 +113,8 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
       throw new IllegalStateException("No Velocity proxy instance available");
     }
     CompletableFuture<ServerPing> pingFuture = new CompletableFuture<>();
-    server.createBootstrap(loop, serverInfo.getSocketAddress()).handler(new ChannelInitializer<>() {
+    SocketAddress address = AddressUtil.toNettyAddress(serverInfo.getSocketAddress());
+    server.createBootstrap(loop, address).handler(new ChannelInitializer<>() {
       @Override
       protected void initChannel(Channel ch) {
         ch.pipeline().addLast(FRAME_DECODER, new MinecraftVarintFrameDecoder(ProtocolUtils.Direction.CLIENTBOUND))
@@ -125,7 +128,7 @@ public class VelocityRegisteredServer implements RegisteredServer, ForwardingAud
 
         ch.pipeline().addLast(HANDLER, new MinecraftConnection(ch, server));
       }
-    }).connect(serverInfo.getSocketAddress()).addListener((ChannelFutureListener) future -> {
+    }).connect(address).addListener((ChannelFutureListener) future -> {
       if (future.isSuccess()) {
         MinecraftConnection conn = future.channel().pipeline().get(MinecraftConnection.class);
         PingSessionHandler handler = new PingSessionHandler(pingFuture,

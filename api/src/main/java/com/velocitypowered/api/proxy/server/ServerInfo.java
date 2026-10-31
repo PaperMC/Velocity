@@ -10,6 +10,7 @@ package com.velocitypowered.api.proxy.server;
 import com.google.common.base.Preconditions;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.UnixDomainSocketAddress;
 import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -66,7 +67,7 @@ public final class ServerInfo implements Comparable<ServerInfo> {
 
   /**
    * Returns the address of this server as a {@link SocketAddress}. This may be an
-   * {@link InetSocketAddress} for TCP connections or a Unix domain socket address.
+   * {@link InetSocketAddress} for TCP connections or a {@link UnixDomainSocketAddress}.
    *
    * @return the address
    */

@@ -46,6 +46,7 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
 import com.velocitypowered.proxy.protocol.util.ByteBufDataOutput;
 import com.velocitypowered.proxy.server.VelocityRegisteredServer;
+import com.velocitypowered.proxy.util.AddressUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
@@ -102,7 +103,8 @@ public class VelocityServerConnection implements MinecraftConnectionAssociation,
     CompletableFuture<Impl> result = new CompletableFuture<>();
     // Note: we use the event loop for the connection the player is on. This reduces context
     // switches.
-    SocketAddress destinationAddress = registeredServer.getServerInfo().getSocketAddress();
+    SocketAddress destinationAddress =
+        AddressUtil.toNettyAddress(registeredServer.getServerInfo().getSocketAddress());
     server.createBootstrap(proxyPlayer.getConnection().eventLoop(), destinationAddress)
         .handler(server.getBackendChannelInitializer())
         .connect(destinationAddress)
