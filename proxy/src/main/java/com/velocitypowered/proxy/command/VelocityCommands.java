@@ -34,6 +34,7 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.InvocableCommand;
 import com.velocitypowered.proxy.command.brigadier.VelocityArgumentCommandNode;
 import com.velocitypowered.proxy.command.brigadier.VelocityBrigadierCommandWrapper;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -49,9 +50,10 @@ public final class VelocityCommands {
   // Wrapping
 
   /**
-   * Walks the command node tree and wraps all {@link Command} instances in a {@link VelocityBrigadierCommandWrapper},
-   * to indicate the plugin that registered the command. This also has the side effect of cloning
-   * the command node tree.
+   * Walks the command node graph and wraps all {@link com.mojang.brigadier.Command} instances in a
+   * {@link VelocityBrigadierCommandWrapper}, to indicate the plugin that registered the command.
+   * This also has the side effect of cloning the command node graph. Every node in the graph will
+   * be copied only once.
    *
    * @param delegate the command node to wrap
    * @param registrant the plugin that registered the command
@@ -64,46 +66,59 @@ public final class VelocityCommands {
       // the registrant is null if the `plugin` was absent when we try to register the command
       return delegate;
     }
+    return wrap(delegate, registrant, new IdentityHashMap<>());
+  }
+
+  private static CommandNode<CommandSource> wrap(final CommandNode<CommandSource> delegate,
+      final Object registrant,
+      final Map<CommandNode<CommandSource>, CommandNode<CommandSource>> wrapped) {
+    CommandNode<CommandSource> copy = wrapped.get(delegate);
+    if (copy != null) {
+      return copy;  // reuse wrapped node
+    }
+    // brigadier didn't allow a node have both redirect and children, check before register it.
+    Preconditions.checkArgument(!(delegate.getRedirect() != null && !delegate.getChildren().isEmpty()),
+        "Command node %s cannot have both a redirect and children", delegate.getName());
+
+    // redirect is final, so the target was wrapped here.
+    final CommandNode<CommandSource> redirect = delegate.getRedirect() != null
+        ? wrap(delegate.getRedirect(), registrant, wrapped) : null;
+    if (redirect != null) {
+      // redirect may point backward indirectly:
+      // foo -> redirect target -> child node -> foo
+      copy = wrapped.get(delegate);
+      if (copy != null) {
+        return copy;
+      }
+    }
 
     com.mojang.brigadier.Command<CommandSource> maybeCommand = delegate.getCommand();
     if (maybeCommand != null && !(maybeCommand instanceof VelocityBrigadierCommandWrapper)) {
       maybeCommand = VelocityBrigadierCommandWrapper.wrap(delegate.getCommand(), registrant);
     }
 
-    return switch (delegate) {
-      case LiteralCommandNode<CommandSource> lcn -> {
-        var literalBuilder = shallowCopyAsBuilder(lcn, delegate.getName(), true);
-        literalBuilder.executes(maybeCommand);
-        // we also need to wrap any children
-        for (final CommandNode<CommandSource> child : delegate.getChildren()) {
-          literalBuilder.then(wrap(child, registrant));
-        }
-        if (delegate.getRedirect() != null) {
-          literalBuilder.forward(
-              wrap(delegate.getRedirect(), registrant),
-              delegate.getRedirectModifier(),
-              delegate.isFork());
-        }
-        yield literalBuilder.build();
-      }
+    copy = switch (delegate) {
+      case LiteralCommandNode<CommandSource> lcn -> shallowCopyAsBuilder(lcn, delegate.getName(), true)
+          .executes(maybeCommand)
+          .forward(redirect, delegate.getRedirectModifier(), delegate.isFork())
+          .build();
       case VelocityArgumentCommandNode<CommandSource, ?> vacn -> vacn.withCommand(maybeCommand)
-              .withRedirect(delegate.getRedirect() != null ? wrap(delegate.getRedirect(), registrant) : null);
-      case ArgumentCommandNode<CommandSource, ?> node -> {
-        var argBuilder = node.createBuilder().executes(maybeCommand);
-        // we also need to wrap any children
-        for (final CommandNode<CommandSource> child : delegate.getChildren()) {
-          argBuilder.then(wrap(child, registrant));
-        }
-        if (delegate.getRedirect() != null) {
-          argBuilder.forward(
-              wrap(delegate.getRedirect(), registrant),
-              delegate.getRedirectModifier(),
-              delegate.isFork());
-        }
-        yield argBuilder.build();
-      }
+          .withRedirect(redirect);
+      case ArgumentCommandNode<CommandSource, ?> node -> node.createBuilder()
+          // createBuilder() didn't copy the context requirement. velocity-brigadier have missed it.
+          .requiresWithContext(node.getContextRequirement())
+          .executes(maybeCommand)
+          .forward(redirect, delegate.getRedirectModifier(), delegate.isFork())
+          .build();
       default -> throw new IllegalArgumentException("Unsupported node type: " + delegate.getClass());
     };
+
+    // record wrapped node before its children.
+    wrapped.put(delegate, copy);
+    for (final CommandNode<CommandSource> child : delegate.getChildren()) {
+      copy.addChild(wrap(child, registrant, wrapped));
+    }
+    return copy;
   }
 
   // Normalization
