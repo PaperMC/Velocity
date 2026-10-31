@@ -20,7 +20,7 @@ package com.velocitypowered.proxy;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.proxy.util.AddressUtil;
 import java.io.IOException;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Arrays;
 import java.util.List;
 import joptsimple.OptionParser;
@@ -109,7 +109,7 @@ public final class ProxyOptions {
       if (split.length < 2) {
         throw new ValueConversionException("Invalid server format. Use <name>:<address>");
       }
-      InetSocketAddress address;
+      SocketAddress address;
       try {
         address = AddressUtil.parseAddress(split[1]);
       } catch (IllegalStateException e) {

@@ -19,9 +19,12 @@ package com.velocitypowered.proxy.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.net.InetAddresses;
+import io.netty.channel.unix.DomainSocketAddress;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.URI;
+import java.net.UnixDomainSocketAddress;
 
 /**
  * Utilities to parse addresses.
@@ -35,14 +38,16 @@ public final class AddressUtil {
   }
 
   /**
-   * Attempts to parse an IP address of the form {@code 127.0.0.1:25565}. The returned
-   * {@link InetSocketAddress} is not resolved.
+   * Attempts to parse a socket address of the form {@code 127.0.0.1:25565}. The returned
+   * {@link SocketAddress} is not resolved if it is a {@link InetSocketAddress}.
    *
    * @param ip the IP to parse
    * @return the parsed address
    */
-  public static InetSocketAddress parseAddress(String ip) {
-    Preconditions.checkNotNull(ip, "ip");
+  public static SocketAddress parseAddress(String ip) {
+    if (ip.startsWith("unix://")) {
+      return UnixDomainSocketAddress.of(ip.substring("unix://".length()));
+    }
     URI uri = URI.create("tcp://" + ip);
     if (uri.getHost() == null) {
       throw new IllegalStateException("Invalid hostname/IP " + ip);
@@ -58,13 +63,16 @@ public final class AddressUtil {
   }
 
   /**
-   * Attempts to parse an IP address of the form {@code 127.0.0.1:25565}. The returned
-   * {@link InetSocketAddress} is resolved.
+   * Attempts to parse a socket address of the form {@code 127.0.0.1:25565}. The returned
+   * {@link SocketAddress} is resolved if it is a {@link InetSocketAddress}.
    *
    * @param ip the IP to parse
    * @return the parsed address
    */
-  public static InetSocketAddress parseAndResolveAddress(String ip) {
+  public static SocketAddress parseAndResolveAddress(String ip) {
+    if (ip.startsWith("unix://")) {
+      return UnixDomainSocketAddress.of(ip.substring("unix://".length()));
+    }
     Preconditions.checkNotNull(ip, "ip");
     URI uri = URI.create("tcp://" + ip);
     if (uri.getHost() == null) {
@@ -73,5 +81,19 @@ public final class AddressUtil {
 
     int port = uri.getPort() == -1 ? DEFAULT_MINECRAFT_PORT : uri.getPort();
     return new InetSocketAddress(uri.getHost(), port);
+  }
+
+  /**
+   * Converts a Java Unix domain socket address to the address used by Netty native transports.
+   * Other socket addresses are returned unchanged.
+   *
+   * @param address the address to convert
+   * @return the address for a Netty connection
+   */
+  public static SocketAddress toNettyAddress(SocketAddress address) {
+    if (address instanceof UnixDomainSocketAddress unixAddress) {
+      return new DomainSocketAddress(unixAddress.getPath().toString());
+    }
+    return address;
   }
 }

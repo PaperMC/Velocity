@@ -38,6 +38,7 @@ import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.List;
 import java.util.Map;
 
@@ -195,14 +196,18 @@ public enum InformationUtils {
   public static JsonObject collectServerInfo(RegisteredServer server) {
     JsonObject info = new JsonObject();
     info.addProperty("currentPlayers", server.getPlayersConnected().size());
-    InetSocketAddress iaddr = server.getServerInfo().getAddress();
-    if (iaddr.isUnresolved()) {
-      // Greetings form Netty 4aa10db9
-      info.addProperty("host", iaddr.getHostString());
+    SocketAddress address = server.getServerInfo().getSocketAddress();
+    if (address instanceof InetSocketAddress inetSocketAddress) {
+      if (inetSocketAddress.isUnresolved()) {
+        // Greetings form Netty 4aa10db9
+        info.addProperty("host", inetSocketAddress.getHostString());
+      } else {
+        info.addProperty("host", anonymizeInetAddress(inetSocketAddress.getAddress()));
+      }
+      info.addProperty("port", inetSocketAddress.getPort());
     } else {
-      info.addProperty("host", anonymizeInetAddress(iaddr.getAddress()));
+      info.addProperty("bind", address.toString());
     }
-    info.addProperty("port", iaddr.getPort());
     return info;
   }
 
