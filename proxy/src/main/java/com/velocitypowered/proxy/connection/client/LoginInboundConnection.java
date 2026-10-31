@@ -89,6 +89,11 @@ public class LoginInboundConnection implements LoginPhaseConnection, KeyIdentifi
   }
 
   @Override
+  public int getRawProtocolVersion() {
+    return delegate.getRawProtocolVersion();
+  }
+
+  @Override
   public void sendLoginPluginMessage(ChannelIdentifier identifier, byte[] contents,
       MessageConsumer consumer) {
     if (identifier == null) {
