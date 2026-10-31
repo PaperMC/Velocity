@@ -49,4 +49,40 @@ public final class CharacterUtil {
     }
     return false;
   }
+
+  /**
+   * Escapes control characters before text is written to a log.
+   *
+   * @param value text to escape
+   * @return text without raw control characters
+   */
+  public static String escapeControlCharacters(String value) {
+    StringBuilder result = null;
+    for (int i = 0; i < value.length(); i++) {
+      char c = value.charAt(i);
+      String replacement;
+      switch (c) {
+        case '\b' -> replacement = "\\b";
+        case '\t' -> replacement = "\\t";
+        case '\n' -> replacement = "\\n";
+        case '\f' -> replacement = "\\f";
+        case '\r' -> replacement = "\\r";
+        default -> {
+          if (!Character.isISOControl(c)) {
+            if (result != null) {
+              result.append(c);
+            }
+            continue;
+          }
+          replacement = "\\u" + String.format("%04x", (int) c);
+        }
+      }
+      if (result == null) {
+        result = new StringBuilder(value.length() + 8);
+        result.append(value, 0, i);
+      }
+      result.append(replacement);
+    }
+    return result == null ? value : result.toString();
+  }
 }

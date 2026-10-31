@@ -98,6 +98,7 @@ import com.velocitypowered.proxy.tablist.InternalTabList;
 import com.velocitypowered.proxy.tablist.KeyedVelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabList;
 import com.velocitypowered.proxy.tablist.VelocityTabListLegacy;
+import com.velocitypowered.proxy.util.CharacterUtil;
 import com.velocitypowered.proxy.util.ClosestLocaleMatcher;
 import com.velocitypowered.proxy.util.DurationUtils;
 import com.velocitypowered.proxy.util.TranslatableMapper;
@@ -980,7 +981,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
         .isPlayerAddressLoggingEnabled();
     final String playerIp =
         isPlayerAddressLoggingEnabled ? getRemoteAddress().toString() : "<ip address withheld>";
-    return "[connected player] " + profile.getName() + " (" + playerIp + ")";
+    return "[connected player] " + CharacterUtil.escapeControlCharacters(profile.getName()) + " (" + playerIp + ")";
   }
 
   @Override
