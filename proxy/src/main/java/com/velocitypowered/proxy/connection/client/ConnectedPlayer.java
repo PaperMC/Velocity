@@ -84,6 +84,7 @@ import com.velocitypowered.proxy.protocol.packet.PluginMessagePacket;
 import com.velocitypowered.proxy.protocol.packet.RemoveResourcePackPacket;
 import com.velocitypowered.proxy.protocol.packet.TransferPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
+import com.velocitypowered.proxy.protocol.packet.chat.ChatType;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import com.velocitypowered.proxy.protocol.packet.chat.PlayerChatCompletionPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderFactory;
@@ -425,8 +426,10 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     Preconditions.checkNotNull(message, "message");
     final Component translated = translateMessage(message);
 
+    // A message sent by the proxy is a system message: without an explicit type, the builder
+    // keeps ChatType.CHAT, which clients older than 1.19 receive as a chat message (position 0).
     connection.write(getChatBuilderFactory().builder()
-        .component(translated).toClient());
+        .component(translated).setType(ChatType.SYSTEM).toClient());
   }
 
   @Override
