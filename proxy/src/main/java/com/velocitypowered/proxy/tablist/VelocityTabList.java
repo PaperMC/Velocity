@@ -193,8 +193,12 @@ public class VelocityTabList implements InternalTabList {
 
   @Override
   public Optional<TabListEntry> removeEntry(UUID uuid) {
-    this.connection.write(new RemovePlayerInfoPacket(List.of(uuid)));
-    return Optional.ofNullable(this.entries.remove(uuid));
+    Preconditions.checkNotNull(uuid, "uuid");
+    TabListEntry entry = this.entries.remove(uuid);
+    if (entry != null) {
+      this.connection.write(new RemovePlayerInfoPacket(List.of(uuid)));
+    }
+    return Optional.ofNullable(entry);
   }
 
   @Override
