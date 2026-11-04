@@ -132,6 +132,8 @@ public sealed class LegacyResourcePackHandler extends ResourcePackHandler
     final ResourcePackInfo queued = peek
             ? outstandingResourcePacks.peek() : outstandingResourcePacks.poll();
 
+    final UUID callbackId = queued != null ? queued.getId() : bundle.uuid();
+    dispatchPackCallback(callbackId, bundle.status());
     server.getEventManager()
             .fire(new PlayerResourcePackStatusEvent(
                 this.player, bundle.uuid(), bundle.status(), queued))

@@ -126,6 +126,7 @@ public final class ModernResourcePackHandler extends ResourcePackHandler {
     final ResourcePackInfo queued = outstandingResourcePacks.isEmpty() ? null :
         peek ? outstandingResourcePacks.getFirst() : outstandingResourcePacks.removeFirst();
 
+    dispatchPackCallback(uuid, bundle.status());
     server.getEventManager()
             .fire(new PlayerResourcePackStatusEvent(this.player, uuid, bundle.status(), queued))
             .thenAcceptAsync(event -> {

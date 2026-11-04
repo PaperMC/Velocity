@@ -17,6 +17,8 @@
 
 package com.velocitypowered.proxy.connection.player.resourcepack.handler;
 
+import com.google.common.util.concurrent.MoreExecutors;
+import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import com.velocitypowered.proxy.VelocityServer;
@@ -24,13 +26,20 @@ import com.velocitypowered.proxy.connection.backend.VelocityServerConnection;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.player.resourcepack.ResourcePackResponseBundle;
 import com.velocitypowered.proxy.connection.player.resourcepack.VelocityResourcePackInfo;
+import com.velocitypowered.proxy.plugin.virtual.VelocityVirtualPlugin;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.ResourcePackResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import io.netty.buffer.ByteBufUtil;
 import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import net.kyori.adventure.resource.ResourcePackCallback;
 import net.kyori.adventure.resource.ResourcePackRequest;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,12 +48,19 @@ import org.jetbrains.annotations.Nullable;
  */
 public abstract sealed class ResourcePackHandler
         permits LegacyResourcePackHandler, ModernResourcePackHandler {
+  private static final Logger LOGGER = LogManager.getLogger(ResourcePackHandler.class);
+
   protected final ConnectedPlayer player;
   protected final VelocityServer server;
+
+  private final Map<UUID, ResourcePackCallback> packCallbacks = new ConcurrentHashMap<>();
+  private final Executor packCallbackExecutor;
 
   protected ResourcePackHandler(final ConnectedPlayer player, final VelocityServer server) {
     this.player = player;
     this.server = server;
+    this.packCallbackExecutor = MoreExecutors.newSequentialExecutor(server.getPluginManager()
+        .ensurePluginContainer(VelocityVirtualPlugin.INSTANCE).getExecutorService());
   }
 
   /**
@@ -93,9 +109,15 @@ public abstract sealed class ResourcePackHandler
    * empty.
    */
   public void queueResourcePack(final @NotNull ResourcePackRequest request) {
+    final ResourcePackCallback callback = request.callback();
+    // noOp() is a singleton, so there is nothing to track for requests without a callback
+    final boolean trackCallback = callback != ResourcePackCallback.noOp();
     for (final net.kyori.adventure.resource.ResourcePackInfo pack : request.packs()) {
       final ResourcePackInfo resourcePackInfo = VelocityResourcePackInfo.fromAdventureRequest(request, pack);
       this.checkAlreadyAppliedPack(resourcePackInfo.getHash());
+      if (trackCallback) {
+        packCallbacks.put(resourcePackInfo.getId(), callback);
+      }
       queueResourcePack(resourcePackInfo);
     }
   }
@@ -163,6 +185,37 @@ public abstract sealed class ResourcePackHandler
       }
     }
     return handled;
+  }
+
+  /**
+   * Invokes the Adventure {@link ResourcePackCallback} (if any) registered for the given pack
+   * UUID via {@code sendResourcePacks(ResourcePackRequest)}, then evicts the entry on a terminal
+   * status. Callbacks run off the player's event loop, in the order the client responses arrived.
+   *
+   * @param uuid   the pack UUID, or {@code null} if it is unknown
+   * @param status the status reported by the client
+   */
+  protected void dispatchPackCallback(final @Nullable UUID uuid,
+                                      final @NotNull PlayerResourcePackStatusEvent.Status status) {
+    if (uuid == null) {
+      return;
+    }
+
+    final ResourcePackCallback callback = status.isIntermediate()
+        ? packCallbacks.get(uuid)
+        : packCallbacks.remove(uuid);
+    if (callback == null) {
+      return;
+    }
+
+    packCallbackExecutor.execute(() -> {
+      try {
+        callback.packEventReceived(uuid, status.adventureStatus(), player);
+      } catch (Throwable t) {
+        LOGGER.error("Couldn't pass resource pack callback {} for pack {} to {}",
+            callback.getClass().getName(), uuid, player, t);
+      }
+    });
   }
 
   /**
