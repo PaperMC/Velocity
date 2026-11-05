@@ -17,14 +17,18 @@
 
 package com.velocitypowered.proxy.connection.forge.modern;
 
+import static com.velocitypowered.proxy.connection.forge.modern.ModernForgeConstants.EXTRA_DATA_PROPERTY;
+import static com.velocitypowered.proxy.connection.forge.modern.ModernForgeConstants.IS_MODERN_FORGE_CLIENT_PROPERTY;
 import static com.velocitypowered.proxy.connection.forge.modern.ModernForgeConstants.MODERN_FORGE_TOKEN;
 
+import com.velocitypowered.api.util.GameProfile;
+import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.connection.backend.BackendConnectionPhases;
 import com.velocitypowered.proxy.connection.client.ClientConnectionPhases;
 import com.velocitypowered.proxy.connection.util.ConnectionTypeImpl;
 
 /**
- * Contains extra logic.
+ * Contains extra logic to handle Forge 1.20.2+ clients.
  */
 public class ModernForgeConnectionType extends ConnectionTypeImpl {
 
@@ -44,22 +48,38 @@ public class ModernForgeConnectionType extends ConnectionTypeImpl {
   /**
    * Align the acquisition logic with the internal code of Forge.
    *
-   * @return returns the final correct hostname
+   * @return returns the modern Forge token with the Net Version.
    */
   public String getModernToken() {
-    int natVersion = 0;
+    int netVersion = 0;
     int idx = hostName.indexOf('\0');
     if (idx != -1) {
       for (var pt : hostName.split("\0")) {
         if (pt.startsWith(MODERN_FORGE_TOKEN)) {
           if (pt.length() > MODERN_FORGE_TOKEN.length()) {
-            natVersion = Integer.parseInt(
+            netVersion = Integer.parseInt(
                     pt.substring(MODERN_FORGE_TOKEN.length()));
+            break;
           }
         }
       }
     }
-    return natVersion == 0 ? "\0" + MODERN_FORGE_TOKEN : "\0"
-            + MODERN_FORGE_TOKEN + natVersion;
+    return MODERN_FORGE_TOKEN + (netVersion == 0 ? "" : netVersion);
+  }
+
+  @Override
+  public GameProfile addGameProfileTokensIfRequired(GameProfile original,
+      PlayerInfoForwarding forwardingType) {
+    // We can't forward the FORGE token to the server when we are running in legacy (or bungeeguard) forwarding mode,
+    // since both use the "hostname" field in the handshake. We add a special property to the
+    // profile instead, which will be ignored by non-Forge servers and can be intercepted by a
+    // Forge coremod, such as SpongeForge, BungeeForge, or ProxyCompatibleForge.
+    if (forwardingType == PlayerInfoForwarding.LEGACY || forwardingType == PlayerInfoForwarding.BUNGEEGUARD) {
+      return original.addProperty(IS_MODERN_FORGE_CLIENT_PROPERTY)
+              .addProperty(EXTRA_DATA_PROPERTY.apply(
+                      this.getModernToken().replaceAll("\0", "\1")));
+    }
+
+    return original;
   }
 }
