@@ -57,6 +57,17 @@ public interface InboundConnection {
   ProtocolVersion getProtocolVersion();
 
   /**
+   * Returns the protocol version number declared by the client during the initial handshake.
+   *
+   * <p>A client prior to the Netty rewrite is considered legacy.</p>
+   *
+   * @see <a href="https://minecraft.wiki/w/Minecraft_Wiki:Projects/wiki.vg_merge/Protocol_version_numbers">Protocol version numbers</a>
+   *
+   * @return the protocol version number or {@code -1}, if it is a legacy client or the protocol version number was not set for another reason
+   */
+  int getRawProtocolVersion();
+
+  /**
    * Returns the current protocol state of this connection.
    *
    * @return the protocol state of the connection
