@@ -103,6 +103,17 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
   @Override
   public boolean handle(ClientSettingsPacket packet) {
     player.setClientSettings(packet);
+    // LoginSessionHandler replays settings already available when the backend enters CONFIG.
+    // Settings arriving later must also reach that backend, rather than only updating the proxy.
+    VelocityServerConnection targetServer = player.getConnectionInFlightOrConnectedServer();
+    if (targetServer != null) {
+      MinecraftConnection backend = targetServer.getConnection();
+      if (backend != null
+          && (backend.getState() == StateRegistry.CONFIG
+              || backend.getState() == StateRegistry.PLAY)) {
+        backend.write(packet);
+      }
+    }
     return true;
   }
 
