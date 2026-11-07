@@ -532,10 +532,15 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       }
     }
 
+    // Apply the new configuration before evacuation so fallback lookups use the updated try list.
+    VelocityConfiguration previousConfiguration = this.configuration;
+    this.configuration = newConfiguration;
+
     // If we had any players to evacuate, let's move them now. Wait until they are all moved off.
     if (!evacuate.isEmpty()) {
       CountDownLatch latch = new CountDownLatch(evacuate.size());
       for (ConnectedPlayer player : evacuate) {
+        player.resetServersToTry();
         Optional<RegisteredServer> next = player.getNextServerToTry();
         if (next.isPresent()) {
           player.createConnectionRequest(next.get()).connectWithIndication()
@@ -561,17 +566,17 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     }
 
     // If we have a new bind address, bind to it
-    if (!configuration.getBind().equals(newConfiguration.getBind())) {
+    if (!previousConfiguration.getBind().equals(newConfiguration.getBind())) {
       this.cm.bind(newConfiguration.getBind());
-      this.cm.close(configuration.getBind());
+      this.cm.close(previousConfiguration.getBind());
     }
 
-    boolean queryPortChanged = newConfiguration.getQueryPort() != configuration.getQueryPort();
-    boolean queryAlreadyEnabled = configuration.isQueryEnabled();
+    boolean queryPortChanged = newConfiguration.getQueryPort() != previousConfiguration.getQueryPort();
+    boolean queryAlreadyEnabled = previousConfiguration.isQueryEnabled();
     boolean queryEnabled = newConfiguration.isQueryEnabled();
     if (queryAlreadyEnabled && (!queryEnabled || queryPortChanged)) {
       this.cm.close(new InetSocketAddress(
-          configuration.getBind().getHostString(), configuration.getQueryPort()));
+          previousConfiguration.getBind().getHostString(), previousConfiguration.getQueryPort()));
     }
     if (queryEnabled && (!queryAlreadyEnabled || queryPortChanged)) {
       this.cm.queryBind(newConfiguration.getBind().getHostString(),
@@ -580,7 +585,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
 
     commandManager.setAnnounceProxyCommands(newConfiguration.isAnnounceProxyCommands());
     ipAttemptLimiter = Ratelimiters.createWithMilliseconds(newConfiguration.getLoginRatelimit());
-    this.configuration = newConfiguration;
     eventManager.fireAndForget(new ProxyReloadEvent());
     return true;
   }
