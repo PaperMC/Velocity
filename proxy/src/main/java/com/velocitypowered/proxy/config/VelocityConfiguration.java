@@ -70,6 +70,8 @@ public class VelocityConfiguration implements ProxyConfig {
   @Expose
   private int showMaxPlayers = 500;
   @Expose
+  private int playerLimit;
+  @Expose
   private boolean onlineMode = true;
   @Expose
   private boolean preventClientProxyConnections = false;
@@ -109,8 +111,8 @@ public class VelocityConfiguration implements ProxyConfig {
     this.metrics = metrics;
   }
 
-  private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
-      boolean preventClientProxyConnections, boolean announceForge,
+  private VelocityConfiguration(String bind, String motd, int showMaxPlayers, int playerLimit,
+      boolean onlineMode, boolean preventClientProxyConnections, boolean announceForge,
       PlayerInfoForwarding playerInfoForwardingMode, byte[] forwardingSecret,
       boolean onlineModeKickExistingPlayers, PingPassthroughMode pingPassthrough,
       boolean samplePlayersInPing, boolean enablePlayerAddressLogging, Servers servers,
@@ -119,6 +121,7 @@ public class VelocityConfiguration implements ProxyConfig {
     this.bind = bind;
     this.motd = motd;
     this.showMaxPlayers = showMaxPlayers;
+    this.playerLimit = playerLimit;
     this.onlineMode = onlineMode;
     this.preventClientProxyConnections = preventClientProxyConnections;
     this.announceForge = announceForge;
@@ -155,6 +158,11 @@ public class VelocityConfiguration implements ProxyConfig {
         logger.error("'bind' option does not specify a valid IP address.", e);
         valid = false;
       }
+    }
+
+    if (playerLimit < 0) {
+      logger.error("'player-limit' must be zero or greater.");
+      valid = false;
     }
 
     if (!onlineMode) {
@@ -294,6 +302,11 @@ public class VelocityConfiguration implements ProxyConfig {
   @Override
   public int getShowMaxPlayers() {
     return showMaxPlayers;
+  }
+
+  @Override
+  public int getPlayerLimit() {
+    return playerLimit;
   }
 
   @Override
@@ -463,6 +476,7 @@ public class VelocityConfiguration implements ProxyConfig {
         .add("bind", bind)
         .add("motd", motd)
         .add("showMaxPlayers", showMaxPlayers)
+        .add("playerLimit", playerLimit)
         .add("onlineMode", onlineMode)
         .add("playerInfoForwardingMode", playerInfoForwardingMode)
         .add("forwardingSecret", forwardingSecret)
@@ -563,6 +577,7 @@ public class VelocityConfiguration implements ProxyConfig {
 
       final String bind = config.getOrElse("bind", "0.0.0.0:25565");
       final int maxPlayers = config.getIntOrElse("show-max-players", 500);
+      final int playerLimit = config.getIntOrElse("player-limit", 0);
       final boolean onlineMode = config.getOrElse("online-mode", true);
       final boolean forceKeyAuthentication = config.getOrElse("force-key-authentication", true);
       final boolean announceForge = config.getOrElse("announce-forge", true);
@@ -585,6 +600,7 @@ public class VelocityConfiguration implements ProxyConfig {
               bind,
               motd,
               maxPlayers,
+              playerLimit,
               onlineMode,
               preventClientProxyConnections,
               announceForge,

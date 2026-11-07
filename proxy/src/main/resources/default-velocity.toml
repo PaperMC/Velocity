@@ -11,8 +11,8 @@ motd = "<#09add3>A Velocity Server"
 # What should we display for the maximum number of players?
 show-max-players = 500
 
-# Number of player allowed to connect to proxy
-# Set to 0 to disable player limit
+# Maximum number of players allowed to connect to the proxy.
+# Set to 0 for no limit.
 player-limit = 0
 
 # Should we authenticate players with Mojang? By default, this is on.

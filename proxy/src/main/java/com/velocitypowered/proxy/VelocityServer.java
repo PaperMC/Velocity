@@ -723,30 +723,54 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
    * @return {@code true} if we can register the connection, {@code false} if not
    */
   public boolean canRegisterConnection(ConnectedPlayer connection) {
-    if (configuration.isOnlineMode() && configuration.isOnlineModeKickExistingPlayers()) {
-      return true;
+    return checkConnectionRegistration(connection) == ConnectionRegistrationResult.SUCCESS;
+  }
+
+  /**
+   * Checks whether a connection can be registered with the proxy.
+   *
+   * @param connection the connection to check
+   * @return the connection registration result
+   */
+  public ConnectionRegistrationResult checkConnectionRegistration(ConnectedPlayer connection) {
+    if (!(configuration.isOnlineMode() && configuration.isOnlineModeKickExistingPlayers())) {
+      String lowerName = connection.getUsername().toLowerCase(Locale.US);
+      if (connectionsByName.containsKey(lowerName)
+          || connectionsByUuid.containsKey(connection.getUniqueId())) {
+        return ConnectionRegistrationResult.ALREADY_CONNECTED;
+      }
     }
-    String lowerName = connection.getUsername().toLowerCase(Locale.US);
-    return !(connectionsByName.containsKey(lowerName)
-        || connectionsByUuid.containsKey(connection.getUniqueId()));
+
+    int playerLimit = configuration.getPlayerLimit();
+    if (playerLimit > 0 && connectionsByUuid.size() >= playerLimit
+        && !(configuration.isOnlineMode() && configuration.isOnlineModeKickExistingPlayers()
+        && connectionsByUuid.containsKey(connection.getUniqueId()))) {
+      return ConnectionRegistrationResult.PLAYER_LIMIT_REACHED;
+    }
+    return ConnectionRegistrationResult.SUCCESS;
   }
 
   /**
    * Attempts to register the {@code connection} with the proxy.
    *
    * @param connection the connection to register
-   * @return {@code true} if we registered the connection, {@code false} if not
+   * @return the connection registration result
    */
-  public boolean registerConnection(ConnectedPlayer connection) {
+  public synchronized ConnectionRegistrationResult registerConnection(ConnectedPlayer connection) {
+    ConnectionRegistrationResult result = checkConnectionRegistration(connection);
+    if (result != ConnectionRegistrationResult.SUCCESS) {
+      return result;
+    }
+
     String lowerName = connection.getUsername().toLowerCase(Locale.US);
 
     if (!this.configuration.isOnlineModeKickExistingPlayers()) {
       if (connectionsByName.putIfAbsent(lowerName, connection) != null) {
-        return false;
+        return ConnectionRegistrationResult.ALREADY_CONNECTED;
       }
       if (connectionsByUuid.putIfAbsent(connection.getUniqueId(), connection) != null) {
         connectionsByName.remove(lowerName, connection);
-        return false;
+        return ConnectionRegistrationResult.ALREADY_CONNECTED;
       }
     } else {
       ConnectedPlayer existing = connectionsByUuid.get(connection.getUniqueId());
@@ -758,7 +782,13 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       connectionsByName.put(lowerName, connection);
       connectionsByUuid.put(connection.getUniqueId(), connection);
     }
-    return true;
+    return ConnectionRegistrationResult.SUCCESS;
+  }
+
+  public enum ConnectionRegistrationResult {
+    SUCCESS,
+    ALREADY_CONNECTED,
+    PLAYER_LIMIT_REACHED
   }
 
   /**

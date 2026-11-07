@@ -34,6 +34,7 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import com.velocitypowered.api.util.UuidUtils;
 import com.velocitypowered.proxy.VelocityServer;
+import com.velocitypowered.proxy.VelocityServer.ConnectionRegistrationResult;
 import com.velocitypowered.proxy.config.PlayerInfoForwarding;
 import com.velocitypowered.proxy.config.VelocityConfiguration;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
@@ -101,10 +102,10 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
           mcConnection, inbound.getVirtualHost().orElse(null), inbound.getRawVirtualHost().orElse(null), onlineMode,
           inbound.getHandshakeIntent(), inbound.getIdentifiedKey());
       this.connectedPlayer = player;
-      if (!server.canRegisterConnection(player)) {
-        player.disconnect0(
-            Component.translatable("velocity.error.already-connected-proxy", NamedTextColor.RED),
-            true);
+      ConnectionRegistrationResult registrationResult =
+          server.checkConnectionRegistration(player);
+      if (registrationResult != ConnectionRegistrationResult.SUCCESS) {
+        player.disconnect0(registrationFailureMessage(registrationResult), true);
         return CompletableFuture.completedFuture(null);
       }
 
@@ -227,8 +228,9 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
       if (reason.isPresent()) {
         player.disconnect0(reason.get(), true);
       } else {
-        if (!server.registerConnection(player)) {
-          player.disconnect0(Component.translatable("velocity.error.already-connected-proxy"), true);
+        ConnectionRegistrationResult registrationResult = server.registerConnection(player);
+        if (registrationResult != ConnectionRegistrationResult.SUCCESS) {
+          player.disconnect0(registrationFailureMessage(registrationResult), true);
           return;
         }
 
@@ -257,6 +259,13 @@ public class AuthSessionHandler implements MinecraftSessionHandler {
       logger.error("Exception while completing login initialisation phase for {}", player, ex);
       return null;
     });
+  }
+
+  private static Component registrationFailureMessage(ConnectionRegistrationResult result) {
+    if (result == ConnectionRegistrationResult.PLAYER_LIMIT_REACHED) {
+      return Component.translatable("velocity.error.player-limit-reached", NamedTextColor.RED);
+    }
+    return Component.translatable("velocity.error.already-connected-proxy", NamedTextColor.RED);
   }
 
   private CompletableFuture<Void> connectToInitialServer(ConnectedPlayer player) {

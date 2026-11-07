@@ -62,6 +62,13 @@ public interface ProxyConfig {
   int getShowMaxPlayers();
 
   /**
+   * Get the maximum number of players allowed to connect to the proxy, or {@code 0} if unlimited.
+   *
+   * @return the player limit
+   */
+  int getPlayerLimit();
+
+  /**
    * Get whether the proxy is online mode. This determines if players are authenticated with Mojang.
    * servers.
    *
