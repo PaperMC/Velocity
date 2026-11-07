@@ -3,6 +3,7 @@
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        mavenLocal { content { includeModule("io.papermc", "brigadier") } } // TODO remove once io.papermc:brigadier is published to repo.papermc.io
         mavenCentral()
         maven("https://repo.papermc.io/repository/maven-public/")
     }

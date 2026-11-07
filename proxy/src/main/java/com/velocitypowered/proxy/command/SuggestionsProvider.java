@@ -200,7 +200,11 @@ final class SuggestionsProvider<S> {
       reader.setCursor(0);
       final ParseResults<S> parse = this.dispatcher.parse(reader, source);
       try {
-        return this.dispatcher.getCompletionSuggestions(parse);
+        return this.dispatcher.getCompletionSuggestions(parse).exceptionally(e -> {
+          // Brigadier propagates failed suggestion futures; swallow them like synchronous failures.
+          LOGGER.error("Command node cannot provide suggestions for " + fullInput, e);
+          return Suggestions.empty().join();
+        });
       } catch (final Throwable e) {
         // Ugly, ugly swallowing of everything Throwable, because plugins are naughty.
         LOGGER.error("Command node cannot provide suggestions for " + fullInput, e);
@@ -281,7 +285,11 @@ final class SuggestionsProvider<S> {
       final CommandContextBuilder<S> context) {
     final ParseResults<S> parse = this.parseHints(alias, reader, context);
     try {
-      return this.dispatcher.getCompletionSuggestions(parse);
+      return this.dispatcher.getCompletionSuggestions(parse).exceptionally(e -> {
+        // Brigadier propagates failed suggestion futures; swallow them like synchronous failures.
+        LOGGER.error("Hint node cannot provide suggestions", e);
+        return Suggestions.empty().join();
+      });
     } catch (final Throwable e) {
       // Yet again, plugins are naughty.
       LOGGER.error("Hint node cannot provide suggestions", e);
