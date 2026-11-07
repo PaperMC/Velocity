@@ -109,7 +109,8 @@ public class GameSpyQueryHandler extends SimpleChannelInboundHandler<DatagramPac
     InetAddress senderAddress = msg.sender().getAddress();
 
     // Verify query packet magic
-    if (queryMessage.readUnsignedByte() != QUERY_MAGIC_FIRST
+    if (queryMessage.readableBytes() < 7
+        || queryMessage.readUnsignedByte() != QUERY_MAGIC_FIRST
         || queryMessage.readUnsignedByte() != QUERY_MAGIC_SECOND) {
       return;
     }
