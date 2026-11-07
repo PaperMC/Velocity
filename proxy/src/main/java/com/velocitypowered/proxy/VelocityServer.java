@@ -741,12 +741,6 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
       }
     }
 
-    int playerLimit = configuration.getPlayerLimit();
-    if (playerLimit > 0 && connectionsByUuid.size() >= playerLimit
-        && !(configuration.isOnlineMode() && configuration.isOnlineModeKickExistingPlayers()
-        && connectionsByUuid.containsKey(connection.getUniqueId()))) {
-      return ConnectionRegistrationResult.PLAYER_LIMIT_REACHED;
-    }
     return ConnectionRegistrationResult.SUCCESS;
   }
 
@@ -760,6 +754,14 @@ public class VelocityServer implements ProxyServer, ForwardingAudience {
     ConnectionRegistrationResult result = checkConnectionRegistration(connection);
     if (result != ConnectionRegistrationResult.SUCCESS) {
       return result;
+    }
+
+    int playerLimit = configuration.getPlayerLimit();
+    if (playerLimit > 0 && connectionsByUuid.size() >= playerLimit
+        && !connection.hasPermission("velocity.limit.bypass")
+        && !(configuration.isOnlineMode() && configuration.isOnlineModeKickExistingPlayers()
+        && connectionsByUuid.containsKey(connection.getUniqueId()))) {
+      return ConnectionRegistrationResult.PLAYER_LIMIT_REACHED;
     }
 
     String lowerName = connection.getUsername().toLowerCase(Locale.US);
