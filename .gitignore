@@ -7,6 +7,9 @@
 atlassian-ide-plugin.xml
 .fleet/
 
+### VSCode ###
+.vscode/
+
 ### Eclipse ###
 .metadata
 bin/
