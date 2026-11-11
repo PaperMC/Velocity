@@ -80,6 +80,11 @@ public final class InitialInboundConnection implements VelocityInboundConnection
   }
 
   @Override
+  public int getRawProtocolVersion() {
+    return connection.getRawProtocolVersion();
+  }
+
+  @Override
   public String toString() {
     final boolean isPlayerAddressLoggingEnabled = connection.server.getConfiguration()
         .isPlayerAddressLoggingEnabled();
