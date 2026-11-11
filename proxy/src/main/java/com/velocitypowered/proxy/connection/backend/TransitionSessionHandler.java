@@ -107,7 +107,7 @@ public class TransitionSessionHandler implements MinecraftSessionHandler {
     player.clearPlayerListHeaderAndFooter();
 
     // Override online mode
-    packet.setOnlineMode(player.isOnlineMode());
+    packet.setOnlineMode(player.isClientOnlineMode());
 
     // The goods are in hand! We got JoinGame. Let's transition completely to the new state.
     smc.setAutoReading(false);
