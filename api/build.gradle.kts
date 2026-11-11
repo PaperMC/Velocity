@@ -28,6 +28,7 @@ dependencies {
 
     api(platform(libs.adventure.bom))
     api("net.kyori:adventure-api")
+    api("net.kyori:adventure-nbt")
     api("net.kyori:adventure-text-serializer-gson")
     api("net.kyori:adventure-text-serializer-legacy")
     api("net.kyori:adventure-text-serializer-plain")
