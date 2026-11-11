@@ -179,6 +179,7 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
   private long ping = -1;
   private final boolean onlineMode;
   private @Nullable VelocityServerConnection connectedServer;
+  private boolean hasJoinedServer;
   private @Nullable VelocityServerConnection connectionInFlight;
   private @Nullable PlayerSettings settings;
   private @Nullable ModInfo modInfo;
@@ -911,6 +912,9 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
    */
   public void setConnectedServer(@Nullable VelocityServerConnection serverConnection) {
     this.connectedServer = serverConnection;
+    if (serverConnection != null) {
+      this.hasJoinedServer = true;
+    }
     this.tryIndex = 0; // reset since we got connected to a server
 
     if (serverConnection == connectionInFlight) {
@@ -947,18 +951,8 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
     Optional<Player> connectedPlayer = server.getPlayer(this.getUniqueId());
     server.unregisterConnection(this);
 
-    DisconnectEvent.LoginStatus status;
-    if (connectedPlayer.isPresent()) {
-      if (connectedPlayer.get().getCurrentServer().isEmpty()) {
-        status = LoginStatus.PRE_SERVER_JOIN;
-      } else {
-        status = connectedPlayer.get() == this ? LoginStatus.SUCCESSFUL_LOGIN
-            : LoginStatus.CONFLICTING_LOGIN;
-      }
-    } else {
-      status = connection.isKnownDisconnect() ? LoginStatus.CANCELLED_BY_PROXY :
-          LoginStatus.CANCELLED_BY_USER;
-    }
+    DisconnectEvent.LoginStatus status = determineLoginStatus(connectedPlayer.orElse(null),
+        connection.isKnownDisconnect());
 
     DisconnectEvent event = new DisconnectEvent(this, status);
     server.getEventManager().fire(event).whenComplete((val, ex) -> {
@@ -972,6 +966,18 @@ public class ConnectedPlayer implements MinecraftConnectionAssociation, Player, 
 
   public CompletableFuture<Void> getTeardownFuture() {
     return teardownFuture;
+  }
+
+  DisconnectEvent.LoginStatus determineLoginStatus(@Nullable Player connectedPlayer,
+                                                    boolean knownDisconnect) {
+    if (connectedPlayer == null) {
+      return knownDisconnect ? LoginStatus.CANCELLED_BY_PROXY : LoginStatus.CANCELLED_BY_USER;
+    }
+    if (connectedPlayer == this) {
+      return hasJoinedServer ? LoginStatus.SUCCESSFUL_LOGIN : LoginStatus.PRE_SERVER_JOIN;
+    }
+    return connectedPlayer.getCurrentServer().isEmpty() ? LoginStatus.PRE_SERVER_JOIN
+        : LoginStatus.CONFLICTING_LOGIN;
   }
 
   @Override
