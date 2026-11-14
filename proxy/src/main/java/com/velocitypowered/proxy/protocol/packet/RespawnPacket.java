@@ -209,7 +209,8 @@ public class RespawnPacket implements MinecraftPacket {
       } else {
         this.previousGamemode = buf.readByte();
       }
-      boolean isDebug = buf.readBoolean();
+      boolean isDebug = version.lessThan(ProtocolVersion.MINECRAFT_26_4)
+          && buf.readBoolean(); // 1.16-26.3
       boolean isFlat = buf.readBoolean();
       this.dimensionInfo = new DimensionInfo(dimensionKey, levelName, isFlat, isDebug, version);
       if (version.lessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
@@ -270,7 +271,9 @@ public class RespawnPacket implements MinecraftPacket {
       } else {
         buf.writeByte(this.previousGamemode);
       }
-      buf.writeBoolean(dimensionInfo.isDebugType());
+      if (version.lessThan(ProtocolVersion.MINECRAFT_26_4)) { // 1.16-26.3
+        buf.writeBoolean(dimensionInfo.isDebugType());
+      }
       buf.writeBoolean(dimensionInfo.isFlat());
       if (version.lessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
         buf.writeBoolean(dataToKeep != 0);
