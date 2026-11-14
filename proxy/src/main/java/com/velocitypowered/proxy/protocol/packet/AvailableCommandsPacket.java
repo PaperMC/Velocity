@@ -180,11 +180,9 @@ public class AvailableCommandsPacket implements MinecraftPacket {
       if (((ArgumentCommandNode<CommandSource, ?>) node).getCustomSuggestions() != null) {
         SuggestionProvider<CommandSource> provider = ((ArgumentCommandNode<CommandSource, ?>) node)
             .getCustomSuggestions();
-        String name = "minecraft:ask_server";
-        if (provider instanceof ProtocolSuggestionProvider) {
-          name = ((ProtocolSuggestionProvider) provider).name;
-        }
-        ProtocolUtils.writeString(buf, name);
+        ProtocolSuggestionProvider suggestion = provider instanceof ProtocolSuggestionProvider p
+            ? p : ProtocolSuggestionProvider.ASK_SERVER;
+        suggestion.write(buf, protocolVersion);
       }
     } else if (node instanceof LiteralCommandNode<?>) {
       ProtocolUtils.writeString(buf, node.getName());
@@ -217,7 +215,7 @@ public class AvailableCommandsPacket implements MinecraftPacket {
         RequiredArgumentBuilder<CommandSource, ?> argumentBuilder = RequiredArgumentBuilder
             .argument(name, argumentType);
         if ((flags & FLAG_HAS_SUGGESTIONS) != 0) {
-          argumentBuilder.suggests(new ProtocolSuggestionProvider(ProtocolUtils.readString(buf)));
+          argumentBuilder.suggests(ProtocolSuggestionProvider.read(buf, version));
         }
         return new WireNode(idx, flags, children, redirectTo, argumentBuilder);
       default:
@@ -343,9 +341,69 @@ public class AvailableCommandsPacket implements MinecraftPacket {
 
   /**
    * A placeholder {@link SuggestionProvider} used internally to preserve the suggestion provider
-   * name.
+   * name, and for {@code minecraft:literal} (26.4+) its fixed suggestions.
+   *
+   * @param name the suggestion provider name, e.g. {@code minecraft:ask_server}
+   * @param literals the suggested values of {@code minecraft:literal}, empty for other providers
    */
-  public record ProtocolSuggestionProvider(String name) implements SuggestionProvider<CommandSource> {
+  public record ProtocolSuggestionProvider(String name, List<String> literals)
+      implements SuggestionProvider<CommandSource> {
+
+    public static final ProtocolSuggestionProvider ASK_SERVER =
+        new ProtocolSuggestionProvider("minecraft:ask_server");
+
+    private static final String LITERAL = "minecraft:literal";
+
+    // minecraft:command_suggestion_type registry ids, 26.4+
+    private static final List<String> TYPES_26_4 = List.of(
+        "minecraft:ask_server",
+        "minecraft:available_sounds",
+        "minecraft:summonable_entities",
+        "minecraft:post_effects",
+        LITERAL);
+
+    public ProtocolSuggestionProvider(String name) {
+      this(name, List.of());
+    }
+
+    static ProtocolSuggestionProvider read(ByteBuf buf, ProtocolVersion version) {
+      if (version.lessThan(ProtocolVersion.MINECRAFT_26_4)) {
+        return new ProtocolSuggestionProvider(ProtocolUtils.readString(buf));
+      }
+      int type = ProtocolUtils.readVarInt(buf);
+      if (type < 0 || type >= TYPES_26_4.size()) {
+        throw new IllegalArgumentException("Unknown suggestion type " + type);
+      }
+      String name = TYPES_26_4.get(type);
+      if (!name.equals(LITERAL)) {
+        return new ProtocolSuggestionProvider(name);
+      }
+      int count = ProtocolUtils.readVarInt(buf);
+      List<String> literals = ProtocolUtils.newList(count);
+      for (int i = 0; i < count; i++) {
+        literals.add(ProtocolUtils.readString(buf));
+      }
+      return new ProtocolSuggestionProvider(name, List.copyOf(literals));
+    }
+
+    void write(ByteBuf buf, ProtocolVersion version) {
+      if (version.lessThan(ProtocolVersion.MINECRAFT_26_4)) {
+        // minecraft:literal only exists in 26.4+, older clients ask the server instead
+        ProtocolUtils.writeString(buf, name.equals(LITERAL) ? ASK_SERVER.name : name);
+        return;
+      }
+      int type = TYPES_26_4.indexOf(name);
+      if (type == -1) {
+        type = TYPES_26_4.indexOf(ASK_SERVER.name);
+      }
+      ProtocolUtils.writeVarInt(buf, type);
+      if (TYPES_26_4.get(type).equals(LITERAL)) {
+        ProtocolUtils.writeVarInt(buf, literals.size());
+        for (String literal : literals) {
+          ProtocolUtils.writeString(buf, literal);
+        }
+      }
+    }
 
     @Override
     public CompletableFuture<Suggestions> getSuggestions(CommandContext<CommandSource> context,

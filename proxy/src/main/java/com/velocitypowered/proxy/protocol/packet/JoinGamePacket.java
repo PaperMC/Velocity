@@ -34,7 +34,7 @@ public class JoinGamePacket implements MinecraftPacket {
   private int entityId;
   private int gamemode;
   private int dimension;
-  private long partialHashedSeed; // 1.15+
+  private long partialHashedSeed; // 1.15-26.3
   private short difficulty;
   private boolean isHardcore;
   private int maxPlayers;
@@ -343,7 +343,9 @@ public class JoinGamePacket implements MinecraftPacket {
       dimensionKey = ProtocolUtils.readString(buf);
     }
     String levelName = ProtocolUtils.readString(buf);
-    this.partialHashedSeed = buf.readLong();
+    if (version.lessThan(ProtocolVersion.MINECRAFT_26_4)) {
+      this.partialHashedSeed = buf.readLong();
+    }
 
     if (version.noLessThan(ProtocolVersion.MINECRAFT_26_3)) {
       this.gamemode = ProtocolUtils.readVarInt(buf);
@@ -353,7 +355,8 @@ public class JoinGamePacket implements MinecraftPacket {
       this.previousGamemode = buf.readByte(); // game mode or -1
     }
 
-    boolean isDebug = buf.readBoolean();
+    boolean isDebug = version.lessThan(ProtocolVersion.MINECRAFT_26_4)
+        && buf.readBoolean(); // 1.16-26.3
     boolean isFlat = buf.readBoolean();
     this.dimensionInfo = new DimensionInfo(dimensionKey, levelName, isFlat, isDebug, version);
 
@@ -501,7 +504,9 @@ public class JoinGamePacket implements MinecraftPacket {
       ProtocolUtils.writeString(buf, dimensionInfo.getRegistryIdentifier());
     }
     ProtocolUtils.writeString(buf, dimensionInfo.getLevelName());
-    buf.writeLong(partialHashedSeed);
+    if (version.lessThan(ProtocolVersion.MINECRAFT_26_4)) {
+      buf.writeLong(partialHashedSeed);
+    }
 
     if (version.noLessThan(ProtocolVersion.MINECRAFT_26_3)) {
       ProtocolUtils.writeVarInt(buf, this.gamemode);
@@ -511,7 +516,9 @@ public class JoinGamePacket implements MinecraftPacket {
       buf.writeByte(this.previousGamemode);
     }
 
-    buf.writeBoolean(dimensionInfo.isDebugType());
+    if (version.lessThan(ProtocolVersion.MINECRAFT_26_4)) { // 1.16-26.3
+      buf.writeBoolean(dimensionInfo.isDebugType());
+    }
     buf.writeBoolean(dimensionInfo.isFlat());
 
     // optional death location

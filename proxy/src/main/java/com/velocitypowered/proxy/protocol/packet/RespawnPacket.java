@@ -31,7 +31,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class RespawnPacket implements MinecraftPacket {
 
   private int dimension;
-  private long partialHashedSeed;
+  private long partialHashedSeed; // 1.15-26.3
   private short difficulty;
   private int gamemode;
   private String levelType = "";
@@ -194,7 +194,8 @@ public class RespawnPacket implements MinecraftPacket {
     if (version.noGreaterThan(ProtocolVersion.MINECRAFT_1_13_2)) {
       this.difficulty = buf.readUnsignedByte();
     }
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_15)) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_15)
+        && version.lessThan(ProtocolVersion.MINECRAFT_26_4)) {
       this.partialHashedSeed = buf.readLong();
     }
     if (version.noLessThan(ProtocolVersion.MINECRAFT_26_3)) {
@@ -208,7 +209,8 @@ public class RespawnPacket implements MinecraftPacket {
       } else {
         this.previousGamemode = buf.readByte();
       }
-      boolean isDebug = buf.readBoolean();
+      boolean isDebug = version.lessThan(ProtocolVersion.MINECRAFT_26_4)
+          && buf.readBoolean(); // 1.16-26.3
       boolean isFlat = buf.readBoolean();
       this.dimensionInfo = new DimensionInfo(dimensionKey, levelName, isFlat, isDebug, version);
       if (version.lessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
@@ -254,7 +256,8 @@ public class RespawnPacket implements MinecraftPacket {
     if (version.noGreaterThan(ProtocolVersion.MINECRAFT_1_13_2)) {
       buf.writeByte(difficulty);
     }
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_15)) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_15)
+        && version.lessThan(ProtocolVersion.MINECRAFT_26_4)) {
       buf.writeLong(partialHashedSeed);
     }
     if (version.noLessThan(ProtocolVersion.MINECRAFT_26_3)) {
@@ -268,7 +271,9 @@ public class RespawnPacket implements MinecraftPacket {
       } else {
         buf.writeByte(this.previousGamemode);
       }
-      buf.writeBoolean(dimensionInfo.isDebugType());
+      if (version.lessThan(ProtocolVersion.MINECRAFT_26_4)) { // 1.16-26.3
+        buf.writeBoolean(dimensionInfo.isDebugType());
+      }
       buf.writeBoolean(dimensionInfo.isFlat());
       if (version.lessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
         buf.writeBoolean(dataToKeep != 0);
