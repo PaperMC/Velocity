@@ -47,4 +47,18 @@ class CaffeineCacheRatelimiterTest {
     assertTrue(ratelimiter.attempt(InetAddress.getLoopbackAddress()));
   }
 
+  @Test
+  void attemptMultiplePermits() {
+    AtomicLong time = new AtomicLong(System.nanoTime());
+    Ratelimiter ratelimiter = new CaffeineCacheRatelimiter(1000, TimeUnit.MILLISECONDS, 3,
+        time::get);
+    for (int i = 0; i < 3; i++) {
+      assertTrue(ratelimiter.attempt(InetAddress.getLoopbackAddress()));
+    }
+    assertFalse(ratelimiter.attempt(InetAddress.getLoopbackAddress()));
+    time.addAndGet(TimeUnit.MILLISECONDS.toNanos(334));
+    assertTrue(ratelimiter.attempt(InetAddress.getLoopbackAddress()));
+    assertFalse(ratelimiter.attempt(InetAddress.getLoopbackAddress()));
+  }
+
 }
