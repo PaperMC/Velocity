@@ -8,7 +8,7 @@ netty = "4.2.21.Final"
 [plugins]
 fill = "io.papermc.fill.gradle:1.0.14"
 shadow = "com.gradleup.shadow:9.6.1"
-spotless = "com.diffplug.spotless:8.10.4"
+spotless = "com.diffplug.spotless:8.12.0"
 
 [libraries]
 adventure-bom = "net.kyori:adventure-bom:5.2.0"
@@ -19,8 +19,8 @@ auto-service-annotations = "com.google.auto.service:auto-service-annotations:1.1
 brigadier = "com.velocitypowered:velocity-brigadier:1.0.0-20261110.144108-12"
 bstats = "org.bstats:bstats-base:3.2.1"
 caffeine = "com.github.ben-manes.caffeine:caffeine:3.3.1"
-checker-qual = "org.checkerframework:checker-qual:4.3.1"
-checkstyle = "com.puppycrawl.tools:checkstyle:14.3.0"
+checker-qual = "org.checkerframework:checker-qual:4.4.0"
+checkstyle = "com.puppycrawl.tools:checkstyle:14.4.0"
 completablefutures = "com.spotify:completable-futures:0.3.6"
 configurate3-hocon = { module = "org.spongepowered:configurate-hocon", version.ref = "configurate3" }
 configurate3-yaml = { module = "org.spongepowered:configurate-yaml", version.ref = "configurate3" }
@@ -32,13 +32,13 @@ disruptor = "com.lmax:disruptor:4.0.0"
 fastutil = "it.unimi.dsi:fastutil:8.5.19"
 flare-core = { module = "space.vectrix.flare:flare", version.ref = "flare" }
 flare-fastutil = { module = "space.vectrix.flare:flare-fastutil", version.ref = "flare" }
-jline = "org.jline:jline-terminal-ffm:4.4.8"
+jline = "org.jline:jline-terminal-ffm:4.7.0"
 jopt = "net.sf.jopt-simple:jopt-simple:5.0.4"
 junit = "org.junit.jupiter:junit-jupiter:6.1.3"
 jspecify = "org.jspecify:jspecify:1.0.1"
 kyori-ansi = "net.kyori:ansi:1.1.1"
-guava = "com.google.guava:guava:33.7.2-jre"
-gson = "com.google.code.gson:gson:2.14.0"
+guava = "com.google.guava:guava:33.8.0-jre"
+gson = "com.google.code.gson:gson:2.15.0"
 guice = "com.google.inject:guice:7.0.0"
 lmbda = "org.lanternpowered:lmbda:3.0.0"
 log4j-api = { module = "org.apache.logging.log4j:log4j-api", version.ref = "log4j" }
