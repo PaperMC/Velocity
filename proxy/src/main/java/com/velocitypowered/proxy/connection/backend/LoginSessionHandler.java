@@ -35,6 +35,7 @@ import com.velocitypowered.proxy.connection.util.ConnectionRequestResults.Impl;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
+import com.velocitypowered.proxy.protocol.packet.ConnectionOptions;
 import com.velocitypowered.proxy.protocol.packet.DisconnectPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.LoginAcknowledgedPacket;
@@ -66,6 +67,7 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
   private final VelocityServerConnection serverConn;
   private final CompletableFuture<Impl> resultFuture;
   private boolean informationForwarded;
+  private int pendingCompressionThreshold = -1; // 26.4+
 
   LoginSessionHandler(VelocityServer server, VelocityServerConnection serverConn,
       CompletableFuture<Impl> resultFuture) {
@@ -137,7 +139,13 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
 
   @Override
   public boolean handle(SetCompressionPacket packet) {
-    serverConn.ensureConnected().setCompressionThreshold(packet.getThreshold());
+    MinecraftConnection smc = serverConn.ensureConnected();
+    if (smc.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_26_4)) {
+      // Only announces the threshold; LoginSuccess says whether to switch it on.
+      pendingCompressionThreshold = packet.getThreshold();
+    } else {
+      smc.setCompressionThreshold(packet.getThreshold());
+    }
     return true;
   }
 
@@ -158,6 +166,16 @@ public class LoginSessionHandler implements MinecraftSessionHandler {
       smc.setActiveSessionHandler(StateRegistry.PLAY, new TransitionSessionHandler(server, serverConn, resultFuture));
     } else {
       smc.write(new LoginAcknowledgedPacket());
+      if (smc.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_26_4)
+          && ConnectionOptions.isCompression(packet.getOptions())) {
+        if (pendingCompressionThreshold < 0) {
+          throw new QuietRuntimeException("Backend server asked for compression in LoginSuccess"
+              + " without sending a compression threshold first");
+        }
+        // LoginAcknowledged has been encoded uncompressed above (we are on the event loop); the
+        // server only replies once it has received it, so both directions switch over here.
+        smc.setCompressionThreshold(pendingCompressionThreshold);
+      }
       smc.setActiveSessionHandler(StateRegistry.CONFIG, new ConfigSessionHandler(server, serverConn, resultFuture));
       ConnectedPlayer player = serverConn.getPlayer();
       if (player.getClientSettingsPacket() != null) {
