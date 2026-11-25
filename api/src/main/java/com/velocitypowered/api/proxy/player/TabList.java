@@ -11,7 +11,9 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.util.GameProfile;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -77,6 +79,34 @@ public interface TabList {
    *     {@link Optional#empty()}
    */
   Optional<TabListEntry> removeEntry(UUID uuid);
+
+  /**
+   * Removes a {@link Iterable} of {@link UUID}'s from the {@link Player}'s tab list.
+   *
+   * @param entries to remove from the tab list
+   * @return {@link Optional} containing the {@link Set} of removed {@link TabListEntry}'s
+   */
+  default Set<TabListEntry> removeEntries(Iterable<UUID> entries) {
+    final Set<TabListEntry> removed = new HashSet<>();
+    for (UUID entry : entries) {
+      removeEntry(entry).ifPresent(removed::add);
+    }
+    return removed;
+  }
+
+  /**
+   * Removes an array of {@link UUID}'s from the {@link Player}'s tab list.
+   *
+   * @param entries to remove from the tab list
+   * @return {@link Optional} containing the {@link Set} of removed {@link TabListEntry}'s
+   */
+  default Set<TabListEntry> removeEntries(UUID... entries) {
+    final Set<TabListEntry> removed = new HashSet<>();
+    for (UUID entry : entries) {
+      removeEntry(entry).ifPresent(removed::add);
+    }
+    return removed;
+  }
 
   /**
    * Determines if the specified entry exists in the tab list.
