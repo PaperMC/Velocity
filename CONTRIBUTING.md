@@ -86,8 +86,8 @@ the submitted work.
 ### Branches
 
 Generally, PRs should be targeted at the repository's default branch, where
-active development happens. If you're unsure which branch to target, for
-example for a change tied to an upcoming Minecraft version, ask in the
+active development happens. Larger or breaking changes may be developed on a
+separate branch instead. If you're unsure which branch to target, ask in the
 [Discord](https://discord.gg/papermc) or open an issue before starting work.
 
 ## Formatting
