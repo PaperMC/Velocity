@@ -29,7 +29,6 @@ import static com.velocitypowered.proxy.network.Connections.MINECRAFT_ENCODER;
 import com.google.common.base.Preconditions;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.natives.compression.VelocityCompressor;
-import com.velocitypowered.natives.encryption.JavaVelocityCipher;
 import com.velocitypowered.natives.encryption.VelocityCipher;
 import com.velocitypowered.natives.encryption.VelocityCipherFactory;
 import com.velocitypowered.natives.util.Natives;
@@ -652,11 +651,11 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     ensureOpen();
     ensureInEventLoop();
 
-    // The native ciphers always use the key as the IV, so 26.4+ sessions use the Java cipher.
+    VelocityCipherFactory factory = Natives.cipher.get();
     VelocityCipher decryptionCipher =
-        JavaVelocityCipher.withIv(false, keys.clientToServer(), keys.clientToServerIv());
+        factory.forDecryption(keys.clientToServer(), keys.clientToServerIv());
     VelocityCipher encryptionCipher =
-        JavaVelocityCipher.withIv(true, keys.serverToClient(), keys.serverToClientIv());
+        factory.forEncryption(keys.serverToClient(), keys.serverToClientIv());
     channel.pipeline()
         .addBefore(FRAME_DECODER, CIPHER_DECODER, new MinecraftCipherDecoder(decryptionCipher));
     channel.pipeline()

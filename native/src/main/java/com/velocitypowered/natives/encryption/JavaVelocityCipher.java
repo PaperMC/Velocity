@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2023 Velocity Contributors
+ * Copyright (C) 2018-2026 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.ShortBufferException;
 import javax.crypto.spec.IvParameterSpec;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Implements AES-CFB8 encryption/decryption using {@link Cipher}.
@@ -33,54 +34,41 @@ public class JavaVelocityCipher implements VelocityCipher {
 
   public static final VelocityCipherFactory FACTORY = new VelocityCipherFactory() {
     @Override
-    public VelocityCipher forEncryption(SecretKey key) throws GeneralSecurityException {
-      return new JavaVelocityCipher(true, key);
+    public VelocityCipher forEncryption(SecretKey key, byte @Nullable [] iv)
+        throws GeneralSecurityException {
+      return new JavaVelocityCipher(true, key, iv);
     }
 
     @Override
-    public VelocityCipher forDecryption(SecretKey key) throws GeneralSecurityException {
-      return new JavaVelocityCipher(false, key);
+    public VelocityCipher forDecryption(SecretKey key, byte @Nullable [] iv)
+        throws GeneralSecurityException {
+      return new JavaVelocityCipher(false, key, iv);
     }
   };
 
   private final Cipher cipher;
   private boolean disposed = false;
 
-  private JavaVelocityCipher(boolean encrypt, SecretKey key, byte[] iv)
+  private JavaVelocityCipher(boolean encrypt, SecretKey key, byte @Nullable [] iv)
       throws GeneralSecurityException {
+    final byte[] effectiveIv;
+    if (iv == null) {
+      // Before 26.4, the protocol used the shared secret as both the key and the IV, in both
+      // directions. Reusing the key as the IV defeats the entire point of an IV - we might as well
+      // just initialize it to all zeroes - and because both directions use the same key and IV,
+      // both streams start out in the same cipher state.
+      //
+      // 26.4 replaced this with a proper key exchange that derives a separate key and IV for each
+      // direction. Not passing an IV (insecure!) is only for older protocols.
+      effectiveIv = key.getEncoded();
+    } else if (iv.length == VelocityCipherFactory.IV_LENGTH) {
+      effectiveIv = iv;
+    } else {
+      throw new IllegalArgumentException("IV not " + VelocityCipherFactory.IV_LENGTH + " bytes");
+    }
     this.cipher = Cipher.getInstance("AES/CFB8/NoPadding");
     this.cipher.init(encrypt ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE, key,
-        new IvParameterSpec(iv));
-  }
-
-  private JavaVelocityCipher(boolean encrypt, SecretKey key) throws GeneralSecurityException {
-    this.cipher = Cipher.getInstance("AES/CFB8/NoPadding");
-    // Before 26.4, the protocol used the shared secret as both the key and the IV, in both
-    // directions. Reusing the key as the IV defeats the entire point of an IV - we might as well
-    // just initialize it to all zeroes - and because both directions use the same key and IV,
-    // both streams start out in the same cipher state.
-    //
-    // 26.4 replaced this with a proper key exchange that derives a separate key and IV for each
-    // direction (see the constructor above). This (insecure!) constructor is only for older
-    // protocols.
-    this.cipher.init(encrypt ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE, key,
-        new IvParameterSpec(key.getEncoded()));
-  }
-
-  /**
-   * Creates a cipher with a separate IV for 26.4+ login encryption.
-   *
-   * <p>TODO: NATIVE ENCRYPTION! (withIv -> VelocityCipherFactory + native implementations + rebuild natives)
-   *
-   * @param encrypt whether to encrypt or decrypt
-   * @param key the AES key
-   * @param iv the 16-byte IV
-   * @return the cipher
-   * @throws GeneralSecurityException if the cipher can't be initialized
-   */
-  public static VelocityCipher withIv(boolean encrypt, SecretKey key, byte[] iv)
-      throws GeneralSecurityException {
-    return new JavaVelocityCipher(encrypt, key, iv);
+        new IvParameterSpec(effectiveIv));
   }
 
   @Override

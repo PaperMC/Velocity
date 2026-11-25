@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2023 Velocity Contributors
+ * Copyright (C) 2018-2026 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import com.velocitypowered.natives.util.BufferPreference;
 import io.netty.buffer.ByteBuf;
 import java.security.GeneralSecurityException;
 import javax.crypto.SecretKey;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Implements AES-CFB8 encryption/decryption using a native library.
@@ -30,20 +31,25 @@ public class NativeVelocityCipher implements VelocityCipher {
 
   public static final VelocityCipherFactory FACTORY = new VelocityCipherFactory() {
     @Override
-    public VelocityCipher forEncryption(SecretKey key) throws GeneralSecurityException {
-      return new NativeVelocityCipher(true, key);
+    public VelocityCipher forEncryption(SecretKey key, byte @Nullable [] iv)
+        throws GeneralSecurityException {
+      return new NativeVelocityCipher(true, key, iv);
     }
 
     @Override
-    public VelocityCipher forDecryption(SecretKey key) throws GeneralSecurityException {
-      return new NativeVelocityCipher(false, key);
+    public VelocityCipher forDecryption(SecretKey key, byte @Nullable [] iv)
+        throws GeneralSecurityException {
+      return new NativeVelocityCipher(false, key, iv);
     }
   };
   private final long ctx;
   private boolean disposed = false;
 
-  private NativeVelocityCipher(boolean encrypt, SecretKey key) throws GeneralSecurityException {
-    this.ctx = OpenSslCipherImpl.init(key.getEncoded(), encrypt);
+  private NativeVelocityCipher(boolean encrypt, SecretKey key, byte @Nullable [] iv)
+      throws GeneralSecurityException {
+    byte[] keyBytes = key.getEncoded();
+    // A missing IV means the pre-26.4 behavior of using the key as the IV (see JavaVelocityCipher).
+    this.ctx = OpenSslCipherImpl.init(keyBytes, iv == null ? keyBytes : iv, encrypt);
   }
 
   @Override
