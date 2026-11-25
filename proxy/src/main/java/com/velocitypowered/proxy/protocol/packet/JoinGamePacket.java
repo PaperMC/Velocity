@@ -355,7 +355,8 @@ public class JoinGamePacket implements MinecraftPacket {
       this.previousGamemode = buf.readByte(); // game mode or -1
     }
 
-    boolean isDebug = buf.readBoolean();
+    boolean isDebug = version.lessThan(ProtocolVersion.MINECRAFT_26_4)
+        && buf.readBoolean(); // 1.16-26.3
     boolean isFlat = buf.readBoolean();
     this.dimensionInfo = new DimensionInfo(dimensionKey, levelName, isFlat, isDebug, version);
 
@@ -515,7 +516,9 @@ public class JoinGamePacket implements MinecraftPacket {
       buf.writeByte(this.previousGamemode);
     }
 
-    buf.writeBoolean(dimensionInfo.isDebugType());
+    if (version.lessThan(ProtocolVersion.MINECRAFT_26_4)) { // 1.16-26.3
+      buf.writeBoolean(dimensionInfo.isDebugType());
+    }
     buf.writeBoolean(dimensionInfo.isFlat());
 
     // optional death location
