@@ -133,6 +133,9 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
       brandChannel = packet.getChannel();
       // Client sends `minecraft:brand` packet immediately after Login,
       // but at this time the backend server may not be ready
+    } else if (PluginMessageUtil.isModList(packet)) {
+      // 26.4+ clients send `minecraft:mod_list` right after the brand, once per session.
+      player.setClientModList(ByteBufUtil.getBytes(packet.content()));
     } else if (BungeeCordMessageResponder.isBungeeCordMessage(packet)) {
       return true;
     } else if (serverConn != null) {
@@ -336,6 +339,12 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
       ProtocolUtils.writeString(buf, brand);
       final PluginMessagePacket brandPacket = new PluginMessagePacket(brandChannel, buf);
       smc.write(brandPacket);
+    }
+
+    final byte[] modList = serverConn.getPlayer().getClientModList();
+    if (modList != null) {
+      smc.write(new PluginMessagePacket(PluginMessageUtil.MOD_LIST_CHANNEL,
+          Unpooled.wrappedBuffer(modList)));
     }
 
     callConfigurationEvent().thenCompose(v -> {
