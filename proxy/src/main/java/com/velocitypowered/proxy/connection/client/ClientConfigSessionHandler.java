@@ -141,6 +141,14 @@ public class ClientConfigSessionHandler implements MinecraftSessionHandler {
     } else if (serverConn != null) {
       ChannelIdentifier id = this.server.getChannelRegistrar().getFromId(packet.getChannel());
 
+      if (serverConn.getConnection() == null) {
+        // The backend connection is still being set up; there is nowhere to send this yet.
+        // TODO: Do we queue this instead?
+        logger.warn("Dropping plugin message on {} from {}: backend connection to {} not ready",
+            packet.getChannel(), player, serverConn.getServerInfo().getName());
+        return true;
+      }
+
       if (id == null) {
         serverConn.ensureConnected().write(packet.retain());
         return true;
