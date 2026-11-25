@@ -46,19 +46,41 @@ public class JavaVelocityCipher implements VelocityCipher {
   private final Cipher cipher;
   private boolean disposed = false;
 
+  private JavaVelocityCipher(boolean encrypt, SecretKey key, byte[] iv)
+      throws GeneralSecurityException {
+    this.cipher = Cipher.getInstance("AES/CFB8/NoPadding");
+    this.cipher.init(encrypt ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE, key,
+        new IvParameterSpec(iv));
+  }
+
   private JavaVelocityCipher(boolean encrypt, SecretKey key) throws GeneralSecurityException {
     this.cipher = Cipher.getInstance("AES/CFB8/NoPadding");
-    // But, you're saying, *why* are we using the key as the IV? After all, reusing the key as
-    // the IV defeats the entire point - we might as well just initialize it to all zeroes.
+    // Before 26.4, the protocol used the shared secret as both the key and the IV, in both
+    // directions. Reusing the key as the IV defeats the entire point of an IV - we might as well
+    // just initialize it to all zeroes - and because both directions use the same key and IV,
+    // both streams start out in the same cipher state.
     //
-    // You can blame Mojang. For the record, we also don't consider the Minecraft protocol
-    // encryption scheme to be secure, and it has reached the point where any serious cryptographic
-    // protocol needs a refresh. There are multiple obvious weaknesses, and this is far from the
-    // most serious.
-    //
-    // If you are using Minecraft in a security-sensitive application, *I don't know what to say.*
+    // 26.4 replaced this with a proper key exchange that derives a separate key and IV for each
+    // direction (see the constructor above). This (insecure!) constructor is only for older
+    // protocols.
     this.cipher.init(encrypt ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE, key,
         new IvParameterSpec(key.getEncoded()));
+  }
+
+  /**
+   * Creates a cipher with a separate IV for 26.4+ login encryption.
+   *
+   * <p>TODO: NATIVE ENCRYPTION! (withIv -> VelocityCipherFactory + native implementations + rebuild natives)
+   *
+   * @param encrypt whether to encrypt or decrypt
+   * @param key the AES key
+   * @param iv the 16-byte IV
+   * @return the cipher
+   * @throws GeneralSecurityException if the cipher can't be initialized
+   */
+  public static VelocityCipher withIv(boolean encrypt, SecretKey key, byte[] iv)
+      throws GeneralSecurityException {
+    return new JavaVelocityCipher(encrypt, key, iv);
   }
 
   @Override
