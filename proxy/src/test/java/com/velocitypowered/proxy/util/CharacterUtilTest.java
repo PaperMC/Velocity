@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.util;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -48,5 +49,12 @@ class CharacterUtilTest {
 
     assertTrue(CharacterUtil.containsIllegalCharacters("§cVelocity"));
     assertTrue(CharacterUtil.containsIllegalCharacters("§"));
+  }
+
+  @Test
+  void testEscapeControlCharacters() {
+    assertEquals("line\\nreturn\\rtab\\tzero\\u0000",
+        CharacterUtil.escapeControlCharacters("line\nreturn\rtab\tzero\u0000"));
+    assertEquals("Velocity", CharacterUtil.escapeControlCharacters("Velocity"));
   }
 }
