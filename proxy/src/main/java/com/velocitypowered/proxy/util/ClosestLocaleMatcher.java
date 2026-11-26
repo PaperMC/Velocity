@@ -21,6 +21,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import org.jetbrains.annotations.VisibleForTesting;
 
 /**
  * Matches a player's locale to the "closest" Velocity locale, for message localization.
@@ -32,6 +33,7 @@ public class ClosestLocaleMatcher {
   private final Set<Locale> known;
   private final Map<String, Locale> byLanguage;
 
+  @VisibleForTesting
   ClosestLocaleMatcher() {
     this.known = ConcurrentHashMap.newKeySet();
     this.byLanguage = new ConcurrentHashMap<>();
@@ -44,7 +46,7 @@ public class ClosestLocaleMatcher {
    */
   public void registerKnown(final Locale locale) {
     this.known.add(locale);
-    if (locale.getLanguage().equals(new Locale("zh").getLanguage())) {
+    if (locale.getLanguage().equals(Locale.CHINESE.getLanguage())) {
       return;
     }
 
