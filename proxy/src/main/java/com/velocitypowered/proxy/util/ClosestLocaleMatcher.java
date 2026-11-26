@@ -54,11 +54,10 @@ public class ClosestLocaleMatcher {
   }
 
   /**
-   * Finds the closest known locale. A registered locale always matches itself, otherwise the
-   * last registered locale with the same language is used, falling back to the given locale.
+   * Finds the closest known locale.
    *
-   * @param locale the locale to look up
-   * @return the closest known locale
+   * @param locale locale to look up
+   * @return closest known locale
    */
   public Locale lookupClosest(final Locale locale) {
     if (this.known.contains(locale)) {
