@@ -17,11 +17,11 @@
 
 package com.velocitypowered.proxy.util;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import org.jetbrains.annotations.VisibleForTesting;
 
 /**
  * Matches a player's locale to the "closest" Velocity locale, for message localization.
@@ -30,16 +30,13 @@ public class ClosestLocaleMatcher {
 
   public static final ClosestLocaleMatcher INSTANCE = new ClosestLocaleMatcher();
 
+  private final Set<Locale> known;
   private final Map<String, Locale> byLanguage;
-  private final LoadingCache<Locale, Locale> closest;
 
-  private ClosestLocaleMatcher() {
+  @VisibleForTesting
+  ClosestLocaleMatcher() {
+    this.known = ConcurrentHashMap.newKeySet();
     this.byLanguage = new ConcurrentHashMap<>();
-    this.closest = Caffeine.newBuilder()
-        .build(sublocale -> {
-          final String tag = sublocale.getLanguage();
-          return byLanguage.getOrDefault(tag, sublocale);
-        });
   }
 
   /**
@@ -48,14 +45,24 @@ public class ClosestLocaleMatcher {
    * @param locale locale to register
    */
   public void registerKnown(final Locale locale) {
-    if (locale.getLanguage().equals(new Locale("zh").getLanguage())) {
+    this.known.add(locale);
+    if (locale.getLanguage().equals(Locale.CHINESE.getLanguage())) {
       return;
     }
 
     this.byLanguage.put(locale.getLanguage(), locale);
   }
 
+  /**
+   * Finds the closest known locale.
+   *
+   * @param locale locale to look up
+   * @return closest known locale
+   */
   public Locale lookupClosest(final Locale locale) {
-    return closest.get(locale);
+    if (this.known.contains(locale)) {
+      return locale;
+    }
+    return this.byLanguage.getOrDefault(locale.getLanguage(), locale);
   }
 }
