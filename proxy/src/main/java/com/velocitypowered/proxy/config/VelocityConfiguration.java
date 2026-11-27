@@ -17,26 +17,17 @@
 
 package com.velocitypowered.proxy.config;
 
-import com.electronwill.nightconfig.core.CommentedConfig;
-import com.electronwill.nightconfig.core.UnmodifiableConfig;
-import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.annotations.Expose;
 import com.velocitypowered.api.proxy.config.ProxyConfig;
 import com.velocitypowered.api.util.Favicon;
-import com.velocitypowered.proxy.config.migration.ConfigurationMigration;
-import com.velocitypowered.proxy.config.migration.ForwardingMigration;
-import com.velocitypowered.proxy.config.migration.KeyAuthenticationMigration;
-import com.velocitypowered.proxy.config.migration.MiniMessageTranslationsMigration;
-import com.velocitypowered.proxy.config.migration.MotdMigration;
-import com.velocitypowered.proxy.config.migration.PacketLimiterMigration;
-import com.velocitypowered.proxy.config.migration.PingPassthroughMigration;
-import com.velocitypowered.proxy.config.migration.TransferIntegrationMigration;
+import com.velocitypowered.proxy.config.migration.TomlToYamlConverter;
 import com.velocitypowered.proxy.util.AddressUtil;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.leangen.geantyref.TypeToken;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -49,12 +40,20 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.spongepowered.configurate.CommentedConfigurationNode;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.loader.HeaderMode;
+import org.spongepowered.configurate.serialize.SerializationException;
+import org.spongepowered.configurate.yaml.BlankLineStyle;
+import org.spongepowered.configurate.yaml.NodeStyle;
+import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 /**
  * Velocity's configuration.
@@ -63,27 +62,40 @@ public class VelocityConfiguration implements ProxyConfig {
 
   private static final Logger logger = LogManager.getLogger(VelocityConfiguration.class);
 
+  /**
+   * The current {@code velocity.yaml} version. Version 3 superseded the last TOML version, 2.9.
+   */
+  public static final int CONFIG_VERSION = 3;
+  private static final String DEFAULT_RESOURCE = "default-velocity.yaml";
+  private static final String LEGACY_CONFIG_FILE = "velocity.toml";
+  private static final TypeToken<List<String>> STRING_LIST = new TypeToken<>() {};
+  private static final String DEFAULT_FORWARDING_SECRET_FILE = "forwarding.secret";
+  /**
+   * Sections whose keys the user chooses. The shipped entries are examples, not defaults.
+   */
+  public static final Set<String> USER_NAMED_SECTIONS = Set.of("servers", "forced-hosts");
+
   @Expose
-  private String bind = "0.0.0.0:25565";
+  private String bind;
   @Expose
-  private String motd = "<aqua>A Velocity Server";
+  private String motd;
   @Expose
-  private int showMaxPlayers = 500;
+  private int showMaxPlayers;
   @Expose
-  private boolean onlineMode = true;
+  private boolean onlineMode;
   @Expose
-  private boolean preventClientProxyConnections = false;
+  private boolean preventClientProxyConnections;
   @Expose
-  private PlayerInfoForwarding playerInfoForwardingMode = PlayerInfoForwarding.NONE;
-  private byte[] forwardingSecret = generateRandomString(12).getBytes(StandardCharsets.UTF_8);
+  private PlayerInfoForwarding playerInfoForwardingMode;
+  private byte[] forwardingSecret;
   @Expose
-  private boolean announceForge = false;
+  private boolean announceForge;
   @Expose
-  private boolean onlineModeKickExistingPlayers = false;
+  private boolean onlineModeKickExistingPlayers;
   @Expose
-  private PingPassthroughMode pingPassthrough = PingPassthroughMode.DEFAULT;
+  private PingPassthroughMode pingPassthrough;
   @Expose
-  private boolean samplePlayersInPing = false;
+  private boolean samplePlayersInPing;
   private final Servers servers;
   private final ForcedHosts forcedHosts;
   @Expose
@@ -92,22 +104,13 @@ public class VelocityConfiguration implements ProxyConfig {
   private final Query query;
   private final Metrics metrics;
   @Expose
-  private boolean enablePlayerAddressLogging = true;
+  private boolean enablePlayerAddressLogging;
   private @MonotonicNonNull Component motdAsComponent;
   private @Nullable Favicon favicon;
   @Expose
-  private boolean forceKeyAuthentication = true; // Added in 1.19
+  private boolean forceKeyAuthentication; // Added in 1.19
   @Expose
-  private PacketLimiterConfig packetLimiterConfig = PacketLimiterConfig.DEFAULT;
-
-  private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
-      Query query, Metrics metrics) {
-    this.servers = servers;
-    this.forcedHosts = forcedHosts;
-    this.advanced = advanced;
-    this.query = query;
-    this.metrics = metrics;
-  }
+  private PacketLimiterConfig packetLimiterConfig;
 
   private VelocityConfiguration(String bind, String motd, int showMaxPlayers, boolean onlineMode,
       boolean preventClientProxyConnections, boolean announceForge,
@@ -479,130 +482,166 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   /**
-   * Reads the Velocity configuration from {@code path}.
+   * Reads the Velocity configuration from {@code path}. If there is no configuration there yet,
+   * the legacy {@code velocity.toml} beside it is converted, or the shipped defaults are written.
    *
    * @param path the path to read from
    * @return the deserialized Velocity configuration
    * @throws IOException if we could not read from the {@code path}.
    */
-  @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-      justification = "I looked carefully and there's no way SpotBugs is right.")
   public static VelocityConfiguration read(Path path) throws IOException {
-    URL defaultConfigLocation = VelocityConfiguration.class.getClassLoader()
-        .getResource("default-velocity.toml");
-    if (defaultConfigLocation == null) {
-      throw new RuntimeException("Default configuration file does not exist.");
+    final Path legacyPath = path.resolveSibling(LEGACY_CONFIG_FILE);
+    final CommentedConfigurationNode defaults = loadDefaults();
+    if (Files.isDirectory(path)) {
+      throw new IOException(path + " is a directory, not a file. Docker creates a directory when "
+          + "a file that does not exist on the host is mounted; create an empty file there first.");
     }
+    // Written in place rather than through a temporary file moved over it, so a file mounted
+    // into a container keeps working.
+    final YamlConfigurationLoader loader = yamlLoader()
+        .path(path)
+        .sink(() -> Files.newBufferedWriter(path, StandardCharsets.UTF_8))
+        .build();
 
-    // Create the forwarding-secret file on first-time startup if it doesn't exist
-    final Path defaultForwardingSecretPath = Path.of("forwarding.secret");
-    if (Files.notExists(path) && Files.notExists(defaultForwardingSecretPath)) {
-      Files.writeString(defaultForwardingSecretPath, generateRandomString(12));
-    }
-
-    try (final CommentedFileConfig config = CommentedFileConfig.builder(path)
-            .defaultData(defaultConfigLocation)
-            .autosave()
-            .preserveInsertionOrder()
-            .sync()
-            .build()
-    ) {
-      config.load();
-
-      final ConfigurationMigration[] migrations = {
-          new ForwardingMigration(),
-          new KeyAuthenticationMigration(),
-          new MotdMigration(),
-          new MiniMessageTranslationsMigration(),
-          new TransferIntegrationMigration(),
-          new PacketLimiterMigration(),
-          new PingPassthroughMigration(),
-      };
-
-      for (final ConfigurationMigration migration : migrations) {
-        if (migration.shouldMigrate(config)) {
-          migration.migrate(config, logger);
+    if (Files.notExists(path) || Files.readString(path, StandardCharsets.UTF_8).isBlank()) {
+      if (Files.exists(legacyPath)) {
+        TomlToYamlConverter.convert(legacyPath, loader, defaults, logger);
+      } else {
+        // Create the forwarding-secret file on first-time startup if it doesn't exist
+        final Path defaultForwardingSecretPath =
+            path.resolveSibling(DEFAULT_FORWARDING_SECRET_FILE);
+        if (Files.notExists(defaultForwardingSecretPath)) {
+          Files.writeString(defaultForwardingSecretPath, generateRandomString(12));
+        }
+        try (InputStream shipped = defaultsUrl().openStream()) {
+          Files.write(path, shipped.readAllBytes());
         }
       }
+    } else if (Files.exists(legacyPath)) {
+      logger.warn("Both {} and {} exist. Velocity only reads {}; remove {} once you no longer "
+          + "need it.", path.getFileName(), legacyPath.getFileName(), path.getFileName(),
+          legacyPath.getFileName());
+    }
 
-      String forwardingSecretString = System.getenv().getOrDefault(
-              "VELOCITY_FORWARDING_SECRET", "");
-      if (forwardingSecretString.isBlank()) {
-        final String forwardSecretFile = config.get("forwarding-secret-file");
-        final Path secretPath = forwardSecretFile == null
-                ? defaultForwardingSecretPath
-                : Path.of(forwardSecretFile);
-        if (Files.exists(secretPath)) {
-          if (Files.isRegularFile(secretPath)) {
-            forwardingSecretString = String.join("", Files.readAllLines(secretPath));
-          } else {
-            throw new RuntimeException(
-                    "The file " + forwardSecretFile + " is not a valid file or it is a directory.");
-          }
+    final CommentedConfigurationNode config = loader.load();
+    if (config.node("config-version").virtual()) {
+      throw new IllegalStateException("Your " + path.getFileName() + " has no config-version.");
+    }
+    final int version = config.node("config-version").require(Integer.class);
+    if (version != CONFIG_VERSION) {
+      // Once velocity.yaml gets a new version, upgrade older files here with a
+      // ConfigurationTransformation.versionedBuilder() keyed on config-version, and save them.
+      throw new IllegalStateException("Your " + path.getFileName() + " is config-version "
+          + version + ", but this version of Velocity only understands config-version "
+          + CONFIG_VERSION + ".");
+    }
+
+    return read(withDefaults(config, defaults), path);
+  }
+
+  static VelocityConfiguration read(ConfigurationNode config, Path path) throws IOException {
+    String forwardingSecretString = System.getenv().getOrDefault(
+            "VELOCITY_FORWARDING_SECRET", "");
+    if (forwardingSecretString.isBlank()) {
+      final String forwardSecretFile =
+          config.node("forwarding", "secret-file").require(String.class);
+      final Path secretPath = path.resolveSibling(forwardSecretFile);
+      if (Files.exists(secretPath)) {
+        if (Files.isRegularFile(secretPath)) {
+          forwardingSecretString = String.join("", Files.readAllLines(secretPath));
         } else {
-          Files.createFile(secretPath);
-          Files.writeString(secretPath, forwardingSecretString = generateRandomString(12),
-              StandardCharsets.UTF_8);
-          logger.info("The forwarding-secret-file does not exist. A new file has been created at {}",
-              forwardSecretFile);
+          throw new RuntimeException(
+                  "The file " + forwardSecretFile + " is not a valid file or it is a directory.");
         }
+      } else {
+        Files.createFile(secretPath);
+        Files.writeString(secretPath, forwardingSecretString = generateRandomString(12),
+            StandardCharsets.UTF_8);
+        logger.info("The forwarding secret-file does not exist. A new file has been created at {}",
+            forwardSecretFile);
       }
-      final byte[] forwardingSecret = forwardingSecretString.getBytes(StandardCharsets.UTF_8);
-      final String motd = config.getOrElse("motd", "<#09add3>A Velocity Server");
-
-      // Read the rest of the config
-      final CommentedConfig serversConfig = config.get("servers");
-      final CommentedConfig forcedHostsConfig = config.get("forced-hosts");
-      final CommentedConfig advancedConfig = config.get("advanced");
-      final CommentedConfig queryConfig = config.get("query");
-      final CommentedConfig metricsConfig = config.get("metrics");
-      final PlayerInfoForwarding forwardingMode = config.getEnumOrElse(
-              "player-info-forwarding-mode", PlayerInfoForwarding.NONE);
-      final PingPassthroughMode pingPassthrough = PingPassthroughMode.fromConfig(config.get("ping-passthrough"));
-      final boolean samplePlayersInPing = config.getOrElse("sample-players-in-ping", false);
-
-      final String bind = config.getOrElse("bind", "0.0.0.0:25565");
-      final int maxPlayers = config.getIntOrElse("show-max-players", 500);
-      final boolean onlineMode = config.getOrElse("online-mode", true);
-      final boolean forceKeyAuthentication = config.getOrElse("force-key-authentication", true);
-      final boolean announceForge = config.getOrElse("announce-forge", true);
-      final boolean preventClientProxyConnections = config.getOrElse(
-              "prevent-client-proxy-connections", false);
-      final boolean kickExisting = config.getOrElse("kick-existing-players", false);
-      final boolean enablePlayerAddressLogging = config.getOrElse(
-              "enable-player-address-logging", true);
-      final PacketLimiterConfig packetLimiterConfig = PacketLimiterConfig.fromConfig(config.get("packet-limiter"));
-
-      // Throw an exception if the forwarding-secret file is empty and the proxy is using a
-      // forwarding mode that requires it.
-      if (forwardingSecret.length == 0
-              && (forwardingMode == PlayerInfoForwarding.MODERN
-              || forwardingMode == PlayerInfoForwarding.BUNGEEGUARD)) {
-        throw new RuntimeException("The forwarding-secret file must not be empty.");
-      }
-
-      return new VelocityConfiguration(
-              bind,
-              motd,
-              maxPlayers,
-              onlineMode,
-              preventClientProxyConnections,
-              announceForge,
-              forwardingMode,
-              forwardingSecret,
-              kickExisting,
-              pingPassthrough,
-              samplePlayersInPing,
-              enablePlayerAddressLogging,
-              new Servers(serversConfig),
-              new ForcedHosts(forcedHostsConfig),
-              new Advanced(advancedConfig),
-              new Query(queryConfig),
-              new Metrics(metricsConfig),
-              forceKeyAuthentication,
-              packetLimiterConfig
-      );
     }
+    final byte[] forwardingSecret = forwardingSecretString.getBytes(StandardCharsets.UTF_8);
+    final PlayerInfoForwarding forwardingMode =
+        config.node("forwarding", "mode").require(PlayerInfoForwarding.class);
+
+    // Throw an exception if the forwarding-secret file is empty and the proxy is using a
+    // forwarding mode that requires it.
+    if (forwardingSecret.length == 0
+            && (forwardingMode == PlayerInfoForwarding.MODERN
+            || forwardingMode == PlayerInfoForwarding.BUNGEEGUARD)) {
+      throw new RuntimeException("The forwarding-secret file must not be empty.");
+    }
+
+    return new VelocityConfiguration(
+            config.node("bind").require(String.class),
+            config.node("motd").require(String.class),
+            config.node("show-max-players").require(Integer.class),
+            config.node("online-mode").require(Boolean.class),
+            config.node("prevent-client-proxy-connections").require(Boolean.class),
+            config.node("announce-forge").require(Boolean.class),
+            forwardingMode,
+            forwardingSecret,
+            config.node("kick-existing-players").require(Boolean.class),
+            PingPassthroughMode.fromConfig(config.node("ping-passthrough")),
+            config.node("sample-players-in-ping").require(Boolean.class),
+            config.node("logging", "player-addresses").require(Boolean.class),
+            new Servers(config.node("servers"), config.node("try")),
+            new ForcedHosts(config.node("forced-hosts")),
+            new Advanced(config.node("advanced"), config.node("rate-limits"),
+                config.node("logging")),
+            new Query(config.node("query")),
+            new Metrics(config.node("metrics")),
+            config.node("force-key-authentication").require(Boolean.class),
+            PacketLimiterConfig.fromConfig(config.node("packet-limiter"))
+    );
+  }
+
+  /**
+   * Builds a YAML loader that lays files out the way the shipped {@code default-velocity.yaml} is.
+   *
+   * @return the loader builder
+   */
+  public static YamlConfigurationLoader.Builder yamlLoader() {
+    return YamlConfigurationLoader.builder()
+        .indent(2)
+        .nodeStyle(NodeStyle.BLOCK)
+        .commentsEnabled(true)
+        .blankLineStyle(BlankLineStyle.BEFORE_COMMENT)
+        .headerMode(HeaderMode.NONE)
+        .lineLength(Integer.MAX_VALUE)
+        // A missing list must fail like any other missing option, not read as an empty one.
+        .defaultOptions(options -> options.implicitInitialization(false));
+  }
+
+  static CommentedConfigurationNode loadDefaults() throws IOException {
+    return yamlLoader().url(defaultsUrl()).build().load();
+  }
+
+  private static URL defaultsUrl() {
+    final URL url = VelocityConfiguration.class.getClassLoader().getResource(DEFAULT_RESOURCE);
+    if (url == null) {
+      throw new IllegalStateException(DEFAULT_RESOURCE + " is missing from the classpath");
+    }
+    return url;
+  }
+
+  /**
+   * Fills every option {@code config} leaves out from the shipped defaults. Sections whose keys
+   * the user chooses are taken whole from {@code config}, never merged with the shipped examples.
+   *
+   * @param config the user's configuration
+   * @param defaults the shipped defaults
+   * @return the configuration to read
+   */
+  static ConfigurationNode withDefaults(ConfigurationNode config, ConfigurationNode defaults) {
+    final ConfigurationNode fallback = defaults.copy();
+    for (String section : USER_NAMED_SECTIONS) {
+      if (!config.node(section).virtual()) {
+        fallback.removeChild(section);
+      }
+    }
+    return config.copy().mergeFrom(fallback);
   }
 
   /**
@@ -627,65 +666,26 @@ public class VelocityConfiguration implements ProxyConfig {
 
   private static class Servers {
 
-    private Map<String, String> servers = ImmutableMap.of(
-        "lobby", "127.0.0.1:30066",
-        "factions", "127.0.0.1:30067",
-        "minigames", "127.0.0.1:30068"
-    );
-    private List<String> attemptConnectionOrder = ImmutableList.of("lobby");
+    private final Map<String, String> servers;
+    private final List<String> attemptConnectionOrder;
 
-    private Servers() {
-    }
-
-    private Servers(CommentedConfig config) {
-      if (config != null) {
-        Map<String, String> servers = new HashMap<>();
-        for (UnmodifiableConfig.Entry entry : config.entrySet()) {
-          if (entry.getValue() instanceof String) {
-            servers.put(cleanServerName(entry.getKey()), entry.getValue());
-          } else {
-            if (!entry.getKey().equalsIgnoreCase("try")) {
-              throw new IllegalArgumentException(
-                  "Server entry " + entry.getKey() + " is not a string!");
-            }
-          }
-        }
-        this.servers = ImmutableMap.copyOf(servers);
-        this.attemptConnectionOrder = config.getOrElse("try", attemptConnectionOrder);
+    private Servers(ConfigurationNode section, ConfigurationNode attemptConnectionOrder)
+        throws SerializationException {
+      Map<String, String> servers = new HashMap<>();
+      for (Map.Entry<Object, ? extends ConfigurationNode> entry : section.childrenMap().entrySet()) {
+        servers.put(String.valueOf(entry.getKey()), entry.getValue().require(String.class));
       }
-    }
-
-    private Servers(Map<String, String> servers, List<String> attemptConnectionOrder) {
-      this.servers = servers;
-      this.attemptConnectionOrder = attemptConnectionOrder;
+      this.servers = ImmutableMap.copyOf(servers);
+      this.attemptConnectionOrder =
+          ImmutableList.copyOf(attemptConnectionOrder.require(STRING_LIST));
     }
 
     private Map<String, String> getServers() {
       return servers;
     }
 
-    public void setServers(Map<String, String> servers) {
-      this.servers = servers;
-    }
-
     public List<String> getAttemptConnectionOrder() {
       return attemptConnectionOrder;
-    }
-
-    public void setAttemptConnectionOrder(List<String> attemptConnectionOrder) {
-      this.attemptConnectionOrder = attemptConnectionOrder;
-    }
-
-    /**
-     * TOML requires keys to match a regex of {@code [A-Za-z0-9_-]} unless it is wrapped in quotes;
-     * however, the TOML parser returns the key with the quotes so we need to clean the server name
-     * before we pass it onto server registration to keep proper server name behavior.
-     *
-     * @param name the server name to clean
-     * @return the cleaned server name
-     */
-    private String cleanServerName(String name) {
-      return name.replace("\"", "");
     }
 
     @Override
@@ -699,44 +699,20 @@ public class VelocityConfiguration implements ProxyConfig {
 
   private static class ForcedHosts {
 
-    private Map<String, List<String>> forcedHosts = ImmutableMap.of(
-        "lobby.example.com", ImmutableList.of("lobby"),
-        "factions.example.com", ImmutableList.of("factions"),
-        "minigames.example.com", ImmutableList.of("minigames")
-    );
+    private final Map<String, List<String>> forcedHosts;
 
-    private ForcedHosts() {
-    }
-
-    private ForcedHosts(CommentedConfig config) {
-      if (config != null) {
-        Map<String, List<String>> forcedHosts = new HashMap<>();
-        for (UnmodifiableConfig.Entry entry : config.entrySet()) {
-          if (entry.getValue() instanceof String) {
-            forcedHosts.put(entry.getKey().toLowerCase(Locale.ROOT),
-                ImmutableList.of(entry.getValue()));
-          } else if (entry.getValue() instanceof List) {
-            forcedHosts.put(entry.getKey().toLowerCase(Locale.ROOT),
-                ImmutableList.copyOf((List<String>) entry.getValue()));
-          } else {
-            throw new IllegalStateException(
-                "Invalid value of type " + entry.getValue().getClass() + " in forced hosts!");
-          }
-        }
-        this.forcedHosts = ImmutableMap.copyOf(forcedHosts);
+    private ForcedHosts(ConfigurationNode section)
+        throws SerializationException {
+      Map<String, List<String>> forcedHosts = new HashMap<>();
+      for (Map.Entry<Object, ? extends ConfigurationNode> entry : section.childrenMap().entrySet()) {
+        forcedHosts.put(String.valueOf(entry.getKey()).toLowerCase(Locale.ROOT),
+            ImmutableList.copyOf(entry.getValue().require(STRING_LIST)));
       }
-    }
-
-    private ForcedHosts(Map<String, List<String>> forcedHosts) {
-      this.forcedHosts = forcedHosts;
+      this.forcedHosts = ImmutableMap.copyOf(forcedHosts);
     }
 
     private Map<String, List<String>> getForcedHosts() {
       return forcedHosts;
-    }
-
-    private void setForcedHosts(Map<String, List<String>> forcedHosts) {
-      this.forcedHosts = forcedHosts;
     }
 
     @Override
@@ -750,77 +726,72 @@ public class VelocityConfiguration implements ProxyConfig {
   private static class Advanced {
 
     @Expose
-    private int compressionThreshold = 256;
+    private int compressionThreshold;
     @Expose
-    private int compressionLevel = -1;
+    private int compressionLevel;
     @Expose
-    private int loginRatelimit = 3000;
+    private int loginRatelimit;
     @Expose
-    private int connectionTimeout = 5000;
+    private int connectionTimeout;
     @Expose
-    private int readTimeout = 30000;
+    private int readTimeout;
     @Expose
-    private boolean proxyProtocol = false;
+    private boolean proxyProtocol;
     @Expose
-    private boolean tcpFastOpen = false;
+    private boolean tcpFastOpen;
     @Expose
-    private boolean bungeePluginMessageChannel = true;
+    private boolean bungeePluginMessageChannel;
     @Expose
-    private boolean showPingRequests = false;
+    private boolean showPingRequests;
     @Expose
-    private boolean failoverOnUnexpectedServerDisconnect = true;
+    private boolean failoverOnUnexpectedServerDisconnect;
     @Expose
-    private boolean announceProxyCommands = true;
+    private boolean announceProxyCommands;
     @Expose
-    private boolean logCommandExecutions = false;
+    private boolean logCommandExecutions;
     @Expose
-    private boolean logPlayerConnections = true;
+    private boolean logPlayerConnections;
     @Expose
-    private boolean acceptTransfers = false;
+    private boolean acceptTransfers;
     @Expose
-    private boolean enableReusePort = false;
+    private boolean enableReusePort;
     @Expose
-    private int commandRateLimit = 50;
+    private int commandRateLimit;
     @Expose
-    private boolean forwardCommandsIfRateLimited = true;
+    private boolean forwardCommandsIfRateLimited;
     @Expose
-    private int kickAfterRateLimitedCommands = 5;
+    private int kickAfterRateLimitedCommands;
     @Expose
-    private int tabCompleteRateLimit = 50;
+    private int tabCompleteRateLimit;
     @Expose
-    private int kickAfterRateLimitedTabCompletes = 10;
+    private int kickAfterRateLimitedTabCompletes;
 
-    private Advanced() {
-    }
-
-    private Advanced(CommentedConfig config) {
-      if (config != null) {
-        this.compressionThreshold = config.getIntOrElse("compression-threshold", 256);
-        this.compressionLevel = config.getIntOrElse("compression-level", -1);
-        this.loginRatelimit = config.getIntOrElse("login-ratelimit", 3000);
-        this.connectionTimeout = config.getIntOrElse("connection-timeout", 5000);
-        this.readTimeout = config.getIntOrElse("read-timeout", 30000);
-        if (config.contains("haproxy-protocol")) {
-          this.proxyProtocol = config.getOrElse("haproxy-protocol", false);
-        } else {
-          this.proxyProtocol = config.getOrElse("proxy-protocol", false);
-        }
-        this.tcpFastOpen = config.getOrElse("tcp-fast-open", false);
-        this.bungeePluginMessageChannel = config.getOrElse("bungee-plugin-message-channel", true);
-        this.showPingRequests = config.getOrElse("show-ping-requests", false);
-        this.failoverOnUnexpectedServerDisconnect = config
-            .getOrElse("failover-on-unexpected-server-disconnect", true);
-        this.announceProxyCommands = config.getOrElse("announce-proxy-commands", true);
-        this.logCommandExecutions = config.getOrElse("log-command-executions", false);
-        this.logPlayerConnections = config.getOrElse("log-player-connections", true);
-        this.acceptTransfers = config.getOrElse("accepts-transfers", false);
-        this.enableReusePort = config.getOrElse("enable-reuse-port", false);
-        this.commandRateLimit = config.getIntOrElse("command-rate-limit", 25);
-        this.forwardCommandsIfRateLimited = config.getOrElse("forward-commands-if-rate-limited", true);
-        this.kickAfterRateLimitedCommands = config.getIntOrElse("kick-after-rate-limited-commands", 0);
-        this.tabCompleteRateLimit = config.getIntOrElse("tab-complete-rate-limit", 10); // very lenient
-        this.kickAfterRateLimitedTabCompletes = config.getIntOrElse("kick-after-rate-limited-tab-completes", 0);
-      }
+    private Advanced(ConfigurationNode section, ConfigurationNode rateLimits,
+        ConfigurationNode logging) throws SerializationException {
+      this.compressionThreshold = section.node("compression-threshold").require(Integer.class);
+      this.compressionLevel = section.node("compression-level").require(Integer.class);
+      this.loginRatelimit = rateLimits.node("login").require(Integer.class);
+      this.connectionTimeout = section.node("connection-timeout").require(Integer.class);
+      this.readTimeout = section.node("read-timeout").require(Integer.class);
+      this.proxyProtocol = section.node("haproxy-protocol").require(Boolean.class);
+      this.tcpFastOpen = section.node("tcp-fast-open").require(Boolean.class);
+      this.bungeePluginMessageChannel =
+          section.node("bungee-plugin-message-channel").require(Boolean.class);
+      this.showPingRequests = logging.node("ping-requests").require(Boolean.class);
+      this.failoverOnUnexpectedServerDisconnect =
+          section.node("failover-on-unexpected-server-disconnect").require(Boolean.class);
+      this.announceProxyCommands = section.node("announce-proxy-commands").require(Boolean.class);
+      this.logCommandExecutions = logging.node("commands").require(Boolean.class);
+      this.logPlayerConnections = logging.node("player-connections").require(Boolean.class);
+      this.acceptTransfers = section.node("accepts-transfers").require(Boolean.class);
+      this.enableReusePort = section.node("enable-reuse-port").require(Boolean.class);
+      this.commandRateLimit = rateLimits.node("commands").require(Integer.class);
+      this.forwardCommandsIfRateLimited =
+          rateLimits.node("forward-commands-if-limited").require(Boolean.class);
+      this.kickAfterRateLimitedCommands = rateLimits.node("kick-after-commands").require(Integer.class);
+      this.tabCompleteRateLimit = rateLimits.node("tab-completes").require(Integer.class);
+      this.kickAfterRateLimitedTabCompletes =
+          rateLimits.node("kick-after-tab-completes").require(Integer.class);
     }
 
     public int getCompressionThreshold() {
@@ -932,31 +903,20 @@ public class VelocityConfiguration implements ProxyConfig {
   private static class Query {
 
     @Expose
-    private boolean queryEnabled = false;
+    private final boolean queryEnabled;
     @Expose
-    private int queryPort = 25565;
+    private final int queryPort;
     @Expose
-    private String queryMap = "Velocity";
+    private final String queryMap;
     @Expose
-    private boolean showPlugins = false;
+    private final boolean showPlugins;
 
-    private Query() {
-    }
-
-    private Query(boolean queryEnabled, int queryPort, String queryMap, boolean showPlugins) {
-      this.queryEnabled = queryEnabled;
-      this.queryPort = queryPort;
-      this.queryMap = queryMap;
-      this.showPlugins = showPlugins;
-    }
-
-    private Query(CommentedConfig config) {
-      if (config != null) {
-        this.queryEnabled = config.getOrElse("enabled", false);
-        this.queryPort = config.getIntOrElse("port", 25565);
-        this.queryMap = config.getOrElse("map", "Velocity");
-        this.showPlugins = config.getOrElse("show-plugins", false);
-      }
+    private Query(ConfigurationNode section)
+        throws SerializationException {
+      this.queryEnabled = section.node("enabled").require(Boolean.class);
+      this.queryPort = section.node("port").require(Integer.class);
+      this.queryMap = section.node("map").require(String.class);
+      this.showPlugins = section.node("show-plugins").require(Boolean.class);
     }
 
     public boolean isQueryEnabled() {
@@ -991,12 +951,11 @@ public class VelocityConfiguration implements ProxyConfig {
    */
   public static class Metrics {
 
-    private boolean enabled = true;
+    private final boolean enabled;
 
-    private Metrics(CommentedConfig toml) {
-      if (toml != null) {
-        this.enabled = toml.getOrElse("enabled", true);
-      }
+    private Metrics(ConfigurationNode section)
+        throws SerializationException {
+      this.enabled = section.node("enabled").require(Boolean.class);
     }
 
     public boolean isEnabled() {
@@ -1016,22 +975,19 @@ public class VelocityConfiguration implements ProxyConfig {
     public static PacketLimiterConfig DEFAULT = new PacketLimiterConfig(7, -1, -1, 5242880);
 
     /**
-     * returns a PacketLimiterConfig from a config section, or the default if the section is null.
+     * Returns the PacketLimiterConfig in a config section.
      *
-     * @param config the configuration object to parse
-     * @return the packet limiter config, or the default if {@code config} is null
+     * @param section the configuration section to parse
+     * @return the packet limiter config
      */
-    public static PacketLimiterConfig fromConfig(CommentedConfig config) {
-      if (config != null) {
-        return new PacketLimiterConfig(
-            config.getIntOrElse("interval", DEFAULT.interval()),
-            config.getIntOrElse("packets-per-second", DEFAULT.pps()),
-            config.getIntOrElse("bytes-per-second", DEFAULT.bytes()),
-            config.getIntOrElse("decompressed-bytes-per-second", DEFAULT.bytesAfterDecompression())
-        );
-      } else {
-        return DEFAULT;
-      }
+    public static PacketLimiterConfig fromConfig(ConfigurationNode section)
+        throws SerializationException {
+      return new PacketLimiterConfig(
+          section.node("interval").require(Integer.class),
+          section.node("packets-per-second").require(Integer.class),
+          section.node("bytes-per-second").require(Integer.class),
+          section.node("decompressed-bytes-per-second").require(Integer.class)
+      );
     }
   }
 }
