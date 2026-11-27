@@ -16,7 +16,9 @@
  */
 
 package com.velocitypowered.proxy.config;
-import com.electronwill.nightconfig.core.Config;
+
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.serialize.SerializationException;
 
 /**
  * Object to contain all the things that can be toggled for ping passthrough.
@@ -29,32 +31,21 @@ import com.electronwill.nightconfig.core.Config;
  */
 public record PingPassthroughMode(boolean version, boolean players,
     boolean description, boolean favicon, boolean modinfo) {
-  public static final PingPassthroughMode DEFAULT = new PingPassthroughMode();
-  
-  /**
-   * Creates a default PingPassthroughMode.
-   */
-  private PingPassthroughMode() {
-    this(false, false, false, false, false);
-  }
 
   /**
-   * Returns a PingPassthroughMode from a config section, or the default if the section is null.
-   * Based on the code for PacketLimiterConfig.
+   * Returns the PingPassthroughMode in a config section.
    *
-   * @param config The configuration object to parse.
-   * @return The PingPassthroughMode, or the default if {@code config} is null.
+   * @param section The configuration section to parse.
+   * @return The PingPassthroughMode.
    */
-  public static PingPassthroughMode fromConfig(Config config) {
-    if (config == null) {
-      return DEFAULT;
-    }
+  public static PingPassthroughMode fromConfig(ConfigurationNode section)
+      throws SerializationException {
     return new PingPassthroughMode(
-        config.getOrElse("version", DEFAULT.version()),
-        config.getOrElse("players", DEFAULT.players()),
-        config.getOrElse("description", DEFAULT.description()),
-        config.getOrElse("favicon", DEFAULT.favicon()),
-        config.getOrElse("modinfo", DEFAULT.modinfo()));
+        section.node("version").require(Boolean.class),
+        section.node("players").require(Boolean.class),
+        section.node("description").require(Boolean.class),
+        section.node("favicon").require(Boolean.class),
+        section.node("modinfo").require(Boolean.class));
   }
 
   public boolean enabled() {

@@ -5,6 +5,10 @@ dependencyResolutionManagement {
     repositories {
         mavenCentral()
         maven("https://repo.papermc.io/repository/maven-public/")
+        // TODO: remove once repo.papermc.io mirrors GeyserMC's Configurate fork
+        maven("https://repo.opencollab.dev/maven-releases/") {
+            content { includeVersionByRegex("org\\.spongepowered", "configurate-.*", ".*-GeyserMC") }
+        }
     }
 }
 
