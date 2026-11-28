@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2021 Velocity Contributors
+ * Copyright (C) 2020-2026 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ import java.security.GeneralSecurityException;
 
 class OpenSslCipherImpl {
 
-  static native long init(byte[] key, boolean encrypt) throws GeneralSecurityException;
+  static native long init(byte[] key, byte[] iv, boolean encrypt) throws GeneralSecurityException;
 
   static native void process(long ctx, long source, int len, long dest);
 

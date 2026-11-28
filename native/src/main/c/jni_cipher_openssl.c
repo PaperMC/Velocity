@@ -1,6 +1,7 @@
 #include <jni.h>
 #include <stdlib.h>
 #include <string.h>
+#include <openssl/crypto.h>
 #include <openssl/evp.h>
 #include "jni_util.h"
 
@@ -10,45 +11,68 @@ JNIEXPORT jlong JNICALL
 Java_com_velocitypowered_natives_encryption_OpenSslCipherImpl_init(JNIEnv *env,
     jclass clazz,
     jbyteArray key,
+    jbyteArray iv,
     jboolean encrypt)
 {
-    jsize keyLen = (*env)->GetArrayLength(env, key);
-    if (keyLen != 16) {
-        throwException(env, "java/lang/IllegalArgumentException", "cipher not 16 bytes");
+    if (key == NULL) {
+        throwException(env, "java/lang/NullPointerException", "key");
+        return 0;
+    }
+    if (iv == NULL) {
+        throwException(env, "java/lang/NullPointerException", "iv");
         return 0;
     }
 
-    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-    if (ctx == NULL) {
-        throwException(env, "java/lang/OutOfMemoryError", "allocate cipher");
+    jsize keyLen = (*env)->GetArrayLength(env, key);
+    if (keyLen != 16) {
+        throwException(env, "java/lang/IllegalArgumentException", "key not 16 bytes");
+        return 0;
+    }
+
+    jsize ivLen = (*env)->GetArrayLength(env, iv);
+    if (ivLen != 16) {
+        throwException(env, "java/lang/IllegalArgumentException", "IV not 16 bytes");
         return 0;
     }
 
     // Since we know the array size is always bounded, we can just use Get<Primitive>ArrayRegion
-    // and save ourselves some error-checking headaches.
+    // and save ourselves some error-checking headaches. Both buffers hold key material, so they
+    // are wiped before returning on every path.
     jbyte keyBytes[16];
-    (*env)->GetByteArrayRegion(env, key, 0, keyLen, (jbyte*) keyBytes);
+    jbyte ivBytes[16];
+    jlong ret = 0;
+    EVP_CIPHER_CTX *ctx = NULL;
+
+    (*env)->GetByteArrayRegion(env, key, 0, keyLen, keyBytes);
     if ((*env)->ExceptionCheck(env)) {
-        return 0;
+        goto cleanup;
     }
 
-    // But, you're saying, *why* are we using the key as the IV? After all, reusing the key as
-    // the IV defeats the entire point - we might as well just initialize it to all zeroes.
-    //
-    // You can blame Mojang. For the record, we also don't consider the Minecraft protocol
-    // encryption scheme to be secure, and it has reached the point where any serious cryptographic
-    // protocol needs a refresh. There are multiple obvious weaknesses, and this is far from the
-    // most serious.
-    //
-    // If you are using Minecraft in a security-sensitive application, *I don't know what to say.*
-    int result = EVP_CipherInit(ctx, EVP_aes_128_cfb8(), (byte*) keyBytes, (byte*) keyBytes,
-        encrypt);
-    if (result != 1) {
+    (*env)->GetByteArrayRegion(env, iv, 0, ivLen, ivBytes);
+    if ((*env)->ExceptionCheck(env)) {
+        goto cleanup;
+    }
+
+    ctx = EVP_CIPHER_CTX_new();
+    if (ctx == NULL) {
+        throwException(env, "java/lang/OutOfMemoryError", "allocate cipher");
+        goto cleanup;
+    }
+
+    // Before 26.4, the protocol used the shared secret as both the key and the IV. That is the
+    // caller's business now: the Java side passes the key as the IV for those older protocols.
+    if (EVP_CipherInit(ctx, EVP_aes_128_cfb8(), (byte*) keyBytes, (byte*) ivBytes,
+            encrypt) != 1) {
         EVP_CIPHER_CTX_free(ctx);
         throwException(env, "java/security/GeneralSecurityException", "openssl initialize cipher");
-        return 0;
+        goto cleanup;
     }
-    return (jlong) ctx;
+    ret = (jlong) ctx;
+
+cleanup:
+    OPENSSL_cleanse(keyBytes, sizeof(keyBytes));
+    OPENSSL_cleanse(ivBytes, sizeof(ivBytes));
+    return ret;
 }
 
 JNIEXPORT void JNICALL

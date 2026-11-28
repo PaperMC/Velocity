@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2023 Velocity Contributors
+ * Copyright (C) 2018-2026 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.natives.util.BufferPreference;
 import io.netty.buffer.ByteBuf;
 import java.security.GeneralSecurityException;
+import java.util.Objects;
 import javax.crypto.SecretKey;
 
 /**
@@ -30,20 +31,21 @@ public class NativeVelocityCipher implements VelocityCipher {
 
   public static final VelocityCipherFactory FACTORY = new VelocityCipherFactory() {
     @Override
-    public VelocityCipher forEncryption(SecretKey key) throws GeneralSecurityException {
-      return new NativeVelocityCipher(true, key);
+    public VelocityCipher forEncryption(SecretKey key, byte[] iv) throws GeneralSecurityException {
+      return new NativeVelocityCipher(true, key, iv);
     }
 
     @Override
-    public VelocityCipher forDecryption(SecretKey key) throws GeneralSecurityException {
-      return new NativeVelocityCipher(false, key);
+    public VelocityCipher forDecryption(SecretKey key, byte[] iv) throws GeneralSecurityException {
+      return new NativeVelocityCipher(false, key, iv);
     }
   };
   private final long ctx;
   private boolean disposed = false;
 
-  private NativeVelocityCipher(boolean encrypt, SecretKey key) throws GeneralSecurityException {
-    this.ctx = OpenSslCipherImpl.init(key.getEncoded(), encrypt);
+  private NativeVelocityCipher(boolean encrypt, SecretKey key, byte[] iv)
+      throws GeneralSecurityException {
+    this.ctx = OpenSslCipherImpl.init(key.getEncoded(), Objects.requireNonNull(iv, "iv"), encrypt);
   }
 
   @Override
