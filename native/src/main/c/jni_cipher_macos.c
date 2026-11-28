@@ -1,3 +1,5 @@
+// Needed for memset_s, which (unlike memset) the compiler may not optimize away.
+#define __STDC_WANT_LIB_EXT1__ 1
 #include <CommonCrypto/CommonCryptor.h>
 #include <jni.h>
 #include <stdlib.h>
@@ -13,9 +15,18 @@ Java_com_velocitypowered_natives_encryption_OpenSslCipherImpl_init(JNIEnv *env,
     jbyteArray iv,
     jboolean encrypt)
 {
+    if (key == NULL) {
+        throwException(env, "java/lang/NullPointerException", "key");
+        return 0;
+    }
+    if (iv == NULL) {
+        throwException(env, "java/lang/NullPointerException", "iv");
+        return 0;
+    }
+
     jsize keyLen = (*env)->GetArrayLength(env, key);
     if (keyLen != 16) {
-        throwException(env, "java/lang/IllegalArgumentException", "cipher not 16 bytes");
+        throwException(env, "java/lang/IllegalArgumentException", "key not 16 bytes");
         return 0;
     }
 
@@ -26,23 +37,27 @@ Java_com_velocitypowered_natives_encryption_OpenSslCipherImpl_init(JNIEnv *env,
     }
 
     // Since we know the array size is always bounded, we can just use Get<Primitive>ArrayRegion
-    // and save ourselves some error-checking headaches.
+    // and save ourselves some error-checking headaches. Both buffers hold key material, so they
+    // are wiped before returning on every path.
     jbyte keyBytes[16];
-    (*env)->GetByteArrayRegion(env, key, 0, keyLen, (jbyte*) keyBytes);
+    jbyte ivBytes[16];
+    jlong ret = 0;
+    CCCryptorRef cryptor = NULL;
+    CCCryptorStatus result;
+
+    (*env)->GetByteArrayRegion(env, key, 0, keyLen, keyBytes);
     if ((*env)->ExceptionCheck(env)) {
-        return 0;
+        goto cleanup;
     }
 
-    jbyte ivBytes[16];
-    (*env)->GetByteArrayRegion(env, iv, 0, ivLen, (jbyte*) ivBytes);
+    (*env)->GetByteArrayRegion(env, iv, 0, ivLen, ivBytes);
     if ((*env)->ExceptionCheck(env)) {
-        return 0;
+        goto cleanup;
     }
 
     // Before 26.4, the protocol used the shared secret as both the key and the IV. That is the
     // caller's business now: the Java side passes the key as the IV for those older protocols.
-    CCCryptorRef cryptor = NULL;
-    CCCryptorStatus result = CCCryptorCreateWithMode(encrypt ? kCCEncrypt : kCCDecrypt,
+    result = CCCryptorCreateWithMode(encrypt ? kCCEncrypt : kCCDecrypt,
         kCCModeCFB8,
         kCCAlgorithmAES128,
         ccNoPadding,
@@ -55,10 +70,16 @@ Java_com_velocitypowered_natives_encryption_OpenSslCipherImpl_init(JNIEnv *env,
         0,
         &cryptor);
     if (result != kCCSuccess) {
-        throwException(env, "java/security/GeneralSecurityException", "openssl initialize cipher");
-        return 0;
+        throwException(env, "java/security/GeneralSecurityException",
+            "commoncrypto initialize cipher");
+        goto cleanup;
     }
-    return (jlong) cryptor;
+    ret = (jlong) cryptor;
+
+cleanup:
+    memset_s(keyBytes, sizeof(keyBytes), 0, sizeof(keyBytes));
+    memset_s(ivBytes, sizeof(ivBytes), 0, sizeof(ivBytes));
+    return ret;
 }
 
 JNIEXPORT void JNICALL

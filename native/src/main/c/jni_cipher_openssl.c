@@ -1,6 +1,7 @@
 #include <jni.h>
 #include <stdlib.h>
 #include <string.h>
+#include <openssl/crypto.h>
 #include <openssl/evp.h>
 #include "jni_util.h"
 
@@ -13,9 +14,18 @@ Java_com_velocitypowered_natives_encryption_OpenSslCipherImpl_init(JNIEnv *env,
     jbyteArray iv,
     jboolean encrypt)
 {
+    if (key == NULL) {
+        throwException(env, "java/lang/NullPointerException", "key");
+        return 0;
+    }
+    if (iv == NULL) {
+        throwException(env, "java/lang/NullPointerException", "iv");
+        return 0;
+    }
+
     jsize keyLen = (*env)->GetArrayLength(env, key);
     if (keyLen != 16) {
-        throwException(env, "java/lang/IllegalArgumentException", "cipher not 16 bytes");
+        throwException(env, "java/lang/IllegalArgumentException", "key not 16 bytes");
         return 0;
     }
 
@@ -26,35 +36,43 @@ Java_com_velocitypowered_natives_encryption_OpenSslCipherImpl_init(JNIEnv *env,
     }
 
     // Since we know the array size is always bounded, we can just use Get<Primitive>ArrayRegion
-    // and save ourselves some error-checking headaches.
+    // and save ourselves some error-checking headaches. Both buffers hold key material, so they
+    // are wiped before returning on every path.
     jbyte keyBytes[16];
-    (*env)->GetByteArrayRegion(env, key, 0, keyLen, (jbyte*) keyBytes);
-    if ((*env)->ExceptionCheck(env)) {
-        return 0;
-    }
-
     jbyte ivBytes[16];
-    (*env)->GetByteArrayRegion(env, iv, 0, ivLen, (jbyte*) ivBytes);
+    jlong ret = 0;
+    EVP_CIPHER_CTX *ctx = NULL;
+
+    (*env)->GetByteArrayRegion(env, key, 0, keyLen, keyBytes);
     if ((*env)->ExceptionCheck(env)) {
-        return 0;
+        goto cleanup;
     }
 
-    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    (*env)->GetByteArrayRegion(env, iv, 0, ivLen, ivBytes);
+    if ((*env)->ExceptionCheck(env)) {
+        goto cleanup;
+    }
+
+    ctx = EVP_CIPHER_CTX_new();
     if (ctx == NULL) {
         throwException(env, "java/lang/OutOfMemoryError", "allocate cipher");
-        return 0;
+        goto cleanup;
     }
 
     // Before 26.4, the protocol used the shared secret as both the key and the IV. That is the
     // caller's business now: the Java side passes the key as the IV for those older protocols.
-    int result = EVP_CipherInit(ctx, EVP_aes_128_cfb8(), (byte*) keyBytes, (byte*) ivBytes,
-        encrypt);
-    if (result != 1) {
+    if (EVP_CipherInit(ctx, EVP_aes_128_cfb8(), (byte*) keyBytes, (byte*) ivBytes,
+            encrypt) != 1) {
         EVP_CIPHER_CTX_free(ctx);
         throwException(env, "java/security/GeneralSecurityException", "openssl initialize cipher");
-        return 0;
+        goto cleanup;
     }
-    return (jlong) ctx;
+    ret = (jlong) ctx;
+
+cleanup:
+    OPENSSL_cleanse(keyBytes, sizeof(keyBytes));
+    OPENSSL_cleanse(ivBytes, sizeof(ivBytes));
+    return ret;
 }
 
 JNIEXPORT void JNICALL

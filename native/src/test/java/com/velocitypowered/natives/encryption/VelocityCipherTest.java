@@ -181,6 +181,19 @@ class VelocityCipherTest {
   }
 
   @Test
+  void nativeRejectsBadArrays() {
+    assumeTrue(Natives.cipher.get() != JavaVelocityCipher.FACTORY, "No native cipher on this host");
+
+    // These would crash the JVM rather than throw if the native code didn't check them itself.
+    assertThrows(NullPointerException.class, () -> OpenSslCipherImpl.init(null, AES_IV, true));
+    assertThrows(NullPointerException.class, () -> OpenSslCipherImpl.init(AES_KEY, null, true));
+    assertThrows(IllegalArgumentException.class,
+        () -> OpenSslCipherImpl.init(new byte[15], AES_IV, true));
+    assertThrows(IllegalArgumentException.class,
+        () -> OpenSslCipherImpl.init(AES_KEY, new byte[17], true));
+  }
+
+  @Test
   void nativeMatchesJava() throws GeneralSecurityException {
     VelocityCipherFactory nativeFactory = Natives.cipher.get();
     assumeTrue(nativeFactory != JavaVelocityCipher.FACTORY, "No native cipher on this host");
