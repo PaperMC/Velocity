@@ -10,11 +10,18 @@ JNIEXPORT jlong JNICALL
 Java_com_velocitypowered_natives_encryption_OpenSslCipherImpl_init(JNIEnv *env,
     jclass clazz,
     jbyteArray key,
+    jbyteArray iv,
     jboolean encrypt)
 {
     jsize keyLen = (*env)->GetArrayLength(env, key);
     if (keyLen != 16) {
         throwException(env, "java/lang/IllegalArgumentException", "cipher not 16 bytes");
+        return 0;
+    }
+
+    jsize ivLen = (*env)->GetArrayLength(env, iv);
+    if (ivLen != 16) {
+        throwException(env, "java/lang/IllegalArgumentException", "IV not 16 bytes");
         return 0;
     }
 
@@ -26,21 +33,20 @@ Java_com_velocitypowered_natives_encryption_OpenSslCipherImpl_init(JNIEnv *env,
         return 0;
     }
 
-    // But, you're saying, *why* are we using the key as the IV? After all, reusing the key as
-    // the IV defeats the entire point - we might as well just initialize it to all zeroes.
-    //
-    // You can blame Mojang. For the record, we also don't consider the Minecraft protocol
-    // encryption scheme to be secure, and it has reached the point where any serious cryptographic
-    // protocol needs a refresh. There are multiple obvious weaknesses, and this is far from the
-    // most serious.
-    //
-    // If you are using Minecraft in a security-sensitive application, *I don't know what to say.*
+    jbyte ivBytes[16];
+    (*env)->GetByteArrayRegion(env, iv, 0, ivLen, (jbyte*) ivBytes);
+    if ((*env)->ExceptionCheck(env)) {
+        return 0;
+    }
+
+    // Before 26.4, the protocol used the shared secret as both the key and the IV. That is the
+    // caller's business now: the Java side passes the key as the IV for those older protocols.
     CCCryptorRef cryptor = NULL;
     CCCryptorStatus result = CCCryptorCreateWithMode(encrypt ? kCCEncrypt : kCCDecrypt,
         kCCModeCFB8,
         kCCAlgorithmAES128,
         ccNoPadding,
-        keyBytes,
+        ivBytes,
         keyBytes,
         16,
         NULL,

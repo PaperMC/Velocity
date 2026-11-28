@@ -32,6 +32,23 @@ public class EncryptionRequestPacket implements MinecraftPacket {
   private byte[] publicKey = EMPTY_BYTE_ARRAY;
   private byte[] verifyToken = EMPTY_BYTE_ARRAY;
   private boolean shouldAuthenticate = true;
+  private long salt; // 26.4+
+
+  public String getServerId() {
+    return serverId;
+  }
+
+  public void setServerId(String serverId) {
+    this.serverId = serverId;
+  }
+
+  public long getSalt() {
+    return salt;
+  }
+
+  public void setSalt(long salt) {
+    this.salt = salt;
+  }
 
   public byte[] getPublicKey() {
     return publicKey.clone();
@@ -54,11 +71,22 @@ public class EncryptionRequestPacket implements MinecraftPacket {
     return "EncryptionRequest{"
         + "publicKey=" + Arrays.toString(publicKey)
         + ", verifyToken=" + Arrays.toString(verifyToken)
+        + ", salt=" + salt
         + '}';
   }
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_26_4)) {
+      // 26.4+: X25519 key exchange, no verify token
+      salt = buf.readLong();
+      serverId = ProtocolUtils.readString(buf, 20);
+      publicKey = ProtocolUtils.readByteArray(buf, 384);
+      verifyToken = EMPTY_BYTE_ARRAY;
+      shouldAuthenticate = buf.readBoolean();
+      return;
+    }
+
     this.serverId = ProtocolUtils.readString(buf, 20);
 
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
@@ -75,6 +103,14 @@ public class EncryptionRequestPacket implements MinecraftPacket {
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_26_4)) {
+      buf.writeLong(salt);
+      ProtocolUtils.writeString(buf, this.serverId);
+      ProtocolUtils.writeByteArray(buf, publicKey);
+      buf.writeBoolean(shouldAuthenticate);
+      return;
+    }
+
     ProtocolUtils.writeString(buf, this.serverId);
 
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {

@@ -34,10 +34,14 @@ public class EncryptionResponsePacket implements MinecraftPacket {
 
   private static final QuietDecoderException NO_SALT = new QuietDecoderException(
       "Encryption response didn't contain salt");
+  private static final int SIGNATURE_LENGTH_26_4 = 32;
 
   private byte[] sharedSecret = EMPTY_BYTE_ARRAY;
   private byte[] verifyToken = EMPTY_BYTE_ARRAY;
   private @Nullable Long salt;
+  // 26.4+: the client's X25519 public key (X.509) and the HMAC over the key exchange
+  private byte[] publicKey = EMPTY_BYTE_ARRAY;
+  private byte[] signature = EMPTY_BYTE_ARRAY;
 
   public byte[] getSharedSecret() {
     return sharedSecret.clone();
@@ -45,6 +49,14 @@ public class EncryptionResponsePacket implements MinecraftPacket {
 
   public byte[] getVerifyToken() {
     return verifyToken.clone();
+  }
+
+  public byte[] getPublicKey() {
+    return publicKey.clone();
+  }
+
+  public byte[] getSignature() {
+    return signature.clone();
   }
 
   public long getSalt() {
@@ -59,12 +71,18 @@ public class EncryptionResponsePacket implements MinecraftPacket {
     return "EncryptionResponse{"
         + "sharedSecret=" + Arrays.toString(sharedSecret)
         + ", verifyToken=" + Arrays.toString(verifyToken)
+        + ", publicKey=" + Arrays.toString(publicKey)
+        + ", signature=" + Arrays.toString(signature)
         + '}';
   }
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_26_4)) {
+      this.publicKey = ProtocolUtils.readByteArray(buf, 384);
+      this.signature = new byte[SIGNATURE_LENGTH_26_4];
+      buf.readBytes(this.signature);
+    } else if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       this.sharedSecret = ProtocolUtils.readByteArray(buf, 128);
 
       if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)
@@ -83,7 +101,10 @@ public class EncryptionResponsePacket implements MinecraftPacket {
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_26_4)) {
+      ProtocolUtils.writeByteArray(buf, publicKey);
+      buf.writeBytes(signature);
+    } else if (version.noLessThan(ProtocolVersion.MINECRAFT_1_8)) {
       ProtocolUtils.writeByteArray(buf, sharedSecret);
       if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)
           && version.lessThan(ProtocolVersion.MINECRAFT_1_19_3)) {
@@ -108,6 +129,11 @@ public class EncryptionResponsePacket implements MinecraftPacket {
 
   @Override
   public int decodeExpectedMaxLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_26_4)) {
+      // public key (2-byte length prefix + up to 384 bytes) + fixed signature
+      return 2 + 384 + SIGNATURE_LENGTH_26_4;
+    }
+
     // It turns out these come out to the same length, whether we're talking >=1.8 or not.
     // The length prefix always winds up being 2 bytes.
     int base = 256 + 2 + 2;
@@ -124,6 +150,10 @@ public class EncryptionResponsePacket implements MinecraftPacket {
 
   @Override
   public int decodeExpectedMinLength(ByteBuf buf, Direction direction, ProtocolVersion version) {
+    if (version.noLessThan(ProtocolVersion.MINECRAFT_26_4)) {
+      return 1 + SIGNATURE_LENGTH_26_4;
+    }
+
     int base = decodeExpectedMaxLength(buf, direction, version);
     if (version.noLessThan(ProtocolVersion.MINECRAFT_1_19)) {
       // These are "optional"

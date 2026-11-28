@@ -37,6 +37,7 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.connection.client.HandshakeSessionHandler;
 import com.velocitypowered.proxy.connection.client.InitialLoginSessionHandler;
 import com.velocitypowered.proxy.connection.client.StatusSessionHandler;
+import com.velocitypowered.proxy.crypto.SessionKeyExchange;
 import com.velocitypowered.proxy.network.Connections;
 import com.velocitypowered.proxy.network.limiter.SimpleBytesPerSecondLimiter;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
@@ -631,6 +632,30 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     VelocityCipherFactory factory = Natives.cipher.get();
     VelocityCipher decryptionCipher = factory.forDecryption(key);
     VelocityCipher encryptionCipher = factory.forEncryption(key);
+    channel.pipeline()
+        .addBefore(FRAME_DECODER, CIPHER_DECODER, new MinecraftCipherDecoder(decryptionCipher));
+    channel.pipeline()
+        .addBefore(FRAME_ENCODER, CIPHER_ENCODER, new MinecraftCipherEncoder(encryptionCipher));
+
+    channel.pipeline().fireUserEventTriggered(VelocityConnectionEvent.ENCRYPTION_ENABLED);
+  }
+
+  /**
+   * Enables 26.4+ encryption on the connection: a separate key and IV for each direction.
+   *
+   * @param keys the session keys from the key exchange
+   * @throws GeneralSecurityException if encryption can't be enabled
+   */
+  public void enableEncryption(SessionKeyExchange.SessionKeys keys)
+      throws GeneralSecurityException {
+    ensureOpen();
+    ensureInEventLoop();
+
+    VelocityCipherFactory factory = Natives.cipher.get();
+    VelocityCipher decryptionCipher =
+        factory.forDecryption(keys.clientToServer(), keys.clientToServerIv());
+    VelocityCipher encryptionCipher =
+        factory.forEncryption(keys.serverToClient(), keys.serverToClientIv());
     channel.pipeline()
         .addBefore(FRAME_DECODER, CIPHER_DECODER, new MinecraftCipherDecoder(decryptionCipher));
     channel.pipeline()

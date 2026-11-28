@@ -34,12 +34,17 @@ import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.MinecraftConnection;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.crypto.IdentifiedKeyImpl;
+import com.velocitypowered.proxy.crypto.SessionKeyExchange;
+import com.velocitypowered.proxy.crypto.SessionKeyExchange.SessionKeys;
 import com.velocitypowered.proxy.protocol.StateRegistry;
 import com.velocitypowered.proxy.protocol.netty.MinecraftDecoder;
+import com.velocitypowered.proxy.protocol.packet.ClientboundApplyOptionsPacket;
+import com.velocitypowered.proxy.protocol.packet.ConnectionOptions;
 import com.velocitypowered.proxy.protocol.packet.EncryptionRequestPacket;
 import com.velocitypowered.proxy.protocol.packet.EncryptionResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.LoginPluginResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerboundOptionsAppliedPacket;
 import com.velocitypowered.proxy.util.VelocityProperties;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
@@ -58,6 +63,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Handles authenticating the player to Mojang's servers.
@@ -66,6 +72,9 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
 
   private static final Logger logger = LogManager.getLogger(InitialLoginSessionHandler.class);
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+  // the server id in the 26.4+ key packet, which is also side A's name in the key derivation
+  // (vanilla uses "server")
+  private static final String KEY_EXCHANGE_SERVER_ID = "server";
   private static final String MOJANG_HASJOINED_URL =
       System.getProperty("mojang.sessionserver",
               "https://sessionserver.mojang.com/session/minecraft/hasJoined")
@@ -77,6 +86,11 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
   private @MonotonicNonNull ServerLoginPacket login;
   private byte[] verify = EMPTY_BYTE_ARRAY;
   private LoginState currentState = LoginState.LOGIN_PACKET_EXPECTED;
+  // 26.4+: X25519 key exchange; encryption waits until the client confirms ApplyOptions.
+  private @Nullable KeyPair keyExchangePair;
+  private long keyExchangeSalt;
+  private @Nullable SessionKeys pendingSessionKeys;
+  private @Nullable AuthSessionHandler pendingAuthSessionHandler;
   private final boolean forceKeyAuthentication;
 
   InitialLoginSessionHandler(VelocityServer server, MinecraftConnection mcConnection,
@@ -147,7 +161,9 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
               && (server.getConfiguration().isOnlineMode() || result.isOnlineModeAllowed())) {
             // Request encryption.
             EncryptionRequestPacket request = generateEncryptionRequest();
-            this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
+            if (mcConnection.getProtocolVersion().lessThan(ProtocolVersion.MINECRAFT_26_4)) {
+              this.verify = Arrays.copyOf(request.getVerifyToken(), 4);
+            }
             mcConnection.write(request);
             this.currentState = LoginState.ENCRYPTION_REQUEST_SENT;
           } else {
@@ -180,32 +196,14 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
       throw new IllegalStateException("No ServerLogin packet received yet.");
     }
 
-    if (verify.length == 0) {
-      throw new IllegalStateException("No EncryptionRequest packet sent yet.");
-    }
-
     try {
-      KeyPair serverKeyPair = server.getServerKeyPair();
-      if (inbound.getIdentifiedKey() != null) {
-        IdentifiedKey playerKey = inbound.getIdentifiedKey();
-        if (!playerKey.verifyDataSignature(packet.getVerifyToken(), verify,
-            Longs.toByteArray(packet.getSalt()))) {
-          throw new IllegalStateException("Invalid client public signature.");
-        }
+      final String serverId;
+      if (mcConnection.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_26_4)) {
+        serverId = handleKeyExchange(packet, login);
       } else {
-        byte[] decryptedVerifyToken = decryptRsa(serverKeyPair, packet.getVerifyToken());
-        if (!MessageDigest.isEqual(verify, decryptedVerifyToken)) {
-          throw new IllegalStateException("Unable to successfully decrypt the verification token.");
-        }
+        serverId = handleRsaEncryptionResponse(packet);
       }
 
-      byte[] decryptedSharedSecret = decryptRsa(serverKeyPair, packet.getSharedSecret());
-
-      // Go ahead and enable encryption. Once the client sends EncryptionResponse, encryption
-      // is enabled.
-      mcConnection.enableEncryption(decryptedSharedSecret);
-
-      String serverId = generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
       String playerIp = ((InetSocketAddress) mcConnection.getRemoteAddress()).getHostString();
       String url = String.format(MOJANG_HASJOINED_URL,
           urlFormParameterEscaper().escape(login.getUsername()), serverId);
@@ -247,8 +245,16 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
                 }
               }
               // All went well, initialize the session.
-              mcConnection.setActiveSessionHandler(StateRegistry.LOGIN,
-                  new AuthSessionHandler(server, inbound, profile, true, serverId));
+              final AuthSessionHandler authSessionHandler =
+                  new AuthSessionHandler(server, inbound, profile, true, serverId);
+              if (pendingSessionKeys != null) {
+                // 26.4+: ask the client to switch encryption on and wait for its confirmation.
+                pendingAuthSessionHandler = authSessionHandler;
+                currentState = LoginState.APPLY_OPTIONS_SENT;
+                mcConnection.write(new ClientboundApplyOptionsPacket(ConnectionOptions.ENCRYPTION));
+              } else {
+                mcConnection.setActiveSessionHandler(StateRegistry.LOGIN, authSessionHandler);
+              }
             } else if (response.statusCode() == 204) {
               // Apparently an offline-mode user logged onto this online-mode proxy.
               inbound.disconnect(
@@ -271,7 +277,92 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
     return true;
   }
 
+  @Override
+  public boolean handle(ServerboundOptionsAppliedPacket packet) {
+    assertState(LoginState.APPLY_OPTIONS_SENT);
+    SessionKeys sessionKeys = pendingSessionKeys;
+    AuthSessionHandler authSessionHandler = pendingAuthSessionHandler;
+    if (mcConnection.isClosed() || sessionKeys == null || authSessionHandler == null) {
+      return true;
+    }
+    this.currentState = LoginState.OPTIONS_APPLIED;
+    this.pendingSessionKeys = null;
+    this.pendingAuthSessionHandler = null;
+
+    try {
+      // OptionsApplied was the client's last plaintext packet. The client sends nothing else
+      // until we answer, so no encrypted bytes can be buffered behind it yet.
+      mcConnection.enableEncryption(sessionKeys);
+    } catch (GeneralSecurityException e) {
+      logger.error("Unable to enable encryption", e);
+      mcConnection.close(true);
+      return true;
+    }
+    mcConnection.setActiveSessionHandler(StateRegistry.LOGIN, authSessionHandler);
+    return true;
+  }
+
+  private String handleRsaEncryptionResponse(EncryptionResponsePacket packet)
+      throws GeneralSecurityException {
+    if (verify.length == 0) {
+      throw new IllegalStateException("No EncryptionRequest packet sent yet.");
+    }
+
+    KeyPair serverKeyPair = server.getServerKeyPair();
+    if (inbound.getIdentifiedKey() != null) {
+      IdentifiedKey playerKey = inbound.getIdentifiedKey();
+      if (!playerKey.verifyDataSignature(packet.getVerifyToken(), verify,
+          Longs.toByteArray(packet.getSalt()))) {
+        throw new IllegalStateException("Invalid client public signature.");
+      }
+    } else {
+      byte[] decryptedVerifyToken = decryptRsa(serverKeyPair, packet.getVerifyToken());
+      if (!MessageDigest.isEqual(verify, decryptedVerifyToken)) {
+        throw new IllegalStateException("Unable to successfully decrypt the verification token.");
+      }
+    }
+
+    byte[] decryptedSharedSecret = decryptRsa(serverKeyPair, packet.getSharedSecret());
+
+    // Go ahead and enable encryption. Once the client sends EncryptionResponse, encryption
+    // is enabled.
+    mcConnection.enableEncryption(decryptedSharedSecret);
+    return generateServerId(decryptedSharedSecret, serverKeyPair.getPublic());
+  }
+
+  // 26.4+: derive the session keys, check the client's signature over the key exchange and keep
+  // the keys until the client has confirmed ApplyOptions.
+  private String handleKeyExchange(EncryptionResponsePacket packet, ServerLoginPacket login)
+      throws GeneralSecurityException {
+    KeyPair keyPair = this.keyExchangePair;
+    if (keyPair == null) {
+      throw new IllegalStateException("No EncryptionRequest packet sent yet.");
+    }
+    this.keyExchangePair = null;
+
+    SessionKeys keys = SessionKeyExchange.deriveServerSide(keyPair, KEY_EXCHANGE_SERVER_ID,
+        SessionKeyExchange.parsePublicKey(packet.getPublicKey()), login.getUsername(),
+        mcConnection.getProtocolVersion().getProtocol(), keyExchangeSalt, true);
+    if (!MessageDigest.isEqual(keys.integrityDigest(), packet.getSignature())) {
+      throw new IllegalStateException("Invalid key exchange signature.");
+    }
+    this.pendingSessionKeys = keys;
+    return keys.serverId();
+  }
+
   private EncryptionRequestPacket generateEncryptionRequest() {
+    if (mcConnection.getProtocolVersion().noLessThan(ProtocolVersion.MINECRAFT_26_4)) {
+      KeyPair keyPair = SessionKeyExchange.generateKeyPair(SECURE_RANDOM);
+      this.keyExchangePair = keyPair;
+      this.keyExchangeSalt = SECURE_RANDOM.nextLong();
+
+      EncryptionRequestPacket request = new EncryptionRequestPacket();
+      request.setServerId(KEY_EXCHANGE_SERVER_ID);
+      request.setPublicKey(keyPair.getPublic().getEncoded());
+      request.setSalt(keyExchangeSalt);
+      return request;
+    }
+
     byte[] verify = new byte[4];
     SECURE_RANDOM.nextBytes(verify);
 
@@ -306,6 +397,8 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
     LOGIN_PACKET_EXPECTED,
     LOGIN_PACKET_RECEIVED,
     ENCRYPTION_REQUEST_SENT,
-    ENCRYPTION_RESPONSE_RECEIVED
+    ENCRYPTION_RESPONSE_RECEIVED,
+    APPLY_OPTIONS_SENT, // 26.4+
+    OPTIONS_APPLIED // 26.4+
   }
 }
