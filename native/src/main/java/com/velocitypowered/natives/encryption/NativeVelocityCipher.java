@@ -21,8 +21,8 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.natives.util.BufferPreference;
 import io.netty.buffer.ByteBuf;
 import java.security.GeneralSecurityException;
+import java.util.Objects;
 import javax.crypto.SecretKey;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Implements AES-CFB8 encryption/decryption using a native library.
@@ -31,25 +31,21 @@ public class NativeVelocityCipher implements VelocityCipher {
 
   public static final VelocityCipherFactory FACTORY = new VelocityCipherFactory() {
     @Override
-    public VelocityCipher forEncryption(SecretKey key, byte @Nullable [] iv)
-        throws GeneralSecurityException {
+    public VelocityCipher forEncryption(SecretKey key, byte[] iv) throws GeneralSecurityException {
       return new NativeVelocityCipher(true, key, iv);
     }
 
     @Override
-    public VelocityCipher forDecryption(SecretKey key, byte @Nullable [] iv)
-        throws GeneralSecurityException {
+    public VelocityCipher forDecryption(SecretKey key, byte[] iv) throws GeneralSecurityException {
       return new NativeVelocityCipher(false, key, iv);
     }
   };
   private final long ctx;
   private boolean disposed = false;
 
-  private NativeVelocityCipher(boolean encrypt, SecretKey key, byte @Nullable [] iv)
+  private NativeVelocityCipher(boolean encrypt, SecretKey key, byte[] iv)
       throws GeneralSecurityException {
-    byte[] keyBytes = key.getEncoded();
-    // A missing IV means the pre-26.4 behavior of using the key as the IV (see JavaVelocityCipher).
-    this.ctx = OpenSslCipherImpl.init(keyBytes, iv == null ? keyBytes : iv, encrypt);
+    this.ctx = OpenSslCipherImpl.init(key.getEncoded(), Objects.requireNonNull(iv, "iv"), encrypt);
   }
 
   @Override

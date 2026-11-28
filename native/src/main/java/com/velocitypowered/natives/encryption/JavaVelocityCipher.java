@@ -21,11 +21,11 @@ import com.google.common.base.Preconditions;
 import com.velocitypowered.natives.util.BufferPreference;
 import io.netty.buffer.ByteBuf;
 import java.security.GeneralSecurityException;
+import java.util.Objects;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.ShortBufferException;
 import javax.crypto.spec.IvParameterSpec;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Implements AES-CFB8 encryption/decryption using {@link Cipher}.
@@ -34,14 +34,12 @@ public class JavaVelocityCipher implements VelocityCipher {
 
   public static final VelocityCipherFactory FACTORY = new VelocityCipherFactory() {
     @Override
-    public VelocityCipher forEncryption(SecretKey key, byte @Nullable [] iv)
-        throws GeneralSecurityException {
+    public VelocityCipher forEncryption(SecretKey key, byte[] iv) throws GeneralSecurityException {
       return new JavaVelocityCipher(true, key, iv);
     }
 
     @Override
-    public VelocityCipher forDecryption(SecretKey key, byte @Nullable [] iv)
-        throws GeneralSecurityException {
+    public VelocityCipher forDecryption(SecretKey key, byte[] iv) throws GeneralSecurityException {
       return new JavaVelocityCipher(false, key, iv);
     }
   };
@@ -49,26 +47,15 @@ public class JavaVelocityCipher implements VelocityCipher {
   private final Cipher cipher;
   private boolean disposed = false;
 
-  private JavaVelocityCipher(boolean encrypt, SecretKey key, byte @Nullable [] iv)
+  private JavaVelocityCipher(boolean encrypt, SecretKey key, byte[] iv)
       throws GeneralSecurityException {
-    final byte[] effectiveIv;
-    if (iv == null) {
-      // Before 26.4, the protocol used the shared secret as both the key and the IV, in both
-      // directions. Reusing the key as the IV defeats the entire point of an IV - we might as well
-      // just initialize it to all zeroes - and because both directions use the same key and IV,
-      // both streams start out in the same cipher state.
-      //
-      // 26.4 replaced this with a proper key exchange that derives a separate key and IV for each
-      // direction. Not passing an IV (insecure!) is only for older protocols.
-      effectiveIv = key.getEncoded();
-    } else if (iv.length == VelocityCipherFactory.IV_LENGTH) {
-      effectiveIv = iv;
-    } else {
+    Objects.requireNonNull(iv, "iv");
+    if (iv.length != VelocityCipherFactory.IV_LENGTH) {
       throw new IllegalArgumentException("IV not " + VelocityCipherFactory.IV_LENGTH + " bytes");
     }
     this.cipher = Cipher.getInstance("AES/CFB8/NoPadding");
     this.cipher.init(encrypt ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE, key,
-        new IvParameterSpec(effectiveIv));
+        new IvParameterSpec(iv));
   }
 
   @Override

@@ -629,8 +629,9 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
     SecretKey key = new SecretKeySpec(secret, "AES");
 
     VelocityCipherFactory factory = Natives.cipher.get();
-    VelocityCipher decryptionCipher = factory.forDecryption(key);
-    VelocityCipher encryptionCipher = factory.forEncryption(key);
+    // Minecraft 26.3 and older use the key as the IV, which is insecure but required.
+    VelocityCipher decryptionCipher = factory.forDecryptionInsecure(key);
+    VelocityCipher encryptionCipher = factory.forEncryptionInsecure(key);
     channel.pipeline()
         .addBefore(FRAME_DECODER, CIPHER_DECODER, new MinecraftCipherDecoder(decryptionCipher));
     channel.pipeline()

@@ -92,7 +92,7 @@ class VelocityCipherTest {
   void roundTripKeyAsIv(String name, VelocityCipherFactory factory)
       throws GeneralSecurityException {
     SecretKey key = aesKey(AES_KEY);
-    assertRoundTrip(factory.forEncryption(key), factory.forDecryption(key));
+    assertRoundTrip(factory.forEncryptionInsecure(key), factory.forDecryptionInsecure(key));
   }
 
   @ParameterizedTest(name = "{0}")
@@ -119,15 +119,23 @@ class VelocityCipherTest {
 
   @ParameterizedTest(name = "{0}")
   @MethodSource("factories")
-  void noIvUsesKeyAsIv(String name, VelocityCipherFactory factory)
+  void insecureUsesKeyAsIv(String name, VelocityCipherFactory factory)
       throws GeneralSecurityException {
     SecretKey key = aesKey(AES_KEY);
-    assertArrayEquals(
-        process(factory.forEncryption(key, AES_KEY), TEST_DATA),
-        process(factory.forEncryption(key), TEST_DATA));
-    assertArrayEquals(
-        process(factory.forEncryption(key, AES_KEY), TEST_DATA),
-        process(factory.forEncryption(key, null), TEST_DATA));
+    byte[] encrypted = process(factory.forEncryption(key, AES_KEY), TEST_DATA);
+    assertArrayEquals(encrypted, process(factory.forEncryptionInsecure(key), TEST_DATA));
+    assertArrayEquals(TEST_DATA, process(factory.forDecryptionInsecure(key), encrypted));
+  }
+
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("factories")
+  @SuppressWarnings("deprecation")
+  void deprecatedMatchesInsecure(String name, VelocityCipherFactory factory)
+      throws GeneralSecurityException {
+    SecretKey key = aesKey(AES_KEY);
+    byte[] encrypted = process(factory.forEncryptionInsecure(key), TEST_DATA);
+    assertArrayEquals(encrypted, process(factory.forEncryption(key), TEST_DATA));
+    assertArrayEquals(TEST_DATA, process(factory.forDecryption(key), encrypted));
   }
 
   @ParameterizedTest(name = "{0}")
@@ -135,7 +143,7 @@ class VelocityCipherTest {
   void ivChangesOutput(String name, VelocityCipherFactory factory)
       throws GeneralSecurityException {
     SecretKey key = aesKey(AES_KEY);
-    byte[] withKeyAsIv = process(factory.forEncryption(key), TEST_DATA);
+    byte[] withKeyAsIv = process(factory.forEncryptionInsecure(key), TEST_DATA);
     byte[] withIv = process(factory.forEncryption(key, AES_IV), TEST_DATA);
     assertFalse(Arrays.equals(withKeyAsIv, withIv));
   }
@@ -180,6 +188,14 @@ class VelocityCipherTest {
     assertThrows(IllegalArgumentException.class, () -> factory.forDecryption(key, new byte[17]));
   }
 
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("factories")
+  void rejectsNullIv(String name, VelocityCipherFactory factory) {
+    SecretKey key = aesKey(AES_KEY);
+    assertThrows(NullPointerException.class, () -> factory.forEncryption(key, null));
+    assertThrows(NullPointerException.class, () -> factory.forDecryption(key, null));
+  }
+
   @Test
   void nativeRejectsBadArrays() {
     assumeTrue(Natives.cipher.get() != JavaVelocityCipher.FACTORY, "No native cipher on this host");
@@ -200,8 +216,8 @@ class VelocityCipherTest {
 
     SecretKey key = aesKey(AES_KEY);
     assertArrayEquals(
-        process(JavaVelocityCipher.FACTORY.forEncryption(key), TEST_DATA),
-        process(nativeFactory.forEncryption(key), TEST_DATA));
+        process(JavaVelocityCipher.FACTORY.forEncryptionInsecure(key), TEST_DATA),
+        process(nativeFactory.forEncryptionInsecure(key), TEST_DATA));
     assertArrayEquals(
         process(JavaVelocityCipher.FACTORY.forEncryption(key, AES_IV), TEST_DATA),
         process(nativeFactory.forEncryption(key, AES_IV), TEST_DATA));
