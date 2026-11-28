@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2023 Velocity Contributors
+ * Copyright (C) 2018-2026 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.ShortBufferException;
 import javax.crypto.spec.IvParameterSpec;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Implements AES-CFB8 encryption/decryption using {@link Cipher}.
@@ -33,32 +34,41 @@ public class JavaVelocityCipher implements VelocityCipher {
 
   public static final VelocityCipherFactory FACTORY = new VelocityCipherFactory() {
     @Override
-    public VelocityCipher forEncryption(SecretKey key) throws GeneralSecurityException {
-      return new JavaVelocityCipher(true, key);
+    public VelocityCipher forEncryption(SecretKey key, byte @Nullable [] iv)
+        throws GeneralSecurityException {
+      return new JavaVelocityCipher(true, key, iv);
     }
 
     @Override
-    public VelocityCipher forDecryption(SecretKey key) throws GeneralSecurityException {
-      return new JavaVelocityCipher(false, key);
+    public VelocityCipher forDecryption(SecretKey key, byte @Nullable [] iv)
+        throws GeneralSecurityException {
+      return new JavaVelocityCipher(false, key, iv);
     }
   };
 
   private final Cipher cipher;
   private boolean disposed = false;
 
-  private JavaVelocityCipher(boolean encrypt, SecretKey key) throws GeneralSecurityException {
+  private JavaVelocityCipher(boolean encrypt, SecretKey key, byte @Nullable [] iv)
+      throws GeneralSecurityException {
+    final byte[] effectiveIv;
+    if (iv == null) {
+      // Before 26.4, the protocol used the shared secret as both the key and the IV, in both
+      // directions. Reusing the key as the IV defeats the entire point of an IV - we might as well
+      // just initialize it to all zeroes - and because both directions use the same key and IV,
+      // both streams start out in the same cipher state.
+      //
+      // 26.4 replaced this with a proper key exchange that derives a separate key and IV for each
+      // direction. Not passing an IV (insecure!) is only for older protocols.
+      effectiveIv = key.getEncoded();
+    } else if (iv.length == VelocityCipherFactory.IV_LENGTH) {
+      effectiveIv = iv;
+    } else {
+      throw new IllegalArgumentException("IV not " + VelocityCipherFactory.IV_LENGTH + " bytes");
+    }
     this.cipher = Cipher.getInstance("AES/CFB8/NoPadding");
-    // But, you're saying, *why* are we using the key as the IV? After all, reusing the key as
-    // the IV defeats the entire point - we might as well just initialize it to all zeroes.
-    //
-    // You can blame Mojang. For the record, we also don't consider the Minecraft protocol
-    // encryption scheme to be secure, and it has reached the point where any serious cryptographic
-    // protocol needs a refresh. There are multiple obvious weaknesses, and this is far from the
-    // most serious.
-    //
-    // If you are using Minecraft in a security-sensitive application, *I don't know what to say.*
     this.cipher.init(encrypt ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE, key,
-        new IvParameterSpec(key.getEncoded()));
+        new IvParameterSpec(effectiveIv));
   }
 
   @Override
